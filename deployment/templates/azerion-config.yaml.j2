@@ -1,0 +1,57 @@
+---
+status-response: "ok"
+adapters:
+  appnexus:
+    enabled: true
+  improvedigital:
+    enabled: true
+  openx:
+    enabled: true
+  pubmatic:
+    enabled: true
+  smartadserver:
+    enabled: true
+  triplelift:
+    enabled: true
+currency-converter:
+  external-rates:
+    enabled: true
+    url: https://cdn.jsdelivr.net/gh/prebid/currency-file@1/latest.json
+    default-timeout-ms: 4000
+    refresh-period-ms: 1800000
+metrics:
+  prometheus:
+    port: 9112
+  graphite:
+    enabled: false
+    host: carbon.{{ env_tag }}.iceberg.improve
+    port: 2000
+    prefix: prebid-server
+    interval: 60
+cache:
+  scheme: https
+  host: {{ pbc_url }}
+  path: cache
+  query: uuid=
+  banner-ttl-seconds: 300
+  video-ttl-seconds: 300
+settings:
+  filesystem:
+    settings-filename: config/azerion-settings.yaml
+    stored-requests-dir: stored-data/requests
+    stored-imps-dir: stored-data/imps
+    stored-responses-dir: stored-data/responses
+gdpr:
+  enabled: true
+  host-vendor-id: 253
+  vendorlist:
+    v1:
+      cache-dir: /var/tmp/vendor1
+    v2:
+      cache-dir: /var/tmp/vendor2
+default-request:
+  file:
+    path: stored-data/requests/default.json
+external-url: {{ external_url }}
+google-ad-manager:
+  network-code: 1015413

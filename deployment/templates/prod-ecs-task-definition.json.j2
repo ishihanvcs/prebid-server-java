@@ -1,0 +1,45 @@
+{
+  "taskDefinition": {
+    "family": "Prebid_Server",
+    "networkMode": "host",
+    "volumes": [
+      {
+        "name": "service_logs",
+        "host": {
+          "sourcePath": "/opt/prebid-server/logs"
+        }
+      }
+    ],
+    "containerDefinitions": [
+      {
+        "name": "prebid-server",
+        "logConfiguration": {
+          "logDriver": "json-file",
+          "options": {
+            "max-file": "2",
+            "max-size": "10m"
+          }
+        },
+        "mountPoints": [
+          {
+            "sourceVolume": "service_logs",
+            "containerPath": "{{ prebid_server_log_path }}"
+          }
+        ],
+        "image": "{{ prebid_server_docker_image_uri }}:{{ jar_version }}",
+        "cpu": 1024,
+        "portMappings": [
+          {
+            "protocol": "tcp",
+            "containerPort": {{ prebid_server_container_port }},
+            "hostPort": {{ prebid_server_container_port }}
+          }
+        ],
+        "memoryReservation": 2000,
+        "memory": 4000,
+        "essential": true,
+        "volumesFrom": []
+      }
+    ]
+  }
+}

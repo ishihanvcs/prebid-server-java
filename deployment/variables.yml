@@ -1,0 +1,13 @@
+---
+ 
+prebid_server_docker_image_uri: "{{ account_id }}.dkr.ecr.{{ region }}.amazonaws.com/iceberg/prebid-server-{{ stage }}"
+prebid_server_log_path: "/opt/prebid-server/logs"
+prebid_server_container_port: 8080
+
+# vars defined at build
+external_url:
+jar_version:
+stage:
+pbc_url:
+region:
+account_id:

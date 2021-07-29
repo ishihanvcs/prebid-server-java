@@ -1,0 +1,27 @@
+---
+- name: Build Docker Image
+  hosts: localhost
+
+  tasks:
+
+  - name: Include variables file
+    include_vars:
+      file: "{{ playbook_dir }}/variables.yml"
+
+  - name: Copy taskdef template
+    template:
+      src: "{{ playbook_dir }}/templates/{{ stage }}-ecs-task-definition.json.j2"
+      dest: "../ecs-task-definition.json"
+      force: true
+
+  - name: Copy prebid-server config template
+    template:
+      src: "{{ playbook_dir }}/templates/azerion-config.yaml.j2"
+      dest: "../config/azerion-config.yaml"
+      force: true
+
+  - name: Build Docker Image
+    docker_image:
+      name: prebid-server
+      build:
+        path: ..

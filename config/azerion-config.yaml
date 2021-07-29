@@ -35,6 +35,7 @@ cache:
 settings:
   filesystem:
     settings-filename: config/azerion-settings.yaml
+    custom-settings-filename: config/azerion-custom-settings.yaml
     stored-requests-dir: stored-data/requests
     stored-imps-dir: stored-data/imps
     stored-responses-dir: stored-data/responses

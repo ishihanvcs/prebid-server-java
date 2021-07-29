@@ -1,0 +1,34 @@
+placements:
+  - id: 22137694
+    accountId: 950
+    waterfall:
+      - gam_first_look
+      - gam
+      - https://ad.360yield.com/advast?p=22137694&w=4&h=3&gdpr={{gdpr_consent}}
+  - id: 22346851
+    accountId: 545-jeu.fr
+    gamAdUnit: TNL_NS-19041000062/jeu.fr_game_preroll
+  - id: 22239504
+    accountId: 545-a10.com
+    gamAdUnit: TNL_NS-19041000062/a10.com_game_preroll
+  - id: 22245204
+    accountId: 545-jeux.fr
+    gamAdUnit: TNL_NS-19041000062/jeux.fr_game_preroll
+  - id: 22245203
+    accountId: 545-gry.pl
+    gamAdUnit: TNL_NS-19041000062/gry.pl_game_preroll
+  - id: 22492486
+    accountId: 545-mon-programme-tv.be
+    waterfall:
+      - https://www8.smartadserver.com/ac?siteid=314536&pgid=1130786&fmtid=82422&ab=1&tgt=&oc=1&out=vast4&ps=1&pb=0&visit=S&vcn=s&pgdomain=mon-programme-tv.be&gdpr={{gdpr}}&gdpr_consent={{gdpr_consent}}&tmstp={{timestamp}}&vpw=640&vph=480
+      - gam
+  - id: 22492485
+    accountId: 545-dailymotion.com
+    bidFloor: 1.5
+    #    gamAdUnit: /1015413,23328537/pbs/22492485
+    waterfall:
+      - gam_first_look
+      - gam
+  - id: 22505159
+    accountId: 1915
+    bidFloor: 1.5

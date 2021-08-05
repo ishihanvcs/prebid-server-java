@@ -6,6 +6,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.prebid.server.exception.PreBidException;
 import org.prebid.server.execution.Timeout;
 
@@ -28,6 +30,7 @@ import java.util.stream.Collectors;
 public class FileCustomSettings implements CustomSettings {
 
     private static final String JSON_SUFFIX = ".json";
+    private static final Logger logger = LoggerFactory.getLogger(FileCustomSettings.class);
 
     private final Map<String, Placement> placements;
 
@@ -36,10 +39,11 @@ public class FileCustomSettings implements CustomSettings {
         final SettingsFile settingsFile = readSettingsFile(Objects.requireNonNull(fileSystem),
                 Objects.requireNonNull(settingsFileName));
 
+        logger.info("Custom settings is read successfully.");
         placements = toMap(settingsFile.getPlacements(),
                 Placement::getId,
                 Function.identity());
-
+        logger.debug("Placements loaded:", placements);
     }
 
     @Override
@@ -55,6 +59,7 @@ public class FileCustomSettings implements CustomSettings {
      * Reading YAML settings file.
      */
     private static SettingsFile readSettingsFile(FileSystem fileSystem, String fileName) {
+        logger.info("Reading custom settings from: " + fileName);
         final Buffer buf = fileSystem.readFileBlocking(fileName);
         try {
             return new YAMLMapper().readValue(buf.getBytes(), SettingsFile.class);

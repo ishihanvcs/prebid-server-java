@@ -65,7 +65,6 @@ public class GVastConfiguration {
 
     @Bean
     GVastHandler gvastHandler(
-            ApplicationSettings applicationSettings,
             CustomSettings customSettings,
             GVastRequestFactory gvastRequestFactory,
             GVastResponseCreator gvastResponseCreator,
@@ -76,7 +75,6 @@ public class GVastConfiguration {
             HttpInteractionLogger httpInteractionLogger) {
 
         return new GVastHandler(
-                applicationSettings,
                 customSettings,
                 gvastRequestFactory,
                 gvastResponseCreator,

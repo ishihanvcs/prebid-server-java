@@ -7,29 +7,26 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.prebid.server.exception.PreBidException;
 import org.prebid.server.execution.Timeout;
-import org.prebid.server.metric.MetricName;
-import org.prebid.server.metric.Metrics;
 
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
 public class CachingCustomSettings implements CustomSettings {
-    private static final Logger logger = LoggerFactory.getLogger(CachingCustomSettings.class);
 
+    private static final Logger logger = LoggerFactory.getLogger(CachingCustomSettings.class);
     private final Map<String, Placement> placementCache;
     private final Map<String, String> placementToErrorCache;
-    private final Metrics metrics;
+    /*private final Metrics metrics;*/
     private final CustomSettings delegate;
 
     public CachingCustomSettings(CustomSettings delegate,
-                                 Metrics metrics,
+                                 /*Metrics metrics,*/
                                  int ttl,
                                  int size) {
         this.delegate = Objects.requireNonNull(delegate);
-        this.metrics = Objects.requireNonNull(metrics);
+        /*this.metrics = Objects.requireNonNull(metrics);*/
         this.placementCache = createCache(ttl, size);
         this.placementToErrorCache = createCache(ttl, size);
     }
@@ -51,13 +48,10 @@ public class CachingCustomSettings implements CustomSettings {
 
         final T cachedValue = cache.get(key);
         if (cachedValue != null) {
-//            metricUpdater.accept(MetricName.hit);
-
+            /*metricUpdater.accept(MetricName.hit);*/
             return Future.succeededFuture(cachedValue);
         }
-
-//        metricUpdater.accept(MetricName.miss);
-
+        /*metricUpdater.accept(MetricName.miss);*/
         final String preBidExceptionMessage = errorCache.get(key);
         if (preBidExceptionMessage != null) {
             return Future.failedFuture(new PreBidException(preBidExceptionMessage));

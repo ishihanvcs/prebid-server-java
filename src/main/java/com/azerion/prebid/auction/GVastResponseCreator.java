@@ -9,13 +9,19 @@ import com.iab.openrtb.response.Bid;
 import com.iab.openrtb.response.BidResponse;
 import com.iab.openrtb.response.SeatBid;
 import io.netty.util.AsciiString;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.metric.Metrics;
 import org.prebid.server.util.HttpUtil;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -29,6 +35,7 @@ public class GVastResponseCreator {
 
     private static final String GOOGLE_VAST_TAG = "https://pubads.g.doubleclick.net/gampad/ads?sz=640x480|640x360&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&correlator=";
     private static final double IMPROVE_DIGITAL_DEAL_FLOOR = 1.5;
+    private static final Logger logger = LoggerFactory.getLogger(GVastResponseCreator.class);
 
     private final Metrics metrics;
     private final String externalUrl;
@@ -38,6 +45,7 @@ public class GVastResponseCreator {
         this.metrics = Objects.requireNonNull(metrics);
         this.externalUrl = HttpUtil.validateUrl(Objects.requireNonNull(externalUrl));
         this.gamNetworkCode = Objects.requireNonNull(gamNetworkCode);
+        logger.info("GVastResponseCreator object creation is successful");
     }
 
     public String create(GVastParams gvastParams, Placement placement, RoutingContext routingContext,

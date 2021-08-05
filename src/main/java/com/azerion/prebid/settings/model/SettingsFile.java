@@ -6,5 +6,6 @@ import java.util.List;
 
 @Value
 public class SettingsFile {
+
     List<Placement> placements;
 }

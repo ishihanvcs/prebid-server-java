@@ -38,11 +38,14 @@ import org.prebid.server.metric.MetricName;
 import org.prebid.server.metric.Metrics;
 import org.prebid.server.privacy.gdpr.model.TcfContext;
 import org.prebid.server.privacy.model.PrivacyContext;
-import org.prebid.server.settings.ApplicationSettings;
 import org.prebid.server.util.HttpUtil;
 
 import java.time.Clock;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -77,7 +80,6 @@ public class GVastHandler implements Handler<RoutingContext> {
     private static final ConditionalLogger conditionalLogger = new ConditionalLogger(logger);
     private static final ConditionalLogger EMPTY_ACCOUNT_LOGGER = new ConditionalLogger("empty_account", logger);
 
-    private final ApplicationSettings applicationSettings;
     private final CustomSettings customSettings;
     private final GVastRequestFactory gvastRequestFactory;
     private final GVastResponseCreator gvastResponseCreator;
@@ -87,8 +89,7 @@ public class GVastHandler implements Handler<RoutingContext> {
     private final Clock clock;
     private final HttpInteractionLogger httpInteractionLogger;
 
-    public GVastHandler(ApplicationSettings applicationSettings,
-                        CustomSettings customSettings,
+    public GVastHandler(CustomSettings customSettings,
                         GVastRequestFactory gvastRequestFactory,
                         GVastResponseCreator gvastResponseCreator,
                         ExchangeService exchangeService,
@@ -96,9 +97,7 @@ public class GVastHandler implements Handler<RoutingContext> {
                         Metrics metrics,
                         Clock clock,
                         HttpInteractionLogger httpInteractionLogger) {
-
-        this.applicationSettings = Objects.requireNonNull(applicationSettings);
-        this.customSettings = customSettings;
+        this.customSettings = Objects.requireNonNull(customSettings);
         this.gvastRequestFactory = Objects.requireNonNull(gvastRequestFactory);
         this.gvastResponseCreator = Objects.requireNonNull(gvastResponseCreator);
         this.exchangeService = Objects.requireNonNull(exchangeService);

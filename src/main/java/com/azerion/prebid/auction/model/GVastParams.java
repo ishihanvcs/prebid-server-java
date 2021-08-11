@@ -2,6 +2,7 @@ package com.azerion.prebid.auction.model;
 
 import lombok.Builder;
 import lombok.Value;
+import org.prebid.server.util.HttpUtil;
 
 import java.util.List;
 
@@ -25,4 +26,8 @@ public class GVastParams {
 
     boolean debug;
 
+    public String getDomain() {
+        final String host = referrer.startsWith("http") ? HttpUtil.getHostFromUrl(referrer) : referrer;
+        return host.startsWith("www.") ? host.substring(4) : host;
+    }
 }

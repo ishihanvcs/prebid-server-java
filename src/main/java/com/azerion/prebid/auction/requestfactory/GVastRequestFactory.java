@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.BidRequest;
+import com.iab.openrtb.request.Device;
 import com.iab.openrtb.request.Publisher;
 import com.iab.openrtb.request.Regs;
 import com.iab.openrtb.request.Site;
@@ -192,6 +193,9 @@ public class GVastRequestFactory {
     private Future<GVastContext> updateContextWithAccountAndBidRequest(GVastContext gVastContext) {
         final String tid = idGenerator.generateId(); // UUID.randomUUID().toString();
         final GVastParams gVastParams = gVastContext.getGVastParams();
+        final RoutingContext routingContext = gVastContext.getRoutingContext();
+        final String language = routingContext.preferredLanguage() == null
+                ? null : routingContext.preferredLanguage().tag();
         return applicationSettings.getAccountById(gVastContext.getPlacement().getAccountId(), settingsLoadingTimeout)
             .map(account -> gVastContext.with(account)
                 .with(
@@ -209,6 +213,7 @@ public class GVastRequestFactory {
                                 .consent(gVastParams.getGdprConsentString())
                                 .build())
                             .build())
+                        .device(Device.builder().language(language).build())
                         .ext(ExtRequest.of(ExtRequestPrebid.builder()
                             .storedrequest(ExtStoredRequest.of("gv-" + account.getId()))
                             .build()))

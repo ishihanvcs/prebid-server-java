@@ -5,6 +5,7 @@ import com.azerion.prebid.exception.PlacementAccountNullException;
 import com.azerion.prebid.settings.CustomSettings;
 import com.azerion.prebid.settings.model.Placement;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Publisher;
@@ -18,6 +19,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
+import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.AuctionContext;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
 import org.prebid.server.execution.Timeout;
@@ -36,6 +38,8 @@ import org.prebid.server.settings.ApplicationSettings;
 import org.springframework.context.ApplicationContext;
 
 import java.time.Clock;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -90,8 +94,8 @@ public class GVastRequestFactory {
                     auctionRequestFactory
                         .fromRequest(gVastContext.getRoutingContext(), startTime)
                         .map(auctionContext ->
-                            this.overrideImproveDigitalPlacementId(
-                                auctionContext, gVastContext.getPlacement().getId()
+                            this.setImproveDigitalParams(
+                                auctionContext, gVastParams
                             )
                         )
                         .map(gVastContext::with)
@@ -135,12 +139,50 @@ public class GVastRequestFactory {
     /**
      * Overrides Improve Digital placementId to the one from GVAST GET param
      */
-    private AuctionContext overrideImproveDigitalPlacementId(AuctionContext auctionContext, String placementId) {
+    private AuctionContext setImproveDigitalParams(AuctionContext auctionContext, GVastParams gVastParams) {
         JsonNode impExt = auctionContext.getBidRequest().getImp().get(0).getExt();
-        JsonNode improveParamsNode = impExt.at("/prebid/bidder/improvedigital");
-        if (!improveParamsNode.isMissingNode()) {
-            ((ObjectNode) improveParamsNode).put("placementId", placementId);
+
+        if (impExt.isMissingNode()) {
+            return auctionContext;
         }
+
+        JsonNode improveParamsNode = impExt.at("/prebid/bidder/improvedigital");
+
+        if (improveParamsNode.isMissingNode()) {
+            return auctionContext;
+        }
+
+        // Set Improve Digital placementId in the SSP request to the value of the "p" GET param
+
+        int placementIdNum;
+        try {
+            placementIdNum = Integer.parseInt(gVastParams.getPlacementId());
+        } catch (NumberFormatException e) {
+            placementIdNum = 0;
+        }
+
+        ((ObjectNode) improveParamsNode).put("placementId", placementIdNum);
+
+        // key-values from the "cust_params" GET param
+
+        String custParams = gVastParams.getCustParams(); // auctionContext.getHttpRequest().getQueryParams().get("cust_params");
+
+        if (!StringUtils.isBlank(custParams)) {
+            final Map<String, String[]> keyValues = new HashMap<>();
+            for (String kv: custParams.split("&")) {
+                String[] pair = kv.split("=");
+                if (pair.length != 2) {
+                    continue;
+                }
+                keyValues.put(pair[0], pair[1].split(","));
+            }
+
+            if (!keyValues.isEmpty()) {
+                ObjectMapper mapper = new ObjectMapper();
+                ((ObjectNode) improveParamsNode).set("keyValues", mapper.valueToTree(keyValues));
+            }
+        }
+
         return auctionContext;
     }
 

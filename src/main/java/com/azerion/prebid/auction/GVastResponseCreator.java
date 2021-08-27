@@ -275,6 +275,13 @@ public class GVastResponseCreator {
             categoryTargeting = null;
         }
 
+        // tnl_asset_id KV is used in HeaderLift reporting
+
+        String assetId = "";
+        if (StringUtils.isBlank(custParams) || !custParams.contains("tnl_asset_id=")) {
+            assetId = "tnl_asset_id=prebidserver";
+        }
+
         StringBuilder sb = new StringBuilder();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?><VAST version=\"3.0\">");
 
@@ -297,7 +304,7 @@ public class GVastResponseCreator {
                 case "gam_improve_deal":
                     sb.append(buildVastAdTag(
                             buildGamVastTagUrl(placement, gvastParams.getReferrer(),
-                                    buildTargetingString(Stream.of(gamPrebidTargeting, custParams, categoryTargeting)),
+                                    buildTargetingString(Stream.of(gamPrebidTargeting, custParams, categoryTargeting, assetId)),
                                     gdpr,
                                     gdprConsent),
                             true, gdpr, gdprConsent, hbAuctionDebugInfo, i, i == numTags - 1));
@@ -305,7 +312,7 @@ public class GVastResponseCreator {
                 case "gam_no_hb":
                     sb.append(buildVastAdTag(
                             buildGamVastTagUrl(placement, gvastParams.getReferrer(),
-                                    buildTargetingString(Stream.of(custParams, categoryTargeting)),
+                                    buildTargetingString(Stream.of(custParams, categoryTargeting, assetId)),
                                     gdpr,
                                     gdprConsent),
                             true, gdpr, gdprConsent, null, i, i == numTags - 1));

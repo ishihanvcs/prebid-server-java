@@ -136,7 +136,7 @@ public class GVastRequestFactory {
     }
 
     /**
-     * Overrides Improve Digital placementId to the one from GVAST GET param
+     * Sets some Improve Digital request params from the GVAST GET params
      */
     private AuctionContext setImproveDigitalParams(AuctionContext auctionContext, GVastParams gVastParams) {
         JsonNode impExt = auctionContext.getBidRequest().getImp().get(0).getExt();

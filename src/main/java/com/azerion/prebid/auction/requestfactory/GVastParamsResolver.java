@@ -10,6 +10,7 @@ import org.prebid.server.exception.InvalidRequestException;
 import org.prebid.server.log.ConditionalLogger;
 import org.prebid.server.model.CaseInsensitiveMultiMap;
 import org.prebid.server.model.HttpRequestContext;
+import org.prebid.server.settings.model.GdprConfig;
 import org.prebid.server.util.HttpUtil;
 
 import java.util.ArrayList;
@@ -23,6 +24,12 @@ public class GVastParamsResolver {
 
     private static final ConditionalLogger conditionalLogger = new ConditionalLogger(logger);
 
+    private final GdprConfig gdprConfig;
+
+    public GVastParamsResolver(GdprConfig gdprConfig) {
+        this.gdprConfig = Objects.requireNonNull(gdprConfig);
+    }
+
     private String resolveReferrer(HttpRequestContext httpRequest) {
         final CaseInsensitiveMultiMap queryParams = httpRequest.getQueryParams();
         return ObjectUtils.firstNonNull(HttpUtil.decodeUrl(queryParams.get("referrer")),
@@ -32,7 +39,8 @@ public class GVastParamsResolver {
     }
 
     private GVastParams.GVastParamsBuilder setGdprParams(
-            HttpRequestContext httpRequest, GVastParams.GVastParamsBuilder builder
+            HttpRequestContext httpRequest,
+            GVastParams.GVastParamsBuilder builder
     ) {
         // Handle GDPR params
         final int gdpr;
@@ -49,7 +57,9 @@ public class GVastParamsResolver {
             }
         } else {
             // "gdpr" param not provided, let's derive the value from consent string existence
-            gdpr = StringUtils.isBlank(gdprConsentString) ? 0 : 1;
+            gdpr = StringUtils.isBlank(gdprConsentString)
+                ? (gdprConfig.getDefaultValue().equals("1") ? 1 : 0)
+                : 1;
         }
 
         if (gdpr == 1 && StringUtils.isBlank(gdprConsentString)) {

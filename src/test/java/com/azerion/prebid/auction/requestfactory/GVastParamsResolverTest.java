@@ -14,6 +14,7 @@ import org.prebid.server.exception.InvalidRequestException;
 import org.prebid.server.log.ConditionalLogger;
 import org.prebid.server.model.CaseInsensitiveMultiMap;
 import org.prebid.server.model.HttpRequestContext;
+import org.prebid.server.settings.model.GdprConfig;
 import org.prebid.server.util.HttpUtil;
 
 import java.util.ArrayList;
@@ -26,19 +27,22 @@ public class GVastParamsResolverTest extends VertxTest {
     private static final String DEFAULT_ABSOLUTE_URI = "http://example.com/gvast";
 
     @Mock
-    Logger logger;
+    private Logger logger;
 
     @Mock
-    ConditionalLogger conditionalLogger;
+    private ConditionalLogger conditionalLogger;
 
     @Rule
     public final MockitoRule mockitoRule = MockitoJUnit.rule();
 
     private GVastParamsResolver target;
 
+    private GdprConfig gdprConfig;
+
     @Before
     public void setUp() {
-        target = new GVastParamsResolver();
+        gdprConfig = GdprConfig.builder().defaultValue("1").build();
+        target = new GVastParamsResolver(gdprConfig);
     }
 
     @Test
@@ -96,9 +100,9 @@ public class GVastParamsResolverTest extends VertxTest {
 
     private GVastParams.GVastParamsBuilder emptyParamsBuilder() {
         return GVastParams.builder()
-            .gdpr(0)
+            .gdpr(gdprConfig.getDefaultValue().equals("1") ? 1 : 0)
             .gdprConsentString("")
-            .cat(new ArrayList<String>())
+            .cat(new ArrayList<>())
             .referrer(DEFAULT_ABSOLUTE_URI)
             .custParams(new CustParams());
     }

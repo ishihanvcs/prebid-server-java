@@ -16,6 +16,7 @@ import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.log.HttpInteractionLogger;
 import org.prebid.server.metric.Metrics;
 import org.prebid.server.settings.ApplicationSettings;
+import org.prebid.server.settings.model.GdprConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,8 +46,8 @@ public class GVastConfiguration {
     }
 
     @Bean
-    GVastParamsResolver gVastParamsResolver() {
-        return new GVastParamsResolver();
+    GVastParamsResolver gVastParamsResolver(GdprConfig gdprConfig) {
+        return new GVastParamsResolver(gdprConfig);
     }
 
     @Bean

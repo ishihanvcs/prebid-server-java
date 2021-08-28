@@ -262,7 +262,6 @@ public class GVastResponseCreator {
     private String buildVastXmlResponse(String gamPrebidTargeting, GVastParams gvastParams, Placement placement,
                                         boolean isImprovedigitalDeal, String hbAuctionDebugInfo) {
         final String custParams = gvastParams.getCustParams().toString();
-        logger.info("custParams = " + custParams);
         final String gdprConsent = gvastParams.getGdprConsentString();
         final int gdpr = gvastParams.getGdpr();
         List<String> waterfall = new ArrayList<>(Arrays.asList(ObjectUtils.defaultIfNull(placement.getWaterfall(),

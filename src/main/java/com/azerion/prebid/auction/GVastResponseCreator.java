@@ -261,7 +261,8 @@ public class GVastResponseCreator {
 
     private String buildVastXmlResponse(String gamPrebidTargeting, GVastParams gvastParams, Placement placement,
                                         boolean isImprovedigitalDeal, String hbAuctionDebugInfo) {
-        final String custParams = gvastParams.getCustParams();
+        final String custParams = gvastParams.getCustParams().toString();
+        logger.info("custParams = " + custParams);
         final String gdprConsent = gvastParams.getGdprConsentString();
         final int gdpr = gvastParams.getGdpr();
         List<String> waterfall = new ArrayList<>(Arrays.asList(ObjectUtils.defaultIfNull(placement.getWaterfall(),
@@ -273,13 +274,6 @@ public class GVastResponseCreator {
             categoryTargeting = "iab_cat=" + String.join(",", gvastParams.getCat());
         } else {
             categoryTargeting = null;
-        }
-
-        // tnl_asset_id KV is used in HeaderLift reporting
-
-        String assetId = "";
-        if (StringUtils.isBlank(custParams) || !custParams.contains("tnl_asset_id=")) {
-            assetId = "tnl_asset_id=prebidserver";
         }
 
         StringBuilder sb = new StringBuilder();
@@ -304,7 +298,7 @@ public class GVastResponseCreator {
                 case "gam_improve_deal":
                     sb.append(buildVastAdTag(
                             buildGamVastTagUrl(placement, gvastParams.getReferrer(),
-                                    buildTargetingString(Stream.of(gamPrebidTargeting, custParams, categoryTargeting, assetId)),
+                                    buildTargetingString(Stream.of(gamPrebidTargeting, custParams, categoryTargeting)),
                                     gdpr,
                                     gdprConsent),
                             true, gdpr, gdprConsent, hbAuctionDebugInfo, i, i == numTags - 1));
@@ -312,7 +306,7 @@ public class GVastResponseCreator {
                 case "gam_no_hb":
                     sb.append(buildVastAdTag(
                             buildGamVastTagUrl(placement, gvastParams.getReferrer(),
-                                    buildTargetingString(Stream.of(custParams, categoryTargeting, assetId)),
+                                    buildTargetingString(Stream.of(custParams, categoryTargeting)),
                                     gdpr,
                                     gdprConsent),
                             true, gdpr, gdprConsent, null, i, i == numTags - 1));

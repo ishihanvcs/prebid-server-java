@@ -1,5 +1,6 @@
 package com.azerion.prebid.auction.requestfactory;
 
+import com.azerion.prebid.auction.model.CustParams;
 import com.azerion.prebid.auction.model.GVastParams;
 import io.vertx.core.logging.Logger;
 import org.junit.Before;
@@ -57,7 +58,7 @@ public class GVastParamsResolverTest extends VertxTest {
 
         GVastParams result = target.resolve(httpRequest);
         GVastParams expected = emptyParamsBuilder()
-                .placementId("1")
+                .placementId(1)
                 .build();
 
         assertThat(result.equals(expected)).isTrue();
@@ -74,7 +75,7 @@ public class GVastParamsResolverTest extends VertxTest {
                 ).build();
         GVastParams result = target.resolve(httpRequest);
         GVastParams expected = emptyParamsBuilder()
-                .placementId("1")
+                .placementId(1)
                 .gdpr(1)
                 .build();
 
@@ -98,6 +99,7 @@ public class GVastParamsResolverTest extends VertxTest {
             .gdpr(0)
             .gdprConsentString("")
             .cat(new ArrayList<String>())
-            .referrer(DEFAULT_ABSOLUTE_URI);
+            .referrer(DEFAULT_ABSOLUTE_URI)
+            .custParams(new CustParams());
     }
 }

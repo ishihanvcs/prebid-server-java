@@ -1,5 +1,6 @@
 package com.azerion.prebid.auction.requestfactory;
 
+import com.azerion.prebid.auction.model.CustParams;
 import com.azerion.prebid.auction.model.GVastParams;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -64,21 +65,26 @@ public class GVastParamsResolver {
     private List<String> resolveCat(CaseInsensitiveMultiMap queryParams) {
         return queryParams.contains("cat")
                 ? Arrays.asList(Objects.requireNonNull(HttpUtil.decodeUrl(queryParams.get("cat"))).split(","))
-                : new ArrayList<String>();
+                : new ArrayList<>();
     }
 
     public GVastParams resolve(HttpRequestContext httpRequest) {
         final CaseInsensitiveMultiMap queryParams = httpRequest.getQueryParams();
-        final String placementId = queryParams.get("p");
-        if (placementId == null) {
+
+        if (queryParams.get("p") == null) {
             throw new InvalidRequestException("'p' parameter required");
         }
 
+        int placementId = 0;
+        try {
+            placementId = Integer.parseInt(queryParams.get("p"));
+        } catch (NumberFormatException e) { }
+
         return setGdprParams(httpRequest, GVastParams.builder()
-                .placementId(queryParams.get("p"))
+                .placementId(placementId)
                 .debug(queryParams.contains("debug") && queryParams.get("debug").equals("1"))
                 .referrer(resolveReferrer(httpRequest))
-                .custParams(queryParams.get("cust_params"))
+                .custParams(new CustParams(queryParams.get("cust_params")))
                 .cat(resolveCat(queryParams))
         ).build();
     }

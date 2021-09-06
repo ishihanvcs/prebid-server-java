@@ -39,7 +39,9 @@ import org.prebid.server.settings.ApplicationSettings;
 import org.springframework.context.ApplicationContext;
 
 import java.time.Clock;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Class for constructing auction request from /gvast GET params
@@ -170,13 +172,20 @@ public class GVastRequestFactory {
         final RoutingContext routingContext = gVastContext.getRoutingContext();
         final String language = routingContext.preferredLanguage() == null
                 ? null : routingContext.preferredLanguage().tag();
+
+        // Improve Digital only allows IAB v1/oRTB 2.5 category format.
+        // Any other category format will cause the Improve bid request to deem the request invalid
+        final List<String> categories = gVastParams.getCat().stream()
+                .filter(cat -> cat.startsWith("IAB"))
+                .collect(Collectors.toList());
+
         return applicationSettings.getAccountById(gVastContext.getPlacement().getAccountId(), settingsLoadingTimeout)
             .map(account -> gVastContext.with(account)
                 .with(
                     BidRequest.builder()
                         .id(tid)
                         .site(Site.builder()
-                            .cat(gVastParams.getCat())
+                            .cat(categories)
                             .domain(gVastParams.getDomain())
                             .page(gVastParams.getReferrer())
                             .publisher(Publisher.builder().id(account.getId()).build())

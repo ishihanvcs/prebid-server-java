@@ -9,7 +9,13 @@ status-response: "ok"
 adapters:
   appnexus:
     enabled: true
+  connectad:
+    enabled: true
   improvedigital:
+    enabled: true
+  ix:
+    enabled: true
+  onetag:
     enabled: true
   openx:
     enabled: true
@@ -18,6 +24,8 @@ adapters:
   smartadserver:
     enabled: true
   triplelift:
+    enabled: true
+  yieldlab:
     enabled: true
 currency-converter:
   external-rates:

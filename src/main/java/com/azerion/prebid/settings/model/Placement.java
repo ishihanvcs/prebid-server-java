@@ -21,7 +21,7 @@ public class Placement {
     public Placement merge(Placement another) {
         return Placement.builder()
                 .id(ObjectUtils.defaultIfNull(id, another.id))
-                .accountId(ObjectUtils.defaultIfNull(id, another.accountId))
+                .accountId(ObjectUtils.defaultIfNull(accountId, another.accountId))
                 .bidFloor(ObjectUtils.defaultIfNull(bidFloor, another.bidFloor))
                 .waterfall(ObjectUtils.defaultIfNull(waterfall, another.waterfall))
                 .build();

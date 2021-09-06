@@ -33,6 +33,7 @@ cache:
   path: cache
   query: uuid=
 settings:
+  default-loading-timeout: 2000
   filesystem:
     settings-filename: config/azerion-settings.yaml
     custom-settings-filename: config/azerion-custom-settings.yaml

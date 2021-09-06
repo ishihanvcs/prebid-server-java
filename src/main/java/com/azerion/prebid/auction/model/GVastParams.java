@@ -2,6 +2,7 @@ package com.azerion.prebid.auction.model;
 
 import lombok.Builder;
 import lombok.Value;
+import org.prebid.server.util.HttpUtil;
 
 import java.util.List;
 
@@ -9,7 +10,7 @@ import java.util.List;
 @Value
 public class GVastParams {
 
-    String placementId;
+    int placementId;
 
     Integer gdpr; // 1=gdpr applies
 
@@ -17,7 +18,7 @@ public class GVastParams {
 
     String referrer;
 
-    String custParams;
+    CustParams custParams;
 
     String country; // Country code using ISO-3166-1-alpha-2 (NB: oRTB requires alpha-3)
 
@@ -25,4 +26,8 @@ public class GVastParams {
 
     boolean debug;
 
+    public String getDomain() {
+        final String host = referrer.startsWith("http") ? HttpUtil.getHostFromUrl(referrer) : referrer;
+        return host.startsWith("www.") ? host.substring(4) : host;
+    }
 }

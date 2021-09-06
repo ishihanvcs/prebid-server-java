@@ -39,7 +39,7 @@ public class FileCustomSettings implements CustomSettings {
         final SettingsFile settingsFile = readSettingsFile(Objects.requireNonNull(fileSystem),
                 Objects.requireNonNull(settingsFileName));
 
-        logger.info("Custom settings is read successfully.");
+        logger.debug("Custom settings are read successfully.");
         placements = toMap(settingsFile.getPlacements(),
                 Placement::getId,
                 Function.identity());
@@ -59,7 +59,7 @@ public class FileCustomSettings implements CustomSettings {
      * Reading YAML settings file.
      */
     private static SettingsFile readSettingsFile(FileSystem fileSystem, String fileName) {
-        logger.info("Reading custom settings from: " + fileName);
+        logger.debug("Reading custom settings from: " + fileName);
         final Buffer buf = fileSystem.readFileBlocking(fileName);
         try {
             return new YAMLMapper().readValue(buf.getBytes(), SettingsFile.class);

@@ -14,7 +14,6 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.prebid.server.metric.Metrics;
 import org.prebid.server.util.HttpUtil;
 
 import java.util.ArrayList;
@@ -37,25 +36,22 @@ public class GVastResponseCreator {
     private static final double IMPROVE_DIGITAL_DEAL_FLOOR = 1.5;
     private static final Logger logger = LoggerFactory.getLogger(GVastResponseCreator.class);
 
-    private final Metrics metrics;
     private final String externalUrl;
     private final String gamNetworkCode;
 
-    public GVastResponseCreator(Metrics metrics, String externalUrl, String gamNetworkCode) {
-        this.metrics = Objects.requireNonNull(metrics);
+    public GVastResponseCreator(/*Metrics metrics, */String externalUrl, String gamNetworkCode) {
         this.externalUrl = HttpUtil.validateUrl(Objects.requireNonNull(externalUrl));
         this.gamNetworkCode = Objects.requireNonNull(gamNetworkCode);
-        logger.info("GVastResponseCreator object creation is successful");
     }
 
-    public String create(GVastParams gvastParams, Placement placement, RoutingContext routingContext,
+    public String create(GVastParams gVastParams, Placement placement, RoutingContext routingContext,
                          BidResponse bidResponse, boolean prioritizeImprovedigitalDeals) {
         routingContext.response().headers().add(HttpUtil.CONTENT_TYPE_HEADER,
                 AsciiString.cached("application/xml"));
         XmlMapper xmlMapper = new XmlMapper();
 
         String debugInfo = "";
-        if (gvastParams.isDebug()) {
+        if (gVastParams.isDebug()) {
             try {
                 debugInfo = xmlMapper.writeValueAsString(bidResponse.getExt());
             } catch (JsonProcessingException ignored) {
@@ -63,11 +59,13 @@ public class GVastResponseCreator {
         }
 
         final String targeting = formatPrebidGamKeyValueString(bidResponse, prioritizeImprovedigitalDeals);
-        return buildVastXmlResponse(targeting,
-                gvastParams,
+        return buildVastXmlResponse(
+                targeting,
+                gVastParams,
                 placement,
-                prioritizeImprovedigitalDeals && targeting.indexOf("hb_deal_improvedigit") != -1,
-                debugInfo);
+                prioritizeImprovedigitalDeals && targeting.contains("hb_deal_improvedigit"),
+                debugInfo
+        );
     }
 
     private String formatPrebidGamKeyValueString(BidResponse bidResponse, boolean prioritizeImprovedigitalDeals) {
@@ -75,7 +73,7 @@ public class GVastResponseCreator {
             return "";
         }
 
-        String targeting = "";
+        StringBuilder targeting = new StringBuilder();
         boolean improvedigitalDealWon = false;
         for (SeatBid seatBid : bidResponse.getSeatbid()) {
             if (seatBid.getBid().isEmpty()) {
@@ -85,7 +83,7 @@ public class GVastResponseCreator {
                 if (bid.getExt() == null) {
                     continue;
                 }
-                String bidderKeyValues = "";
+                StringBuilder bidderKeyValues = new StringBuilder();
                 JsonNode targetingKvs = bid.getExt().at("/prebid/targeting");
                 boolean isDeal = false;
                 boolean hasUuid = false;
@@ -93,7 +91,7 @@ public class GVastResponseCreator {
 
                 for (Iterator<String> it = targetingKvs.fieldNames(); it.hasNext();) {
                     String key = it.next();
-                    bidderKeyValues += key + "=" + targetingKvs.get(key).asText() + "&";
+                    bidderKeyValues.append(key).append("=").append(targetingKvs.get(key).asText()).append("&");
 
                     if (key.equals("hb_deal_improvedigit")) {
                         isDeal = true;
@@ -113,7 +111,7 @@ public class GVastResponseCreator {
                     continue;
                 }
 
-                if (prioritizeImprovedigitalDeals && isDeal && hasUuid && price >= IMPROVE_DIGITAL_DEAL_FLOOR) {
+                if (prioritizeImprovedigitalDeals && isDeal && price >= IMPROVE_DIGITAL_DEAL_FLOOR) {
                     // ImproveDigital deal won't always win if there's a higher bid. In that case we need to add
                     // winner Prebid KVs
                     if (bidderKeyValues.indexOf("hb_pb=") == -1) {
@@ -122,16 +120,20 @@ public class GVastResponseCreator {
                             // Create winner keys by removing the bidder name from the key,
                             // i.e. hb_pb_improvedigital -> hb_pb
                             String winnerKey = key.substring(0, key.lastIndexOf('_'));
-                            bidderKeyValues += winnerKey + "=" + targetingKvs.get(key).asText() + "&";
+                            bidderKeyValues
+                                    .append(winnerKey)
+                                    .append("=")
+                                    .append(targetingKvs.get(key).asText())
+                                    .append("&");
                         }
                     }
                     // Discard bids from other SSPs when prioritizing deal/campaigns from Improve Digital
-                    targeting = bidderKeyValues;
+                    targeting = new StringBuilder(bidderKeyValues.toString());
                     improvedigitalDealWon = true;
                     break;
                 }
 
-                targeting += bidderKeyValues;
+                targeting.append(bidderKeyValues);
             }
             if (improvedigitalDealWon) {
                 break;
@@ -139,13 +141,13 @@ public class GVastResponseCreator {
         }
         if (targeting.length() > 0) {
             // Target Azerion Prebid cache line items (creatives) in GAM
-            targeting += "pbct=1";
+            targeting.append("pbct=1");
             // Disable Google AdX/AdSense and pricing rules for ImproveDigital deals
             if (improvedigitalDealWon) {
-                targeting += "&tnl_wog=1&nf=1";
+                targeting.append("&tnl_wog=1&nf=1");
             }
         }
-        return targeting;
+        return targeting.toString();
     }
 
     private String buildGamVastTagUrl(Placement placement, String referrer, String targeting, int gdpr,
@@ -172,7 +174,7 @@ public class GVastResponseCreator {
             targetingString += targeting;
         }
         final Double bidFloor = placement.getBidFloor();
-        if (bidFloor != null && bidFloor > 0 && targetingString.indexOf("fp=") == -1) {
+        if (bidFloor != null && bidFloor > 0 && !targetingString.contains("fp=")) {
             targetingString += (targetingString.length() > 0 ? "&" : "") + "fp=" + bidFloor;
         }
         if (!StringUtils.isBlank(targetingString)) {
@@ -245,7 +247,7 @@ public class GVastResponseCreator {
                     .append("</Extension>");
         }
         if (!singleAd) {
-            sb.append("<Extension type=\"waterfall\" fallback_index=\"" + adIndex + "\"/>");
+            sb.append("<Extension type=\"waterfall\" fallback_index=\"").append(adIndex).append("\"/>");
         }
         sb.append("</Extensions>");
 
@@ -259,11 +261,11 @@ public class GVastResponseCreator {
 
     private String buildVastXmlResponse(String gamPrebidTargeting, GVastParams gvastParams, Placement placement,
                                         boolean isImprovedigitalDeal, String hbAuctionDebugInfo) {
-        final String custParams = gvastParams.getCustParams();
+        final String custParams = gvastParams.getCustParams().toString();
         final String gdprConsent = gvastParams.getGdprConsentString();
         final int gdpr = gvastParams.getGdpr();
         List<String> waterfall = new ArrayList<>(Arrays.asList(ObjectUtils.defaultIfNull(placement.getWaterfall(),
-                new String[]{ "gam" })));
+                new String[]{"gam"})));
 
         final String categoryTargeting;
         final List<String> categories = gvastParams.getCat();
@@ -288,7 +290,7 @@ public class GVastResponseCreator {
         }
         final int numTags = waterfall.size();
         int i = 0;
-        for (String adTag: waterfall) {
+        for (String adTag : waterfall) {
             switch (adTag) {
                 // GAM + HB bids
                 case "gam":

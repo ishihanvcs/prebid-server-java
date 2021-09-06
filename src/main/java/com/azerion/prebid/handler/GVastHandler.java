@@ -237,7 +237,7 @@ public class GVastHandler implements Handler<RoutingContext> {
                     .setStatusCode(status)
                     .end(body);
 
-            metrics.updateRequestTimeMetric(clock.millis() - startTime);
+            metrics.updateRequestTimeMetric(requestType, clock.millis() - startTime);
             metrics.updateRequestTypeMetric(requestType, metricRequestStatus);
             analyticsDelegator.processEvent(event, tcfContext);
         }

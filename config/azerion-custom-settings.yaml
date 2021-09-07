@@ -1,4 +1,6 @@
 placements:
+  - id: 22404960
+    accountId: 950
   - id: 22137694
     accountId: 950
     waterfall:
@@ -32,3 +34,25 @@ placements:
   - id: 22505159
     accountId: 1915
     bidFloor: 1.5
+  - id: 22555236
+    accountId: 545-minijuegos.com
+    gamAdUnit: /1015413,7451825/pbs/22555236
+  - id: 22555237
+    accountId: 545-minijuegos.mx
+    gamAdUnit: /1015413,7451825/pbs/22555237
+  - id: 22555238
+    accountId: 545-miniplay.com
+    gamAdUnit: /1015413,7451825/pbs/22555238
+  - id: 22555239
+    accountId: 545-minigiochi.com
+    gamAdUnit: /1015413,7451825/pbs/22555239
+  - id: 22555240
+    accountId: 545-minispelletjes.com
+    gamAdUnit: /1015413,7451825/pbs/22555240
+  - id: 22555241
+    accountId: 545-minijogos.com.br
+    gamAdUnit: /1015413,7451825/pbs/22555241
+  - id: 22555242
+    accountId: 545-grymini.pl
+    gamAdUnit: /1015413,7451825/pbs/22555242
+

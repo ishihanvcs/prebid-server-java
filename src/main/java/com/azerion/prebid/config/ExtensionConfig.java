@@ -30,9 +30,9 @@ import java.time.Clock;
 
 @Configuration
 @DependsOn({"webConfiguration", "serviceConfiguration"})
-public class GVastConfiguration {
+public class ExtensionConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(GVastConfiguration.class);
+    private static final Logger logger = LoggerFactory.getLogger(ExtensionConfig.class);
 
     @Autowired
     private ApplicationContext applicationContext;
@@ -42,7 +42,14 @@ public class GVastConfiguration {
         Router router = (Router) applicationContext.getBean("router");
         GVastHandler gVastHandler = (GVastHandler) applicationContext.getBean("gVastHandler");
         router.get(GVastHandler.END_POINT).handler(gVastHandler);
-        logger.debug("Custom routes are registered successfully");
+        final String pbsVersion = applicationContext.getEnvironment().getProperty("app.version.pbs");
+        if (pbsVersion != null) {
+            logger.info("Core PBS Version: " + pbsVersion);
+        }
+        final String extVersion = applicationContext.getEnvironment().getProperty("app.version.extension");
+        if (extVersion != null) {
+            logger.info("Azerion Extension Version: " + extVersion);
+        }
     }
 
     @Bean

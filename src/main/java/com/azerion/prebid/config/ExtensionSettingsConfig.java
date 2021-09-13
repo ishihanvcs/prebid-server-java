@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-public class SettingsConfiguration {
+public class ExtensionSettingsConfig {
 
     @Configuration
     static class CustomFileSettingsConfiguration {

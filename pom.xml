@@ -19,6 +19,7 @@
     </scm>
 
     <properties>
+        <project.extension.version>1.0.0</project.extension.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -426,6 +427,12 @@
 
     <build>
         <finalName>${project.name}</finalName>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <pluginManagement>
             <plugins>
                 <plugin>

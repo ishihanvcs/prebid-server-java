@@ -1,16 +1,24 @@
 package com.azerion.prebid.config;
 
 import com.azerion.prebid.auction.GVastResponseCreator;
+import com.azerion.prebid.auction.customtrackers.contracts.ITrackerInjector;
+import com.azerion.prebid.auction.customtrackers.contracts.ITrackingUrlResolver;
+import com.azerion.prebid.auction.customtrackers.injectors.TrackerInjector;
+import com.azerion.prebid.auction.customtrackers.resolvers.TrackingUrlResolver;
 import com.azerion.prebid.auction.requestfactory.GVastParamsResolver;
 import com.azerion.prebid.auction.requestfactory.GVastRequestFactory;
 import com.azerion.prebid.handler.GVastHandler;
 import com.azerion.prebid.settings.CustomSettings;
+import com.azerion.prebid.settings.model.CustomTracker;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import org.prebid.server.analytics.AnalyticsReporterDelegator;
+import org.prebid.server.auction.BidResponsePostProcessor;
 import org.prebid.server.auction.ExchangeService;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
+import org.prebid.server.currency.CurrencyConversionService;
+import org.prebid.server.execution.Timeout;
 import org.prebid.server.identity.IdGenerator;
 import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.log.HttpInteractionLogger;
@@ -24,9 +32,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Primary;
 
 import javax.annotation.PostConstruct;
 import java.time.Clock;
+import java.util.Map;
 
 @Configuration
 @DependsOn({"webConfiguration", "serviceConfiguration"})
@@ -38,10 +48,7 @@ public class ExtensionConfig {
     private ApplicationContext applicationContext;
 
     @PostConstruct
-    public void registerCustomRoutes() {
-        Router router = (Router) applicationContext.getBean("router");
-        GVastHandler gVastHandler = (GVastHandler) applicationContext.getBean("gVastHandler");
-        router.get(GVastHandler.END_POINT).handler(gVastHandler);
+    public void postConfigure() {
         final String pbsVersion = applicationContext.getEnvironment().getProperty("app.version.pbs");
         if (pbsVersion != null) {
             logger.info("Core PBS Version: " + pbsVersion);
@@ -59,22 +66,20 @@ public class ExtensionConfig {
 
     @Bean
     GVastRequestFactory gvastRequestFactory(
-            ApplicationContext applicationContext,
             ApplicationSettings applicationSettings,
             CustomSettings customSettings,
             GVastParamsResolver gVastParamsResolver,
             AuctionRequestFactory auctionRequestFactory,
-            Clock clock,
+            Timeout settingsLoadingTimeout,
             @Qualifier("sourceIdGenerator")
             IdGenerator idGenerator,
             JacksonMapper mapper) {
         return new GVastRequestFactory(
-                applicationContext,
                 applicationSettings,
                 customSettings,
                 gVastParamsResolver,
                 auctionRequestFactory,
-                clock,
+                settingsLoadingTimeout,
                 idGenerator,
                 mapper);
     }
@@ -99,9 +104,10 @@ public class ExtensionConfig {
             AnalyticsReporterDelegator analyticsReporter,
             Metrics metrics,
             Clock clock,
-            HttpInteractionLogger httpInteractionLogger) {
+            HttpInteractionLogger httpInteractionLogger,
+            Router router) {
 
-        return new GVastHandler(
+        GVastHandler handler = new GVastHandler(
                 gVastRequestFactory,
                 gVastResponseCreator,
                 exchangeService,
@@ -109,5 +115,37 @@ public class ExtensionConfig {
                 metrics,
                 clock,
                 httpInteractionLogger);
+        router.get(GVastHandler.END_POINT).handler(handler);
+        return handler;
+    }
+
+    @Bean
+    @Primary
+    BidResponsePostProcessor customResponsePostProcessor(
+            ApplicationContext applicationContext,
+            CustomSettings customSettings,
+            Timeout settingsLoadingTimeout
+    ) {
+        Map<String, CustomTracker> customTrackers = null;
+        if (applicationContext.getEnvironment()
+                .getProperty("settings.custom-trackers-enabled", Boolean.class, false)
+        ) {
+            customTrackers = customSettings.getAllCustomTrackers(settingsLoadingTimeout).result();
+        }
+        return new com.azerion.prebid.auction.BidResponsePostProcessor(
+                applicationContext, customTrackers
+        );
+    }
+
+    @Bean
+    ITrackingUrlResolver trackingUrlResolver(
+            CurrencyConversionService currencyConversionService
+    ) {
+        return new TrackingUrlResolver(currencyConversionService);
+    }
+
+    @Bean
+    ITrackerInjector trackerInjector() {
+        return new TrackerInjector();
     }
 }

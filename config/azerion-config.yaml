@@ -42,6 +42,7 @@ cache:
   query: uuid=
 settings:
   default-loading-timeout: 2000
+  custom-trackers-enabled: true
   filesystem:
     settings-filename: config/azerion-settings.yaml
     custom-settings-filename: config/azerion-custom-settings.yaml

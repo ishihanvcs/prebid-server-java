@@ -1,5 +1,6 @@
 package com.azerion.prebid.settings;
 
+import com.azerion.prebid.settings.model.CustomTracker;
 import com.azerion.prebid.settings.model.Placement;
 import com.azerion.prebid.settings.model.SettingsFile;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -33,6 +34,7 @@ public class FileCustomSettings implements CustomSettings {
     private static final Logger logger = LoggerFactory.getLogger(FileCustomSettings.class);
 
     private final Map<String, Placement> placements;
+    private final Map<String, CustomTracker> customTrackers;
 
     public FileCustomSettings(FileSystem fileSystem, String settingsFileName) {
 
@@ -44,11 +46,27 @@ public class FileCustomSettings implements CustomSettings {
                 Placement::getId,
                 Function.identity());
         logger.debug("Placements loaded:", placements);
+
+        customTrackers = toMap(settingsFile.getCustomTrackers(),
+                CustomTracker::getId,
+                Function.identity());
+
+        logger.debug("imagePixels config loaded:", customTrackers);
     }
 
     @Override
     public Future<Placement> getPlacementById(String placementId, Timeout timeout) {
         return mapValueToFuture(placements, placementId);
+    }
+
+    @Override
+    public Future<Map<String, CustomTracker>> getAllCustomTrackers(Timeout timeout) {
+        return Future.succeededFuture(customTrackers);
+    }
+
+    @Override
+    public Future<CustomTracker> getCustomTrackerById(String trackerId, Timeout timeout) {
+        return mapValueToFuture(customTrackers, trackerId);
     }
 
     private static <T, K, U> Map<K, U> toMap(List<T> list, Function<T, K> keyMapper, Function<T, U> valueMapper) {

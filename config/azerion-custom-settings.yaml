@@ -1,3 +1,6 @@
+customTrackers:
+  - id: 360yield
+    baseUrl: https://ad.360yield.com/sspbids
 placements:
   - id: 22404960
     accountId: 950

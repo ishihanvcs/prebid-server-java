@@ -8,4 +8,5 @@ import java.util.List;
 public class SettingsFile {
 
     List<Placement> placements;
+    List<CustomTracker> customTrackers;
 }

@@ -1,23 +1,34 @@
 package com.azerion.prebid.config;
 
+import com.azerion.prebid.settings.CachingCustomSettings;
 import com.azerion.prebid.settings.CustomSettings;
 import com.azerion.prebid.settings.FileCustomSettings;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.ObjectUtils;
 import org.prebid.server.execution.Timeout;
 import org.prebid.server.execution.TimeoutFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
 
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import java.time.Clock;
 
 public class ExtensionSettingsConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtensionSettingsConfig.class);
-    private static final long DEFAULT_SETTINGS_LOADING_TIMEOUT = 2000L;
+    private static final long DEFAULT_SETTINGS_LOADING_TIMEOUT = 500L;
 
     @Configuration
     static class CustomFileSettingsConfiguration {
@@ -38,9 +49,42 @@ public class ExtensionSettingsConfig {
 
         @Bean
         FileCustomSettings customFileSettings(
-                @Value("${settings.filesystem.custom-settings-filename}") String settingsFileName,
+                @Value("${settings.filesystem.custom-settings-filename:}")
+                        String settingsFileName,
                 FileSystem fileSystem) {
             return new FileCustomSettings(fileSystem, settingsFileName);
+        }
+    }
+
+    @Configuration
+    static class CustomCachingSettingsConfiguration {
+
+        @Component
+        @ConfigurationProperties(prefix = "settings.in-memory-cache")
+        @ConditionalOnProperty(prefix = "settings.in-memory-cache", name = {"ttl-seconds", "cache-size"})
+        @Validated
+        @Data
+        @NoArgsConstructor
+        private static class CustomSettingsCacheProperties {
+            @NotNull
+            @Min(1)
+            private Integer ttlSeconds;
+            @NotNull
+            @Min(1)
+            private Integer cacheSize;
+        }
+
+        @Bean
+        @ConditionalOnProperty(prefix = "settings.in-memory-cache", name = {"ttl-seconds", "cache-size"})
+        CachingCustomSettings customCachingSettings(
+                CustomSettingsCacheProperties cacheProperties,
+                FileCustomSettings customFileSettings
+        ) {
+
+            return new CachingCustomSettings(
+                    customFileSettings,
+                    cacheProperties.getTtlSeconds(),
+                    cacheProperties.getCacheSize());
         }
     }
 
@@ -49,8 +93,9 @@ public class ExtensionSettingsConfig {
 
         @Bean
         CustomSettings customSettings(
+                @Autowired(required = false) CachingCustomSettings customCachingSettings,
                 FileCustomSettings customFileSettings) {
-            return customFileSettings;
+            return ObjectUtils.defaultIfNull(customCachingSettings, customFileSettings);
         }
     }
 }

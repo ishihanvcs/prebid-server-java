@@ -1,6 +1,7 @@
 package com.azerion.prebid.settings;
 
 import com.azerion.prebid.settings.model.CustomTracker;
+import com.azerion.prebid.settings.model.CustomTrackerSetting;
 import com.azerion.prebid.settings.model.Placement;
 import com.azerion.prebid.settings.model.SettingsFile;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -9,6 +10,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.exception.PreBidException;
 import org.prebid.server.execution.Timeout;
 
@@ -33,40 +35,33 @@ public class FileCustomSettings implements CustomSettings {
     private static final String JSON_SUFFIX = ".json";
     private static final Logger logger = LoggerFactory.getLogger(FileCustomSettings.class);
 
-    private final Map<String, Placement> placements;
-    private final Map<String, CustomTracker> customTrackers;
+    private final Map<String, Placement> placementMap;
+    private final CustomTrackerSetting customTrackerSetting;
 
     public FileCustomSettings(FileSystem fileSystem, String settingsFileName) {
+        SettingsFile settingsFile = readSettingsFile(Objects.requireNonNull(fileSystem),
+                settingsFileName);
 
-        final SettingsFile settingsFile = readSettingsFile(Objects.requireNonNull(fileSystem),
-                Objects.requireNonNull(settingsFileName));
-
-        logger.debug("Custom settings are read successfully.");
-        placements = toMap(settingsFile.getPlacements(),
+        placementMap = toMap(settingsFile.getPlacements(),
                 Placement::getId,
                 Function.identity());
-        logger.debug("Placements loaded:", placements);
 
-        customTrackers = toMap(settingsFile.getCustomTrackers(),
-                CustomTracker::getId,
-                Function.identity());
-
-        logger.debug("imagePixels config loaded:", customTrackers);
+        customTrackerSetting = settingsFile.getCustomTrackers();
     }
 
     @Override
     public Future<Placement> getPlacementById(String placementId, Timeout timeout) {
-        return mapValueToFuture(placements, placementId);
+        return mapValueToFuture(placementMap, "Placement", placementId);
     }
 
     @Override
-    public Future<Map<String, CustomTracker>> getAllCustomTrackers(Timeout timeout) {
-        return Future.succeededFuture(customTrackers);
+    public Future<CustomTrackerSetting> getCustomTrackerSetting(Timeout timeout) {
+        return Future.succeededFuture(customTrackerSetting);
     }
 
     @Override
     public Future<CustomTracker> getCustomTrackerById(String trackerId, Timeout timeout) {
-        return mapValueToFuture(customTrackers, trackerId);
+        return mapValueToFuture(customTrackerSetting.getTrackersMap(), "CustomTracker", trackerId);
     }
 
     private static <T, K, U> Map<K, U> toMap(List<T> list, Function<T, K> keyMapper, Function<T, U> valueMapper) {
@@ -78,18 +73,21 @@ public class FileCustomSettings implements CustomSettings {
      */
     private static SettingsFile readSettingsFile(FileSystem fileSystem, String fileName) {
         logger.debug("Reading custom settings from: " + fileName);
-        final Buffer buf = fileSystem.readFileBlocking(fileName);
-        try {
-            return new YAMLMapper().readValue(buf.getBytes(), SettingsFile.class);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Couldn't read file settings", e);
+        if (!StringUtils.isBlank(fileName)) {
+            try {
+                final Buffer buf = fileSystem.readFileBlocking(fileName);
+                return new YAMLMapper().readValue(buf.getBytes(), SettingsFile.class);
+            } catch (IOException e) {
+                logger.warn("Couldn't read file settings", e);
+            }
         }
+        return new SettingsFile();
     }
 
-    private static <T> Future<T> mapValueToFuture(Map<String, T> map, String id) {
+    private static <T> Future<T> mapValueToFuture(Map<String, T> map, String modelType, String id) {
         final T value = map.get(id);
         return value != null
                 ? Future.succeededFuture(value)
-                : Future.failedFuture(new PreBidException(String.format("Placement not found: %s", id)));
+                : Future.failedFuture(new PreBidException(String.format("%s not found: %s", modelType, id)));
     }
 }

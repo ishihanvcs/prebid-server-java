@@ -40,9 +40,10 @@ cache:
   host: pbc.360yield.com
   path: cache
   query: uuid=
+  banner-ttl-seconds: 20000
+  video-ttl-seconds: 20000
 settings:
-  default-loading-timeout: 2000
-  custom-trackers-enabled: true
+#  default-loading-timeout: 500 # optional long value in milliseconds, default value is 500 ms
   filesystem:
     settings-filename: config/azerion-settings.yaml
     custom-settings-filename: config/azerion-custom-settings.yaml

@@ -9,7 +9,7 @@ import com.azerion.prebid.auction.requestfactory.GVastParamsResolver;
 import com.azerion.prebid.auction.requestfactory.GVastRequestFactory;
 import com.azerion.prebid.handler.GVastHandler;
 import com.azerion.prebid.settings.CustomSettings;
-import com.azerion.prebid.settings.model.CustomTracker;
+import com.azerion.prebid.settings.model.CustomTrackerSetting;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
@@ -36,7 +36,6 @@ import org.springframework.context.annotation.Primary;
 
 import javax.annotation.PostConstruct;
 import java.time.Clock;
-import java.util.Map;
 
 @Configuration
 @DependsOn({"webConfiguration", "serviceConfiguration"})
@@ -86,11 +85,11 @@ public class ExtensionConfig {
 
     @Bean
     GVastResponseCreator gVastResponseCreator(
-            // Metrics metrics,
+            CustomTrackerSetting customTrackerSetting,
             @Value("${external-url}") String externalUrl,
             @Value("${google-ad-manager.network-code}") String gamNetworkCode) {
         return new GVastResponseCreator(
-                // metrics,
+                customTrackerSetting,
                 externalUrl,
                 gamNetworkCode
         );
@@ -106,7 +105,6 @@ public class ExtensionConfig {
             Clock clock,
             HttpInteractionLogger httpInteractionLogger,
             Router router) {
-
         GVastHandler handler = new GVastHandler(
                 gVastRequestFactory,
                 gVastResponseCreator,
@@ -120,20 +118,22 @@ public class ExtensionConfig {
     }
 
     @Bean
-    @Primary
-    BidResponsePostProcessor customResponsePostProcessor(
-            ApplicationContext applicationContext,
+    CustomTrackerSetting customTrackerSetting(
             CustomSettings customSettings,
             Timeout settingsLoadingTimeout
     ) {
-        Map<String, CustomTracker> customTrackers = null;
-        if (applicationContext.getEnvironment()
-                .getProperty("settings.custom-trackers-enabled", Boolean.class, false)
-        ) {
-            customTrackers = customSettings.getAllCustomTrackers(settingsLoadingTimeout).result();
-        }
+        return customSettings.getCustomTrackerSetting(settingsLoadingTimeout).result();
+    }
+
+    @Bean
+    @Primary
+    BidResponsePostProcessor customResponsePostProcessor(
+            ApplicationContext applicationContext,
+            CustomTrackerSetting customTrackerSetting
+    ) {
+
         return new com.azerion.prebid.auction.BidResponsePostProcessor(
-                applicationContext, customTrackers
+                applicationContext, customTrackerSetting
         );
     }
 

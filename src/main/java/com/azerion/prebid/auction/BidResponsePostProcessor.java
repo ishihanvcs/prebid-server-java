@@ -2,7 +2,7 @@ package com.azerion.prebid.auction;
 
 import com.azerion.prebid.auction.customtrackers.TrackerContext;
 import com.azerion.prebid.auction.customtrackers.contracts.ITrackingUrlResolver;
-import com.azerion.prebid.settings.model.CustomTracker;
+import com.azerion.prebid.settings.model.CustomTrackerSetting;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.response.Bid;
@@ -19,7 +19,6 @@ import org.prebid.server.settings.model.Account;
 import org.springframework.context.ApplicationContext;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Stack;
 
@@ -29,13 +28,13 @@ public class BidResponsePostProcessor implements org.prebid.server.auction.BidRe
 
     private final ApplicationContext applicationContext;
 
-    private final Map<String, CustomTracker> customTrackers;
+    private final CustomTrackerSetting customTrackerSetting;
 
     public BidResponsePostProcessor(
             ApplicationContext applicationContext,
-            Map<String, CustomTracker> customTrackers) {
+            CustomTrackerSetting customTrackerSetting) {
         this.applicationContext = Objects.requireNonNull(applicationContext);
-        this.customTrackers = customTrackers;
+        this.customTrackerSetting = customTrackerSetting;
     }
 
     private BidType getBidType(Bid bid, List<Imp> imps) {
@@ -76,13 +75,22 @@ public class BidResponsePostProcessor implements org.prebid.server.auction.BidRe
         }
         final Stack<String> admStack = new Stack<>();
         admStack.push(bid.getAdm());
-        customTrackers.forEach((tagType, customTracker) -> {
+        TrackerContext commonContext = TrackerContext.builder()
+                .applicationContext(applicationContext)
+                .bidRequest(bidRequest)
+                .bidResponse(bidResponse)
+                .seatBid(seatBid)
+                .bid(bid)
+                .bidType(bidType)
+                .account(account)
+                .httpRequest(httpRequest)
+                .uidsCookie(uidsCookie)
+                .build();
+        customTrackerSetting.getTrackers().forEach(customTracker -> {
             try {
-                TrackerContext context = new TrackerContext(
-                        customTracker, applicationContext, httpRequest,
-                        uidsCookie, bidRequest, bidResponse,
-                        seatBid, bid, bidType, account
-                );
+                TrackerContext context = commonContext.toBuilder()
+                        .tracker(customTracker)
+                        .build();
                 ITrackingUrlResolver urlResolver = context.getUrlResolver();
                 String trackingUrl = urlResolver.resolve(context);
                 if (trackingUrl != null) {
@@ -93,7 +101,12 @@ public class BidResponsePostProcessor implements org.prebid.server.auction.BidRe
                     );
                 }
             } catch (Exception ex) {
-                logger.warn(String.format("Could not inject impression tag for tagType = %s", tagType), ex);
+                logger.warn(
+                        String.format(
+                            "Could not inject impression tag for tagType = %s",
+                            customTracker.getId()
+                        ), ex
+                );
             }
         });
 
@@ -107,7 +120,7 @@ public class BidResponsePostProcessor implements org.prebid.server.auction.BidRe
             BidRequest bidRequest,
             BidResponse bidResponse,
             Account account) {
-        if (customTrackers != null) {
+        if (customTrackerSetting != null && customTrackerSetting.isEnabled()) {
             bidResponse.getSeatbid().forEach(seatBid -> seatBid.getBid().replaceAll(bid -> injectTrackerIntoBidAdm(
                     httpRequest, uidsCookie, bidRequest, bidResponse, seatBid, bid, account
             )));

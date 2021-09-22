@@ -1,6 +1,7 @@
 package com.azerion.prebid.auction;
 
 import com.azerion.prebid.auction.model.GVastParams;
+import com.azerion.prebid.settings.model.CustomTrackerSetting;
 import com.azerion.prebid.settings.model.Placement;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -38,8 +39,14 @@ public class GVastResponseCreator {
 
     private final String externalUrl;
     private final String gamNetworkCode;
+    private final CustomTrackerSetting customTrackerSetting;
 
-    public GVastResponseCreator(/*Metrics metrics, */String externalUrl, String gamNetworkCode) {
+    public GVastResponseCreator(
+            CustomTrackerSetting customTrackerSetting,
+            String externalUrl,
+            String gamNetworkCode
+    ) {
+        this.customTrackerSetting = Objects.requireNonNull(customTrackerSetting);
         this.externalUrl = HttpUtil.validateUrl(Objects.requireNonNull(externalUrl));
         this.gamNetworkCode = Objects.requireNonNull(gamNetworkCode);
     }

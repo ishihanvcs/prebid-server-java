@@ -1,6 +1,7 @@
 package com.azerion.prebid.settings;
 
 import com.azerion.prebid.settings.model.CustomTracker;
+import com.azerion.prebid.settings.model.CustomTrackerSetting;
 import com.azerion.prebid.settings.model.Placement;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.vertx.core.Future;
@@ -19,8 +20,8 @@ public class CachingCustomSettings implements CustomSettings {
     private final Map<String, Placement> placementCache;
     private final Map<String, String> placementToErrorCache;
 
-    private final Map<String, Map<String, CustomTracker>> customTrackerCache;
-    private final Map<String, String> customTrackerToErrorCache;
+    private final Map<String, Object> objectCache;
+    private final Map<String, String> objectToErrorCache;
     private final CustomSettings delegate;
 
     public CachingCustomSettings(
@@ -32,8 +33,8 @@ public class CachingCustomSettings implements CustomSettings {
         this.placementCache = createCache(ttl, size);
         this.placementToErrorCache = createCache(ttl, size);
 
-        this.customTrackerCache = createCache(ttl, size);
-        this.customTrackerToErrorCache = createCache(ttl, size);
+        this.objectCache = createCache(ttl, size);
+        this.objectToErrorCache = createCache(ttl, size);
     }
 
     static <T> Map<String, T> createCache(int ttl, int size) {
@@ -69,28 +70,26 @@ public class CachingCustomSettings implements CustomSettings {
                 .recover(throwable -> cacheAndReturnFailedFuture(throwable, key, errorCache));
     }
 
-    private static <T> Future<T> getFromCacheOrDelegate(
-            Map<String, T> cache,
-            Map<String, String> errorCache,
+    private <T> Future<T> getFromObjectCacheOrDelegate(
             String key,
             Timeout timeout,
             Function<Timeout, Future<T>> retriever
     ) {
-        final T cachedValue = cache.get(key);
+        final T cachedValue = (T) objectCache.get(key);
         if (cachedValue != null) {
             return Future.succeededFuture(cachedValue);
         }
-        final String preBidExceptionMessage = errorCache.get(key);
+        final String preBidExceptionMessage = objectToErrorCache.get(key);
         if (preBidExceptionMessage != null) {
             return Future.failedFuture(new PreBidException(preBidExceptionMessage));
         }
 
         return retriever.apply(timeout)
                 .map(value -> {
-                    cache.put(key, value);
+                    objectCache.put(key, value);
                     return value;
                 })
-                .recover(throwable -> cacheAndReturnFailedFuture(throwable, key, errorCache));
+                .recover(throwable -> cacheAndReturnFailedFuture(throwable, key, objectToErrorCache));
     }
 
     private static <T> Future<T> cacheAndReturnFailedFuture(
@@ -119,17 +118,19 @@ public class CachingCustomSettings implements CustomSettings {
 
     @Override
     public Future<CustomTracker> getCustomTrackerById(String trackerId, Timeout timeout) {
-        return getAllCustomTrackers(timeout).map(customTrackers -> customTrackers.get(trackerId));
+        return getCustomTrackerSetting(timeout)
+                .map(customTrackerSetting -> !Objects.isNull(customTrackerSetting)
+                    ? customTrackerSetting.getTrackersMap().get(trackerId)
+                    : null
+                );
     }
 
     @Override
-    public Future<Map<String, CustomTracker>> getAllCustomTrackers(Timeout timeout) {
-        return getFromCacheOrDelegate(
-                customTrackerCache,
-                customTrackerToErrorCache,
+    public Future<CustomTrackerSetting> getCustomTrackerSetting(Timeout timeout) {
+        return getFromObjectCacheOrDelegate(
                 "customTrackers",
                 timeout,
-                delegate::getAllCustomTrackers
+                delegate::getCustomTrackerSetting
         );
     }
 }

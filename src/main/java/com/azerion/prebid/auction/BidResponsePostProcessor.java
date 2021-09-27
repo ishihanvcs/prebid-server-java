@@ -1,7 +1,7 @@
 package com.azerion.prebid.auction;
 
 import com.azerion.prebid.auction.customtrackers.BidResponseModifier;
-import com.azerion.prebid.auction.customtrackers.BidResponseModifierContext;
+import com.azerion.prebid.auction.customtrackers.BidResponseContext;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.response.BidResponse;
 import io.vertx.core.Future;
@@ -36,17 +36,15 @@ public class BidResponsePostProcessor implements org.prebid.server.auction.BidRe
             BidRequest bidRequest,
             BidResponse bidResponse,
             Account account) {
-        bidResponseModifier.apply(
-                BidResponseModifierContext
-                .builder()
-                .applicationContext(applicationContext)
-                .bidRequest(bidRequest)
-                .bidResponse(bidResponse)
-                .account(account)
-                .httpRequest(httpRequest)
-                .uidsCookie(uidsCookie)
-                .build()
+        BidResponseContext bidResponseContext = BidResponseContext.from(
+                applicationContext,
+                bidRequest,
+                bidResponse,
+                account,
+                httpRequest,
+                uidsCookie
         );
+        bidResponseModifier.apply(bidResponseContext);
         return Future.succeededFuture(bidResponse);
     }
 }

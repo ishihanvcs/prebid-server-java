@@ -14,37 +14,45 @@ import java.util.function.Supplier;
 
 @SuperBuilder(toBuilder = true)
 @Getter
-public class TrackerContext extends BidResponseModifierContext {
+public class TrackerContext extends BidResponseContext {
 
     CustomTracker tracker;
     SeatBid seatBid;
     Bid bid;
     BidType bidType;
 
-    public static TrackerContext from(BidResponseModifierContext baseContext) {
+    public static TrackerContext from(BidResponseContext bidResponseContext) {
         return TrackerContext
                 .builder()
-                .applicationContext(baseContext.applicationContext)
-                .bidRequest(baseContext.bidRequest)
-                .bidResponse(baseContext.bidResponse)
-                .account(baseContext.account)
-                .httpRequest(baseContext.httpRequest)
-                .uidsCookie(baseContext.uidsCookie)
+                .applicationContext(bidResponseContext.applicationContext)
+                .bidRequest(bidResponseContext.bidRequest)
+                .bidResponse(bidResponseContext.bidResponse)
+                .account(bidResponseContext.account)
+                .httpRequest(bidResponseContext.httpRequest)
+                .uidsCookie(bidResponseContext.uidsCookie)
                 .build();
     }
 
+    public TrackerContext with(CustomTracker tracker) {
+        return this.toBuilder().tracker(tracker).build();
+    }
+
+    public TrackerContext with(SeatBid seatBid, Bid bid, BidType bidType) {
+        return this.toBuilder().seatBid(seatBid).bid(bid).bidType(bidType).build();
+    }
+
     private <T> T resolveBean(Supplier<String> getter, String defaultBeanName, Class<T> beanClass) {
-        if (tracker == null || getApplicationContext() == null) {
+        if (tracker == null) {
             return null;
         }
         String beanName = getter.get();
         if (StringUtils.isBlank(beanName)) {
             beanName = defaultBeanName;
-            if (getApplicationContext().containsBean(beanName + tracker.getId())) {
+            if (applicationContext.containsBean(beanName + tracker.getId())) {
                 beanName = beanName + tracker.getId();
             }
         }
-        return getApplicationContext().getBean(beanName, beanClass);
+        return applicationContext.getBean(beanName, beanClass);
     }
 
     public ITrackingUrlResolver getUrlResolver() {

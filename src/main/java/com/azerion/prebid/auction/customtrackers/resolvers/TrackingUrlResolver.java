@@ -50,22 +50,28 @@ public class TrackingUrlResolver implements ITrackingUrlResolver {
                     context.getTracker().getCurrency()
                 ).toString()
         );
-        bidRequest.getImp().stream()
-                .filter(imp -> !imp.getExt()
-                        .path("prebid")
-                        .path("bidder")
-                        .path("improvedigital")
-                        .path("placementId")
-                        .isMissingNode()
-                )
-                .map(imp -> imp.getExt()
-                        .get("prebid")
-                        .get("bidder")
-                        .get("improvedigital")
-                )
-                .findFirst()
-                .ifPresent(idExt ->
-                        params.put("pid", String.valueOf(idExt.get("placementId").asLong())));
+
+        if (context.getPlacement() != null) {
+            params.put("pid", context.getPlacement().getId());
+        } else {
+            bidRequest.getImp().stream()
+                    .filter(imp -> !imp.getExt()
+                            .path("prebid")
+                            .path("bidder")
+                            .path("improvedigital")
+                            .path("placementId")
+                            .isMissingNode()
+                    )
+                    .map(imp -> imp.getExt()
+                            .get("prebid")
+                            .get("bidder")
+                            .get("improvedigital")
+                    )
+                    .findFirst()
+                    .ifPresent(idExt ->
+                            params.put("pid", String.valueOf(idExt.get("placementId").asLong())));
+        }
+
         return params;
     }
 }

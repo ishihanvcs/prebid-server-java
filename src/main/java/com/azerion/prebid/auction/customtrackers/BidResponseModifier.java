@@ -20,9 +20,12 @@ public class BidResponseModifier {
         this.customTrackerSetting = customTrackerSetting;
     }
 
-    private Bid injectTrackerIntoBidAdm(BidResponseModifierContext context, SeatBid seatBid, Bid bid) {
+    private Bid injectTrackerIntoBidAdm(
+            BidResponseContext bidResponseContext,
+            SeatBid seatBid,
+            Bid bid) {
 
-        final BidType bidType = context.getBidType(bid);
+        final BidType bidType = bidResponseContext.getBidType(bid);
 
         if (bidType == null || StringUtils.isBlank(bid.getAdm())) {
             logger.warn("Could not determine bidType or adm value is blank in bid!");
@@ -30,18 +33,13 @@ public class BidResponseModifier {
         }
         final Stack<String> admStack = new Stack<>();
         admStack.push(bid.getAdm());
-        TrackerContext commonContext = TrackerContext
-                .from(context)
-                .toBuilder()
-                .seatBid(seatBid)
-                .bidType(bidType)
-                .build();
-        customTrackerSetting.getTrackers().forEach(customTracker -> {
+        TrackerContext commonTrackerContext = TrackerContext
+                .from(bidResponseContext)
+                .with(seatBid, bid, bidType);
+        customTrackerSetting.forEach(customTracker -> {
             try {
-                TrackerContext trackerContext = commonContext
-                        .toBuilder()
-                        .tracker(customTracker)
-                        .build();
+                TrackerContext trackerContext = commonTrackerContext
+                        .with(customTracker);
                 ITrackingUrlResolver urlResolver = trackerContext.getUrlResolver();
                 String trackingUrl = urlResolver.resolve(trackerContext);
                 if (trackingUrl != null) {
@@ -64,15 +62,15 @@ public class BidResponseModifier {
         return bid.toBuilder().adm(admStack.pop()).build();
     }
 
-    private void modifySeatBid(BidResponseModifierContext context, SeatBid seatBid) {
+    private void modifyBidsInSeatBid(BidResponseContext context, SeatBid seatBid) {
         seatBid.getBid().replaceAll(bid -> injectTrackerIntoBidAdm(
                 context, seatBid, bid
         ));
     }
 
-    public void apply(BidResponseModifierContext context) {
+    public void apply(BidResponseContext context) {
         if (customTrackerSetting != null && customTrackerSetting.isEnabled()) {
-            context.getBidResponse().getSeatbid().forEach(seatBid -> this.modifySeatBid(context, seatBid));
+            context.getBidResponse().getSeatbid().forEach(seatBid -> this.modifyBidsInSeatBid(context, seatBid));
         }
     }
 }

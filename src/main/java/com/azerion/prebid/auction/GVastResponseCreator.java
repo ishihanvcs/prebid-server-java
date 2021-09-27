@@ -205,21 +205,22 @@ public class GVastResponseCreator {
                 + "&us_privacy=&uid=" + userIdParamName;
     }
 
-    private String replaceMacros(String tag, int gdpr, String gdprConsent) {
+    private String replaceMacros(String tag, int gdpr, String gdprConsent, String referrer) {
         return tag.replace("{{gdpr}}", Integer.toString(gdpr))
                 .replace("{{gdpr_consent}}", gdprConsent)
-                .replace("{{timestamp}}", Long.toString(System.currentTimeMillis()));
+                .replace("{{timestamp}}", Long.toString(System.currentTimeMillis()))
+                .replace("{{referrer}}", HttpUtil.encodeUrl(referrer));
     }
 
-    private String buildVastAdTag(String tagUrl, boolean isGam, int gdpr, String gdprConsent, String debugInfo,
-                                  int adIndex, boolean isLastAd) {
+    private String buildVastAdTag(String tagUrl, boolean isGam, int gdpr, String gdprConsent, String referrer,
+                                  String debugInfo, int adIndex, boolean isLastAd) {
         StringBuilder sb = new StringBuilder();
         final boolean singleAd = adIndex == 0 && isLastAd;
         sb.append("<Ad><Wrapper")
                 .append(isLastAd ? ">" : " fallbackOnNoAd=\"true\">")
                 .append("<AdSystem>Azerion PBS</AdSystem>")
                 .append("<VASTAdTagURI><![CDATA[")
-                .append(replaceMacros(tagUrl, gdpr, gdprConsent))
+                .append(replaceMacros(tagUrl, gdpr, gdprConsent, referrer))
                 .append("]]></VASTAdTagURI><Creatives></Creatives>");
 
         if (isGam) {
@@ -270,6 +271,7 @@ public class GVastResponseCreator {
                                         boolean isImprovedigitalDeal, String hbAuctionDebugInfo) {
         final String custParams = gvastParams.getCustParams().toString();
         final String gdprConsent = gvastParams.getGdprConsentString();
+        final String referrer = gvastParams.getReferrer();
         final int gdpr = gvastParams.getGdpr();
         List<String> waterfall = new ArrayList<>(Arrays.asList(ObjectUtils.defaultIfNull(placement.getWaterfall(),
                 new String[]{"gam"})));
@@ -303,33 +305,34 @@ public class GVastResponseCreator {
                 case "gam":
                 case "gam_improve_deal":
                     sb.append(buildVastAdTag(
-                            buildGamVastTagUrl(placement, gvastParams.getReferrer(),
+                            buildGamVastTagUrl(placement, referrer,
                                     buildTargetingString(Stream.of(gamPrebidTargeting, custParams, categoryTargeting)),
                                     gdpr,
                                     gdprConsent),
-                            true, gdpr, gdprConsent, hbAuctionDebugInfo, i, i == numTags - 1));
+                            true, gdpr, gdprConsent, referrer, hbAuctionDebugInfo, i, i == numTags - 1));
                     break;
                 case "gam_no_hb":
                     sb.append(buildVastAdTag(
-                            buildGamVastTagUrl(placement, gvastParams.getReferrer(),
+                            buildGamVastTagUrl(placement, referrer,
                                     buildTargetingString(Stream.of(custParams, categoryTargeting)),
                                     gdpr,
                                     gdprConsent),
-                            true, gdpr, gdprConsent, null, i, i == numTags - 1));
+                            true, gdpr, gdprConsent, referrer, null, i, i == numTags - 1));
                     break;
                 // First look is for all low-fill campaigns that should get first look before allowing AdX to monetise
                 // fl=1 -> first look targeting KV
                 // tnl_wog=1 -> disable AdX & AdSense
                 case "gam_first_look":
                     sb.append(buildVastAdTag(
-                            buildGamVastTagUrl(placement, gvastParams.getReferrer(),
+                            buildGamVastTagUrl(placement, referrer,
                                     buildTargetingString(Stream.of(custParams, categoryTargeting, "fl=1&tnl_wog=1")),
                                     gdpr,
                                     gdprConsent),
-                            true, gdpr, gdprConsent, null, i, i == numTags - 1));
+                            true, gdpr, gdprConsent, referrer, null, i, i == numTags - 1));
                     break;
                 default:
-                    sb.append(buildVastAdTag(adTag, false, gdpr, gdprConsent, null, i, i == numTags - 1));
+                    sb.append(buildVastAdTag(adTag, false, gdpr, gdprConsent, referrer,
+                            null, i, i == numTags - 1));
             }
             i++;
         }

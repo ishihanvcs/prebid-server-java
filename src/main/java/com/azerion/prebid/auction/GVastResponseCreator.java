@@ -298,7 +298,7 @@ public class GVastResponseCreator {
                 case "gam":
                 case "gam_improve_deal":
                     sb.append(buildVastAdTag(
-                            buildGamVastTagUrl(placement, gvastParams.getReferrer(),
+                            buildGamVastTagUrl(placement, referrer,
                                     buildTargetingString(Stream.of(gamPrebidTargeting, custParams, categoryTargeting)),
                                     gdpr,
                                     gdprConsent),
@@ -306,7 +306,7 @@ public class GVastResponseCreator {
                     break;
                 case "gam_no_hb":
                     sb.append(buildVastAdTag(
-                            buildGamVastTagUrl(placement, gvastParams.getReferrer(),
+                            buildGamVastTagUrl(placement, referrer,
                                     buildTargetingString(Stream.of(custParams, categoryTargeting)),
                                     gdpr,
                                     gdprConsent),
@@ -317,7 +317,7 @@ public class GVastResponseCreator {
                 // tnl_wog=1 -> disable AdX & AdSense
                 case "gam_first_look":
                     sb.append(buildVastAdTag(
-                            buildGamVastTagUrl(placement, gvastParams.getReferrer(),
+                            buildGamVastTagUrl(placement, referrer,
                                     buildTargetingString(Stream.of(custParams, categoryTargeting, "fl=1&tnl_wog=1")),
                                     gdpr,
                                     gdprConsent),

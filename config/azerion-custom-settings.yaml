@@ -1,6 +1,6 @@
 ---
 customTrackers:
-  enabled: false
+  enabled: true
   trackers:
     - id: 360yield # required and must be unique across all trackers
       baseUrl: https://ad.360yield.com/sspbids # required, must be a valid url

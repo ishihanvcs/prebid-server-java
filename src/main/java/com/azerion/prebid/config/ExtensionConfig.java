@@ -1,6 +1,7 @@
 package com.azerion.prebid.config;
 
 import com.azerion.prebid.auction.GVastResponseCreator;
+import com.azerion.prebid.auction.customtrackers.BidResponseModifier;
 import com.azerion.prebid.auction.customtrackers.contracts.ITrackerInjector;
 import com.azerion.prebid.auction.customtrackers.contracts.ITrackingUrlResolver;
 import com.azerion.prebid.auction.customtrackers.injectors.TrackerInjector;
@@ -126,14 +127,21 @@ public class ExtensionConfig {
     }
 
     @Bean
+    BidResponseModifier bidResponseModifier(
+            CustomTrackerSetting customTrackerSetting
+    ) {
+        return new BidResponseModifier(customTrackerSetting);
+    }
+
+    @Bean
     @Primary
     BidResponsePostProcessor customResponsePostProcessor(
             ApplicationContext applicationContext,
-            CustomTrackerSetting customTrackerSetting
+            BidResponseModifier bidResponseModifier
     ) {
 
         return new com.azerion.prebid.auction.BidResponsePostProcessor(
-                applicationContext, customTrackerSetting
+                applicationContext, bidResponseModifier
         );
     }
 

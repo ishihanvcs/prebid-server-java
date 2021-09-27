@@ -202,7 +202,7 @@ public class GVastResponseCreator {
         return tag.replace("{{gdpr}}", Integer.toString(gdpr))
                 .replace("{{gdpr_consent}}", gdprConsent)
                 .replace("{{timestamp}}", Long.toString(System.currentTimeMillis()))
-                .replace("{{referrer}}", referrer);
+                .replace("{{referrer}}", HttpUtil.encodeUrl(referrer));
     }
 
     private String buildVastAdTag(String tagUrl, boolean isGam, int gdpr, String gdprConsent, String referrer,

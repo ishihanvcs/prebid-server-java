@@ -31,7 +31,7 @@ placements:
     waterfall:
       - gam_first_look
       - gam
-      - https://pubads.g.doubleclick.net/gampad/ads?sz=640x480|640x360&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&correlator=&iu=%2F1015413%2Fpbs%2F22492485&url={{referrer}}&description_url={{referrer}}&cust_params=dm_deal%3D1%26tnl_wog%3D1
+      - https://pubads.g.doubleclick.net/gampad/ads?sz=640x480|640x360&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&correlator=&iu=%2F1015413%2Fpbs%2F22492485&url={{referrer}}&description_url={{referrer}}&cust_params=tnl_asset_id%3Dprebidserver%26dm_deal%3D1%26tnl_wog%3D1
   - id: 22505159
     accountId: 1915
     bidFloor: 1.5

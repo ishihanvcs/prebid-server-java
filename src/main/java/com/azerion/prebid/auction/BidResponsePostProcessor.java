@@ -1,7 +1,6 @@
 package com.azerion.prebid.auction;
 
-import com.azerion.prebid.auction.customtrackers.BidResponseModifier;
-import com.azerion.prebid.auction.customtrackers.BidResponseContext;
+import com.azerion.prebid.customtrackers.BidderBidModifier;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.response.BidResponse;
 import io.vertx.core.Future;
@@ -20,13 +19,13 @@ public class BidResponsePostProcessor implements org.prebid.server.auction.BidRe
 
     private final ApplicationContext applicationContext;
 
-    private final BidResponseModifier bidResponseModifier;
+    private final BidderBidModifier bidderBidModifier;
 
     public BidResponsePostProcessor(
             ApplicationContext applicationContext,
-            BidResponseModifier bidResponseModifier) {
+            BidderBidModifier bidderBidModifier) {
         this.applicationContext = Objects.requireNonNull(applicationContext);
-        this.bidResponseModifier = Objects.requireNonNull(bidResponseModifier);
+        this.bidderBidModifier = Objects.requireNonNull(bidderBidModifier);
     }
 
     @Override
@@ -36,15 +35,14 @@ public class BidResponsePostProcessor implements org.prebid.server.auction.BidRe
             BidRequest bidRequest,
             BidResponse bidResponse,
             Account account) {
-        BidResponseContext bidResponseContext = BidResponseContext.from(
-                applicationContext,
-                bidRequest,
-                bidResponse,
-                account,
-                httpRequest,
-                uidsCookie
-        );
-        bidResponseModifier.apply(bidResponseContext);
+        // BidRequestContext bidRequestContext = BidRequestContext.from(
+        //         applicationContext,
+        //         bidRequest,
+        //         account,
+        //         httpRequest,
+        //         uidsCookie
+        // );
+        // bidResponseModifier.apply(bidRequestContext);
         return Future.succeededFuture(bidResponse);
     }
 }

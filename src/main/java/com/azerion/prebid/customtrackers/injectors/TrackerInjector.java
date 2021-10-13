@@ -1,7 +1,7 @@
-package com.azerion.prebid.auction.customtrackers.injectors;
+package com.azerion.prebid.customtrackers.injectors;
 
-import com.azerion.prebid.auction.customtrackers.contracts.IBidTypeSpecificTrackerInjector;
-import com.azerion.prebid.auction.customtrackers.contracts.ITrackerInjector;
+import com.azerion.prebid.customtrackers.contracts.IBidTypeSpecificTrackerInjector;
+import com.azerion.prebid.customtrackers.contracts.ITrackerInjector;
 import org.apache.commons.collections4.map.HashedMap;
 import org.prebid.server.proto.openrtb.ext.response.BidType;
 

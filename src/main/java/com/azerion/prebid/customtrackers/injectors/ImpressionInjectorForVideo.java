@@ -1,11 +1,14 @@
-package com.azerion.prebid.auction.customtrackers.injectors;
+package com.azerion.prebid.customtrackers.injectors;
 
-import com.azerion.prebid.auction.customtrackers.contracts.IBidTypeSpecificTrackerInjector;
+import com.azerion.prebid.customtrackers.contracts.IBidTypeSpecificTrackerInjector;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.exception.PreBidException;
 
 public class ImpressionInjectorForVideo implements IBidTypeSpecificTrackerInjector {
 
+    private static final Logger logger = LoggerFactory.getLogger(ImpressionInjectorForVideo.class);
     protected static final String IN_LINE_TAG = "<InLine>";
     protected static final String IN_LINE_CLOSE_TAG = "</InLine>";
     protected static final String WRAPPER_TAG = "<Wrapper>";
@@ -43,7 +46,7 @@ public class ImpressionInjectorForVideo implements IBidTypeSpecificTrackerInject
     private String insertAfterExistingImpressionTag(String vastXml, String vastUrlTracking) {
         final String impressionTag = "<Impression><![CDATA[" + vastUrlTracking + "]]></Impression>";
         final int replacementStart = vastXml.lastIndexOf(IMPRESSION_CLOSE_TAG);
-
+        logger.info("Impression tag injection successful for: " + vastUrlTracking);
         return vastXml.substring(0, replacementStart)
                 + IMPRESSION_CLOSE_TAG
                 + impressionTag
@@ -54,13 +57,14 @@ public class ImpressionInjectorForVideo implements IBidTypeSpecificTrackerInject
         final int indexOfCloseTag = StringUtils.indexOfIgnoreCase(vastXml, elementCloseTag);
 
         if (indexOfCloseTag == -1) {
+            logger.warn("Impression tag injection failed for: " + vastUrlTracking);
             return vastXml;
         }
 
         final String caseSpecificCloseTag =
                 vastXml.substring(indexOfCloseTag, indexOfCloseTag + elementCloseTag.length());
         final String impressionTag = "<Impression><![CDATA[" + vastUrlTracking + "]]></Impression>";
-
+        logger.info("Impression tag injection successful for: " + vastUrlTracking);
         return vastXml.replace(caseSpecificCloseTag, impressionTag + caseSpecificCloseTag);
     }
 

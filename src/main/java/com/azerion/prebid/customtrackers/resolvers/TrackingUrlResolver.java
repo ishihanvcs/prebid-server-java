@@ -1,12 +1,14 @@
-package com.azerion.prebid.auction.customtrackers.resolvers;
+package com.azerion.prebid.customtrackers.resolvers;
 
-import com.azerion.prebid.auction.customtrackers.contracts.ITrackingUrlResolver;
-import com.azerion.prebid.auction.customtrackers.TrackerContext;
+import com.azerion.prebid.customtrackers.TrackerContext;
+import com.azerion.prebid.customtrackers.contracts.ITrackingUrlResolver;
 import com.iab.openrtb.request.BidRequest;
+import com.iab.openrtb.response.Bid;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.collections4.map.HashedMap;
 import org.apache.http.client.utils.URIBuilder;
+import org.prebid.server.bidder.model.BidderBid;
 import org.prebid.server.currency.CurrencyConversionService;
 
 import java.util.Map;
@@ -40,13 +42,15 @@ public class TrackingUrlResolver implements ITrackingUrlResolver {
     protected Map<String, String> resolveUrlParams(TrackerContext context) {
         Map<String, String> params = new HashedMap<>();
         BidRequest bidRequest = context.getBidRequest();
-        params.put("adType", context.getBidType().getName());
-        params.put("bidder", context.getSeatBid().getSeat());
+        BidderBid bidderBid = context.getBidderBid();
+        Bid bid = bidderBid.getBid();
+        params.put("adType", bidderBid.getType().getName());
+        params.put("bidder", context.getBidder());
         params.put("price", currencyConversionService
                 .convertCurrency(
-                    context.getBid().getPrice(),
+                    bid.getPrice(),
                     bidRequest,
-                    context.getBidResponse().getCur(),
+                        bidderBid.getBidCurrency(),
                     context.getTracker().getCurrency()
                 ).toString()
         );

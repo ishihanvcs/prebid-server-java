@@ -1,35 +1,31 @@
-package com.azerion.prebid.auction.customtrackers;
+package com.azerion.prebid.customtrackers;
 
-import com.azerion.prebid.auction.customtrackers.contracts.ITrackerInjector;
-import com.azerion.prebid.auction.customtrackers.contracts.ITrackingUrlResolver;
+import com.azerion.prebid.customtrackers.contracts.ITrackerInjector;
+import com.azerion.prebid.customtrackers.contracts.ITrackingUrlResolver;
 import com.azerion.prebid.settings.model.CustomTracker;
-import com.iab.openrtb.response.Bid;
-import com.iab.openrtb.response.SeatBid;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 import org.apache.commons.lang3.StringUtils;
-import org.prebid.server.proto.openrtb.ext.response.BidType;
+import org.prebid.server.bidder.model.BidderBid;
 
 import java.util.function.Supplier;
 
 @SuperBuilder(toBuilder = true)
 @Getter
-public class TrackerContext extends BidResponseContext {
+public class TrackerContext extends BidRequestContext {
 
     CustomTracker tracker;
-    SeatBid seatBid;
-    Bid bid;
-    BidType bidType;
+    BidderBid bidderBid;
+    String bidder;
 
-    public static TrackerContext from(BidResponseContext bidResponseContext) {
+    public static TrackerContext from(BidRequestContext bidRequestContext) {
         return TrackerContext
                 .builder()
-                .applicationContext(bidResponseContext.applicationContext)
-                .bidRequest(bidResponseContext.bidRequest)
-                .bidResponse(bidResponseContext.bidResponse)
-                .account(bidResponseContext.account)
-                .httpRequest(bidResponseContext.httpRequest)
-                .uidsCookie(bidResponseContext.uidsCookie)
+                .applicationContext(bidRequestContext.applicationContext)
+                .bidRequest(bidRequestContext.bidRequest)
+                .account(bidRequestContext.account)
+                .httpRequest(bidRequestContext.httpRequest)
+                .uidsCookie(bidRequestContext.uidsCookie)
                 .build();
     }
 
@@ -37,8 +33,8 @@ public class TrackerContext extends BidResponseContext {
         return this.toBuilder().tracker(tracker).build();
     }
 
-    public TrackerContext with(SeatBid seatBid, Bid bid, BidType bidType) {
-        return this.toBuilder().seatBid(seatBid).bid(bid).bidType(bidType).build();
+    public TrackerContext with(BidderBid bidderBid, String bidder) {
+        return this.toBuilder().bidderBid(bidderBid).bidder(bidder).build();
     }
 
     private <T> T resolveBean(Supplier<String> getter, String defaultBeanName, Class<T> beanClass) {

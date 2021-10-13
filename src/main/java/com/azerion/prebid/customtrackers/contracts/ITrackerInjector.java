@@ -1,4 +1,4 @@
-package com.azerion.prebid.auction.customtrackers.contracts;
+package com.azerion.prebid.customtrackers.contracts;
 
 import org.prebid.server.proto.openrtb.ext.response.BidType;
 

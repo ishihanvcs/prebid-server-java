@@ -44,8 +44,6 @@ cache:
   host: pbc.360yield.com
   path: cache
   query: uuid=
-  banner-ttl-seconds: 20000
-  video-ttl-seconds: 20000
 settings:
 #  default-loading-timeout: 500 # optional long value in milliseconds, default value is 500 ms
   filesystem:
@@ -69,3 +67,41 @@ default-request:
 external-url: https://pbs-proto.360polaris.biz
 google-ad-manager:
   network-code: 1015413
+
+# custom hooks to inject custom trackers in bid responses
+hooks:
+  host-execution-plan: >
+    {
+      "endpoints": {
+        "/openrtb2/auction": {
+          "stages": {
+            "processed-auction-request": {
+              "groups": [
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "custom-tracker-module",
+                      "hook-impl-code": "custom-tracker-processed-auction-request"
+                    }
+                  ]
+                }
+              ]
+            },
+            "processed-bidder-response": {
+              "groups": [
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "custom-tracker-module",
+                      "hook-impl-code": "custom-tracker-processed-bidder-response"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    }

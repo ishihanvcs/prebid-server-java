@@ -1,25 +1,26 @@
 package com.azerion.prebid.config;
 
 import com.azerion.prebid.auction.GVastResponseCreator;
-import com.azerion.prebid.auction.customtrackers.BidResponseModifier;
-import com.azerion.prebid.auction.customtrackers.contracts.ITrackerInjector;
-import com.azerion.prebid.auction.customtrackers.contracts.ITrackingUrlResolver;
-import com.azerion.prebid.auction.customtrackers.injectors.TrackerInjector;
-import com.azerion.prebid.auction.customtrackers.resolvers.TrackingUrlResolver;
+import com.azerion.prebid.customtrackers.BidderBidModifier;
+import com.azerion.prebid.customtrackers.contracts.ITrackerInjector;
+import com.azerion.prebid.customtrackers.contracts.ITrackingUrlResolver;
+import com.azerion.prebid.customtrackers.injectors.TrackerInjector;
+import com.azerion.prebid.customtrackers.resolvers.TrackingUrlResolver;
 import com.azerion.prebid.auction.requestfactory.GVastParamsResolver;
 import com.azerion.prebid.auction.requestfactory.GVastRequestFactory;
 import com.azerion.prebid.handler.GVastHandler;
+import com.azerion.prebid.hooks.v1.CustomTrackerModule;
 import com.azerion.prebid.settings.CustomSettings;
 import com.azerion.prebid.settings.model.CustomTrackerSetting;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import org.prebid.server.analytics.AnalyticsReporterDelegator;
-import org.prebid.server.auction.BidResponsePostProcessor;
 import org.prebid.server.auction.ExchangeService;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
 import org.prebid.server.currency.CurrencyConversionService;
 import org.prebid.server.execution.Timeout;
+import org.prebid.server.hooks.v1.Module;
 import org.prebid.server.identity.IdGenerator;
 import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.log.HttpInteractionLogger;
@@ -33,7 +34,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
-import org.springframework.context.annotation.Primary;
 
 import javax.annotation.PostConstruct;
 import java.time.Clock;
@@ -98,6 +98,7 @@ public class ExtensionConfig {
 
     @Bean
     GVastHandler gVastHandler(
+            ApplicationContext applicationContext,
             GVastRequestFactory gVastRequestFactory,
             GVastResponseCreator gVastResponseCreator,
             ExchangeService exchangeService,
@@ -107,6 +108,7 @@ public class ExtensionConfig {
             HttpInteractionLogger httpInteractionLogger,
             Router router) {
         GVastHandler handler = new GVastHandler(
+                applicationContext,
                 gVastRequestFactory,
                 gVastResponseCreator,
                 exchangeService,
@@ -127,22 +129,30 @@ public class ExtensionConfig {
     }
 
     @Bean
-    BidResponseModifier bidResponseModifier(
+    BidderBidModifier bidResponseModifier(
             CustomTrackerSetting customTrackerSetting
     ) {
-        return new BidResponseModifier(customTrackerSetting);
+        return new BidderBidModifier(customTrackerSetting);
     }
 
-    @Bean
-    @Primary
-    BidResponsePostProcessor customResponsePostProcessor(
-            ApplicationContext applicationContext,
-            BidResponseModifier bidResponseModifier
-    ) {
+    // @Bean
+    // @Primary
+    // BidResponsePostProcessor customResponsePostProcessor(
+    //         ApplicationContext applicationContext,
+    //         BidResponseModifier bidResponseModifier
+    // ) {
+    //
+    //     return new com.azerion.prebid.auction.BidResponsePostProcessor(
+    //             applicationContext, bidResponseModifier
+    //     );
+    // }
 
-        return new com.azerion.prebid.auction.BidResponsePostProcessor(
-                applicationContext, bidResponseModifier
-        );
+    @Bean
+    Module customTrackerModule(
+            ApplicationContext applicationContext,
+            BidderBidModifier bidderBidModifier
+    ) {
+        return new CustomTrackerModule(applicationContext, bidderBidModifier);
     }
 
     @Bean

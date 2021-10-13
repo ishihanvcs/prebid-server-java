@@ -1,6 +1,7 @@
 package com.azerion.prebid.handler;
 
 import com.azerion.prebid.auction.GVastResponseCreator;
+import com.azerion.prebid.customtrackers.BidRequestContext;
 import com.azerion.prebid.auction.model.GVastParams;
 import com.azerion.prebid.auction.requestfactory.GVastContext;
 import com.azerion.prebid.auction.requestfactory.GVastRequestFactory;
@@ -32,6 +33,7 @@ import org.prebid.server.metric.Metrics;
 import org.prebid.server.privacy.gdpr.model.TcfContext;
 import org.prebid.server.privacy.model.PrivacyContext;
 import org.prebid.server.util.HttpUtil;
+import org.springframework.context.ApplicationContext;
 
 import java.time.Clock;
 import java.util.Collections;
@@ -79,8 +81,10 @@ public class GVastHandler implements Handler<RoutingContext> {
     private final Metrics metrics;
     private final Clock clock;
     private final HttpInteractionLogger httpInteractionLogger;
+    private final ApplicationContext applicationContext;
 
     public GVastHandler(
+            ApplicationContext applicationContext,
             GVastRequestFactory gVastRequestFactory,
             GVastResponseCreator gVastResponseCreator,
             ExchangeService exchangeService,
@@ -88,6 +92,7 @@ public class GVastHandler implements Handler<RoutingContext> {
             Metrics metrics,
             Clock clock,
             HttpInteractionLogger httpInteractionLogger) {
+        this.applicationContext = Objects.requireNonNull(applicationContext);
         this.gVastRequestFactory = Objects.requireNonNull(gVastRequestFactory);
         this.gVastResponseCreator = Objects.requireNonNull(gVastResponseCreator);
         this.exchangeService = Objects.requireNonNull(exchangeService);
@@ -125,6 +130,8 @@ public class GVastHandler implements Handler<RoutingContext> {
         exchangeService.holdAuction(auctionContext)
                 .map(bidResponse -> {
                     gVastContext.setBidResponse(bidResponse);
+                    final BidRequestContext bidRequestContext =
+                            BidRequestContext.from(applicationContext, gVastContext);
                     return Tuple2.of(bidResponse, auctionContext);
                 })
                 .map(result -> addToEvent(result.getLeft(), auctionEventBuilder::bidResponse, result))

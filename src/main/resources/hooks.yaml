@@ -1,0 +1,19 @@
+hooks:
+  host-execution-plan:
+    endpoints:
+      /openrtb2/auction:
+        stages:
+          processed-bidder-response:
+            groups:
+              - timeout: 5
+                hook-sequence:
+                  - module-code: custom-tracker-module
+                    hook-impl-code: processed-bidder-response
+      /gvast:
+        stages:
+          processed-bidder-response:
+            groups:
+              - timeout: 5
+                hook-sequence:
+                  - module-code: custom-tracker-module
+                    hook-impl-code: processed-bidder-response

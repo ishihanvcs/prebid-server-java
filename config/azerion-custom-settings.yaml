@@ -1,6 +1,6 @@
 ---
 customTrackers:
-  enabled: true
+  enabled: false
   trackers:
     - id: 360yield # required and must be unique across all trackers
       baseUrl: https://ad.360yield.com/sspbids # required, must be a valid url
@@ -9,13 +9,13 @@ customTrackers:
       # When urlResolver is omitted or value left blank, and a bean with named "trackingUrlResolver" + id is available, that will be used
       # otherwise default "trackingUrlResolver" bean will be used
       # To know actual implementation details, please refer to getUrlResolver() method of
-      # com.azerion.prebid.auction.customtrackers.TrackerContext class
+      # com.azerion.prebid.customtrackers.TrackerContext class
 
       injector: "trackerInjector" # optional
       # When injector is omitted or value left blank, and a bean with named "trackerInjector" + id is available, that will be used
       # otherwise default "trackerInjector" bean will be used
       # To know actual implementation details, please refer to getInjector() method of
-      # com.azerion.prebid.auction.customtrackers.TrackerContext class
+      # com.azerion.prebid.customtrackers.TrackerContext class
 
       currency: "USD" # optional, default value is "USD"
 placements:

@@ -1,17 +1,17 @@
 package com.azerion.prebid.config;
 
 import com.azerion.prebid.auction.GVastResponseCreator;
+import com.azerion.prebid.auction.requestfactory.GVastParamsResolver;
+import com.azerion.prebid.auction.requestfactory.GVastRequestFactory;
 import com.azerion.prebid.customtrackers.BidderBidModifier;
 import com.azerion.prebid.customtrackers.contracts.ITrackerInjector;
 import com.azerion.prebid.customtrackers.contracts.ITrackingUrlResolver;
 import com.azerion.prebid.customtrackers.injectors.TrackerInjector;
 import com.azerion.prebid.customtrackers.resolvers.TrackingUrlResolver;
-import com.azerion.prebid.auction.requestfactory.GVastParamsResolver;
-import com.azerion.prebid.auction.requestfactory.GVastRequestFactory;
 import com.azerion.prebid.handler.GVastHandler;
 import com.azerion.prebid.hooks.v1.CustomTrackerModule;
-import com.azerion.prebid.settings.CustomSettings;
 import com.azerion.prebid.settings.model.CustomTrackerSetting;
+import com.azerion.prebid.utils.SettingsLoader;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
@@ -19,13 +19,11 @@ import org.prebid.server.analytics.AnalyticsReporterDelegator;
 import org.prebid.server.auction.ExchangeService;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
 import org.prebid.server.currency.CurrencyConversionService;
-import org.prebid.server.execution.Timeout;
 import org.prebid.server.hooks.v1.Module;
 import org.prebid.server.identity.IdGenerator;
 import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.log.HttpInteractionLogger;
 import org.prebid.server.metric.Metrics;
-import org.prebid.server.settings.ApplicationSettings;
 import org.prebid.server.settings.model.GdprConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -66,31 +64,25 @@ public class ExtensionConfig {
 
     @Bean
     GVastRequestFactory gvastRequestFactory(
-            ApplicationSettings applicationSettings,
-            CustomSettings customSettings,
+            SettingsLoader settingsLoader,
             GVastParamsResolver gVastParamsResolver,
             AuctionRequestFactory auctionRequestFactory,
-            Timeout settingsLoadingTimeout,
             @Qualifier("sourceIdGenerator")
             IdGenerator idGenerator,
             JacksonMapper mapper) {
         return new GVastRequestFactory(
-                applicationSettings,
-                customSettings,
+                settingsLoader,
                 gVastParamsResolver,
                 auctionRequestFactory,
-                settingsLoadingTimeout,
                 idGenerator,
                 mapper);
     }
 
     @Bean
     GVastResponseCreator gVastResponseCreator(
-            CustomTrackerSetting customTrackerSetting,
             @Value("${external-url}") String externalUrl,
             @Value("${google-ad-manager.network-code}") String gamNetworkCode) {
         return new GVastResponseCreator(
-                customTrackerSetting,
                 externalUrl,
                 gamNetworkCode
         );
@@ -122,10 +114,9 @@ public class ExtensionConfig {
 
     @Bean
     CustomTrackerSetting customTrackerSetting(
-            CustomSettings customSettings,
-            Timeout settingsLoadingTimeout
+            SettingsLoader settingsLoader
     ) {
-        return customSettings.getCustomTrackerSetting(settingsLoadingTimeout).result();
+        return settingsLoader.getCustomTrackerSetting();
     }
 
     @Bean
@@ -150,16 +141,22 @@ public class ExtensionConfig {
     @Bean
     Module customTrackerModule(
             ApplicationContext applicationContext,
-            BidderBidModifier bidderBidModifier
+            SettingsLoader settingsLoader,
+            BidderBidModifier bidderBidModifier,
+            JacksonMapper mapper
     ) {
-        return new CustomTrackerModule(applicationContext, bidderBidModifier);
+        return new CustomTrackerModule(
+                applicationContext,
+                settingsLoader,
+                bidderBidModifier, mapper);
     }
 
     @Bean
     ITrackingUrlResolver trackingUrlResolver(
-            CurrencyConversionService currencyConversionService
+            CurrencyConversionService currencyConversionService,
+            JacksonMapper mapper
     ) {
-        return new TrackingUrlResolver(currencyConversionService);
+        return new TrackingUrlResolver(currencyConversionService, mapper);
     }
 
     @Bean

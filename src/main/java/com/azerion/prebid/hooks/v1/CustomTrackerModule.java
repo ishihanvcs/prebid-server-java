@@ -1,14 +1,16 @@
 package com.azerion.prebid.hooks.v1;
 
-import com.azerion.prebid.customtrackers.BidRequestContext;
 import com.azerion.prebid.customtrackers.BidderBidModifier;
+import com.azerion.prebid.customtrackers.hooks.v1.EntrypointHook;
 import com.azerion.prebid.customtrackers.hooks.v1.ProcessedAuctionRequestHook;
 import com.azerion.prebid.customtrackers.hooks.v1.ProcessedBidderResponseHook;
-import com.iab.openrtb.request.BidRequest;
-import org.prebid.server.bidder.model.BidderBid;
+import com.azerion.prebid.utils.SettingsLoader;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.prebid.server.hooks.v1.Hook;
 import org.prebid.server.hooks.v1.InvocationContext;
 import org.prebid.server.hooks.v1.Module;
+import org.prebid.server.json.JacksonMapper;
 import org.springframework.context.ApplicationContext;
 
 import java.util.Arrays;
@@ -16,14 +18,22 @@ import java.util.Collection;
 
 public class CustomTrackerModule implements Module {
 
+    private static final Logger logger = LoggerFactory.getLogger(CustomTrackerModule.class);
     private final ApplicationContext applicationContext;
+    private final SettingsLoader settingsLoader;
     private final BidderBidModifier bidderBidModifier;
+    private final JacksonMapper mapper;
 
-    private BidRequestContext bidRequestContext = null;
-
-    public CustomTrackerModule(ApplicationContext applicationContext, BidderBidModifier bidderBidModifier) {
+    public CustomTrackerModule(
+            ApplicationContext applicationContext,
+            SettingsLoader settingsLoader,
+            BidderBidModifier bidderBidModifier,
+            JacksonMapper mapper
+    ) {
         this.applicationContext = applicationContext;
+        this.settingsLoader = settingsLoader;
         this.bidderBidModifier = bidderBidModifier;
+        this.mapper = mapper;
     }
 
     @Override
@@ -34,35 +44,16 @@ public class CustomTrackerModule implements Module {
     @Override
     public Collection<? extends Hook<?, ? extends InvocationContext>> hooks() {
         return Arrays.asList(
-                new ProcessedAuctionRequestHook(this),
-                new ProcessedBidderResponseHook(this)
+                new EntrypointHook(
+                        settingsLoader
+                ),
+                new ProcessedAuctionRequestHook(
+                        settingsLoader,
+                        mapper
+                ),
+                new ProcessedBidderResponseHook(
+                        applicationContext, bidderBidModifier
+                )
         );
-    }
-
-    public ApplicationContext getApplicationContext() {
-        return applicationContext;
-    }
-
-    public BidderBidModifier getBidderBidModifier() {
-        return bidderBidModifier;
-    }
-
-    public BidRequestContext getBidRequestContext() {
-        return bidRequestContext;
-    }
-
-    public void setBidRequestContext(BidRequestContext bidRequestContext) {
-        this.bidRequestContext = bidRequestContext;
-    }
-
-    public void setBidRequestContext(BidRequest bidRequest) {
-        bidRequestContext = BidRequestContext.from(applicationContext, bidRequest);
-    }
-
-    public BidderBid modifyBidAdm(
-            BidderBid bidderBid,
-            String bidder
-    ) {
-        return bidderBidModifier.modifyBidAdm(bidRequestContext, bidderBid, bidder);
     }
 }

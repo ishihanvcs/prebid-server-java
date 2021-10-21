@@ -3,8 +3,8 @@ package com.azerion.prebid.auction.requestfactory;
 import com.azerion.prebid.auction.model.CustParams;
 import com.azerion.prebid.auction.model.GVastParams;
 import com.azerion.prebid.exception.PlacementAccountNullException;
-import com.azerion.prebid.settings.CustomSettings;
 import com.azerion.prebid.settings.model.Placement;
+import com.azerion.prebid.utils.SettingsLoader;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -23,7 +23,6 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 import org.prebid.server.auction.model.AuctionContext;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
-import org.prebid.server.execution.Timeout;
 import org.prebid.server.identity.IdGenerator;
 import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.log.ConditionalLogger;
@@ -34,7 +33,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
-import org.prebid.server.settings.ApplicationSettings;
+import org.prebid.server.settings.model.Account;
 
 import java.util.List;
 import java.util.Objects;
@@ -48,36 +47,33 @@ public class GVastRequestFactory {
     private static final Logger logger = LoggerFactory.getLogger(GVastRequestFactory.class);
     private static final ConditionalLogger EMPTY_ACCOUNT_LOGGER = new ConditionalLogger("empty_account", logger);
 
-    private final ApplicationSettings applicationSettings;
-    private final CustomSettings customSettings;
+    private final SettingsLoader settingsLoader;
     private final AuctionRequestFactory auctionRequestFactory;
     private final JacksonMapper mapper;
     private final IdGenerator idGenerator;
     private final GVastParamsResolver paramResolver;
-    private final Timeout settingsLoadingTimeout;
 
     public GVastRequestFactory(
-            ApplicationSettings applicationSettings,
-            CustomSettings customSettings,
+            SettingsLoader settingsLoader,
             GVastParamsResolver gVastParamsResolver,
             AuctionRequestFactory auctionRequestFactory,
-            Timeout settingsLoadingTimeout,
             IdGenerator idGenerator,
             JacksonMapper mapper) {
-        this.applicationSettings = Objects.requireNonNull(applicationSettings);
-        this.customSettings = Objects.requireNonNull(customSettings);
+        this.settingsLoader = Objects.requireNonNull(settingsLoader);
         this.auctionRequestFactory = Objects.requireNonNull(auctionRequestFactory);
         this.mapper = Objects.requireNonNull(mapper);
         this.idGenerator = Objects.requireNonNull(idGenerator);
         this.paramResolver = Objects.requireNonNull(gVastParamsResolver);
-        this.settingsLoadingTimeout = Objects.requireNonNull(settingsLoadingTimeout);
     }
 
     public Future<GVastContext> fromRequest(RoutingContext routingContext, long startTime) {
         try {
             GVastParams gVastParams = paramResolver.resolve(getHttpRequestContext(routingContext));
-            return customSettings.getPlacementById(String.valueOf(gVastParams.getPlacementId()), settingsLoadingTimeout)
-                .map(this::validatePlacement)
+            return Future.succeededFuture(
+                    settingsLoader.getPlacement(
+                            String.valueOf(gVastParams.getPlacementId())
+                    )
+                ).map(this::validatePlacement)
                 .map(placement -> GVastContext.from(gVastParams).with(placement).with(routingContext))
                 .compose(this::updateContextWithAccountAndBidRequest)
                 .map(this::updateRoutingContextBody)
@@ -149,9 +145,14 @@ public class GVastRequestFactory {
         final List<String> categories = gVastParams.getCat().stream()
                 .filter(cat -> cat.startsWith("IAB"))
                 .collect(Collectors.toList());
-
-        return applicationSettings.getAccountById(gVastContext.getPlacement().getAccountId(), settingsLoadingTimeout)
-            .map(account -> gVastContext.with(account)
+        final Account account;
+        try {
+            account = settingsLoader.getAccount(gVastContext.getPlacement().getAccountId());
+        } catch (Throwable t) {
+            return Future.failedFuture(t);
+        }
+        return Future.succeededFuture(account)
+            .map(acc -> gVastContext.with(acc)
                 .with(
                     BidRequest.builder()
                         .id(tid)

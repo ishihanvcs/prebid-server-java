@@ -3,6 +3,7 @@ package com.azerion.prebid.config;
 import com.azerion.prebid.settings.CachingCustomSettings;
 import com.azerion.prebid.settings.CustomSettings;
 import com.azerion.prebid.settings.FileCustomSettings;
+import com.azerion.prebid.utils.SettingsLoader;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
 import org.prebid.server.execution.Timeout;
 import org.prebid.server.execution.TimeoutFactory;
+import org.prebid.server.settings.ApplicationSettings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -53,6 +55,15 @@ public class ExtensionSettingsConfig {
                         String settingsFileName,
                 FileSystem fileSystem) {
             return new FileCustomSettings(fileSystem, settingsFileName);
+        }
+
+        @Bean
+        SettingsLoader customSettingsLoader(
+                ApplicationSettings applicationSettings,
+                CustomSettings customSettings,
+                Timeout settingsLoaderTimeout
+        ) {
+            return new SettingsLoader(applicationSettings, customSettings, settingsLoaderTimeout);
         }
     }
 

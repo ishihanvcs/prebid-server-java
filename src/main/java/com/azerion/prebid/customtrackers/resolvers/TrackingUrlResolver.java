@@ -2,7 +2,10 @@ package com.azerion.prebid.customtrackers.resolvers;
 
 import com.azerion.prebid.customtrackers.TrackerContext;
 import com.azerion.prebid.customtrackers.contracts.ITrackingUrlResolver;
+import com.azerion.prebid.utils.JsonUtils;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.iab.openrtb.request.BidRequest;
+import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.response.Bid;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -10,18 +13,24 @@ import org.apache.commons.collections4.map.HashedMap;
 import org.apache.http.client.utils.URIBuilder;
 import org.prebid.server.bidder.model.BidderBid;
 import org.prebid.server.currency.CurrencyConversionService;
+import org.prebid.server.json.JacksonMapper;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class TrackingUrlResolver implements ITrackingUrlResolver {
 
     private static final Logger logger = LoggerFactory.getLogger(TrackingUrlResolver.class);
-    protected final CurrencyConversionService currencyConversionService;
+    private final CurrencyConversionService currencyConversionService;
+    private final JsonUtils jsonUtils;
 
     public TrackingUrlResolver(
-            CurrencyConversionService currencyConversionService) {
+            CurrencyConversionService currencyConversionService,
+            JacksonMapper mapper
+    ) {
         this.currencyConversionService = Objects.requireNonNull(currencyConversionService);
+        this.jsonUtils = new JsonUtils(mapper);
     }
 
     @Override
@@ -35,7 +44,8 @@ public class TrackingUrlResolver implements ITrackingUrlResolver {
             URIBuilder b = new URIBuilder(context.getTracker().getBaseUrl());
             params.forEach(b::addParameter);
             return b.build().toURL().toExternalForm();
-        } catch (Exception ignored) { }
+        } catch (Exception ignored) {
+        }
         return null;
     }
 
@@ -46,34 +56,25 @@ public class TrackingUrlResolver implements ITrackingUrlResolver {
         Bid bid = bidderBid.getBid();
         params.put("adType", bidderBid.getType().getName());
         params.put("bidder", context.getBidder());
-        params.put("price", currencyConversionService
-                .convertCurrency(
-                    bid.getPrice(),
-                    bidRequest,
-                        bidderBid.getBidCurrency(),
-                    context.getTracker().getCurrency()
-                ).toString()
+        params.put("price", currencyConversionService.convertCurrency(
+                        bid.getPrice(), bidRequest,
+                        context.getTracker().getCurrency(),
+                        bidderBid.getBidCurrency()
+                ).toPlainString()
         );
 
         if (context.getPlacement() != null) {
             params.put("pid", context.getPlacement().getId());
         } else {
-            bidRequest.getImp().stream()
-                    .filter(imp -> !imp.getExt()
-                            .path("prebid")
-                            .path("bidder")
-                            .path("improvedigital")
-                            .path("placementId")
-                            .isMissingNode()
-                    )
-                    .map(imp -> imp.getExt()
-                            .get("prebid")
-                            .get("bidder")
-                            .get("improvedigital")
-                    )
-                    .findFirst()
-                    .ifPresent(idExt ->
-                            params.put("pid", String.valueOf(idExt.get("placementId").asLong())));
+            JsonNode placementIdNode = jsonUtils.findFirstNode(
+                    bidRequest.getImp().stream()
+                            .map(Imp::getExt).collect(Collectors.toList()),
+                    "prebid/bidder/improvedigital/placementId"
+            );
+
+            if (placementIdNode != null) {
+                params.put("pid", placementIdNode.asText());
+            }
         }
 
         return params;

@@ -82,13 +82,15 @@ public class GVastParamsResolver {
         final CaseInsensitiveMultiMap queryParams = httpRequest.getQueryParams();
 
         if (queryParams.get("p") == null) {
-            throw new InvalidRequestException("'p' parameter required");
+            throw new InvalidRequestException("'p' parameter is required");
         }
 
-        int placementId = 0;
+        long placementId = 0;
         try {
-            placementId = Integer.parseInt(queryParams.get("p"));
-        } catch (NumberFormatException e) { }
+            placementId = Long.parseLong(queryParams.get("p"));
+        } catch (NumberFormatException ignored) {
+            throw new InvalidRequestException("Invalid value provided for 'p' parameter");
+        }
 
         return setGdprParams(httpRequest, GVastParams.builder()
                 .placementId(placementId)

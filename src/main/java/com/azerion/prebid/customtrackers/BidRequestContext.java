@@ -36,6 +36,16 @@ public class BidRequestContext {
 
     public static BidRequestContext from(
             ApplicationContext applicationContext,
+            CustomTrackerModuleContext moduleContext) {
+        return BidRequestContext.builder()
+                .applicationContext(applicationContext)
+                .bidRequest(moduleContext.getBidRequest())
+                .placement(moduleContext.getPlacement())
+                .build();
+    }
+
+    public static BidRequestContext from(
+            ApplicationContext applicationContext,
             BidRequest bidRequest,
             Account account,
             HttpRequestContext httpRequest,
@@ -74,6 +84,14 @@ public class BidRequestContext {
                 .placement(gVastContext.getPlacement())
                 .httpRequest(gVastContext.getAuctionContext().getHttpRequest())
                 .uidsCookie(gVastContext.getAuctionContext().getUidsCookie())
+                .build();
+    }
+
+    public BidRequestContext with(
+            Placement placement
+    ) {
+        return this.toBuilder()
+                .placement(placement)
                 .build();
     }
 

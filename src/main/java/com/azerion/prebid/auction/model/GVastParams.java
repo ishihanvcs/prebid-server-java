@@ -10,7 +10,7 @@ import java.util.List;
 @Value
 public class GVastParams {
 
-    int placementId;
+    long placementId;
 
     Integer gdpr; // 1=gdpr applies
 

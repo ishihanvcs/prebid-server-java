@@ -2,6 +2,7 @@ package com.azerion.prebid.auction;
 
 import com.azerion.prebid.auction.model.GVastParams;
 import com.azerion.prebid.settings.model.Placement;
+import com.azerion.prebid.utils.FluentMap;
 import com.azerion.prebid.utils.MacroProcessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,7 +20,6 @@ import org.prebid.server.util.HttpUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -208,11 +208,13 @@ public class GVastResponseCreator {
     }
 
     private String replaceMacros(String tag, int gdpr, String gdprConsent, String referrer) {
-        final Map<String, String> macroValues = new HashMap<>();
-        macroValues.put("gdpr", Integer.toString(gdpr));
-        macroValues.put("gdpr_consent", gdprConsent);
-        macroValues.put("timestamp", Long.toString(System.currentTimeMillis()));
-        macroValues.put("referrer", HttpUtil.encodeUrl(referrer));
+        final Map<String, String> macroValues =
+                FluentMap.<String, String>create()
+                        .put("gdpr", Integer.toString(gdpr))
+                        .put("gdpr_consent", gdprConsent)
+                        .put("timestamp", Long.toString(System.currentTimeMillis()))
+                        .put("referrer", HttpUtil.encodeUrl(referrer))
+                        .result();
         String expanded = "";
         try {
             expanded = macroProcessor.process(tag, macroValues, true);

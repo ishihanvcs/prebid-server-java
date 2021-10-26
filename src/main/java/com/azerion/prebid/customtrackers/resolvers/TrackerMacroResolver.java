@@ -2,6 +2,7 @@ package com.azerion.prebid.customtrackers.resolvers;
 
 import com.azerion.prebid.customtrackers.TrackerContext;
 import com.azerion.prebid.customtrackers.contracts.ITrackerMacroResolver;
+import com.azerion.prebid.utils.FluentMap;
 import com.azerion.prebid.utils.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.iab.openrtb.request.BidRequest;
@@ -9,7 +10,6 @@ import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.response.Bid;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.apache.commons.collections4.map.HashedMap;
 import org.prebid.server.bidder.model.BidderBid;
 import org.prebid.server.currency.CurrencyConversionService;
 import org.prebid.server.json.JacksonMapper;
@@ -35,8 +35,6 @@ public class TrackerMacroResolver implements ITrackerMacroResolver {
 
     @Override
     public Map<String, String> resolveValues(TrackerContext context) throws Exception {
-        final Map<String, String> macroValues = new HashedMap<>();
-
         final String placementId = resolvePlacementId(context);
         final BidderBid bidderBid = context.getBidderBid();
         final Bid bid = bidderBid.getBid();
@@ -50,14 +48,14 @@ public class TrackerMacroResolver implements ITrackerMacroResolver {
                 bidCurrency
         );
 
-        macroValues.put("bid_type", bidType);
-        macroValues.put("bidder", bidder);
-        macroValues.put("bid_price", bidPrice.toPlainString());
-        macroValues.put("bid_currency", bidCurrency);
-        macroValues.put("bid_price_usd", bidPriceUsd.toPlainString());
-        macroValues.put("improve_digital_placement_id", placementId);
-
-        return macroValues;
+        return FluentMap.<String, String>create()
+                .put("bid_type", bidType)
+                .put("bidder", bidder)
+                .put("bid_price", bidPrice.toPlainString())
+                .put("bid_currency", bidCurrency)
+                .put("bid_price_usd", bidPriceUsd.toPlainString())
+                .put("improve_digital_placement_id", placementId)
+                .result();
     }
 
     protected String resolvePlacementId(TrackerContext context) throws Exception {

@@ -20,8 +20,8 @@ public class BidRequestContext {
     ApplicationContext applicationContext;
     @NonNull
     BidRequest bidRequest;
-    Account account;
     Placement placement;
+    Account account;
     HttpRequestContext httpRequest;
     UidsCookie uidsCookie;
 

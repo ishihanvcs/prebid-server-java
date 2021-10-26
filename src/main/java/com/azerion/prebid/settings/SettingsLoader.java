@@ -1,7 +1,6 @@
-package com.azerion.prebid.utils;
+package com.azerion.prebid.settings;
 
 import com.azerion.prebid.exception.CustomSettingsLoaderException;
-import com.azerion.prebid.settings.CustomSettings;
 import com.azerion.prebid.settings.model.CustomTrackerSetting;
 import com.azerion.prebid.settings.model.Placement;
 import io.vertx.core.Future;

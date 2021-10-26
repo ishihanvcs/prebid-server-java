@@ -3,7 +3,7 @@ package com.azerion.prebid.config;
 import com.azerion.prebid.settings.CachingCustomSettings;
 import com.azerion.prebid.settings.CustomSettings;
 import com.azerion.prebid.settings.FileCustomSettings;
-import com.azerion.prebid.utils.SettingsLoader;
+import com.azerion.prebid.settings.SettingsLoader;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;

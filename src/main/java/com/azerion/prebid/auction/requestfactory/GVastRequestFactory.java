@@ -4,7 +4,7 @@ import com.azerion.prebid.auction.model.CustParams;
 import com.azerion.prebid.auction.model.GVastParams;
 import com.azerion.prebid.exception.PlacementAccountNullException;
 import com.azerion.prebid.settings.model.Placement;
-import com.azerion.prebid.utils.SettingsLoader;
+import com.azerion.prebid.settings.SettingsLoader;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

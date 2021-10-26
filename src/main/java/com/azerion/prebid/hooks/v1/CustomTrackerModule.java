@@ -4,7 +4,7 @@ import com.azerion.prebid.customtrackers.BidderBidModifier;
 import com.azerion.prebid.customtrackers.hooks.v1.EntrypointHook;
 import com.azerion.prebid.customtrackers.hooks.v1.ProcessedAuctionRequestHook;
 import com.azerion.prebid.customtrackers.hooks.v1.ProcessedBidderResponseHook;
-import com.azerion.prebid.utils.SettingsLoader;
+import com.azerion.prebid.settings.SettingsLoader;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.prebid.server.hooks.v1.Hook;

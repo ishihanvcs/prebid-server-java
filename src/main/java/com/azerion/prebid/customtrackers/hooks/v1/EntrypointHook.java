@@ -3,7 +3,7 @@ package com.azerion.prebid.customtrackers.hooks.v1;
 import com.azerion.prebid.customtrackers.CustomTrackerModuleContext;
 import com.azerion.prebid.hooks.v1.InvocationResultImpl;
 import com.azerion.prebid.settings.model.Placement;
-import com.azerion.prebid.utils.SettingsLoader;
+import com.azerion.prebid.settings.SettingsLoader;
 import io.vertx.core.Future;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.hooks.v1.InvocationContext;

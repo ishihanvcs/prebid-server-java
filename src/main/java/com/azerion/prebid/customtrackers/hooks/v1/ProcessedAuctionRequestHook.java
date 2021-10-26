@@ -2,7 +2,7 @@ package com.azerion.prebid.customtrackers.hooks.v1;
 
 import com.azerion.prebid.customtrackers.CustomTrackerModuleContext;
 import com.azerion.prebid.hooks.v1.InvocationResultImpl;
-import com.azerion.prebid.utils.SettingsLoader;
+import com.azerion.prebid.settings.SettingsLoader;
 import com.azerion.prebid.utils.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;

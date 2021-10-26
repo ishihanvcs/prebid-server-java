@@ -2,6 +2,7 @@ package com.azerion.prebid.auction;
 
 import com.azerion.prebid.auction.model.GVastParams;
 import com.azerion.prebid.settings.model.Placement;
+import com.azerion.prebid.utils.MacroProcessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -18,8 +19,10 @@ import org.prebid.server.util.HttpUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,11 +41,14 @@ public class GVastResponseCreator {
 
     private final String externalUrl;
     private final String gamNetworkCode;
+    private final MacroProcessor macroProcessor;
 
     public GVastResponseCreator(
+            MacroProcessor macroProcessor,
             String externalUrl,
             String gamNetworkCode
     ) {
+        this.macroProcessor = Objects.requireNonNull(macroProcessor);
         this.externalUrl = HttpUtil.validateUrl(Objects.requireNonNull(externalUrl));
         this.gamNetworkCode = Objects.requireNonNull(gamNetworkCode);
     }
@@ -202,10 +208,16 @@ public class GVastResponseCreator {
     }
 
     private String replaceMacros(String tag, int gdpr, String gdprConsent, String referrer) {
-        return tag.replace("{{gdpr}}", Integer.toString(gdpr))
-                .replace("{{gdpr_consent}}", gdprConsent)
-                .replace("{{timestamp}}", Long.toString(System.currentTimeMillis()))
-                .replace("{{referrer}}", HttpUtil.encodeUrl(referrer));
+        final Map<String, String> macroValues = new HashMap<>();
+        macroValues.put("gdpr", Integer.toString(gdpr));
+        macroValues.put("gdpr_consent", gdprConsent);
+        macroValues.put("timestamp", Long.toString(System.currentTimeMillis()));
+        macroValues.put("referrer", HttpUtil.encodeUrl(referrer));
+        String expanded = "";
+        try {
+            expanded = macroProcessor.process(tag, macroValues, true);
+        } catch (Exception ignored) { }
+        return expanded;
     }
 
     private String buildVastAdTag(String tagUrl, boolean isGam, int gdpr, String gdprConsent, String referrer,

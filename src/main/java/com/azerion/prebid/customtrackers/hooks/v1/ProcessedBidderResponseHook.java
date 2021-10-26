@@ -41,8 +41,9 @@ public class ProcessedBidderResponseHook implements org.prebid.server.hooks.v1.b
         final BidRequestContext bidRequestContext = getBidRequestContext(invocationContext);
         final List<BidderBid> updatedBids = updateBids(bidRequestContext, originalBids, bidder);
 
-        return Future.succeededFuture(InvocationResultImpl.succeeded(payload ->
-                BidderResponsePayloadImpl.of(updatedBids)));
+        return Future.succeededFuture(
+                InvocationResultImpl.succeeded(payload ->
+                BidderResponsePayloadImpl.of(updatedBids), bidRequestContext));
     }
 
     private List<BidderBid> updateBids(
@@ -61,14 +62,14 @@ public class ProcessedBidderResponseHook implements org.prebid.server.hooks.v1.b
     private BidRequestContext getBidRequestContext(
             AuctionInvocationContext invocationContext
     ) {
-        CustomTrackerModuleContext moduleContext =
-                invocationContext.moduleContext() instanceof CustomTrackerModuleContext
-                        ? (CustomTrackerModuleContext) invocationContext.moduleContext()
-                        : null;
-        if (moduleContext != null) {
+        final Object moduleContext = invocationContext.moduleContext();
+        if (moduleContext instanceof BidRequestContext) {
+            return (BidRequestContext) invocationContext.moduleContext();
+        }
+        if (moduleContext instanceof CustomTrackerModuleContext) {
             return BidRequestContext.from(
                     applicationContext,
-                    moduleContext
+                    (CustomTrackerModuleContext) moduleContext
             );
         }
         return null;

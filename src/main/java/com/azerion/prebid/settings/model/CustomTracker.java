@@ -8,11 +8,9 @@ import lombok.Value;
 public class CustomTracker {
 
     String id;
-    String baseUrl;
+    String urlTemplate;
     @Builder.Default
-    String urlResolver = null;
+    String macroResolver = null;
     @Builder.Default
     String injector = null;
-    @Builder.Default
-    String currency = "USD";
 }

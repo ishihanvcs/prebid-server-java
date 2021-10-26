@@ -5,13 +5,14 @@ import com.azerion.prebid.auction.requestfactory.GVastParamsResolver;
 import com.azerion.prebid.auction.requestfactory.GVastRequestFactory;
 import com.azerion.prebid.customtrackers.BidderBidModifier;
 import com.azerion.prebid.customtrackers.contracts.ITrackerInjector;
-import com.azerion.prebid.customtrackers.contracts.ITrackingUrlResolver;
+import com.azerion.prebid.customtrackers.contracts.ITrackerMacroResolver;
 import com.azerion.prebid.customtrackers.injectors.TrackerInjector;
-import com.azerion.prebid.customtrackers.resolvers.TrackingUrlResolver;
+import com.azerion.prebid.customtrackers.resolvers.TrackerMacroResolver;
 import com.azerion.prebid.handler.GVastHandler;
 import com.azerion.prebid.hooks.v1.CustomTrackerModule;
+import com.azerion.prebid.settings.SettingsLoader;
 import com.azerion.prebid.settings.model.CustomTrackerSetting;
-import com.azerion.prebid.utils.SettingsLoader;
+import com.azerion.prebid.utils.MacroProcessor;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
@@ -80,9 +81,11 @@ public class ExtensionConfig {
 
     @Bean
     GVastResponseCreator gVastResponseCreator(
+            MacroProcessor macroProcessor,
             @Value("${external-url}") String externalUrl,
             @Value("${google-ad-manager.network-code}") String gamNetworkCode) {
         return new GVastResponseCreator(
+                macroProcessor,
                 externalUrl,
                 gamNetworkCode
         );
@@ -120,10 +123,11 @@ public class ExtensionConfig {
     }
 
     @Bean
-    BidderBidModifier bidResponseModifier(
-            CustomTrackerSetting customTrackerSetting
+    BidderBidModifier bidderBidModifier(
+            CustomTrackerSetting customTrackerSetting,
+            MacroProcessor macroProcessor
     ) {
-        return new BidderBidModifier(customTrackerSetting);
+        return new BidderBidModifier(customTrackerSetting, macroProcessor);
     }
 
     // @Bean
@@ -152,11 +156,16 @@ public class ExtensionConfig {
     }
 
     @Bean
-    ITrackingUrlResolver trackingUrlResolver(
+    MacroProcessor defaultMacroExpander() {
+        return new MacroProcessor();
+    }
+
+    @Bean
+    ITrackerMacroResolver trackerMacroResolver(
             CurrencyConversionService currencyConversionService,
             JacksonMapper mapper
     ) {
-        return new TrackingUrlResolver(currencyConversionService, mapper);
+        return new TrackerMacroResolver(currencyConversionService, mapper);
     }
 
     @Bean

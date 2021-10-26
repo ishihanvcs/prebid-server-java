@@ -1,7 +1,7 @@
 package com.azerion.prebid.customtrackers;
 
 import com.azerion.prebid.customtrackers.contracts.ITrackerInjector;
-import com.azerion.prebid.customtrackers.contracts.ITrackingUrlResolver;
+import com.azerion.prebid.customtrackers.contracts.ITrackerMacroResolver;
 import com.azerion.prebid.settings.model.CustomTracker;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
@@ -23,6 +23,7 @@ public class TrackerContext extends BidRequestContext {
                 .builder()
                 .applicationContext(bidRequestContext.applicationContext)
                 .bidRequest(bidRequestContext.bidRequest)
+                .placement(bidRequestContext.placement)
                 .account(bidRequestContext.account)
                 .httpRequest(bidRequestContext.httpRequest)
                 .uidsCookie(bidRequestContext.uidsCookie)
@@ -51,8 +52,8 @@ public class TrackerContext extends BidRequestContext {
         return applicationContext.getBean(beanName, beanClass);
     }
 
-    public ITrackingUrlResolver getUrlResolver() {
-        return resolveBean(tracker::getUrlResolver, "trackingUrlResolver", ITrackingUrlResolver.class);
+    public ITrackerMacroResolver getMacroResolver() {
+        return resolveBean(tracker::getMacroResolver, "trackerMacroResolver", ITrackerMacroResolver.class);
     }
 
     public ITrackerInjector getInjector() {

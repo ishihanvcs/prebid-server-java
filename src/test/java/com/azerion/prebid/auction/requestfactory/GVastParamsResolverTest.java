@@ -50,7 +50,7 @@ public class GVastParamsResolverTest extends VertxTest {
         HttpRequestContext httpRequest = emptyRequestBuilder().build();
         assertThatExceptionOfType(InvalidRequestException.class)
             .isThrownBy(() -> target.resolve(httpRequest))
-                .withMessage("'p' parameter required");
+                .withMessage("'p' parameter is required");
     }
 
     @Test

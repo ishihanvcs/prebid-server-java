@@ -4,7 +4,6 @@ import com.azerion.prebid.customtrackers.CustomTrackerModuleContext;
 import com.azerion.prebid.hooks.v1.InvocationResultImpl;
 import com.azerion.prebid.settings.SettingsLoader;
 import com.azerion.prebid.utils.JsonUtils;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
@@ -72,29 +71,13 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
             return moduleContext.with(bidRequest);
         }
 
-        final String placementId = getPlacementId(bidRequest);
-        return CustomTrackerModuleContext.from(
-                bidRequest, settingsLoader.getPlacement(placementId)
-        );
+        return CustomTrackerModuleContext.builder().bidRequest(bidRequest).build();
     }
 
     private ObjectNode createNodesWithPlacementId(String objectPath, String placementId) {
         Tuple2<ObjectNode, ObjectNode> rootAndLeaf = jsonUtils.createObjectNodes(objectPath);
         rootAndLeaf.getRight().put("placementId", Long.parseLong(placementId));
         return rootAndLeaf.getLeft();
-    }
-
-    private String getPlacementId(BidRequest bidRequest) {
-        JsonNode placementIdNode = jsonUtils.findFirstNode(
-                bidRequest.getImp().stream()
-                        .map(Imp::getExt).collect(Collectors.toList()),
-                "prebid/bidder/improvedigital/placementId"
-        );
-
-        if (placementIdNode != null) {
-            return placementIdNode.asText();
-        }
-        return null;
     }
 
     private void setPlacementId(BidRequest bidRequest, String placementId) {

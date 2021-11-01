@@ -1,6 +1,6 @@
 package com.azerion.prebid.settings;
 
-import com.azerion.prebid.exception.CustomSettingsLoaderException;
+import com.azerion.prebid.exception.SettingsLoaderException;
 import com.azerion.prebid.settings.model.CustomTrackerSetting;
 import com.azerion.prebid.settings.model.Placement;
 import io.vertx.core.Future;
@@ -26,46 +26,58 @@ public class SettingsLoader {
         this.settingsLoadingTimeout = settingsLoadingTimeout;
     }
 
-    private <T> T getSetting(
+    private <T> Future<T> getSettingFuture(
             String id, String settingType,
             BiFunction<String, Timeout, Future<T>> loaderFn
     ) {
         if (StringUtils.isBlank(id)) {
-            throw new CustomSettingsLoaderException(
+            return Future.failedFuture(
+                new SettingsLoaderException(
                     String.format("%s id cannot be blank", settingType)
-            );
+            ));
         }
-        Future<T> future = loaderFn.apply(id, settingsLoadingTimeout);
+        return loaderFn.apply(id, settingsLoadingTimeout);
+    }
+
+    private <T> T getSetting(
+            String id, String settingType,
+            BiFunction<String, Timeout, Future<T>> loaderFn
+    ) {
+        Future<T> future = getSettingFuture(id, settingType, loaderFn);
         final T setting = future.result();
         if (future.failed()) {
-            if (future.cause() instanceof CustomSettingsLoaderException) {
-                throw (CustomSettingsLoaderException) future.cause();
+            if (future.cause() instanceof SettingsLoaderException) {
+                throw (SettingsLoaderException) future.cause();
             }
-            throw new CustomSettingsLoaderException(future.cause().getMessage(), future.cause());
+            throw new SettingsLoaderException(future.cause().getMessage(), future.cause());
         } else if (setting == null) {
-            throw new CustomSettingsLoaderException(
+            throw new SettingsLoaderException(
                     String.format("No %s found with id: %s", settingType, id)
             );
         }
         return setting;
     }
 
-    public Placement getPlacement(String placementId) throws Exception {
-        return getSetting(placementId, "placement", customSettings::getPlacementById);
+    public Future<Placement> getPlacementFuture(String placementId) {
+        return getSettingFuture(placementId, "placement", customSettings::getPlacementById);
     }
 
-    public Account getAccount(String accountId) throws Exception {
-        return getSetting(accountId, "account", applicationSettings::getAccountById);
+    public Future<Account> getAccountFuture(String accountId) {
+        return getSettingFuture(accountId, "account", applicationSettings::getAccountById);
+    }
+
+    public Future<CustomTrackerSetting> getCustomTrackerSettingFuture() {
+        return customSettings.getCustomTrackerSetting(settingsLoadingTimeout);
     }
 
     public CustomTrackerSetting getCustomTrackerSetting() {
-        Future<CustomTrackerSetting> future = customSettings.getCustomTrackerSetting(settingsLoadingTimeout);
+        Future<CustomTrackerSetting> future = getCustomTrackerSettingFuture();
         final CustomTrackerSetting customTrackerSetting = future.result();
         if (future.failed()) {
-            if (future.cause() instanceof CustomSettingsLoaderException) {
-                throw (CustomSettingsLoaderException) future.cause();
+            if (future.cause() instanceof SettingsLoaderException) {
+                throw (SettingsLoaderException) future.cause();
             }
-            throw new CustomSettingsLoaderException(future.cause().getMessage(), future.cause());
+            throw new SettingsLoaderException(future.cause().getMessage(), future.cause());
         } else if (customTrackerSetting == null) {
             return new CustomTrackerSetting();
         }

@@ -35,7 +35,7 @@ currency-converter:
   external-rates:
     enabled: true
     url: https://cdn.jsdelivr.net/gh/prebid/currency-file@1/latest.json
-    default-timeout-ms: 40000
+    default-timeout-ms: 4000
     refresh-period-ms: 1800000
 metrics:
   prefix: pbs

@@ -11,7 +11,6 @@ import com.azerion.prebid.customtrackers.resolvers.TrackerMacroResolver;
 import com.azerion.prebid.handler.GVastHandler;
 import com.azerion.prebid.hooks.v1.CustomTrackerModule;
 import com.azerion.prebid.settings.SettingsLoader;
-import com.azerion.prebid.settings.model.CustomTrackerSetting;
 import com.azerion.prebid.utils.MacroProcessor;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -116,31 +115,11 @@ public class ExtensionConfig {
     }
 
     @Bean
-    CustomTrackerSetting customTrackerSetting(
-            SettingsLoader settingsLoader
-    ) {
-        return settingsLoader.getCustomTrackerSetting();
-    }
-
-    @Bean
     BidderBidModifier bidderBidModifier(
-            CustomTrackerSetting customTrackerSetting,
             MacroProcessor macroProcessor
     ) {
-        return new BidderBidModifier(customTrackerSetting, macroProcessor);
+        return new BidderBidModifier(macroProcessor);
     }
-
-    // @Bean
-    // @Primary
-    // BidResponsePostProcessor customResponsePostProcessor(
-    //         ApplicationContext applicationContext,
-    //         BidResponseModifier bidResponseModifier
-    // ) {
-    //
-    //     return new com.azerion.prebid.auction.BidResponsePostProcessor(
-    //             applicationContext, bidResponseModifier
-    //     );
-    // }
 
     @Bean
     Module customTrackerModule(
@@ -156,7 +135,7 @@ public class ExtensionConfig {
     }
 
     @Bean
-    MacroProcessor defaultMacroExpander() {
+    MacroProcessor macroProcessor() {
         return new MacroProcessor();
     }
 

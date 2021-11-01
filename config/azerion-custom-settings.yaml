@@ -1,9 +1,9 @@
 ---
 customTrackers:
-  enabled: false
+  enabled: true
   trackers:
     - id: 360yield # required and must be unique across all trackers
-      urlTemplate: https://ad.360yield.com/sspbids?bidder={{bidder}}&price_in_usd={{bid_price_usd}}&bid_price={{bid_price}}&bid_cur={{bid_currency}}&pid={{improve_digital_placement_id}}&type={{bid_type}} # required
+      urlTemplate: https://ad.360yield.com/extbid?bidder={{bidder}}&price={{bid_price_usd}}&pid={{improve_digital_placement_id}} # required
       # Supported macros supported by default macroResolver are:
       # - bidder
       # - bid_type

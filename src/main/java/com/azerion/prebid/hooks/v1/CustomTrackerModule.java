@@ -45,14 +45,13 @@ public class CustomTrackerModule implements Module {
     public Collection<? extends Hook<?, ? extends InvocationContext>> hooks() {
         return Arrays.asList(
                 new EntrypointHook(
+                        applicationContext,
                         settingsLoader
                 ),
-                new ProcessedAuctionRequestHook(
-                        settingsLoader,
-                        mapper
-                ),
+                new ProcessedAuctionRequestHook(),
                 new ProcessedBidderResponseHook(
-                        applicationContext, bidderBidModifier
+                        settingsLoader,
+                        bidderBidModifier
                 )
         );
     }

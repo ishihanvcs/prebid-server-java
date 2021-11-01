@@ -1,7 +1,6 @@
 package com.azerion.prebid.handler;
 
 import com.azerion.prebid.auction.GVastResponseCreator;
-import com.azerion.prebid.customtrackers.BidRequestContext;
 import com.azerion.prebid.auction.model.GVastParams;
 import com.azerion.prebid.auction.requestfactory.GVastContext;
 import com.azerion.prebid.auction.requestfactory.GVastRequestFactory;
@@ -138,9 +137,6 @@ public class GVastHandler implements Handler<RoutingContext> {
         updateAppAndNoCookieAndImpsMetrics(auctionContext);
         exchangeService.holdAuction(auctionContext)
                 .map(bidResponse -> {
-                    gVastContext.setBidResponse(bidResponse);
-                    final BidRequestContext bidRequestContext =
-                            BidRequestContext.from(applicationContext, gVastContext);
                     return Tuple2.of(bidResponse, auctionContext);
                 })
                 .map(result -> addToEvent(result.getLeft(), auctionEventBuilder::bidResponse, result))

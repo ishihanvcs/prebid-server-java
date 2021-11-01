@@ -3,8 +3,8 @@ package com.azerion.prebid.auction.requestfactory;
 import com.azerion.prebid.auction.model.CustParams;
 import com.azerion.prebid.auction.model.GVastParams;
 import com.azerion.prebid.exception.PlacementAccountNullException;
-import com.azerion.prebid.settings.model.Placement;
 import com.azerion.prebid.settings.SettingsLoader;
+import com.azerion.prebid.settings.model.Placement;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -33,7 +33,6 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
-import org.prebid.server.settings.model.Account;
 
 import java.util.List;
 import java.util.Objects;
@@ -69,11 +68,10 @@ public class GVastRequestFactory {
     public Future<GVastContext> fromRequest(RoutingContext routingContext, long startTime) {
         try {
             GVastParams gVastParams = paramResolver.resolve(getHttpRequestContext(routingContext));
-            return Future.succeededFuture(
-                    settingsLoader.getPlacement(
-                            String.valueOf(gVastParams.getPlacementId())
-                    )
-                ).map(this::validatePlacement)
+            return settingsLoader.getPlacementFuture(
+                        String.valueOf(gVastParams.getPlacementId())
+                )
+                .map(this::validatePlacement)
                 .map(placement -> GVastContext.from(gVastParams).with(placement).with(routingContext))
                 .compose(this::updateContextWithAccountAndBidRequest)
                 .map(this::updateRoutingContextBody)
@@ -145,14 +143,8 @@ public class GVastRequestFactory {
         final List<String> categories = gVastParams.getCat().stream()
                 .filter(cat -> cat.startsWith("IAB"))
                 .collect(Collectors.toList());
-        final Account account;
-        try {
-            account = settingsLoader.getAccount(gVastContext.getPlacement().getAccountId());
-        } catch (Throwable t) {
-            return Future.failedFuture(t);
-        }
-        return Future.succeededFuture(account)
-            .map(acc -> gVastContext.with(acc)
+        return settingsLoader.getAccountFuture(gVastContext.getPlacement().getAccountId())
+            .map(account -> gVastContext.with(account)
                 .with(
                     BidRequest.builder()
                         .id(tid)

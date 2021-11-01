@@ -12,21 +12,18 @@ import java.util.function.Supplier;
 
 @SuperBuilder(toBuilder = true)
 @Getter
-public class TrackerContext extends BidRequestContext {
+public class TrackerContext extends ModuleContext {
 
     CustomTracker tracker;
     BidderBid bidderBid;
     String bidder;
 
-    public static TrackerContext from(BidRequestContext bidRequestContext) {
+    public static TrackerContext from(ModuleContext moduleContext) {
         return TrackerContext
                 .builder()
-                .applicationContext(bidRequestContext.applicationContext)
-                .bidRequest(bidRequestContext.bidRequest)
-                .placement(bidRequestContext.placement)
-                .account(bidRequestContext.account)
-                .httpRequest(bidRequestContext.httpRequest)
-                .uidsCookie(bidRequestContext.uidsCookie)
+                .applicationContext(moduleContext.applicationContext)
+                .bidRequest(moduleContext.bidRequest)
+                .placement(moduleContext.placement)
                 .build();
     }
 

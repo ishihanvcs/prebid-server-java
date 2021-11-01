@@ -15,19 +15,17 @@ import java.util.Stack;
 public class BidderBidModifier {
 
     private static final Logger logger = LoggerFactory.getLogger(BidderBidModifier.class);
-    private final CustomTrackerSetting customTrackerSetting;
     private final MacroProcessor macroProcessor;
 
     public BidderBidModifier(
-            CustomTrackerSetting customTrackerSetting,
             MacroProcessor macroProcessor
     ) {
-        this.customTrackerSetting = customTrackerSetting;
         this.macroProcessor = macroProcessor;
     }
 
     public BidderBid modifyBidAdm(
-            BidRequestContext bidRequestContext,
+            CustomTrackerSetting customTrackerSetting,
+            ModuleContext bidRequestContext,
             BidderBid bidderBid,
             String bidder
     ) {

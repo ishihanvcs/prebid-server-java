@@ -38,6 +38,30 @@ placements:
   - id: 22555236
     accountId: 545-minijuegos.com
     gamAdUnit: /1015413,7451825/pbs/22555236
+  - id: 22604889
+    accountId: 545-linternaute.com
+    gamAdUnit: /1015413,22260766789/pbs/22604889
+  - id: 22606133
+    accountId: 545-kiz10.com
+    gamAdUnit: /1015413,22260766789/pbs/22606133
+  - id: 22606134
+    accountId: 545-kiz10girls.com
+    gamAdUnit: /1015413,22260766789/pbs/22606134
+  - id: 22606135
+    accountId: 545-taptapking.com
+    gamAdUnit: /1015413,22260766789/pbs/22606135
+  - id: 22606136
+    accountId: 545-kukogames.com
+    gamAdUnit: /1015413,22260766789/pbs/22606136
+  - id: 22606138
+    accountId: 545-fun10games.com
+    gamAdUnit: /1015413,22260766789/pbs/22606138
+  - id: 22606139
+    accountId: 545-playonlinefree.games
+    gamAdUnit: /1015413,22260766789/pbs/22606139
+  - id: 22606164
+    accountId: 545-playit-online.de
+    gamAdUnit: /1015413,22562219898/pbs/22606164
   - id: 22555237
     accountId: 545-minijuegos.mx
     gamAdUnit: /1015413,7451825/pbs/22555237

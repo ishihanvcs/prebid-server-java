@@ -1,6 +1,6 @@
 ---
 customTrackers:
-  enabled: true
+  enabled: false
   trackers:
     - id: 360yield # required and must be unique across all trackers
       urlTemplate: https://ad.360yield.com/extbid?bidder={{bidder}}&price={{bid_price_usd}}&pid={{improve_digital_placement_id}} # required

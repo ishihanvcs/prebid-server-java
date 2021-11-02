@@ -67,7 +67,7 @@ public class TrackerMacroResolver implements ITrackerMacroResolver {
         final JsonNode placementIdNode = jsonUtils.findFirstNode(
                 bidRequest.getImp().stream()
                         .map(Imp::getExt).collect(Collectors.toList()),
-                "prebid/bidder/improvedigital/placementId"
+                "/prebid/bidder/improvedigital/placementId"
         );
 
         if (placementIdNode == null) {

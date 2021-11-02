@@ -136,9 +136,7 @@ public class GVastHandler implements Handler<RoutingContext> {
         addToEvent(auctionContext, auctionEventBuilder::auctionContext, auctionContext);
         updateAppAndNoCookieAndImpsMetrics(auctionContext);
         exchangeService.holdAuction(auctionContext)
-                .map(bidResponse -> {
-                    return Tuple2.of(bidResponse, auctionContext);
-                })
+                .map(bidResponse -> Tuple2.of(bidResponse, auctionContext))
                 .map(result -> addToEvent(result.getLeft(), auctionEventBuilder::bidResponse, result))
                 .setHandler(result -> handleResult(result, auctionEventBuilder, gVastContext, startTime));
         return gVastContext;

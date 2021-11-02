@@ -28,23 +28,10 @@ public class JsonUtils {
         return Tuple2.of(root, leaf);
     }
 
-    public JsonNode findFirstNode(List<ObjectNode> nodeList, String path) {
-        final String[] pathItems = path.split("/");
-        return nodeList.stream().filter(node -> {
-            JsonNode n = node;
-            for (String pathItem : pathItems) {
-                if (n == null) {
-                    break;
-                }
-                n = n.get(pathItem);
-            }
-            return n != null && !n.isMissingNode();
-        }).map(node -> {
-            JsonNode n = node;
-            for (String pathItem : pathItems) {
-                n = n.get(pathItem);
-            }
-            return n;
-        }).findFirst().orElse(null);
+    public JsonNode findFirstNode(List<? extends JsonNode> nodeList, String path) {
+        return nodeList.stream().filter(node -> !node.at(path).isMissingNode())
+                .map(node -> node.at(path))
+                .findFirst()
+                .orElse(null);
     }
 }

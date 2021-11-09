@@ -45,7 +45,7 @@ cache:
   path: cache
   query: uuid=
 settings:
-  default-loading-timeout: 2000
+#  default-loading-timeout: 500 # optional long value in milliseconds, default value is 500 ms
   filesystem:
     settings-filename: config/azerion-settings.yaml
     custom-settings-filename: config/azerion-custom-settings.yaml
@@ -67,3 +67,62 @@ default-request:
 external-url: https://pbs-proto.360polaris.biz
 google-ad-manager:
   network-code: 1015413
+
+# Following section defines hooks to inject custom trackers in bid responses
+# for /openrtb2/auction endpoint. Do not change this, if you don't know how
+# hooks are implemented in PBS. As /gvast endpoint internally makes an auction
+# using same code used for /openrtb2/auction handler, these hooks applies
+# for /gvast endpoint as well.
+# Another special note for hooks definition is hooks.host-execution-plan
+# must be a valid JSON string with following structure. Converting it to
+# standard YAML or breaking the JSON syntax will break the application
+# bootstrapping logic and the server will not be started.
+hooks:
+  host-execution-plan: >
+    {
+      "endpoints": {
+        "/openrtb2/auction": {
+          "stages": {
+            "entrypoint": {
+              "groups": [
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "custom-tracker-module",
+                      "hook-impl-code": "custom-tracker-entrypoint"
+                    }
+                  ]
+                }
+              ]
+            },
+            "processed-auction-request": {
+              "groups": [
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "custom-tracker-module",
+                      "hook-impl-code": "custom-tracker-processed-auction-request"
+                    }
+                  ]
+                }
+              ]
+            },
+            "processed-bidder-response": {
+              "groups": [
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "custom-tracker-module",
+                      "hook-impl-code": "custom-tracker-processed-bidder-response"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    }

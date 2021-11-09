@@ -3,19 +3,27 @@ package com.azerion.prebid.config;
 import com.azerion.prebid.auction.GVastResponseCreator;
 import com.azerion.prebid.auction.requestfactory.GVastParamsResolver;
 import com.azerion.prebid.auction.requestfactory.GVastRequestFactory;
+import com.azerion.prebid.customtrackers.BidderBidModifier;
+import com.azerion.prebid.customtrackers.contracts.ITrackerInjector;
+import com.azerion.prebid.customtrackers.contracts.ITrackerMacroResolver;
+import com.azerion.prebid.customtrackers.injectors.TrackerInjector;
+import com.azerion.prebid.customtrackers.resolvers.TrackerMacroResolver;
 import com.azerion.prebid.handler.GVastHandler;
-import com.azerion.prebid.settings.CustomSettings;
+import com.azerion.prebid.hooks.v1.CustomTrackerModule;
+import com.azerion.prebid.settings.SettingsLoader;
+import com.azerion.prebid.utils.MacroProcessor;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import org.prebid.server.analytics.AnalyticsReporterDelegator;
 import org.prebid.server.auction.ExchangeService;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
+import org.prebid.server.currency.CurrencyConversionService;
+import org.prebid.server.hooks.v1.Module;
 import org.prebid.server.identity.IdGenerator;
 import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.log.HttpInteractionLogger;
 import org.prebid.server.metric.Metrics;
-import org.prebid.server.settings.ApplicationSettings;
 import org.prebid.server.settings.model.GdprConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -38,10 +46,7 @@ public class ExtensionConfig {
     private ApplicationContext applicationContext;
 
     @PostConstruct
-    public void registerCustomRoutes() {
-        Router router = (Router) applicationContext.getBean("router");
-        GVastHandler gVastHandler = (GVastHandler) applicationContext.getBean("gVastHandler");
-        router.get(GVastHandler.END_POINT).handler(gVastHandler);
+    public void postConfigure() {
         final String pbsVersion = applicationContext.getEnvironment().getProperty("app.version.pbs");
         if (pbsVersion != null) {
             logger.info("Core PBS Version: " + pbsVersion);
@@ -59,33 +64,27 @@ public class ExtensionConfig {
 
     @Bean
     GVastRequestFactory gvastRequestFactory(
-            ApplicationContext applicationContext,
-            ApplicationSettings applicationSettings,
-            CustomSettings customSettings,
+            SettingsLoader settingsLoader,
             GVastParamsResolver gVastParamsResolver,
             AuctionRequestFactory auctionRequestFactory,
-            Clock clock,
             @Qualifier("sourceIdGenerator")
             IdGenerator idGenerator,
             JacksonMapper mapper) {
         return new GVastRequestFactory(
-                applicationContext,
-                applicationSettings,
-                customSettings,
+                settingsLoader,
                 gVastParamsResolver,
                 auctionRequestFactory,
-                clock,
                 idGenerator,
                 mapper);
     }
 
     @Bean
     GVastResponseCreator gVastResponseCreator(
-            // Metrics metrics,
+            MacroProcessor macroProcessor,
             @Value("${external-url}") String externalUrl,
             @Value("${google-ad-manager.network-code}") String gamNetworkCode) {
         return new GVastResponseCreator(
-                // metrics,
+                macroProcessor,
                 externalUrl,
                 gamNetworkCode
         );
@@ -93,15 +92,17 @@ public class ExtensionConfig {
 
     @Bean
     GVastHandler gVastHandler(
+            ApplicationContext applicationContext,
             GVastRequestFactory gVastRequestFactory,
             GVastResponseCreator gVastResponseCreator,
             ExchangeService exchangeService,
             AnalyticsReporterDelegator analyticsReporter,
             Metrics metrics,
             Clock clock,
-            HttpInteractionLogger httpInteractionLogger) {
-
-        return new GVastHandler(
+            HttpInteractionLogger httpInteractionLogger,
+            Router router) {
+        GVastHandler handler = new GVastHandler(
+                applicationContext,
                 gVastRequestFactory,
                 gVastResponseCreator,
                 exchangeService,
@@ -109,5 +110,45 @@ public class ExtensionConfig {
                 metrics,
                 clock,
                 httpInteractionLogger);
+        router.get(GVastHandler.END_POINT).handler(handler);
+        return handler;
+    }
+
+    @Bean
+    BidderBidModifier bidderBidModifier(
+            MacroProcessor macroProcessor
+    ) {
+        return new BidderBidModifier(macroProcessor);
+    }
+
+    @Bean
+    Module customTrackerModule(
+            ApplicationContext applicationContext,
+            SettingsLoader settingsLoader,
+            BidderBidModifier bidderBidModifier,
+            JacksonMapper mapper
+    ) {
+        return new CustomTrackerModule(
+                applicationContext,
+                settingsLoader,
+                bidderBidModifier, mapper);
+    }
+
+    @Bean
+    MacroProcessor macroProcessor() {
+        return new MacroProcessor();
+    }
+
+    @Bean
+    ITrackerMacroResolver trackerMacroResolver(
+            CurrencyConversionService currencyConversionService,
+            JacksonMapper mapper
+    ) {
+        return new TrackerMacroResolver(currencyConversionService, mapper);
+    }
+
+    @Bean
+    ITrackerInjector trackerInjector() {
+        return new TrackerInjector();
     }
 }

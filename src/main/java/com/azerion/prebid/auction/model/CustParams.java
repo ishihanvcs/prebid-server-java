@@ -1,59 +1,55 @@
 package com.azerion.prebid.auction.model;
 
+import com.azerion.prebid.utils.FluentMap;
 import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-public class CustParams extends HashedMap<String, String[]> {
+public class CustParams extends HashedMap<String, Set<String>> {
 
-    private void setDefaults() {
+    private static final String DEFAULT_TNL_ASSET_ID = "prebidserver";
+
+    @Override
+    protected void init() {
         // tnl_asset_id KV is used in HeaderLift reporting
         if (!this.containsKey("tnl_asset_id")) {
-            this.put("tnl_asset_id", new String[] {"prebidserver"});
+            this.put("tnl_asset_id", Arrays.stream(
+                    new String[]{ DEFAULT_TNL_ASSET_ID })
+                    .collect(Collectors.toSet())
+            );
         }
     }
 
     public CustParams() {
         super();
-        setDefaults();
     }
 
     public CustParams(int initialCapacity) {
         super(initialCapacity);
-        setDefaults();
     }
 
     public CustParams(int initialCapacity, float loadFactor) {
         super(initialCapacity, loadFactor);
-        setDefaults();
     }
 
-    public CustParams(Map<? extends String, ? extends String[]> map) {
+    public CustParams(Map<? extends String, ? extends Set<String>> map) {
         super(map);
-        setDefaults();
     }
 
     public CustParams(String paramString) {
         this();
         if (!StringUtils.isBlank(paramString)) {
-            for (String kv : paramString.split("&")) {
-                String[] pair = kv.split("=");
-                if (pair.length != 2) {
-                    continue;
-                }
-                this.put(pair[0], pair[1].split(","));
-            }
+            FluentMap.fromQueryString(paramString, this);
         }
     }
 
     @Override
     public String toString() {
-        return entrySet().stream()
-            .sorted((o1, o2) -> o1.getKey().compareToIgnoreCase(o2.getKey()))
-            .map(entry -> entry.getKey() + "=" + String.join(",", entry.getValue()))
-                .collect(Collectors.joining("&"));
+        return FluentMap.from(this).queryString();
     }
 
     @Override
@@ -63,6 +59,9 @@ public class CustParams extends HashedMap<String, String[]> {
 
     @Override
     public boolean equals(Object obj) {
-        return this.toString().equals(obj.toString());
+        if (obj instanceof CustParams) {
+            return this.toString().equals(obj.toString());
+        }
+        return false;
     }
 }

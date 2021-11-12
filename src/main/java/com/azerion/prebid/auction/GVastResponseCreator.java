@@ -41,16 +41,23 @@ public class GVastResponseCreator {
 
     private final String externalUrl;
     private final String gamNetworkCode;
+    private final String pbct;
     private final MacroProcessor macroProcessor;
 
     public GVastResponseCreator(
             MacroProcessor macroProcessor,
             String externalUrl,
-            String gamNetworkCode
+            String gamNetworkCode,
+            String cacheHost
     ) {
         this.macroProcessor = Objects.requireNonNull(macroProcessor);
         this.externalUrl = HttpUtil.validateUrl(Objects.requireNonNull(externalUrl));
         this.gamNetworkCode = Objects.requireNonNull(gamNetworkCode);
+        if ("pbc-proto.360polaris.biz".equals(cacheHost)) {
+            this.pbct = "3";
+        } else {
+            this.pbct = "1";
+        }
     }
 
     public String create(GVastParams gVastParams, Placement placement, RoutingContext routingContext,
@@ -150,7 +157,7 @@ public class GVastResponseCreator {
         }
         if (targeting.length() > 0) {
             // Target Azerion Prebid cache line items (creatives) in GAM
-            targeting.append("pbct=1");
+            targeting.append("pbct=").append(pbct);
             // Disable Google AdX/AdSense and pricing rules for ImproveDigital deals
             if (improvedigitalDealWon) {
                 targeting.append("&tnl_wog=1&nf=1");
@@ -163,7 +170,7 @@ public class GVastResponseCreator {
                                       String gdprConsent) {
         String adUnit = placement.getGamAdUnit();
         if (StringUtils.isBlank(adUnit)) {
-            adUnit = "/" + gamNetworkCode + "/" + "pbs" + (placement.getId() == null ? "" : "/" + placement.getId());
+            adUnit = "/" + gamNetworkCode + "/pbs/" + placement.getId();
         } else {
             // If ad unit begins with "/", full ad unit path is expected including the GAM network code
             // otherwise the GAM network code will be prepended
@@ -187,7 +194,7 @@ public class GVastResponseCreator {
             targetingString += (targetingString.length() > 0 ? "&" : "") + "fp=" + bidFloor;
         }
         if (!StringUtils.isBlank(targetingString)) {
-            targetingString = targetingString.replace("pbct=2", "pbct=1"); // HACK - fix
+            targetingString = targetingString.replace("pbct=2", "pbct=" + pbct); // HACK - fix
             gamTag += "&cust_params=" + HttpUtil.encodeUrl(targetingString);
         }
 

@@ -41,7 +41,7 @@ metrics:
   prefix: pbs
 cache:
   scheme: https
-  host: pbc.360yield.com
+  host: pbc-proto.360polaris.biz
   path: cache
   query: uuid=
 settings:

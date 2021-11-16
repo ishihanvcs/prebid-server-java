@@ -82,11 +82,14 @@ public class ExtensionConfig {
     GVastResponseCreator gVastResponseCreator(
             MacroProcessor macroProcessor,
             @Value("${external-url}") String externalUrl,
-            @Value("${google-ad-manager.network-code}") String gamNetworkCode) {
+            @Value("${google-ad-manager.network-code}") String gamNetworkCode,
+            @Value("${cache.host}") String cacheHost
+    ) {
         return new GVastResponseCreator(
                 macroProcessor,
                 externalUrl,
-                gamNetworkCode
+                gamNetworkCode,
+                cacheHost
         );
     }
 

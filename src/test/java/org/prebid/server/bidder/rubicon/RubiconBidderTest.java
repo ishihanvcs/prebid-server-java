@@ -113,7 +113,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.prebid.server.proto.openrtb.ext.response.BidType.banner;
 import static org.prebid.server.proto.openrtb.ext.response.BidType.video;
 
@@ -537,7 +537,7 @@ public class RubiconBidderTest extends VertxTest {
         final Result<List<HttpRequest<BidRequest>>> result = rubiconBidder.makeHttpRequests(bidRequest);
 
         // then
-        verifyZeroInteractions(currencyConversionService);
+        verifyNoInteractions(currencyConversionService);
         assertThat(result.getErrors()).hasSize(1)
                 .containsOnly(BidderError.of("Imp `impId` floor provided with no currency, assuming USD",
                         BidderError.Type.bad_input));
@@ -2320,7 +2320,7 @@ public class RubiconBidderTest extends VertxTest {
 
         // then
         assertThat(result.getErrors()).hasSize(1);
-        assertThat(result.getErrors().get(0).getMessage()).startsWith("Cannot deserialize instance");
+        assertThat(result.getErrors().get(0).getMessage()).startsWith("Cannot deserialize value");
         assertThat(result.getValue()).hasSize(1);
     }
 
@@ -2479,10 +2479,10 @@ public class RubiconBidderTest extends VertxTest {
         // given
         final List<Deal> dealsList = asList(
                 Deal.builder().ext(mapper.valueToTree(ExtDeal.of(ExtDealLine.of(null, "123",
-                        singletonList(Format.builder().w(120).h(600).build()), null))))
+                                singletonList(Format.builder().w(120).h(600).build()), null))))
                         .build(),
                 Deal.builder().ext(mapper.valueToTree(ExtDeal.of(ExtDealLine.of(null, "234",
-                        singletonList(Format.builder().w(300).h(250).build()), null))))
+                                singletonList(Format.builder().w(300).h(250).build()), null))))
                         .build());
 
         final BidRequest bidRequest = givenBidRequest(

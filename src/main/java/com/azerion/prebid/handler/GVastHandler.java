@@ -7,7 +7,6 @@ import com.azerion.prebid.auction.requestfactory.GVastRequestFactory;
 import com.azerion.prebid.settings.model.Placement;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
-import com.iab.openrtb.response.BidResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -17,10 +16,8 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 import org.prebid.server.analytics.AnalyticsReporterDelegator;
 import org.prebid.server.analytics.model.AuctionEvent;
-import org.prebid.server.analytics.model.HttpContext;
 import org.prebid.server.auction.ExchangeService;
 import org.prebid.server.auction.model.AuctionContext;
-import org.prebid.server.auction.model.Tuple2;
 import org.prebid.server.cookie.UidsCookie;
 import org.prebid.server.exception.BlacklistedAccountException;
 import org.prebid.server.exception.BlacklistedAppException;
@@ -30,6 +27,7 @@ import org.prebid.server.log.ConditionalLogger;
 import org.prebid.server.log.HttpInteractionLogger;
 import org.prebid.server.metric.MetricName;
 import org.prebid.server.metric.Metrics;
+import org.prebid.server.model.HttpRequestContext;
 import org.prebid.server.privacy.gdpr.model.TcfContext;
 import org.prebid.server.privacy.model.PrivacyContext;
 import org.prebid.server.util.HttpUtil;
@@ -131,14 +129,14 @@ public class GVastHandler implements Handler<RoutingContext> {
         final AuctionContext auctionContext = gVastContext.getAuctionContext();
         final RoutingContext routingContext = gVastContext.getRoutingContext();
         final AuctionEvent.AuctionEventBuilder auctionEventBuilder = AuctionEvent.builder()
-                .httpContext(HttpContext.from(routingContext));
+                .httpContext(HttpRequestContext.from(routingContext));
 
-        addToEvent(auctionContext, auctionEventBuilder::auctionContext, auctionContext);
         updateAppAndNoCookieAndImpsMetrics(auctionContext);
+        addToEvent(auctionContext, auctionEventBuilder::auctionContext, auctionContext);
         exchangeService.holdAuction(auctionContext)
-                .map(bidResponse -> Tuple2.of(bidResponse, auctionContext))
-                .map(result -> addToEvent(result.getLeft(), auctionEventBuilder::bidResponse, result))
-                .setHandler(result -> handleResult(result, auctionEventBuilder, gVastContext, startTime));
+                .map(context -> addToEvent(context, auctionEventBuilder::auctionContext, context))
+                .map(context -> addToEvent(context.getBidResponse(), auctionEventBuilder::bidResponse, context))
+                .setHandler(context -> handleResult(context, auctionEventBuilder, gVastContext, startTime));
         return gVastContext;
     }
 
@@ -154,14 +152,13 @@ public class GVastHandler implements Handler<RoutingContext> {
     }
 
     private void handleResult(
-            AsyncResult<Tuple2<BidResponse, AuctionContext>> responseResult,
+            AsyncResult<AuctionContext> responseResult,
             AuctionEvent.AuctionEventBuilder auctionEventBuilder,
             GVastContext gVastContext,
             long startTime
     ) {
         final boolean responseSucceeded = responseResult.succeeded();
-        final AuctionContext auctionContext = responseSucceeded ? responseResult.result().getRight() : null;
-        final BidResponse bidResponse = responseSucceeded ? responseResult.result().getLeft() : null;
+        final AuctionContext auctionContext = responseSucceeded ? responseResult.result() : null;
         final GVastParams gVastParams = gVastContext.getGVastParams();
         final Placement placement = gVastContext.getPlacement();
         final RoutingContext routingContext = gVastContext.getRoutingContext();
@@ -179,7 +176,7 @@ public class GVastHandler implements Handler<RoutingContext> {
             metricRequestStatus = MetricName.ok;
             errorMessages = Collections.emptyList();
             status = HttpResponseStatus.OK.code();
-            body = gVastResponseCreator.create(gVastParams, placement, routingContext, bidResponse,
+            body = gVastResponseCreator.create(gVastParams, placement, routingContext, auctionContext.getBidResponse(),
                     PRIORITIZE_IMPROVE_DIGITAL_DEALS);
         } else {
             final Throwable exception = responseResult.cause();

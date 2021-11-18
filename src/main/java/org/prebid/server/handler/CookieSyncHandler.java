@@ -168,7 +168,7 @@ public class CookieSyncHandler implements Handler<RoutingContext> {
 
         return accountById(requestAccount, timeout)
                 .compose(account -> privacyEnforcementService.contextFromCookieSyncRequest(
-                        cookieSyncRequest, routingContext.request(), account, timeout)
+                                cookieSyncRequest, routingContext.request(), account, timeout)
                         .map(privacyContext -> CookieSyncContext.builder()
                                 .routingContext(routingContext)
                                 .uidsCookie(uidsCookie)
@@ -450,7 +450,7 @@ public class CookieSyncHandler implements Handler<RoutingContext> {
 
         final HttpResponseStatus status = HttpResponseStatus.OK;
         final CookieSyncResponse cookieSyncResponse = CookieSyncResponse.of(cookieSyncStatus, updatedBidderStatuses);
-        final String body = mapper.encode(cookieSyncResponse);
+        final String body = mapper.encodeToString(cookieSyncResponse);
 
         HttpUtil.executeSafely(cookieSyncContext.getRoutingContext(), Endpoint.cookie_sync,
                 response -> response

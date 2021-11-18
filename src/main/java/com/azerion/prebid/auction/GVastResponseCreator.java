@@ -105,7 +105,7 @@ public class GVastResponseCreator {
                 boolean hasUuid = false;
                 double price = 0;
 
-                for (Iterator<String> it = targetingKvs.fieldNames(); it.hasNext();) {
+                for (Iterator<String> it = targetingKvs.fieldNames(); it.hasNext(); ) {
                     String key = it.next();
                     bidderKeyValues.append(key).append("=").append(targetingKvs.get(key).asText()).append("&");
 
@@ -131,7 +131,7 @@ public class GVastResponseCreator {
                     // ImproveDigital deal won't always win if there's a higher bid. In that case we need to add
                     // winner Prebid KVs
                     if (bidderKeyValues.indexOf("hb_pb=") == -1) {
-                        for (Iterator<String> it = targetingKvs.fieldNames(); it.hasNext();) {
+                        for (Iterator<String> it = targetingKvs.fieldNames(); it.hasNext(); ) {
                             String key = it.next();
                             // Create winner keys by removing the bidder name from the key,
                             // i.e. hb_pb_improvedigital -> hb_pb

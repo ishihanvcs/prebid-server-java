@@ -119,8 +119,7 @@
         "includebidderkeys": true,
         "includeformat": true
       }
-    },
-    "tmaxrequest": 5000
+    }
   },
   "regs": {
     "ext": {
@@ -129,5 +128,6 @@
   },
   "cur": [
     "EUR"
-  ]
+  ],
+  "tmax": 2000
 }

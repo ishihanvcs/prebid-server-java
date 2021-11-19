@@ -32,9 +32,16 @@
         "minduration": 1,
         "maxduration": 30,
         "linearity": 1,
-        "api": [2],
+        "api": [
+          2
+        ],
         "startdelay": 0,
-        "protocols": [2, 3, 5, 6],
+        "protocols": [
+          2,
+          3,
+          5,
+          6
+        ],
         "skippable": true,
         "frameworks": 0,
         "w": 640,
@@ -80,7 +87,13 @@
       }
     }
   },
-  "regs": { "ext": { "gdpr": 1 } },
-  "cur": ["EUR"],
+  "regs": {
+    "ext": {
+      "gdpr": 1
+    }
+  },
+  "cur": [
+    "EUR"
+  ],
   "tmax": 2000
 }

@@ -9,10 +9,20 @@
           "video": {
             "minduration": 1,
             "maxduration": 30,
-            "api": [2],
+            "api": [
+              2
+            ],
             "startdelay": 0,
-            "playbackmethod": [2, 3],
-            "protocols": [2, 3, 5, 6],
+            "playbackmethod": [
+              2,
+              3
+            ],
+            "protocols": [
+              2,
+              3,
+              5,
+              6
+            ],
             "linearity": 1,
             "placement": 1,
             "skippable": true,
@@ -55,12 +65,18 @@
       },
       "video": {
         "context": "instream",
-        "playerSize": [[640, 480]],
-        "mimes": ["video/mp4"],
+        "playerSize": [
+          [
+            640,
+            480
+          ]
+        ],
+        "mimes": [
+          "video/mp4"
+        ],
         "placement": 1
       }
     }
-
   ],
   "ext": {
     "prebid": {
@@ -72,12 +88,24 @@
           "precision": 2,
           "ranges": [
             {
-              "max": 20,
+              "max": 2,
               "increment": 0.01
             },
             {
-              "max": 100,
+              "max": 5,
+              "increment": 0.05
+            },
+            {
+              "max": 10,
               "increment": 0.1
+            },
+            {
+              "max": 40,
+              "increment": 0.5
+            },
+            {
+              "max": 100,
+              "increment": 1
             }
           ]
         },
@@ -88,6 +116,13 @@
     },
     "tmaxrequest": 50
   },
-  "regs": { "ext": { "gdpr": 1 } },
-  "cur": ["EUR"]
+  "regs": {
+    "ext": {
+      "gdpr": 1
+    }
+  },
+  "cur": [
+    "EUR"
+  ],
+  "tmax": 2000
 }

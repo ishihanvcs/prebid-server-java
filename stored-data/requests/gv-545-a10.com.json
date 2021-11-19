@@ -23,16 +23,25 @@
       },
       "video": {
         "context": "instream",
-        "mimes": ["video/mp4",
+        "mimes": [
+          "video/mp4",
           "application/javascript",
           "video/webm",
-          "video/ogg"],
+          "video/ogg"
+        ],
         "minduration": 1,
         "maxduration": 30,
         "linearity": 1,
-        "api": [2],
+        "api": [
+          2
+        ],
         "startdelay": 0,
-        "protocols": [2, 3, 5, 6],
+        "protocols": [
+          2,
+          3,
+          5,
+          6
+        ],
         "skip": 1,
         "frameworks": 0,
         "w": 640,

@@ -9,12 +9,24 @@
           "precision": 2,
           "ranges": [
             {
-              "max": 20,
+              "max": 2,
               "increment": 0.01
             },
             {
-              "max": 100,
+              "max": 5,
+              "increment": 0.05
+            },
+            {
+              "max": 10,
               "increment": 0.1
+            },
+            {
+              "max": 40,
+              "increment": 0.5
+            },
+            {
+              "max": 100,
+              "increment": 1
             }
           ]
         },
@@ -24,6 +36,12 @@
       }
     }
   },
-  "regs": { "ext": { "gdpr": 1 } },
-  "cur": ["EUR"]
+  "regs": {
+    "ext": {
+      "gdpr": 1
+    }
+  },
+  "cur": [
+    "EUR"
+  ]
 }

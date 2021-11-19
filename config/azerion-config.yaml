@@ -61,9 +61,6 @@ gdpr:
       cache-dir: /var/tmp/vendor1
     v2:
       cache-dir: /var/tmp/vendor2
-default-request:
-  file:
-    path: stored-data/requests/default.json
 external-url: https://pbs-proto.360polaris.biz
 google-ad-manager:
   network-code: 1015413

@@ -115,8 +115,7 @@ public class ApplicationTest extends IntegrationTest {
                 .willReturn(aResponse()
                         .withTransformers("cache-response-transformer")
                         .withTransformerParameter("matcherName",
-                                "openrtb2/rubicon_appnexus/test-cache-matcher-rubicon-appnexus.json")
-                ));
+                                "openrtb2/rubicon_appnexus/test-cache-matcher-rubicon-appnexus.json")));
 
         // when
         final Response response = given(SPEC)
@@ -279,7 +278,7 @@ public class ApplicationTest extends IntegrationTest {
                         + "&targeting=%7B%22gam-key1%22%3A%22val1%22%2C%22gam-key2%22%3A%22val2%22%7D"
                         + "&curl=https%3A%2F%2Fgoogle.com"
                         + "&account=accountId"
-                        + "&attl_consent=someConsent"
+                        + "&addtl_consent=someConsent"
                         + "&gdpr_applies=false"
                         + "&consent_type=3"
                         + "&consent_string=1YNN");
@@ -708,7 +707,7 @@ public class ApplicationTest extends IntegrationTest {
                 final String bidderName = bidderEntry.getKey();
                 final JsonNode aliasesNode = bidderEntry.getValue().get("aliases");
 
-                if (aliasesNode.isObject()) {
+                if (aliasesNode != null && aliasesNode.isObject()) {
                     Iterator<String> iterator = aliasesNode.fieldNames();
                     while (iterator.hasNext()) {
                         aliases.put(iterator.next().trim(), bidderName);

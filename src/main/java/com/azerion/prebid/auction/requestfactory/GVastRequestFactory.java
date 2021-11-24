@@ -193,7 +193,7 @@ public class GVastRequestFactory {
      * Sets/replaces request body in the routing context
      */
     private GVastContext updateRoutingContextBody(GVastContext gVastContext) {
-        String body = mapper.encode(gVastContext.getBidRequest());
+        String body = mapper.encodeToString(gVastContext.getBidRequest());
         gVastContext.getRoutingContext().setBody(Buffer.buffer(body));
         return gVastContext;
     }

@@ -1,6 +1,6 @@
 FROM adoptopenjdk/openjdk15
 WORKDIR /
-COPY /target/prebid-server*.jar prebid-server.jar
+COPY ./target/prebid-server*.jar prebid-server.jar
 COPY stored-data stored-data
 COPY config config
 EXPOSE 8080

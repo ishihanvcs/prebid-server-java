@@ -32,6 +32,10 @@ currency-converter:
     default-timeout-ms: 4000
     refresh-period-ms: 1800000
 metrics:
+  accounts:
+    default-verbosity: basic
+    detailed-verbosity:
+      - 545-dailymotion.com
   prometheus:
     port: 9112
   graphite:
@@ -55,8 +59,7 @@ settings:
     stored-imps-dir: stored-data/imps
     stored-responses-dir: stored-data/responses
 gdpr:
-  enabled: true
-  default-value: 1
+  enabled: false
   host-vendor-id: 253
   vendorlist:
     v1:

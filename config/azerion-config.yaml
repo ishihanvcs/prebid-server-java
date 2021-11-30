@@ -53,7 +53,7 @@ settings:
     stored-imps-dir: stored-data/imps
     stored-responses-dir: stored-data/responses
 gdpr:
-  enabled: true
+  enabled: false
   default-value: 1
   host-vendor-id: 253
   vendorlist:

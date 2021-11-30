@@ -43,26 +43,30 @@ public class GVastParamsResolver {
             GVastParams.GVastParamsBuilder builder
     ) {
         // Handle GDPR params
-        final int gdpr;
+        final String gdpr;
         final CaseInsensitiveMultiMap queryParams = httpRequest.getQueryParams();
         String gdprConsentString = ObjectUtils.defaultIfNull(queryParams.get("gdpr_consent"), "");
         final String gdprParam = queryParams.get("gdpr");
         if (!StringUtils.isBlank(gdprParam)) {
             if (StringUtils.isNumeric(gdprParam)) {
-                gdpr = gdprParam.equals("1") ? 1 : 0;
+                gdpr = gdprParam.equals("1") ? "1" : "0";
             } else {
                 // "gdpr" param contains a string, assume gdpr applies and the string is a consent string
-                gdpr = 1;
+                gdpr = "1";
                 gdprConsentString = gdprParam;
             }
         } else {
             // "gdpr" param not provided, let's derive the value from consent string existence
-            gdpr = StringUtils.isBlank(gdprConsentString)
-                ? (gdprConfig.getDefaultValue().equals("1") ? 1 : 0)
-                : 1;
+            if (!StringUtils.isBlank(gdprConsentString)) {
+                gdpr = "1";
+            } else if (gdprConfig.getEnabled()) {
+                gdpr = gdprConfig.getDefaultValue();
+            } else {
+                gdpr = "";
+            }
         }
 
-        if (gdpr == 1 && StringUtils.isBlank(gdprConsentString)) {
+        if (gdpr.equals("1") && StringUtils.isBlank(gdprConsentString)) {
             conditionalLogger.warn(
                     String.format("Consent missing. Referer: %s", resolveReferrer(httpRequest)),
                     1000

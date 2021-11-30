@@ -38,6 +38,8 @@ import org.prebid.server.proto.openrtb.ext.request.ExtUser;
 import org.prebid.server.settings.ApplicationSettings;
 import org.springframework.context.ApplicationContext;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Clock;
 import java.util.List;
 import java.util.Objects;
@@ -83,8 +85,18 @@ public class GVastRequestFactory {
         this.settingsLoadingTimeout = createSettingsLoadingTimeout();
     }
 
+    private void validateUri(RoutingContext routingContext) throws IllegalArgumentException {
+        try {
+            new URI(routingContext.request().uri());
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(String.format("Malformed URL %s", routingContext.request().uri()), e);
+        }
+
+    }
+
     public Future<GVastContext> fromRequest(RoutingContext routingContext, long startTime) {
         try {
+            validateUri(routingContext);
             GVastParams gVastParams = paramResolver.resolve(getHttpRequestContext(routingContext));
             return customSettings.getPlacementById(String.valueOf(gVastParams.getPlacementId()), settingsLoadingTimeout)
                 .map(this::validatePlacement)

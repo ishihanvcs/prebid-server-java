@@ -111,7 +111,19 @@ public class GVastHandler implements Handler<RoutingContext> {
 
         final long startTime = clock.millis();
         gVastRequestFactory.fromRequest(routingContext, startTime)
-                .map(gVastContext -> this.executeAuction(gVastContext, startTime));
+                .setHandler(result -> {
+                    if (!routingContext.response().closed()) {
+                        if (result.failed()) {
+                            routingContext.response()
+                                    .exceptionHandler(throwable -> handleResponseException(throwable,
+                                            MetricName.badinput))
+                                    .setStatusCode(400)
+                                    .end(result.cause().getMessage());
+                        } else {
+                            result.map(gVastContext -> this.executeAuction(gVastContext, startTime));
+                        }
+                    }
+                });
     }
 
     private GVastContext executeAuction(GVastContext gVastContext, long startTime) {

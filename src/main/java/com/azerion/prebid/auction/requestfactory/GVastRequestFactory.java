@@ -37,8 +37,6 @@ import org.prebid.server.model.HttpRequestContext;
 import org.prebid.server.proto.openrtb.ext.request.ExtImp;
 import org.prebid.server.proto.openrtb.ext.request.ExtImpPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRegs;
-import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
-import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
 import org.prebid.server.settings.ApplicationSettings;
@@ -172,8 +170,6 @@ public class GVastRequestFactory {
             return auctionContext;
         }
 
-        ((ObjectNode) improveParamsNode).put("placementId", gVastParams.getPlacementId());
-
         CustParams custParams = gVastParams.getCustParams();
         if (!custParams.isEmpty()) {
             ObjectMapper mapper = new ObjectMapper();
@@ -198,19 +194,34 @@ public class GVastRequestFactory {
                 .filter(cat -> cat.startsWith("IAB"))
                 .collect(Collectors.toList());
 
+        final String gdpr = gVastParams.getGdpr();
+        final Integer gdprInt = StringUtils.isBlank(gdpr) ? null : Integer.parseInt(gdpr);
+
         return applicationSettings.getAccountById(gVastContext.getPlacement().getAccountId(), settingsLoadingTimeout)
             .map(account -> {
                 BidRequest commonBidRequest = BidRequest.builder()
                         .id(tid)
-                        .regs(Regs.of(null, ExtRegs.of(1, null)))
+                        .imp(Collections.singletonList(Imp.builder()
+                                .id("1")
+                                .video(Video.builder()
+                                        .minduration(gVastParams.getMinduration())
+                                        .maxduration(gVastParams.getMaxduration())
+                                        .w(gVastParams.getW())
+                                        .h(gVastParams.getH())
+                                        .protocols(gVastParams.getProtocols())
+                                        .api(gVastParams.getApi())
+                                        .placement(gVastParams.getPlacement())
+                                        .build())
+                                .ext(mapper.mapper().valueToTree(ExtImp.of(ExtImpPrebid.builder()
+                                        .storedrequest(ExtStoredRequest.of(gVastContext.getPlacement().getId()))
+                                        .build(), null)))
+                                .build()))
+                        .regs(Regs.of(null, ExtRegs.of(gdprInt, null)))
                         .user(User.builder()
                                 .ext(ExtUser.builder()
                                         .consent(gVastParams.getGdprConsentString())
                                         .build())
                                 .build())
-                        .ext(ExtRequest.of(ExtRequestPrebid.builder()
-                                .storedrequest(ExtStoredRequest.of("gv-" + account.getId()))
-                                .build()))
                         .source(Source.builder().tid(tid).build())
                         .test(gVastParams.isDebug() ? 1 : 0)
                         .build();
@@ -239,21 +250,6 @@ public class GVastRequestFactory {
                                     .language(language)
                                     .ua(gVastParams.getUa())
                                     .build())
-                            .imp(Collections.singletonList(Imp.builder()
-                                    .video(Video.builder()
-                                        .minduration(gVastParams.getMinduration())
-                                        .maxduration(gVastParams.getMaxduration())
-                                        .w(gVastParams.getW())
-                                        .h(gVastParams.getH())
-                                        .protocols(gVastParams.getProtocols())
-                                        .api(gVastParams.getApi())
-                                        .placement(gVastParams.getPlacement())
-                                        .build())
-                                    .ext(mapper.mapper().valueToTree(ExtImp.of(ExtImpPrebid.builder()
-                                            .storedrequest(ExtStoredRequest.of("gv-"
-                                                    + account.getId() + "-" + gVastContext.getPlacement().getId()))
-                                            .build(), null)))
-                                    .build()))
                             .build();
                 }
 

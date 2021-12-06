@@ -1,7 +1,7 @@
 {
   "ext": {
     "prebid": {
-      "bidders": {
+      "bidder": {
         "improvedigital": {
           "placementId": 22637960
         }

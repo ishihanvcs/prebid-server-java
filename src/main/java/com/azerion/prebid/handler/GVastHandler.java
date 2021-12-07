@@ -9,7 +9,6 @@ import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -113,16 +112,20 @@ public class GVastHandler implements Handler<RoutingContext> {
         // more accurately if we note the real start time, and use it to compute the auction timeout.
 
         final long startTime = clock.millis();
-        final Future<GVastContext> future = gVastRequestFactory.fromRequest(routingContext,
-                startTime);
-        if (future.failed() && !routingContext.response().closed()) {
-            routingContext.response()
-                    .exceptionHandler(throwable -> handleResponseException(throwable, MetricName.badinput))
-                    .setStatusCode(400)
-                    .end(future.cause().getMessage());
-        } else {
-            future.map(gVastContext -> this.executeAuction(gVastContext, startTime));
-        }
+        gVastRequestFactory.fromRequest(routingContext, startTime)
+                .setHandler(result -> {
+                    if (!routingContext.response().closed()) {
+                        if (result.failed()) {
+                            routingContext.response()
+                                    .exceptionHandler(throwable -> handleResponseException(throwable,
+                                            MetricName.badinput))
+                                    .setStatusCode(400)
+                                    .end(result.cause().getMessage());
+                        } else {
+                            result.map(gVastContext -> this.executeAuction(gVastContext, startTime));
+                        }
+                    }
+                });
     }
 
     private GVastContext executeAuction(GVastContext gVastContext, long startTime) {

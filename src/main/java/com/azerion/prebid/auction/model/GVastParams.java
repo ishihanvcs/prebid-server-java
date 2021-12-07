@@ -12,7 +12,7 @@ public class GVastParams {
 
     long placementId;
 
-    Integer gdpr; // 1=gdpr applies
+    String gdpr; // "1"=gdpr applies
 
     String gdprConsentString;
 

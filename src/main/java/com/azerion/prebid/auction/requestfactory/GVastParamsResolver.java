@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class GVastParamsResolver {
 
@@ -82,6 +83,34 @@ public class GVastParamsResolver {
                 : new ArrayList<>();
     }
 
+    private List<Integer> resolveIntArray(CaseInsensitiveMultiMap queryParams, String param) {
+        final String value = queryParams.get(param);
+        if (value == null) {
+            return null;
+        }
+
+        try {
+            return Arrays.stream(value.split(","))
+                .mapToInt(num -> Integer.parseInt(num))
+                .boxed()
+                .collect(Collectors.toList());
+        } catch (NumberFormatException e) {
+            throw new InvalidRequestException(String.format("'%s' parameter must be an array of numbers", param));
+        }
+    }
+
+    private Integer resolveIntParam(CaseInsensitiveMultiMap queryParams, String param) {
+        final String value = queryParams.get(param);
+        if (value == null) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw new InvalidRequestException(String.format("'%s' parameter must be a number", param));
+        }
+    }
+
     public GVastParams resolve(HttpRequestContext httpRequest) {
         final CaseInsensitiveMultiMap queryParams = httpRequest.getQueryParams();
 
@@ -89,12 +118,7 @@ public class GVastParamsResolver {
             throw new InvalidRequestException("'p' parameter is required");
         }
 
-        long placementId = 0;
-        try {
-            placementId = Long.parseLong(queryParams.get("p"));
-        } catch (NumberFormatException ignored) {
-            throw new InvalidRequestException("Invalid value provided for 'p' parameter");
-        }
+        int placementId = ObjectUtils.defaultIfNull(resolveIntParam(queryParams, "p"), 0);
 
         return setGdprParams(httpRequest, GVastParams.builder()
                 .placementId(placementId)
@@ -102,6 +126,16 @@ public class GVastParamsResolver {
                 .referrer(resolveReferrer(httpRequest))
                 .custParams(new CustParams(queryParams.get("cust_params")))
                 .cat(resolveCat(queryParams))
+                .ifa(queryParams.get("ifa"))
+                .ua(queryParams.get("ua"))
+                .bundle(queryParams.get("bundle"))
+                .minduration(resolveIntParam(queryParams, "minduration"))
+                .maxduration(resolveIntParam(queryParams, "maxduration"))
+                .w(resolveIntParam(queryParams, "w"))
+                .h(resolveIntParam(queryParams, "h"))
+                .protocols(resolveIntArray(queryParams, "protocols"))
+                .api(resolveIntArray(queryParams, "api"))
+                .placement(resolveIntParam(queryParams, "placement"))
         ).build();
     }
 }

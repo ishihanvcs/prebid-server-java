@@ -1,0 +1,52 @@
+{
+  "ext": {
+    "prebid": {
+      "bidder": {
+        "pubmatic": {
+          "publisherId": "156946",
+          "adSlot": "kiz10.com_preroll"
+        },
+        "improvedigital": {
+          "placementId": 22606133
+        },
+        "appnexus": {
+          "use_pmt_rule": false,
+          "placement_id": 23142033
+        },
+        "smartadserver": {
+          "networkId": 3653,
+          "pageId": 1485204,
+          "siteId": 471550,
+          "formatId": 88313
+        }
+      }
+    }
+  },
+  "video": {
+    "context": "instream",
+    "mimes": [
+      "video/mp4",
+      "application/javascript",
+      "video/webm",
+      "video/ogg"
+    ],
+    "minduration": 1,
+    "maxduration": 30,
+    "linearity": 1,
+    "api": [
+      2
+    ],
+    "startdelay": 0,
+    "protocols": [
+      2,
+      3,
+      5,
+      6
+    ],
+    "skip": 1,
+    "frameworks": 0,
+    "w": 640,
+    "h": 480,
+    "placement": 1
+  }
+}

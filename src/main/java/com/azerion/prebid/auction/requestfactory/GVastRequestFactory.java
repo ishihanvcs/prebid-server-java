@@ -8,19 +8,23 @@ import com.azerion.prebid.settings.model.Placement;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.iab.openrtb.request.App;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Device;
+import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.request.Publisher;
 import com.iab.openrtb.request.Regs;
 import com.iab.openrtb.request.Site;
 import com.iab.openrtb.request.Source;
 import com.iab.openrtb.request.User;
+import com.iab.openrtb.request.Video;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
+import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.AuctionContext;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
 import org.prebid.server.identity.IdGenerator;
@@ -28,9 +32,9 @@ import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.log.ConditionalLogger;
 import org.prebid.server.model.CaseInsensitiveMultiMap;
 import org.prebid.server.model.HttpRequestContext;
+import org.prebid.server.proto.openrtb.ext.request.ExtImp;
+import org.prebid.server.proto.openrtb.ext.request.ExtImpPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRegs;
-import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
-import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
 
@@ -130,8 +134,6 @@ public class GVastRequestFactory {
             return auctionContext;
         }
 
-        ((ObjectNode) improveParamsNode).put("placementId", gVastParams.getPlacementId());
-
         CustParams custParams = gVastParams.getCustParams();
         if (!custParams.isEmpty()) {
             ObjectMapper mapper = new ObjectMapper();
@@ -155,32 +157,68 @@ public class GVastRequestFactory {
         final List<String> categories = gVastParams.getCat().stream()
                 .filter(cat -> cat.startsWith("IAB"))
                 .collect(Collectors.toList());
+
+        final String gdpr = gVastParams.getGdpr();
+        final Integer gdprInt = StringUtils.isBlank(gdpr) ? null : Integer.parseInt(gdpr);
+
         return settingsLoader.getAccountFuture(gVastContext.getPlacement().getAccountId())
-            .map(account -> gVastContext.with(account)
-                .with(
-                    BidRequest.builder()
+            .map(account ->
+                BidRequest commonBidRequest = BidRequest.builder()
                         .id(tid)
-                        .site(Site.builder()
-                            .cat(categories)
-                            .domain(gVastParams.getDomain())
-                            .page(gVastParams.getReferrer())
-                            .publisher(Publisher.builder().id(account.getId()).build())
-                            .build())
-                        .regs(Regs.of(null, ExtRegs.of(1, null)))
+                        .imp(Collections.singletonList(Imp.builder()
+                                .id("1")
+                                .video(Video.builder()
+                                        .minduration(gVastParams.getMinduration())
+                                        .maxduration(gVastParams.getMaxduration())
+                                        .w(gVastParams.getW())
+                                        .h(gVastParams.getH())
+                                        .protocols(gVastParams.getProtocols())
+                                        .api(gVastParams.getApi())
+                                        .placement(gVastParams.getPlacement())
+                                        .build())
+                                .ext(mapper.mapper().valueToTree(ExtImp.of(ExtImpPrebid.builder()
+                                        .storedrequest(ExtStoredRequest.of(gVastContext.getPlacement().getId()))
+                                        .build(), null)))
+                                .build()))
+                        .regs(Regs.of(null, ExtRegs.of(gdprInt, null)))
                         .user(User.builder()
-                            .ext(ExtUser.builder()
-                                .consent(gVastParams.getGdprConsentString())
+                                .ext(ExtUser.builder()
+                                        .consent(gVastParams.getGdprConsentString())
+                                        .build())
                                 .build())
-                            .build())
-                        .device(Device.builder().language(language).build())
-                        .ext(ExtRequest.of(ExtRequestPrebid.builder()
-                            .storedrequest(ExtStoredRequest.of("gv-" + account.getId()))
-                            .build()))
                         .source(Source.builder().tid(tid).build())
                         .test(gVastParams.isDebug() ? 1 : 0)
-                        .build()
-                )
-            );
+                        .build();
+
+                final BidRequest bidRequest;
+                if (StringUtils.isBlank(gVastParams.getBundle())) {
+                    // web
+                    bidRequest = commonBidRequest.toBuilder()
+                            .site(Site.builder()
+                                    .cat(categories)
+                                    .domain(gVastParams.getDomain())
+                                    .page(gVastParams.getReferrer())
+                                    .publisher(Publisher.builder().id(account.getId()).build())
+                                    .build())
+                            .device(Device.builder().language(language).build())
+                            .build();
+                } else {
+                    //  app
+                    bidRequest = commonBidRequest.toBuilder()
+                            .app(App.builder()
+                                    .bundle(gVastParams.getBundle())
+                                    .storeurl(gVastParams.getReferrer())
+                                    .build())
+                            .device(Device.builder()
+                                    .ifa(gVastParams.getIfa())
+                                    .language(language)
+                                    .ua(gVastParams.getUa())
+                                    .build())
+                            .build();
+                }
+
+                return gVastContext.with(account).with(bidRequest);
+            });
     }
 
     private static CaseInsensitiveMultiMap toCaseInsensitiveMultiMap(MultiMap originalMap) {

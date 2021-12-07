@@ -41,7 +41,7 @@ public class GVastParamsResolverTest extends VertxTest {
 
     @Before
     public void setUp() {
-        gdprConfig = GdprConfig.builder().defaultValue("1").build();
+        gdprConfig = GdprConfig.builder().enabled(true).defaultValue("1").build();
         target = new GVastParamsResolver(gdprConfig);
     }
 
@@ -80,7 +80,7 @@ public class GVastParamsResolverTest extends VertxTest {
         GVastParams result = target.resolve(httpRequest);
         GVastParams expected = emptyParamsBuilder()
                 .placementId(1)
-                .gdpr(1)
+                .gdpr("1")
                 .build();
 
         assertThat(result.equals(expected)).isTrue();
@@ -100,7 +100,7 @@ public class GVastParamsResolverTest extends VertxTest {
 
     private GVastParams.GVastParamsBuilder emptyParamsBuilder() {
         return GVastParams.builder()
-            .gdpr(gdprConfig.getDefaultValue().equals("1") ? 1 : 0)
+            .gdpr(gdprConfig.getDefaultValue())
             .gdprConsentString("")
             .cat(new ArrayList<>())
             .referrer(DEFAULT_ABSOLUTE_URI)

@@ -54,7 +54,7 @@ settings:
     stored-responses-dir: stored-data/responses
     categories-dir: stored-data/categories
 gdpr:
-  enabled: true
+  enabled: false
   default-value: 1
   host-vendor-id: 253
   vendorlist:

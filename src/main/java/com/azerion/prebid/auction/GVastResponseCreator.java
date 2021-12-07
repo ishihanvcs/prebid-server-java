@@ -166,7 +166,7 @@ public class GVastResponseCreator {
         return targeting.toString();
     }
 
-    private String buildGamVastTagUrl(Placement placement, String referrer, String targeting, int gdpr,
+    private String buildGamVastTagUrl(Placement placement, String referrer, String targeting, String gdpr,
                                       String gdprConsent) {
         String adUnit = placement.getGamAdUnit();
         if (StringUtils.isBlank(adUnit)) {
@@ -207,14 +207,14 @@ public class GVastResponseCreator {
         return gamTag;
     }
 
-    private String getRedirect(String externalUrl, String bidder, int gdpr, String gdprConsent,
+    private String getRedirect(String externalUrl, String bidder, String gdpr, String gdprConsent,
                                String userIdParamName) {
         // TODO add us_privacy
         return externalUrl + "/setuid?bidder=" + bidder + "&gdpr=" + gdpr + "&gdpr_consent=" + gdprConsent
                 + "&us_privacy=&uid=" + userIdParamName;
     }
 
-    private String replaceMacros(String tag, int gdpr, String gdprConsent, String referrer) {
+    private String replaceMacros(String tag, String gdpr, String gdprConsent, String referrer) {
         final Map<String, String> macroValues =
                 FluentMap.<String, String>create()
                         .put("gdpr", Integer.toString(gdpr))
@@ -229,7 +229,7 @@ public class GVastResponseCreator {
         return expanded;
     }
 
-    private String buildVastAdTag(String tagUrl, boolean isGam, int gdpr, String gdprConsent, String referrer,
+    private String buildVastAdTag(String tagUrl, boolean isGam, String gdpr, String gdprConsent, String referrer,
                                   String debugInfo, int adIndex, boolean isLastAd) {
         StringBuilder sb = new StringBuilder();
         final boolean singleAd = adIndex == 0 && isLastAd;
@@ -289,7 +289,7 @@ public class GVastResponseCreator {
         final String custParams = gvastParams.getCustParams().toString();
         final String gdprConsent = gvastParams.getGdprConsentString();
         final String referrer = gvastParams.getReferrer();
-        final int gdpr = gvastParams.getGdpr();
+        final String gdpr = gvastParams.getGdpr();
         List<String> waterfall = new ArrayList<>(Arrays.asList(ObjectUtils.defaultIfNull(placement.getWaterfall(),
                 new String[]{"gam"})));
 

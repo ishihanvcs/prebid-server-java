@@ -34,6 +34,8 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -65,8 +67,18 @@ public class GVastRequestFactory {
         this.paramResolver = Objects.requireNonNull(gVastParamsResolver);
     }
 
+    private void validateUri(RoutingContext routingContext) throws IllegalArgumentException {
+        try {
+            new URI(routingContext.request().uri());
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(String.format("Malformed URL %s", routingContext.request().uri()), e);
+        }
+
+    }
+
     public Future<GVastContext> fromRequest(RoutingContext routingContext, long startTime) {
         try {
+            validateUri(routingContext);
             GVastParams gVastParams = paramResolver.resolve(getHttpRequestContext(routingContext));
             return settingsLoader.getPlacementFuture(
                         String.valueOf(gVastParams.getPlacementId())

@@ -217,7 +217,7 @@ public class GVastResponseCreator {
     private String replaceMacros(String tag, String gdpr, String gdprConsent, String referrer) {
         final Map<String, String> macroValues =
                 FluentMap.<String, String>create()
-                        .put("gdpr", Integer.toString(gdpr))
+                        .put("gdpr", gdpr)
                         .put("gdpr_consent", gdprConsent)
                         .put("timestamp", Long.toString(System.currentTimeMillis()))
                         .put("referrer", HttpUtil.encodeUrl(referrer))

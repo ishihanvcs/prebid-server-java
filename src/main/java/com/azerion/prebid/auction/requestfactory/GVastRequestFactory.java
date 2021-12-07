@@ -47,7 +47,6 @@ import org.springframework.context.ApplicationContext;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Clock;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -239,7 +238,8 @@ public class GVastRequestFactory {
                                     .language(language)
                                     .ua(gVastParams.getUa())
                                     .build())
-                            .imp(Collections.singletonList(Imp.builder()
+                            .imp(List.of(Imp.builder()
+                                    .id("1")
                                     .video(Video.builder()
                                         .minduration(gVastParams.getMinduration())
                                         .maxduration(gVastParams.getMaxduration())

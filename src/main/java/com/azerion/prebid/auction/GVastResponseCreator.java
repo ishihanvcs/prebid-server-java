@@ -32,7 +32,6 @@ import java.util.stream.Stream;
  */
 public class GVastResponseCreator {
 
-    private static final String GOOGLE_VAST_TAG = "https://pubads.g.doubleclick.net/gampad/ads?sz=640x480|640x360&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&correlator=";
     private static final double IMPROVE_DIGITAL_DEAL_FLOOR = 1.5;
     private static final Logger logger = LoggerFactory.getLogger(GVastResponseCreator.class);
 
@@ -150,9 +149,25 @@ public class GVastResponseCreator {
         return targeting.toString();
     }
 
-    private String buildGamVastTagUrl(Placement placement, String referrer, String targeting, String gdpr,
-                                      String gdprConsent) {
+    private String resolveGamOutputFromOrtb(List<Integer> protocols) {
+        if (protocols != null) {
+            if (protocols.contains(7)) {
+                return "xml_vast4";
+            } else if (protocols.contains(3)) {
+                return "xml_vast3";
+            } else if (protocols.contains(2)) {
+                return "xml_vast2";
+            }
+        }
+        return "vast";
+    }
+
+    private String buildGamVastTagUrl(Placement placement, GVastParams gvastParams, String targeting) {
         String adUnit = placement.getGamAdUnit();
+        final String gdprConsent = gvastParams.getGdprConsentString();
+        final String referrer = gvastParams.getReferrer();
+        final String gdpr = gvastParams.getGdpr();
+
         if (StringUtils.isBlank(adUnit)) {
             adUnit = "/" + gamNetworkCode + "/" + "pbs" + (placement.getId() == null ? "" : "/" + placement.getId());
         } else {
@@ -162,10 +177,23 @@ public class GVastResponseCreator {
                 adUnit = "/" + gamNetworkCode + "/" + adUnit;
             }
         }
-        String gamTag = GOOGLE_VAST_TAG + System.currentTimeMillis() + "&iu=" + adUnit;
+        StringBuilder gamTag = new StringBuilder();
+        gamTag.append("https://pubads.g.doubleclick.net/gampad/ads?gdfp_req=1&env=vp&unviewed_position_start=1")
+                .append("&correlator=").append(System.currentTimeMillis())
+                .append("&iu=").append(adUnit)
+                .append("&output=").append(resolveGamOutputFromOrtb(gvastParams.getProtocols()));
+
+        gamTag.append("&sz=");
+        if (gvastParams.getH() != null && gvastParams.getW() != null) {
+            gamTag.append(gvastParams.getW()).append("x").append(gvastParams.getH());
+        } else {
+            gamTag.append("640x480|640x360");
+        }
+
         if (referrer != null) {
             final String encodedReferrer = HttpUtil.encodeUrl(referrer);
-            gamTag += "&url=" + encodedReferrer + "&description_url=" + encodedReferrer;
+            gamTag.append("&url=").append(encodedReferrer)
+                    .append("&description_url=").append(encodedReferrer);
         }
 
         // cust_params
@@ -179,16 +207,16 @@ public class GVastResponseCreator {
         }
         if (!StringUtils.isBlank(targetingString)) {
             targetingString = targetingString.replace("pbct=2", "pbct=1"); // HACK - fix
-            gamTag += "&cust_params=" + HttpUtil.encodeUrl(targetingString);
+            gamTag.append("&cust_params=").append(HttpUtil.encodeUrl(targetingString));
         }
 
         if (placement.getId() != null && placement.getId().equals("22505159")) {
-            gamTag += "&sdki=44d&sdk_apis=2%2C8&sdkv=h.3.460.0&gdpr=" + gdpr;
+            gamTag.append("&sdki=44d&sdk_apis=2%2C8&sdkv=h.3.460.0&gdpr=").append(gdpr);
             if (!StringUtils.isBlank(gdprConsent)) {
-                gamTag += "&gdpr_consent=" + gdprConsent;
+                gamTag.append("&gdpr_consent=").append(gdprConsent);
             }
         }
-        return gamTag;
+        return gamTag.toString();
     }
 
     private String getRedirect(String externalUrl, String bidder, String gdpr, String gdprConsent,
@@ -209,7 +237,7 @@ public class GVastResponseCreator {
                                   String debugInfo, int adIndex, boolean isLastAd) {
         StringBuilder sb = new StringBuilder();
         final boolean singleAd = adIndex == 0 && isLastAd;
-        sb.append("<Ad><Wrapper")
+        sb.append(String.format("<Ad id=\"%d\"><Wrapper", adIndex))
                 .append(isLastAd ? ">" : " fallbackOnNoAd=\"true\">")
                 .append("<AdSystem>Azerion PBS</AdSystem>")
                 .append("<VASTAdTagURI><![CDATA[")
@@ -278,7 +306,7 @@ public class GVastResponseCreator {
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?><VAST version=\"3.0\">");
+        sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?><VAST version=\"2.0\">");
 
         // In order to prioritize Improve Digital deal over other ads, a second GAM tag is added
         // The first GAM call will disable AdX/AdSense. In case Improve's VAST doesn't fill or the ad
@@ -298,18 +326,14 @@ public class GVastResponseCreator {
                 case "gam":
                 case "gam_improve_deal":
                     sb.append(buildVastAdTag(
-                            buildGamVastTagUrl(placement, referrer,
-                                    buildTargetingString(Stream.of(gamPrebidTargeting, custParams, categoryTargeting)),
-                                    gdpr,
-                                    gdprConsent),
+                            buildGamVastTagUrl(placement, gvastParams,
+                                    buildTargetingString(Stream.of(gamPrebidTargeting, custParams, categoryTargeting))),
                             true, gdpr, gdprConsent, referrer, hbAuctionDebugInfo, i, i == numTags - 1));
                     break;
                 case "gam_no_hb":
                     sb.append(buildVastAdTag(
-                            buildGamVastTagUrl(placement, referrer,
-                                    buildTargetingString(Stream.of(custParams, categoryTargeting)),
-                                    gdpr,
-                                    gdprConsent),
+                            buildGamVastTagUrl(placement, gvastParams,
+                                    buildTargetingString(Stream.of(custParams, categoryTargeting))),
                             true, gdpr, gdprConsent, referrer, null, i, i == numTags - 1));
                     break;
                 // First look is for all low-fill campaigns that should get first look before allowing AdX to monetise
@@ -317,10 +341,8 @@ public class GVastResponseCreator {
                 // tnl_wog=1 -> disable AdX & AdSense
                 case "gam_first_look":
                     sb.append(buildVastAdTag(
-                            buildGamVastTagUrl(placement, referrer,
-                                    buildTargetingString(Stream.of(custParams, categoryTargeting, "fl=1&tnl_wog=1")),
-                                    gdpr,
-                                    gdprConsent),
+                            buildGamVastTagUrl(placement, gvastParams,
+                                    buildTargetingString(Stream.of(custParams, categoryTargeting, "fl=1&tnl_wog=1"))),
                             true, gdpr, gdprConsent, referrer, null, i, i == numTags - 1));
                     break;
                 default:

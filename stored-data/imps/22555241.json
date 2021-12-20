@@ -1,6 +1,10 @@
 {
   "ext": {
     "prebid": {
+      "azerion": {
+        "accountId": "545-minijogos.com.br",
+        "gamAdUnit": "/1015413,7451825/pbs/22555241"
+      },
       "bidder": {
         "pubmatic": {
           "publisherId": "156946",

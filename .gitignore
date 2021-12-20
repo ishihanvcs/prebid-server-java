@@ -14,3 +14,4 @@ target/
 .DS_Store
 
 .allure/
+/dev-scripts/node_modules/

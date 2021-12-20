@@ -44,15 +44,42 @@ cache:
   host: pbc-proto.360polaris.biz
   path: cache
   query: uuid=
+default-request:
+  file:
+    path : stored-data/requests/default.json
 settings:
-#  default-loading-timeout: 500 # optional long value in milliseconds, default value is 500 ms
+  # optional long value in milliseconds, default value is 500 ms
+  default-loading-timeout: 500
+
+  # To test with http backend in local development environment, `npm run dev` command must be
+  # in a separate terminal/console in the <project-root>/dev-scripts folder.
+  http:
+    endpoint: http://localhost:8989/config
+    amp-endpoint: http://localhost:8989/config?amp=true
+    video-endpoint: http://localhost:8989/config?video=true
+    category-endpoint: http://localhost:8989/categories
+  in-memory-cache:
+    cache-size: 10000
+    ttl-seconds: 120 # 2 minutes in seconds
+    notification-endpoints-enabled: true
+    http-update:
+      endpoint: http://localhost:8989/config
+      amp-endpoint: http://localhost:8989/config?amp=true
+      refresh-rate: 60000 # 1 minute in milliseconds
+      timeout: 2000 # in milliseconds
   filesystem:
-    settings-filename: config/azerion-settings.yaml
     custom-settings-filename: config/azerion-custom-settings.yaml
-    stored-requests-dir: stored-data/requests
-    stored-imps-dir: stored-data/imps
-    stored-responses-dir: stored-data/responses
-    categories-dir: stored-data/categories
+admin-endpoints:
+  storedrequest:
+    enabled: true
+    path: /invalidate/requests
+    on-application-port: true
+    protected: false
+  cache-invalidation:
+    enabled: true
+    path: /invalidate/accounts
+    on-application-port: true
+    protected: false
 gdpr:
   enabled: false
   default-value: 1
@@ -65,6 +92,26 @@ gdpr:
 external-url: https://pbs-proto.360polaris.biz
 google-ad-manager:
   network-code: 1015413
+
+#geolocation:
+#  enabled: true
+#  type: maxmind
+#  maxmind:
+#    remote-file-syncer:
+#      download-url: https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key=6O2UlqKmfUcyXzGP&suffix=tar.gz
+#      save-filepath: /var/tmp/prebid/GeoLite2-City.tar.gz
+#      retry-count: 3
+#      retry-interval-ms: 3000
+#      timeout-ms: 300000
+#      update-interval-ms: 0
+#      http-client:
+#        connect-timeout-ms: 3000
+#        max-redirects: 3
+#  circuit-breaker:
+#    enabled: false
+#    opening-threshold: 10
+#    opening-interval-ms: 200
+#    closing-interval-ms: 200
 
 # Following section defines hooks to inject custom trackers in bid responses
 # for /openrtb2/auction endpoint. Do not change this, if you don't know how
@@ -124,3 +171,12 @@ hooks:
         }
       }
     }
+
+# Following settings are set for development only. Don't copy these values to
+# deployment/templates/azerion-config.yaml.j2 unless absolutely needed.
+
+# Increase default auction timeout during development from Bangladesh
+auction:
+  default-timeout-ms: 10000
+  max-timeout-ms: 15000
+  stored-requests-timeout-ms: 5000

@@ -3,12 +3,16 @@
     "prebid": {
       "azerion": {
         "accountId": "950",
-        "bidFloor": {
-          "nl": 1.5,
-          "default": 0.5
+        "bidFloors": {
+          "nl": {
+            "bidFloor": 1.5
+          },
+          "default": {
+            "bidFloor": 0.5
+          }
         },
         "gamAdUnit": "/1015413/pbs/22137694",
-        "watefall": {
+        "waterfall": {
           "default": [
             "gam_first_look",
             "gam",

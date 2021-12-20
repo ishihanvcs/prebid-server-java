@@ -1,6 +1,10 @@
 {
   "ext": {
     "prebid": {
+      "azerion": {
+        "accountId": "545-taptapking.com",
+        "gamAdUnit": "/1015413,22260766789/pbs/22606135"
+      },
       "bidder": {
         "pubmatic": {
           "publisherId": "156946",

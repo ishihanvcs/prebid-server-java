@@ -1,6 +1,12 @@
 {
   "ext": {
     "prebid": {
+      "azerion": {
+        "accountId": 1915,
+        "bidFloor": {
+          "default": 1.5
+        }
+      },
       "bidder": {
         "improvedigital": {
           "placementId": 22505159

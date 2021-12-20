@@ -1,6 +1,10 @@
 {
   "ext": {
     "prebid": {
+      "azerion": {
+        "accountId": "545-a10.com",
+        "gamAdUnit": "TNL_NS-19041000062/a10.com_game_preroll"
+      },
       "bidder": {
         "pubmatic": {
           "publisherId": "156946",

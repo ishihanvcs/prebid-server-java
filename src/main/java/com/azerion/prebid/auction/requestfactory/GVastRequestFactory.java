@@ -2,9 +2,8 @@ package com.azerion.prebid.auction.requestfactory;
 
 import com.azerion.prebid.auction.model.CustParams;
 import com.azerion.prebid.auction.model.GVastParams;
-import com.azerion.prebid.exception.PlacementAccountNullException;
 import com.azerion.prebid.settings.SettingsLoader;
-import com.azerion.prebid.settings.model.Placement;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -40,6 +39,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtUser;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -77,19 +77,27 @@ public class GVastRequestFactory {
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException(String.format("Malformed URL %s", routingContext.request().uri()), e);
         }
+    }
 
+    private Future<GVastContext> createContext(Imp imp, RoutingContext routingContext, GVastParams gVastParams) {
+        try {
+            return updateContextWithAccountAndBidRequest(
+                    GVastContext
+                    .from(gVastParams)
+                    .with(routingContext)
+                    .with(imp, mapper)
+            );
+        } catch (JsonProcessingException e) {
+            return Future.failedFuture(e);
+        }
     }
 
     public Future<GVastContext> fromRequest(RoutingContext routingContext, long startTime) {
         try {
             validateUri(routingContext);
             GVastParams gVastParams = paramResolver.resolve(getHttpRequestContext(routingContext));
-            return settingsLoader.getPlacementFuture(
-                        String.valueOf(gVastParams.getPlacementId())
-                )
-                .map(this::validatePlacement)
-                .map(placement -> GVastContext.from(gVastParams).with(placement).with(routingContext))
-                .compose(this::updateContextWithAccountAndBidRequest)
+            return settingsLoader.getStoredImp(gVastParams.getImpId())
+                .compose(imp -> this.createContext(imp, routingContext, gVastParams))
                 .map(this::updateRoutingContextBody)
                 .compose(gVastContext ->
                     auctionRequestFactory
@@ -104,18 +112,6 @@ public class GVastRequestFactory {
         } catch (Throwable throwable) {
             return Future.failedFuture(throwable);
         }
-    }
-
-    /**
-     * Verifies if placement belongs to a valid account
-     */
-    private Placement validatePlacement(Placement placement) {
-        if (placement.getAccountId() == null) {
-            final String msg = String.format("Undefined account for placement %s", placement.getId());
-            EMPTY_ACCOUNT_LOGGER.error(msg, 100);
-            throw new PlacementAccountNullException(msg, placement.getId());
-        }
-        return placement;
     }
 
     /**
@@ -160,9 +156,9 @@ public class GVastRequestFactory {
 
         final String gdpr = gVastParams.getGdpr();
         final Integer gdprInt = StringUtils.isBlank(gdpr) ? null : Integer.parseInt(gdpr);
-
-        return settingsLoader.getAccountFuture(gVastContext.getPlacement().getAccountId())
-            .map(account ->
+        final String accountId = gVastContext.getImpExtConfig().getAccountId();
+        return settingsLoader.getAccountFuture(accountId)
+            .map(account -> {
                 BidRequest commonBidRequest = BidRequest.builder()
                         .id(tid)
                         .imp(Collections.singletonList(Imp.builder()
@@ -176,8 +172,9 @@ public class GVastRequestFactory {
                                         .api(gVastParams.getApi())
                                         .placement(gVastParams.getPlacement())
                                         .build())
-                                .ext(mapper.mapper().valueToTree(ExtImp.of(ExtImpPrebid.builder()
-                                        .storedrequest(ExtStoredRequest.of(gVastContext.getPlacement().getId()))
+                                .ext(mapper.mapper().valueToTree(
+                                        ExtImp.of(ExtImpPrebid.builder()
+                                        .storedrequest(ExtStoredRequest.of(String.valueOf(gVastParams.getImpId())))
                                         .build(), null)))
                                 .build()))
                         .regs(Regs.of(null, ExtRegs.of(gdprInt, null)))

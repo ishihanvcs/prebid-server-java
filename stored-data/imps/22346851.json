@@ -1,6 +1,10 @@
 {
   "ext": {
     "prebid": {
+      "azerion": {
+        "accountId": "545-jeu.fr",
+        "gamAdUnit": "TNL_NS-19041000062/jeu.fr_game_preroll"
+      },
       "bidder": {
         "pubmatic": {
           "publisherId": "156946",

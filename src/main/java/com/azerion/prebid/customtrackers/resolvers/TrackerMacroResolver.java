@@ -59,10 +59,6 @@ public class TrackerMacroResolver implements ITrackerMacroResolver {
     }
 
     protected String resolvePlacementId(TrackerContext context) throws Exception {
-        if (context.getPlacement() != null) {
-            return context.getPlacement().getId();
-        }
-
         final BidRequest bidRequest = context.getBidRequest();
         final JsonNode placementIdNode = jsonUtils.findFirstNode(
                 bidRequest.getImp().stream()

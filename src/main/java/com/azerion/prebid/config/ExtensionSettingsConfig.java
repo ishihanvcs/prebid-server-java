@@ -10,8 +10,8 @@ import io.vertx.core.logging.LoggerFactory;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
-import org.prebid.server.execution.Timeout;
-import org.prebid.server.execution.TimeoutFactory;
+import org.prebid.server.json.JacksonMapper;
+import org.prebid.server.metric.Metrics;
 import org.prebid.server.settings.ApplicationSettings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,24 +30,9 @@ import java.time.Clock;
 public class ExtensionSettingsConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtensionSettingsConfig.class);
-    private static final long DEFAULT_SETTINGS_LOADING_TIMEOUT = 500L;
 
     @Configuration
     static class CustomFileSettingsConfiguration {
-
-        /**
-         * Create {{@link Timeout}} object based on configuration or default, to be used
-         * during placement or account loading
-         * @return Timeout
-         */
-        @Bean
-        Timeout settingsLoadingTimeout(ApplicationContext applicationContext, Clock clock) {
-            final long lngTimeoutMs = applicationContext
-                        .getEnvironment()
-                        .getProperty("settings.default-loading-timeout", Long.class, DEFAULT_SETTINGS_LOADING_TIMEOUT);
-            final TimeoutFactory timeoutFactory = new TimeoutFactory(clock);
-            return timeoutFactory.create(lngTimeoutMs);
-        }
 
         @Bean
         FileCustomSettings customFileSettings(
@@ -59,11 +44,17 @@ public class ExtensionSettingsConfig {
 
         @Bean
         SettingsLoader customSettingsLoader(
+                ApplicationContext applicationContext,
                 ApplicationSettings applicationSettings,
                 CustomSettings customSettings,
-                Timeout settingsLoaderTimeout
+                Metrics metrics,
+                JacksonMapper mapper,
+                Clock clock
         ) {
-            return new SettingsLoader(applicationSettings, customSettings, settingsLoaderTimeout);
+            return new SettingsLoader(
+                    applicationContext, applicationSettings, customSettings,
+                    metrics, mapper, clock
+            );
         }
     }
 

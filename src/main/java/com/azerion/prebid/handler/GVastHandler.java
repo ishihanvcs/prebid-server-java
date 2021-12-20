@@ -1,10 +1,8 @@
 package com.azerion.prebid.handler;
 
 import com.azerion.prebid.auction.GVastResponseCreator;
-import com.azerion.prebid.auction.model.GVastParams;
 import com.azerion.prebid.auction.requestfactory.GVastContext;
 import com.azerion.prebid.auction.requestfactory.GVastRequestFactory;
-import com.azerion.prebid.settings.model.Placement;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -160,10 +158,7 @@ public class GVastHandler implements Handler<RoutingContext> {
             GVastContext gVastContext,
             long startTime
     ) {
-        final boolean responseSucceeded = responseResult.succeeded();
-        final AuctionContext auctionContext = responseSucceeded ? responseResult.result() : null;
-        final GVastParams gVastParams = gVastContext.getGVastParams();
-        final Placement placement = gVastContext.getPlacement();
+        final AuctionContext auctionContext = responseResult.succeeded() ? responseResult.result() : null;
         final RoutingContext routingContext = gVastContext.getRoutingContext();
 
         final MetricName requestType = auctionContext != null
@@ -175,12 +170,14 @@ public class GVastHandler implements Handler<RoutingContext> {
         final int status;
         final String body;
 
-        if (responseSucceeded) {
+        if (auctionContext != null) {
             metricRequestStatus = MetricName.ok;
             errorMessages = Collections.emptyList();
             status = HttpResponseStatus.OK.code();
-            body = gVastResponseCreator.create(gVastParams, placement, routingContext, auctionContext.getBidResponse(),
-                    PRIORITIZE_IMPROVE_DIGITAL_DEALS);
+            body = gVastResponseCreator.create(
+                    gVastContext.with(auctionContext.getBidResponse()),
+                    PRIORITIZE_IMPROVE_DIGITAL_DEALS
+            );
         } else {
             final Throwable exception = responseResult.cause();
             if (exception instanceof InvalidRequestException) {

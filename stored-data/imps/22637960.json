@@ -1,6 +1,9 @@
 {
   "ext": {
     "prebid": {
+      "azerion": {
+        "accountId": 2018
+      },
       "bidder": {
         "improvedigital": {
           "placementId": 22637960

@@ -1,6 +1,10 @@
 {
   "ext": {
     "prebid": {
+      "azerion": {
+        "accountId": "545-playit-online.de",
+        "gamAdUnit": "/1015413,22562219898/pbs/22606164"
+      },
       "bidder": {
         "pubmatic": {
           "publisherId": "156946",

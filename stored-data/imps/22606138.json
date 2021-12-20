@@ -1,6 +1,10 @@
 {
   "ext": {
     "prebid": {
+      "azerion": {
+        "accountId": "545-fun10games.com",
+        "gamAdUnit": "/1015413,22260766789/pbs/22606138"
+      },
       "bidder": {
         "pubmatic": {
           "publisherId": "156946",

@@ -1,0 +1,20 @@
+{
+  "name": "dev-scripts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "dev": "npx node server.js",
+    "debug": "DEBUG=routes:* npx node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "debug": "^4.3.3",
+    "express": "^4.17.2",
+    "js-yaml": "^4.1.0",
+    "lodash": "^4.17.21",
+    "morgan": "^1.10.0"
+  }
+}

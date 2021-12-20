@@ -2,7 +2,6 @@ package com.azerion.prebid.settings;
 
 import com.azerion.prebid.settings.model.CustomTracker;
 import com.azerion.prebid.settings.model.CustomTrackerSetting;
-import com.azerion.prebid.settings.model.Placement;
 import com.azerion.prebid.settings.model.SettingsFile;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.vertx.core.Future;
@@ -35,23 +34,13 @@ public class FileCustomSettings implements CustomSettings {
     private static final String JSON_SUFFIX = ".json";
     private static final Logger logger = LoggerFactory.getLogger(FileCustomSettings.class);
 
-    private final Map<String, Placement> placementMap;
     private final CustomTrackerSetting customTrackerSetting;
 
     public FileCustomSettings(FileSystem fileSystem, String settingsFileName) {
         SettingsFile settingsFile = readSettingsFile(Objects.requireNonNull(fileSystem),
                 settingsFileName);
 
-        placementMap = toMap(settingsFile.getPlacements(),
-                Placement::getId,
-                Function.identity());
-
         customTrackerSetting = settingsFile.getCustomTrackers();
-    }
-
-    @Override
-    public Future<Placement> getPlacementById(String placementId, Timeout timeout) {
-        return mapValueToFuture(placementMap, "Placement", placementId);
     }
 
     @Override

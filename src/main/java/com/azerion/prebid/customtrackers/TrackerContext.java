@@ -23,7 +23,6 @@ public class TrackerContext extends ModuleContext {
                 .builder()
                 .applicationContext(moduleContext.applicationContext)
                 .bidRequest(moduleContext.bidRequest)
-                .placement(moduleContext.placement)
                 .build();
     }
 

@@ -60,8 +60,16 @@ settings:
     category-endpoint: http://localhost:8989/categories
   in-memory-cache:
     cache-size: 10000
-    ttl-seconds: 120 # 2 minutes in seconds
+    ttl-seconds: 86400 # 1 day in seconds, can be set to 1 month or more now if needed
     notification-endpoints-enabled: true
+    # Below setting has been introduced to run a custom periodic executor {AccountCachePeriodicInvalidator} that
+    # invalidates all cached accounts from in memory cache only if the value of this setting is
+    # between 1 and value of ttl-seconds (after being converted to ms). This way, we can remove our dependency
+    # on cache invalidation routes. If this approach is approved, we should parameterize it in deployment script
+    # so that the interval can be fine-tuned as per business need. One downside of this approach, is that this
+    # periodic invalidator has not way to consider the actual time of caching of accounts and invalidate full cache
+    # in each execution.
+    account-invalidation-rate: 180000 # 3 minutes in milliseconds
     http-update:
       endpoint: http://localhost:8989/config
       amp-endpoint: http://localhost:8989/config?amp=true

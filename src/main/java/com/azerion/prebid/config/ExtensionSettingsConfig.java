@@ -10,6 +10,7 @@ import io.vertx.core.logging.LoggerFactory;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
+import org.prebid.server.execution.TimeoutFactory;
 import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.metric.Metrics;
 import org.prebid.server.settings.ApplicationSettings;
@@ -17,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
@@ -25,7 +25,6 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import java.time.Clock;
 
 public class ExtensionSettingsConfig {
 
@@ -44,16 +43,16 @@ public class ExtensionSettingsConfig {
 
         @Bean
         SettingsLoader customSettingsLoader(
-                ApplicationContext applicationContext,
                 ApplicationSettings applicationSettings,
                 CustomSettings customSettings,
                 Metrics metrics,
                 JacksonMapper mapper,
-                Clock clock
+                @Value("${settings.default-loading-timeout:#{500}}") long defaultTimeoutMs,
+                TimeoutFactory timeoutFactory
         ) {
             return new SettingsLoader(
-                    applicationContext, applicationSettings, customSettings,
-                    metrics, mapper, clock
+                    applicationSettings, customSettings,
+                    metrics, mapper, timeoutFactory, defaultTimeoutMs
             );
         }
     }

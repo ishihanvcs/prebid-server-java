@@ -11,7 +11,6 @@ import com.azerion.prebid.customtrackers.resolvers.TrackerMacroResolver;
 import com.azerion.prebid.handler.GVastHandler;
 import com.azerion.prebid.hooks.v1.CustomTrackerModule;
 import com.azerion.prebid.settings.SettingsLoader;
-import com.azerion.prebid.utils.JsonUtils;
 import com.azerion.prebid.utils.MacroProcessor;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -20,6 +19,8 @@ import org.prebid.server.analytics.AnalyticsReporterDelegator;
 import org.prebid.server.auction.ExchangeService;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
 import org.prebid.server.currency.CurrencyConversionService;
+import org.prebid.server.execution.TimeoutFactory;
+import org.prebid.server.geolocation.GeoLocationService;
 import org.prebid.server.hooks.v1.Module;
 import org.prebid.server.identity.IdGenerator;
 import org.prebid.server.json.JacksonMapper;
@@ -68,13 +69,18 @@ public class ExtensionConfig {
             SettingsLoader settingsLoader,
             GVastParamsResolver gVastParamsResolver,
             AuctionRequestFactory auctionRequestFactory,
-            @Qualifier("sourceIdGenerator")
-            IdGenerator idGenerator,
+            TimeoutFactory timeoutFactory,
+            Clock clock,
+            @Autowired(required = false) GeoLocationService geoLocationService,
+            @Qualifier("sourceIdGenerator") IdGenerator idGenerator,
             JacksonMapper mapper) {
         return new GVastRequestFactory(
                 settingsLoader,
                 gVastParamsResolver,
                 auctionRequestFactory,
+                geoLocationService,
+                timeoutFactory,
+                clock,
                 idGenerator,
                 mapper);
     }
@@ -82,14 +88,12 @@ public class ExtensionConfig {
     @Bean
     GVastResponseCreator gVastResponseCreator(
             MacroProcessor macroProcessor,
-            JacksonMapper mapper,
             @Value("${external-url}") String externalUrl,
             @Value("${google-ad-manager.network-code}") String gamNetworkCode,
             @Value("${cache.host}") String cacheHost
     ) {
         return new GVastResponseCreator(
                 macroProcessor,
-                new JsonUtils(mapper),
                 externalUrl,
                 gamNetworkCode,
                 cacheHost

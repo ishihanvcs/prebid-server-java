@@ -13,9 +13,7 @@ import org.prebid.server.metric.Metrics;
 import org.prebid.server.settings.ApplicationSettings;
 import org.prebid.server.settings.model.Account;
 import org.prebid.server.settings.model.StoredDataResult;
-import org.springframework.context.ApplicationContext;
 
-import java.time.Clock;
 import java.util.Collections;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -24,31 +22,33 @@ public class SettingsLoader {
 
     private static final long DEFAULT_SETTINGS_LOADING_TIMEOUT = 500L;
 
-    private final ApplicationContext applicationContext;
     private final ApplicationSettings applicationSettings;
     private final CustomSettings customSettings;
-    private final Clock clock;
+    private final TimeoutFactory timeoutFactory;
     private final Metrics metrics;
     private final JacksonMapper mapper;
+    private final long defaultLoadingTimeoutMs;
 
     public SettingsLoader(
-            ApplicationContext applicationContext,
             ApplicationSettings applicationSettings,
             CustomSettings customSettings,
             Metrics metrics,
             JacksonMapper mapper,
-            Clock clock) {
-        this.applicationContext = applicationContext;
+            TimeoutFactory timeoutFactory,
+            long defaultLoadingTimeoutMs
+    ) {
         this.applicationSettings = applicationSettings;
         this.customSettings = customSettings;
         this.metrics = metrics;
         this.mapper = mapper;
-        this.clock = clock;
+        this.timeoutFactory = timeoutFactory;
+        this.defaultLoadingTimeoutMs = defaultLoadingTimeoutMs;
     }
 
     private <T> Future<T> getSettingFuture(
             String id, String settingType,
-            BiFunction<String, Timeout, Future<T>> loaderFn
+            BiFunction<String, Timeout, Future<T>> loaderFn,
+            Timeout timeout
     ) {
         if (StringUtils.isBlank(id)) {
             return Future.failedFuture(
@@ -56,46 +56,45 @@ public class SettingsLoader {
                             String.format("%s id cannot be blank", settingType)
                     ));
         }
-        return loaderFn.apply(id, createSettingsLoadingTimeout());
+        return loaderFn.apply(id, createTimeoutIfNull(timeout));
     }
 
-    private <T> T getSetting(
-            String id, String settingType,
-            BiFunction<String, Timeout, Future<T>> loaderFn
-    ) {
-        Future<T> future = getSettingFuture(id, settingType, loaderFn);
-        final T setting = future.result();
-        if (future.failed()) {
-            if (future.cause() instanceof SettingsLoaderException) {
-                throw (SettingsLoaderException) future.cause();
-            }
-            throw new SettingsLoaderException(future.cause().getMessage(), future.cause());
-        } else if (setting == null) {
-            throw new SettingsLoaderException(
-                    String.format("No %s found with id: %s", settingType, id)
-            );
+    public Timeout createSettingsLoadingTimeout() {
+        return createSettingsLoadingTimeout(0);
+    }
+
+    public Timeout createSettingsLoadingTimeout(long startTime) {
+        return startTime <= 0
+                ? timeoutFactory.create(defaultLoadingTimeoutMs)
+                : timeoutFactory.create(startTime, defaultLoadingTimeoutMs);
+    }
+
+    private Timeout createTimeoutIfNull(Timeout timeout) {
+        if (timeout == null) {
+            timeout = createSettingsLoadingTimeout();
         }
-        return setting;
-    }
-
-    private Timeout createSettingsLoadingTimeout() {
-        final long lngTimeoutMs = applicationContext
-                .getEnvironment()
-                .getProperty("settings.default-loading-timeout", Long.class, DEFAULT_SETTINGS_LOADING_TIMEOUT);
-        final TimeoutFactory timeoutFactory = new TimeoutFactory(clock);
-        return timeoutFactory.create(lngTimeoutMs);
+        return timeout;
     }
 
     public Future<Account> getAccountFuture(String accountId) {
-        return getSettingFuture(accountId, "account", applicationSettings::getAccountById);
+        return getAccountFuture(accountId, null);
+    }
+
+    public Future<Account> getAccountFuture(String accountId, Timeout timeout) {
+        timeout = createTimeoutIfNull(timeout);
+        return getSettingFuture(accountId, "account", applicationSettings::getAccountById, timeout);
+    }
+
+    public Future<CustomTrackerSetting> getCustomTrackerSettingFuture(Timeout timeout) {
+        return customSettings.getCustomTrackerSetting(createTimeoutIfNull(timeout));
     }
 
     public Future<CustomTrackerSetting> getCustomTrackerSettingFuture() {
-        return customSettings.getCustomTrackerSetting(createSettingsLoadingTimeout());
+        return getCustomTrackerSettingFuture(null);
     }
 
-    public Future<Imp> getStoredImp(String impId) {
-        return getStoredDataResultFuture(null, Collections.emptySet(), Set.of(impId))
+    public Future<Imp> getStoredImp(String impId, Timeout timeout) {
+        return getStoredDataResultFuture(null, Collections.emptySet(), Set.of(impId), timeout)
                 .compose(storedDataResult -> {
                     try {
                         final String storedData = storedDataResult.getStoredIdToImp().getOrDefault(impId, null);
@@ -113,9 +112,9 @@ public class SettingsLoader {
     }
 
     public Future<StoredDataResult> getStoredDataResultFuture(
-            String accountId, Set<String> requestIds, final Set<String> impIds
+            String accountId, Set<String> requestIds, final Set<String> impIds, Timeout timeout
     ) {
-        return applicationSettings.getStoredData(accountId, requestIds, impIds, createSettingsLoadingTimeout())
+        return applicationSettings.getStoredData(accountId, requestIds, impIds, timeout)
                 .recover(exception -> Future.failedFuture(new InvalidRequestException(
                         String.format("Stored request fetching failed: %s", exception.getMessage()))))
                 .compose(result -> !result.getErrors().isEmpty()
@@ -134,19 +133,5 @@ public class SettingsLoader {
                     );
                     return Future.succeededFuture(storedDataResult);
                 });
-    }
-
-    public CustomTrackerSetting getCustomTrackerSetting() {
-        Future<CustomTrackerSetting> future = getCustomTrackerSettingFuture();
-        final CustomTrackerSetting customTrackerSetting = future.result();
-        if (future.failed()) {
-            if (future.cause() instanceof SettingsLoaderException) {
-                throw (SettingsLoaderException) future.cause();
-            }
-            throw new SettingsLoaderException(future.cause().getMessage(), future.cause());
-        } else if (customTrackerSetting == null) {
-            return new CustomTrackerSetting();
-        }
-        return customTrackerSetting;
     }
 }

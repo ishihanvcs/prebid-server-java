@@ -3,8 +3,10 @@
     "prebid": {
       "azerion": {
         "accountId": 1915,
-        "bidFloor": {
-          "default": 1.5
+        "bidFloors": {
+          "default": {
+            "bidFloor": 1.5
+          }
         }
       },
       "bidder": {

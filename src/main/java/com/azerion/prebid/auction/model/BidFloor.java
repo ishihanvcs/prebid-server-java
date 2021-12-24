@@ -9,5 +9,5 @@ import lombok.Value;
 public class BidFloor {
 
     @JsonProperty("bidFloor")
-    double bidFloor = 0.0;
+    double bidFloor;
 }

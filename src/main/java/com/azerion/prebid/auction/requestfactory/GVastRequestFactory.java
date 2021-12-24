@@ -26,6 +26,9 @@ import io.vertx.ext.web.RoutingContext;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.AuctionContext;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
+import org.prebid.server.execution.Timeout;
+import org.prebid.server.execution.TimeoutFactory;
+import org.prebid.server.geolocation.GeoLocationService;
 import org.prebid.server.identity.IdGenerator;
 import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.log.ConditionalLogger;
@@ -39,6 +42,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtUser;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -57,14 +61,23 @@ public class GVastRequestFactory {
     private final JacksonMapper mapper;
     private final IdGenerator idGenerator;
     private final GVastParamsResolver paramResolver;
+    private final GeoLocationService geoLocationService;
+    private final TimeoutFactory timeoutFactory;
+    private final Clock clock;
 
     public GVastRequestFactory(
             SettingsLoader settingsLoader,
             GVastParamsResolver gVastParamsResolver,
             AuctionRequestFactory auctionRequestFactory,
+            GeoLocationService geoLocationService,
+            TimeoutFactory timeoutFactory,
+            Clock clock,
             IdGenerator idGenerator,
             JacksonMapper mapper) {
         this.settingsLoader = Objects.requireNonNull(settingsLoader);
+        this.timeoutFactory = Objects.requireNonNull(timeoutFactory);
+        this.clock = clock;
+        this.geoLocationService = geoLocationService;
         this.auctionRequestFactory = Objects.requireNonNull(auctionRequestFactory);
         this.mapper = Objects.requireNonNull(mapper);
         this.idGenerator = Objects.requireNonNull(idGenerator);
@@ -79,39 +92,60 @@ public class GVastRequestFactory {
         }
     }
 
-    private Future<GVastContext> createContext(Imp imp, RoutingContext routingContext, GVastParams gVastParams) {
+    private Future<GVastContext> createContext(
+            Imp imp,
+            RoutingContext routingContext,
+            GVastParams gVastParams,
+            Timeout initialTimeout
+    ) {
         try {
             return updateContextWithAccountAndBidRequest(
                     GVastContext
                     .from(gVastParams)
                     .with(routingContext)
-                    .with(imp, mapper)
+                    .with(imp, mapper),
+                    initialTimeout
             );
         } catch (JsonProcessingException e) {
             return Future.failedFuture(e);
         }
     }
 
+    private Future<AuctionContext> resolveGeoInfoIfNull(AuctionContext auctionContext) {
+        if (auctionContext.getGeoInfo() == null) {
+            final String ipAddress = auctionContext.getBidRequest().getDevice().getIp();
+            if (geoLocationService != null && StringUtils.isNotBlank(ipAddress)) {
+                return geoLocationService.lookup(ipAddress, auctionContext.getTimeout())
+                        .map(geoInfo -> auctionContext.toBuilder().geoInfo(geoInfo).build());
+            }
+        }
+        return Future.succeededFuture(auctionContext);
+    }
+
     public Future<GVastContext> fromRequest(RoutingContext routingContext, long startTime) {
         try {
+            final Timeout initialTimeout = settingsLoader.createSettingsLoadingTimeout(startTime);
             validateUri(routingContext);
             GVastParams gVastParams = paramResolver.resolve(getHttpRequestContext(routingContext));
-            return settingsLoader.getStoredImp(gVastParams.getImpId())
-                .compose(imp -> this.createContext(imp, routingContext, gVastParams))
+            return settingsLoader.getStoredImp(gVastParams.getImpId(), initialTimeout)
+                .compose(imp -> this.createContext(imp, routingContext, gVastParams, initialTimeout))
                 .map(this::updateRoutingContextBody)
                 .compose(gVastContext ->
                     auctionRequestFactory
-                        .fromRequest(gVastContext.getRoutingContext(), startTime)
-                        .map(auctionContext ->
-                            this.setImproveDigitalParams(
-                                auctionContext, gVastParams
-                            )
-                        )
+                        .fromRequest(gVastContext.getRoutingContext(), clock.millis())
+                        .compose(this::resolveGeoInfoIfNull)
+                        .map(auctionContext -> updateAuctionTimeout(auctionContext, startTime))
+                        .map(auctionContext -> setImproveDigitalParams(auctionContext, gVastParams))
                         .map(gVastContext::with)
                 );
         } catch (Throwable throwable) {
             return Future.failedFuture(throwable);
         }
+    }
+
+    public AuctionContext updateAuctionTimeout(AuctionContext auctionContext, long actualStartTime) {
+        final long timeSpent = clock.millis() - actualStartTime;
+        return auctionContext.toBuilder().timeout(auctionContext.getTimeout().minus(timeSpent)).build();
     }
 
     /**
@@ -141,7 +175,10 @@ public class GVastRequestFactory {
     /**
      * Constructs oRTB bid request from /gvast GET params, request header, and stored data
      */
-    private Future<GVastContext> updateContextWithAccountAndBidRequest(GVastContext gVastContext) {
+    private Future<GVastContext> updateContextWithAccountAndBidRequest(
+            GVastContext gVastContext,
+            Timeout initialTimeout
+    ) {
         final String tid = idGenerator.generateId(); // UUID.randomUUID().toString();
         final GVastParams gVastParams = gVastContext.getGVastParams();
         final RoutingContext routingContext = gVastContext.getRoutingContext();
@@ -157,7 +194,7 @@ public class GVastRequestFactory {
         final String gdpr = gVastParams.getGdpr();
         final Integer gdprInt = StringUtils.isBlank(gdpr) ? null : Integer.parseInt(gdpr);
         final String accountId = gVastContext.getImpExtConfig().getAccountId();
-        return settingsLoader.getAccountFuture(accountId)
+        return settingsLoader.getAccountFuture(accountId, initialTimeout)
             .map(account -> {
                 BidRequest commonBidRequest = BidRequest.builder()
                         .id(tid)

@@ -168,20 +168,44 @@ public class GVastResponseCreator {
         return targeting.toString();
     }
 
+    private String resolveCountryCode(Map<String, ?> map, GeoInfo geoInfo) {
+        return ObjectUtil.getIfNotNullOrDefault(geoInfo,
+                gn -> map.containsKey(gn.getCountry())
+                        ? gn.getCountry()
+                        : ImpExtConfig.DEFAULT_CONFIG_KEY,
+                () -> ImpExtConfig.DEFAULT_CONFIG_KEY
+        );
+    }
+
     private double getBidFloor(ImpExtConfig config, GeoInfo geoInfo) {
-        final double noBidFloor = 0.0;
+        final double defaultResult = 0.0;
         final Map<String, BidFloor> bidFloors = config.getBidFloors();
         if (bidFloors.isEmpty()) {
-            return noBidFloor;
-        }
-        final String countryCode = geoInfo != null ? geoInfo.getCountry() : "default";
-        if (StringUtils.isNotBlank(countryCode) && bidFloors.containsKey(countryCode)) {
-            return bidFloors.get(countryCode).getBidFloor();
-        } else if (bidFloors.containsKey("default")) {
-            return bidFloors.get("default").getBidFloor();
+            return defaultResult;
         }
 
-        return noBidFloor;
+        final String countryCode = resolveCountryCode(bidFloors, geoInfo);
+        // logger.info("countryCode = " + countryCode);
+
+        if (bidFloors.containsKey(countryCode)) {
+            return bidFloors.get(countryCode).getBidFloor();
+        }
+
+        return defaultResult;
+    }
+
+    private List<String> getWaterfall(ImpExtConfig config, GeoInfo geoInfo) {
+        final Map<String, List<String>> waterfall = config.getWaterfall();
+        final List<String> defaultResult = List.of("gam");
+        if (waterfall.isEmpty()) {
+            return defaultResult;
+        }
+        final String countryCode = resolveCountryCode(waterfall, geoInfo);
+
+        if (waterfall.containsKey(countryCode)) {
+            return waterfall.get(countryCode);
+        }
+        return defaultResult;
     }
 
     private String getGamAdUnit(GVastParams gVastParams, ImpExtConfig config) {
@@ -318,14 +342,14 @@ public class GVastResponseCreator {
         final String gdpr = gVastParams.getGdpr();
         final ImpExtConfig config = gVastContext.getImpExtConfig();
         final String adUnit = getGamAdUnit(gVastParams, config);
-        final double bidFloor = getBidFloor(config, gVastContext.getAuctionContext().getGeoInfo());
+        final GeoInfo geoInfo = gVastContext.getAuctionContext().getGeoInfo();
         final String impId = gVastParams.getImpId();
-        List<String> waterfall = ObjectUtil.getIfNotNull(
-                config.getWaterfall(), waterfalls -> waterfalls.get("default")
-        );
-
+        final double bidFloor = getBidFloor(config, geoInfo);
+        // logger.info("bidFloor = " + bidFloor);
+        final List<String> waterfall = getWaterfall(config, geoInfo);
         final String categoryTargeting;
         final List<String> categories = gVastParams.getCat();
+
         if (categories != null && categories.size() > 0) {
             categoryTargeting = "iab_cat=" + String.join(",", gVastParams.getCat());
         } else {
@@ -345,6 +369,7 @@ public class GVastResponseCreator {
                 waterfall.set(gamIndex, "gam_no_hb");
             }
         }
+        // logger.info("waterfall = " + waterfall);
         final int numTags = waterfall.size();
         int i = 0;
         for (String adTag : waterfall) {

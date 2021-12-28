@@ -14,4 +14,5 @@ target/
 .DS_Store
 
 .allure/
-/dev-scripts/node_modules/
+/azerion-dev-tools/node_modules/
+config/azerion-config-local.yaml

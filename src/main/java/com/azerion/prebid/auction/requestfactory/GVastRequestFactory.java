@@ -27,7 +27,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.AuctionContext;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
 import org.prebid.server.execution.Timeout;
-import org.prebid.server.execution.TimeoutFactory;
 import org.prebid.server.geolocation.GeoLocationService;
 import org.prebid.server.identity.IdGenerator;
 import org.prebid.server.json.JacksonMapper;
@@ -39,6 +38,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtImpPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRegs;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
+import org.prebid.server.util.ObjectUtil;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -62,7 +62,6 @@ public class GVastRequestFactory {
     private final IdGenerator idGenerator;
     private final GVastParamsResolver paramResolver;
     private final GeoLocationService geoLocationService;
-    private final TimeoutFactory timeoutFactory;
     private final Clock clock;
 
     public GVastRequestFactory(
@@ -70,12 +69,10 @@ public class GVastRequestFactory {
             GVastParamsResolver gVastParamsResolver,
             AuctionRequestFactory auctionRequestFactory,
             GeoLocationService geoLocationService,
-            TimeoutFactory timeoutFactory,
             Clock clock,
             IdGenerator idGenerator,
             JacksonMapper mapper) {
         this.settingsLoader = Objects.requireNonNull(settingsLoader);
-        this.timeoutFactory = Objects.requireNonNull(timeoutFactory);
         this.clock = clock;
         this.geoLocationService = geoLocationService;
         this.auctionRequestFactory = Objects.requireNonNull(auctionRequestFactory);
@@ -112,9 +109,12 @@ public class GVastRequestFactory {
     }
 
     private Future<AuctionContext> resolveGeoInfoIfNull(AuctionContext auctionContext) {
-        if (auctionContext.getGeoInfo() == null) {
-            final String ipAddress = auctionContext.getBidRequest().getDevice().getIp();
-            if (geoLocationService != null && StringUtils.isNotBlank(ipAddress)) {
+        if (auctionContext.getGeoInfo() == null && geoLocationService != null) {
+            final String ipAddress = ObjectUtil.getIfNotNull(
+                    auctionContext.getBidRequest().getDevice(),
+                    Device::getIp
+            );
+            if (StringUtils.isNotBlank(ipAddress)) {
                 return geoLocationService.lookup(ipAddress, auctionContext.getTimeout())
                         .map(geoInfo -> auctionContext.toBuilder().geoInfo(geoInfo).build());
             }

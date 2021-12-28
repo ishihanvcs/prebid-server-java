@@ -48,11 +48,22 @@ default-request:
   file:
     path : stored-data/requests/default.json
 settings:
-  # optional long value in milliseconds, default value is 500 ms
-  default-loading-timeout: 500
+#  uncomment & edit following line, if default value needs to be changed from 500 ms
+#  default-loading-timeout: 500
 
-  # To test with http backend in local development environment, `npm run dev` command must be
-  # in a separate terminal/console in the <project-root>/dev-scripts folder.
+#  To test with http config backend in local development environment,
+#  1. comment out all items in filesystem section except custom-settings-filename
+#  2. uncomment http & in-memory-cache sections fully
+#  3. Run `./run-mock-server.sh [debug]` command in a separate terminal/console
+#     from within the <project-root>/azerion-dev-tools folder
+#  4. Run PBS in another terminal
+  filesystem:
+    settings-filename: config/azerion-settings.yaml
+    custom-settings-filename: config/azerion-custom-settings.yaml
+    stored-requests-dir: stored-data/requests
+    stored-imps-dir: stored-data/imps
+    stored-responses-dir: stored-data/responses
+    categories-dir: stored-data/categories
   http:
     endpoint: http://localhost:8989/config
     amp-endpoint: http://localhost:8989/config?amp=true
@@ -67,8 +78,8 @@ settings:
       amp-endpoint: http://localhost:8989/config?amp=true
       refresh-rate: 60000 # 1 minute in milliseconds
       timeout: 2000 # in milliseconds
-  filesystem:
-    custom-settings-filename: config/azerion-custom-settings.yaml
+
+# cache invalidation endpoints
 admin-endpoints:
   storedrequest:
     enabled: true
@@ -80,6 +91,7 @@ admin-endpoints:
     path: /invalidate/accounts
     on-application-port: true
     protected: false
+
 gdpr:
   enabled: false
   default-value: 1
@@ -94,7 +106,7 @@ google-ad-manager:
   network-code: 1015413
 
 geolocation:
-  enabled: true
+  enabled: false
   type: maxmind
   maxmind:
     remote-file-syncer:
@@ -166,12 +178,3 @@ hooks:
         }
       }
     }
-
-# Following settings are set for development only. Don't copy these values to
-# deployment/templates/azerion-config.yaml.j2 unless absolutely needed.
-
-# Increase default auction timeout during development from Bangladesh
-auction:
-  default-timeout-ms: 10000
-  max-timeout-ms: 15000
-  stored-requests-timeout-ms: 5000

@@ -19,7 +19,6 @@ import org.prebid.server.analytics.AnalyticsReporterDelegator;
 import org.prebid.server.auction.ExchangeService;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
 import org.prebid.server.currency.CurrencyConversionService;
-import org.prebid.server.execution.TimeoutFactory;
 import org.prebid.server.geolocation.GeoLocationService;
 import org.prebid.server.hooks.v1.Module;
 import org.prebid.server.identity.IdGenerator;
@@ -69,7 +68,6 @@ public class ExtensionConfig {
             SettingsLoader settingsLoader,
             GVastParamsResolver gVastParamsResolver,
             AuctionRequestFactory auctionRequestFactory,
-            TimeoutFactory timeoutFactory,
             Clock clock,
             @Autowired(required = false) GeoLocationService geoLocationService,
             @Qualifier("sourceIdGenerator") IdGenerator idGenerator,
@@ -79,7 +77,6 @@ public class ExtensionConfig {
                 gVastParamsResolver,
                 auctionRequestFactory,
                 geoLocationService,
-                timeoutFactory,
                 clock,
                 idGenerator,
                 mapper);

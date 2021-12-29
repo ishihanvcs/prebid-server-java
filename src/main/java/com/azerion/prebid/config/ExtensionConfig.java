@@ -10,10 +10,8 @@ import com.azerion.prebid.customtrackers.injectors.TrackerInjector;
 import com.azerion.prebid.customtrackers.resolvers.TrackerMacroResolver;
 import com.azerion.prebid.handler.GVastHandler;
 import com.azerion.prebid.hooks.v1.CustomTrackerModule;
-import com.azerion.prebid.services.AccountCachePeriodicInvalidator;
 import com.azerion.prebid.settings.SettingsLoader;
 import com.azerion.prebid.utils.MacroProcessor;
-import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
@@ -27,13 +25,10 @@ import org.prebid.server.identity.IdGenerator;
 import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.log.HttpInteractionLogger;
 import org.prebid.server.metric.Metrics;
-import org.prebid.server.settings.CachingApplicationSettings;
 import org.prebid.server.settings.model.GdprConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -124,25 +119,6 @@ public class ExtensionConfig {
                 httpInteractionLogger);
         router.get(GVastHandler.END_POINT).handler(handler);
         return handler;
-    }
-
-    @Bean
-    @ConditionalOnBean(name = "cachingApplicationSettings")
-    @ConditionalOnProperty(
-            "settings.in-memory-cache.account-invalidation-rate"
-    )
-    AccountCachePeriodicInvalidator accountCachePeriodicInvalidator(
-            CachingApplicationSettings cachingApplicationSettings,
-            @Value("${settings.in-memory-cache.account-invalidation-rate:#{0}}") long accountInvalidationRate,
-            @Value("${settings.in-memory-cache.ttl-seconds:#{0}}") int cacheTtlSeconds,
-            Vertx vertx
-    ) {
-        return new AccountCachePeriodicInvalidator(
-                cachingApplicationSettings,
-                accountInvalidationRate,
-                1000L * cacheTtlSeconds, // converted to milliseconds
-                vertx
-        );
     }
 
     @Bean

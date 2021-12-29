@@ -3,10 +3,12 @@
     "prebid": {
       "azerion": {
         "accountId": "545-mon-programme-tv.be",
-        "waterfall": [
-          "https://www8.smartadserver.com/ac?siteid=314536&pgid=1130786&fmtid=82422&ab=1&tgt=&oc=1&out=vast4&ps=1&pb=0&visit=S&vcn=s&pgdomain=mon-programme-tv.be&gdpr={{gdpr}}&gdpr_consent={{gdpr_consent}}&tmstp={{timestamp}}&vpw=640&vph=480",
-          "gam"
-        ]
+        "waterfall": {
+          "default":[
+            "https://www8.smartadserver.com/ac?siteid=314536&pgid=1130786&fmtid=82422&ab=1&tgt=&oc=1&out=vast4&ps=1&pb=0&visit=S&vcn=s&pgdomain=mon-programme-tv.be&gdpr={{gdpr}}&gdpr_consent={{gdpr_consent}}&tmstp={{timestamp}}&vpw=640&vph=480",
+            "gam"
+          ]
+        }
       },
       "bidder": {
         "pubmatic": {

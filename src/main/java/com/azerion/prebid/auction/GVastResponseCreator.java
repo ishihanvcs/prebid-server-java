@@ -2,7 +2,7 @@ package com.azerion.prebid.auction;
 
 import com.azerion.prebid.auction.model.BidFloor;
 import com.azerion.prebid.auction.model.GVastParams;
-import com.azerion.prebid.auction.model.ImpExtConfig;
+import com.azerion.prebid.auction.model.AzerionImpExt;
 import com.azerion.prebid.auction.requestfactory.GVastContext;
 import com.azerion.prebid.utils.FluentMap;
 import com.azerion.prebid.utils.MacroProcessor;
@@ -172,12 +172,12 @@ public class GVastResponseCreator {
         return ObjectUtil.getIfNotNullOrDefault(geoInfo,
                 gn -> map.containsKey(gn.getCountry())
                         ? gn.getCountry()
-                        : ImpExtConfig.DEFAULT_CONFIG_KEY,
-                () -> ImpExtConfig.DEFAULT_CONFIG_KEY
+                        : AzerionImpExt.DEFAULT_CONFIG_KEY,
+                () -> AzerionImpExt.DEFAULT_CONFIG_KEY
         );
     }
 
-    private double getBidFloor(ImpExtConfig config, GeoInfo geoInfo) {
+    private double getBidFloor(AzerionImpExt config, GeoInfo geoInfo) {
         final double defaultResult = 0.0;
         final Map<String, BidFloor> bidFloors = config.getBidFloors();
         if (bidFloors.isEmpty()) {
@@ -194,7 +194,7 @@ public class GVastResponseCreator {
         return defaultResult;
     }
 
-    private List<String> getWaterfall(ImpExtConfig config, GeoInfo geoInfo) {
+    private List<String> getWaterfall(AzerionImpExt config, GeoInfo geoInfo) {
         final Map<String, List<String>> waterfall = config.getWaterfall();
         final List<String> defaultResult = List.of("gam");
         if (waterfall.isEmpty()) {
@@ -208,7 +208,7 @@ public class GVastResponseCreator {
         return defaultResult;
     }
 
-    private String getGamAdUnit(GVastParams gVastParams, ImpExtConfig config) {
+    private String getGamAdUnit(GVastParams gVastParams, AzerionImpExt config) {
         String adUnit = config.getGamAdUnit();
         if (StringUtils.isBlank(adUnit)) {
             adUnit = "/" + gamNetworkCode + "/pbs/" + gVastParams.getImpId();
@@ -340,7 +340,7 @@ public class GVastResponseCreator {
         final String gdprConsent = gVastParams.getGdprConsentString();
         final String referrer = gVastParams.getReferrer();
         final String gdpr = gVastParams.getGdpr();
-        final ImpExtConfig config = gVastContext.getImpExtConfig();
+        final AzerionImpExt config = gVastContext.getAzerionImpExt();
         final String adUnit = getGamAdUnit(gVastParams, config);
         final GeoInfo geoInfo = gVastContext.getAuctionContext().getGeoInfo();
         final String impId = gVastParams.getImpId();

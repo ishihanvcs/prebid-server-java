@@ -1,7 +1,7 @@
 package com.azerion.prebid.auction.requestfactory;
 
 import com.azerion.prebid.auction.model.GVastParams;
-import com.azerion.prebid.auction.model.ImpExtConfig;
+import com.azerion.prebid.auction.model.AzerionImpExt;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
@@ -21,7 +21,7 @@ public class GVastContext {
     AuctionContext auctionContext;
     Account account;
     Imp imp;
-    ImpExtConfig impExtConfig;
+    AzerionImpExt azerionImpExt;
     BidRequest bidRequest;
     BidResponse bidResponse;
     GVastParams gVastParams;
@@ -31,10 +31,10 @@ public class GVastContext {
     }
 
     public GVastContext with(Imp imp, JacksonMapper mapper) throws JsonProcessingException {
-        ImpExtConfig impExtConfig = mapper.mapper().treeToValue(
-                imp.getExt().at("/prebid/azerion"), ImpExtConfig.class
+        AzerionImpExt azerionImpExt = mapper.mapper().treeToValue(
+                imp.getExt().at("/prebid/azerion"), AzerionImpExt.class
         );
-        return this.toBuilder().imp(imp).impExtConfig(impExtConfig).build();
+        return this.toBuilder().imp(imp).azerionImpExt(azerionImpExt).build();
     }
 
     public GVastContext with(Account account) {

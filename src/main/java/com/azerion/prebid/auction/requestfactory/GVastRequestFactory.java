@@ -193,7 +193,7 @@ public class GVastRequestFactory {
 
         final String gdpr = gVastParams.getGdpr();
         final Integer gdprInt = StringUtils.isBlank(gdpr) ? null : Integer.parseInt(gdpr);
-        final String accountId = gVastContext.getImpExtConfig().getAccountId();
+        final String accountId = gVastContext.getAzerionImpExt().getAccountId();
         return settingsLoader.getAccountFuture(accountId, initialTimeout)
             .map(account -> {
                 BidRequest commonBidRequest = BidRequest.builder()

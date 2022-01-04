@@ -71,7 +71,7 @@ settings:
 #    category-endpoint: http://localhost:8989/categories
 #  in-memory-cache:
 #    cache-size: 10000
-#    ttl-seconds: 86400 # 1 day in seconds, can be set to 1 month or more now if needed
+#    ttl-seconds: 120 # 2 minutes in seconds
 #    notification-endpoints-enabled: true
 #    http-update:
 #      endpoint: http://localhost:8989/config

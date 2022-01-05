@@ -24,9 +24,44 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public class CustomHttpPeriodicRefreshService implements Initializable {
+/**
+ * <p>
+ * As per current implementation of {@link org.prebid.server.settings.service.HttpPeriodicRefreshService},
+ * the service periodically calls external HTTP API for only stored request updates, but
+ * <a href="https://github.com/prebid/prebid-server-java/issues/1665">cannot handle account updates</a>.
+ *
+ * <p>
+ * So, until the account updates are officially supported by
+ * {@link org.prebid.server.settings.service.HttpPeriodicRefreshService}
+ * we needed to create this service that will call a similar HTTP API, and get the account updates. But, as
+ * replacing/updating cached accounts is not possible via {@link org.prebid.server.settings.CacheNotificationListener}
+ * now, we had to invalidate the updated accounts instead, by calling invalidateAccountCache() method in
+ * cachingApplicationSettings bean, so that the invalidated account gets loaded & cached in next call of
+ * of applicationSettings.getAccountById() method.
+ * <p>
+ * To keep the implementation consistent, it uses the same endpoint configured for HttpPeriodicRefreshService
+ * and expects following API spec to send periodic account updates:
+ * <p>
+ * GET {endpoint}?accounts={ignored_value}&last-modified={timestamp}
+ * -- Returns all the accounts which have been updated since the last timestamp.
+ * This timestamp will be sent in the rfc3339 format, using UTC and no timezone shift.
+ * For more info, see: https://tools.ietf.org/html/rfc3339
+ * <p>
+ * The responses should be JSON like this:
+ * <pre>
+ * {
+ *   "accounts": {
+ *     "account1": { ... account data ... },
+ *     "account2": { ... account data ... },
+ *     "account3": { ... account data ... },
+ *   }
+ * }
+ * </pre>
+ */
 
-    private static final Logger logger = LoggerFactory.getLogger(CustomHttpPeriodicRefreshService.class);
+public class AccountHttpPeriodicRefreshService implements Initializable {
+
+    private static final Logger logger = LoggerFactory.getLogger(AccountHttpPeriodicRefreshService.class);
 
     private final CachingApplicationSettings cachingApplicationSettings;
     private final String refreshUrl;
@@ -39,7 +74,7 @@ public class CustomHttpPeriodicRefreshService implements Initializable {
 
     private Instant lastUpdateTime;
 
-    public CustomHttpPeriodicRefreshService(
+    public AccountHttpPeriodicRefreshService(
             CachingApplicationSettings cachingApplicationSettings,
             String refreshUrl,
             long refreshPeriod,
@@ -78,7 +113,7 @@ public class CustomHttpPeriodicRefreshService implements Initializable {
         httpClient.get(refreshEndpoint, HttpUtil.headers(), timeout)
                 .map(this::processResponse)
                 .map(this::invalidateAccounts)
-                .recover(CustomHttpPeriodicRefreshService::failResponse);
+                .recover(AccountHttpPeriodicRefreshService::failResponse);
     }
 
     private Set<Account> processResponse(HttpClientResponse response) {

@@ -1,6 +1,6 @@
 package com.azerion.prebid.config;
 
-import com.azerion.prebid.services.CustomHttpPeriodicRefreshService;
+import com.azerion.prebid.services.AccountHttpPeriodicRefreshService;
 import com.azerion.prebid.settings.CachingCustomSettings;
 import com.azerion.prebid.settings.CustomSettings;
 import com.azerion.prebid.settings.FileCustomSettings;
@@ -122,10 +122,10 @@ public class ExtensionSettingsConfig {
         int cacheTtlSeconds;
 
         @Bean
-        CustomHttpPeriodicRefreshService customHttpPeriodicRefreshService(
+        AccountHttpPeriodicRefreshService customHttpPeriodicRefreshService(
                 CachingApplicationSettings cachingApplicationSettings
         ) {
-            return new CustomHttpPeriodicRefreshService(
+            return new AccountHttpPeriodicRefreshService(
                     cachingApplicationSettings,
                     endPoint,
                     refreshPeriod,

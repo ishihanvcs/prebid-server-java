@@ -122,7 +122,7 @@ public class ExtensionSettingsConfig {
         int cacheTtlSeconds;
 
         @Bean
-        AccountHttpPeriodicRefreshService customHttpPeriodicRefreshService(
+        AccountHttpPeriodicRefreshService accountHttpPeriodicRefreshService(
                 CachingApplicationSettings cachingApplicationSettings
         ) {
             return new AccountHttpPeriodicRefreshService(

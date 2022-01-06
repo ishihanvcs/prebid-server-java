@@ -30,13 +30,16 @@ function extractIds(req, paramName) {
 }
 
 function getAccounts(accountIds) {
-    if (!accountIds || accountIds.length === 0) {
-        return null;
-    }
     const doc = yaml.load(fs.readFileSync(accountsDataPath, "utf8"));
+    const allAccounts = doc.accounts;
     const result = {};
+    if (!accountIds || accountIds.length === 0) {
+        accountIds = Object.values(allAccounts).map((acc) => acc.id);
+    }
     accountIds.forEach((id) => {
-        const acc = doc.accounts.find((a) => a.id == id);
+        const acc = allAccounts.find((a) => {
+            return a.id == id;
+        });
         result[id] = acc !== undefined ? acc : null;
     });
     return result;
@@ -83,10 +86,15 @@ module.exports = function (req, res) {
     };
     debug("query: %O", req.query);
     if (!req.query.amp && !req.query.video) {
-        const accountIds = extractIds(req, paramNames.ACCOUNT);
+        let accountIds = extractIds(req, paramNames.ACCOUNT);
         let requestIds = extractIds(req, paramNames.REQUEST);
         let impIds = extractIds(req, paramNames.IMP);
-        if (accountIds !== null) {
+        if (accountIds !== null || req.query.accounts) {
+            if (req.query[paramNames.LAST_MODIFIED]) {
+                const allAccounts = getAccounts(null);
+                accountIds = Object.keys(allAccounts);
+                accountIds = accountIds.length > 0 ? [accountIds[getRandomInt(accountIds.length)]] : null;
+            }
             result[resultKeys.ACCOUNT] = getAccounts(accountIds);
         } else {
             requestIds = requestIds || getAllRequestIds(requestsDataPath);

@@ -1,9 +1,11 @@
 package com.azerion.prebid.config;
 
+import com.azerion.prebid.services.AccountHttpPeriodicRefreshService;
 import com.azerion.prebid.settings.CachingCustomSettings;
 import com.azerion.prebid.settings.CustomSettings;
 import com.azerion.prebid.settings.FileCustomSettings;
 import com.azerion.prebid.settings.SettingsLoader;
+import io.vertx.core.Vertx;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -14,8 +16,11 @@ import org.prebid.server.execution.TimeoutFactory;
 import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.metric.Metrics;
 import org.prebid.server.settings.ApplicationSettings;
+import org.prebid.server.settings.CachingApplicationSettings;
+import org.prebid.server.vertx.http.HttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -86,6 +91,50 @@ public class ExtensionSettingsConfig {
                     customFileSettings,
                     cacheProperties.getTtlSeconds(),
                     cacheProperties.getCacheSize());
+        }
+    }
+
+    @Configuration
+    @ConditionalOnBean(name = "cachingApplicationSettings")
+    @ConditionalOnProperty(prefix = "settings.in-memory-cache.http-update",
+            name = {"endpoint", "refresh-rate", "timeout"})
+    static class CustomHttpPeriodicRefreshServiceConfiguration {
+
+        @Value("${settings.in-memory-cache.http-update.endpoint}")
+        String endPoint;
+
+        @Value("${settings.in-memory-cache.http-update.refresh-rate}")
+        long refreshPeriod;
+
+        @Value("${settings.in-memory-cache.http-update.timeout}")
+        long timeout;
+
+        @Autowired
+        Vertx vertx;
+
+        @Autowired
+        HttpClient httpClient;
+
+        @Autowired
+        JacksonMapper mapper;
+
+        @Value("${settings.in-memory-cache.ttl-seconds:#{0}}")
+        int cacheTtlSeconds;
+
+        @Bean
+        AccountHttpPeriodicRefreshService accountHttpPeriodicRefreshService(
+                CachingApplicationSettings cachingApplicationSettings
+        ) {
+            return new AccountHttpPeriodicRefreshService(
+                    cachingApplicationSettings,
+                    endPoint,
+                    refreshPeriod,
+                    timeout,
+                    1000L * cacheTtlSeconds, // converted to milliseconds
+                    vertx,
+                    httpClient,
+                    mapper
+            );
         }
     }
 

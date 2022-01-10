@@ -3,9 +3,7 @@ package com.azerion.prebid.customtrackers.hooks.v1;
 import com.azerion.prebid.customtrackers.ModuleContext;
 import com.azerion.prebid.hooks.v1.InvocationResultImpl;
 import com.azerion.prebid.settings.SettingsLoader;
-import com.azerion.prebid.settings.model.Placement;
 import io.vertx.core.Future;
-import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.hooks.v1.InvocationContext;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.entrypoint.EntrypointPayload;
@@ -28,20 +26,11 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
     public Future<InvocationResult<EntrypointPayload>> call(
             EntrypointPayload entrypointPayload, InvocationContext invocationContext) {
         final String placementId = entrypointPayload.queryParams().get("p");
-        Future<Placement> future = Future.succeededFuture(null);
-        if (StringUtils.isNotBlank(placementId)) {
-            future = settingsLoader.getPlacementFuture(placementId);
-        }
 
-        return future.compose(
-                // successMapper
-                placement -> Future.succeededFuture(InvocationResultImpl.succeeded(
-                        payload -> entrypointPayload,
-                        ModuleContext.from(applicationContext, placement)
-                )),
-                // failureMapper
-                throwable -> Future.succeededFuture(InvocationResultImpl.rejected(throwable.getMessage()))
-        );
+        return Future.succeededFuture(InvocationResultImpl.succeeded(
+                payload -> entrypointPayload,
+                ModuleContext.from(applicationContext)
+        ));
     }
 
     @Override

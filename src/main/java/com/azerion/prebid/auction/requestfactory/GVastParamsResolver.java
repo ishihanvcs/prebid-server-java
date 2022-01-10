@@ -121,7 +121,7 @@ public class GVastParamsResolver {
         int placementId = ObjectUtils.defaultIfNull(resolveIntParam(queryParams, "p"), 0);
 
         return setGdprParams(httpRequest, GVastParams.builder()
-                .placementId(placementId)
+                .impId(String.valueOf(placementId))
                 .debug(queryParams.contains("debug") && queryParams.get("debug").equals("1"))
                 .referrer(resolveReferrer(httpRequest))
                 .custParams(new CustParams(queryParams.get("cust_params")))

@@ -2,7 +2,6 @@ package com.azerion.prebid.settings;
 
 import com.azerion.prebid.settings.model.CustomTracker;
 import com.azerion.prebid.settings.model.CustomTrackerSetting;
-import com.azerion.prebid.settings.model.Placement;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.vertx.core.Future;
 import org.prebid.server.exception.PreBidException;
@@ -17,8 +16,6 @@ import java.util.function.Function;
 public class CachingCustomSettings implements CustomSettings {
 
     // private static final Logger logger = LoggerFactory.getLogger(CachingCustomSettings.class);
-    private final Map<String, Placement> placementCache;
-    private final Map<String, String> placementToErrorCache;
 
     private final Map<String, Object> objectCache;
     private final Map<String, String> objectToErrorCache;
@@ -30,9 +27,6 @@ public class CachingCustomSettings implements CustomSettings {
             int size
     ) {
         this.delegate = Objects.requireNonNull(delegate);
-        this.placementCache = createCache(ttl, size);
-        this.placementToErrorCache = createCache(ttl, size);
-
         this.objectCache = createCache(ttl, size);
         this.objectToErrorCache = createCache(ttl, size);
     }
@@ -103,17 +97,6 @@ public class CachingCustomSettings implements CustomSettings {
         }
 
         return Future.failedFuture(throwable);
-    }
-
-    @Override
-    public Future<Placement> getPlacementById(String placementId, Timeout timeout) {
-        return getFromCacheOrDelegate(
-                placementCache,
-                placementToErrorCache,
-                placementId,
-                timeout,
-                delegate::getPlacementById
-        );
     }
 
     @Override

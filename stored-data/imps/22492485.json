@@ -1,0 +1,56 @@
+{
+  "ext": {
+    "prebid": {
+      "azerion": {
+        "accountId": "545-dailymotion.com",
+        "bidFloors": {
+          "default": {
+            "bidFloor": 1.5
+          }
+        },
+        "waterfall": {
+          "default": [
+            "gam_first_look",
+            "gam",
+            "https://pubads.g.doubleclick.net/gampad/ads?sz=640x480|640x360&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&correlator=&iu=%2F1015413%2Fpbs%2F22492485&url={{referrer}}&description_url={{referrer}}&cust_params=tnl_asset_id%3Dprebidserver%26dm_deal%3D1%26tnl_wog%3D1"
+          ]
+        }
+      },
+      "bidder": {
+        "improvedigital": {
+          "placementId": 22492485
+        },
+        "pubmatic": {
+          "publisherId": "156946",
+          "adSlot": "dailymotion.com_prebidserver_instream"
+        },
+        "appnexus": {
+          "use_pmt_rule": false,
+          "placement_id": 21509275
+        },
+        "smartadserver": {
+          "networkId": 3653,
+          "pageId": 1376746,
+          "siteId": 408084,
+          "formatId": 88313
+        }
+      }
+    }
+  },
+  "video": {
+    "context": "instream",
+    "mimes": [
+      "video/mp4",
+      "application/javascript",
+      "video/webm",
+      "video/ogg"
+    ],
+    "minduration": 1,
+    "maxduration": 30,
+    "linearity": 1,
+    "api": [2],
+    "protocols": [2, 3, 5, 6],
+    "w": 640,
+    "h": 480
+  }
+}

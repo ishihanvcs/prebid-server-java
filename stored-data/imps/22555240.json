@@ -1,0 +1,56 @@
+{
+  "ext": {
+    "prebid": {
+      "azerion": {
+        "accountId": "545-minispelletjes.com",
+        "gamAdUnit": "/1015413,7451825/pbs/22555240"
+      },
+      "bidder": {
+        "pubmatic": {
+          "publisherId": "156946",
+          "adSlot": "minispelletjes.com_video"
+        },
+        "improvedigital": {
+          "placementId": 22555240
+        },
+        "appnexus": {
+          "use_pmt_rule": false,
+          "placement_id": 22384974
+        },
+        "smartadserver": {
+          "networkId": 3653,
+          "pageId": 1449792,
+          "siteId": 460062,
+          "formatId": 88313
+        }
+      }
+    }
+  },
+  "video": {
+    "context": "instream",
+    "mimes": [
+      "video/mp4",
+      "application/javascript",
+      "video/webm",
+      "video/ogg"
+    ],
+    "minduration": 1,
+    "maxduration": 30,
+    "linearity": 1,
+    "api": [
+      2
+    ],
+    "startdelay": 0,
+    "protocols": [
+      2,
+      3,
+      5,
+      6
+    ],
+    "skip": 1,
+    "frameworks": 0,
+    "w": 640,
+    "h": 480,
+    "placement": 1
+  }
+}

@@ -4,7 +4,7 @@ customTrackers:
   trackers:
     - id: 360yield # required and must be unique across all trackers
       urlTemplate: https://pad.360polaris.biz/ssp_bids?bidder={{bidder}}&cpm={{bid_price_usd}}&pid={{improve_digital_placement_id}} # required
-      # Supported macros supported by default macroResolver are:
+      # Macros supported by default macroResolver are:
       # - bidder
       # - bid_type
       # - bid_price (original bid price in BidderBid response)
@@ -23,94 +23,3 @@ customTrackers:
       # otherwise default "trackerInjector" bean will be used
       # To know actual implementation details, please refer to getInjector() method of
       # com.azerion.prebid.customtrackers.TrackerContext class
-placements:
-  - id: 22404960
-    accountId: 950
-  - id: 22137694
-    accountId: 950
-    waterfall:
-      - gam_first_look
-      - gam
-      - https://ad.360yield.com/advast?p=22137694&w=4&h=3&gdpr={{gdpr_consent}}
-  - id: 22643052
-    accountId: 950-inapp
-  - id: 20232111
-    accountId: 950-inapp
-    waterfall:
-      - gam
-      - https://ad.360yield.com/advast?p=22645785&gdpr={{gdpr_consent}}
-  - id: 22346851
-    accountId: 545-jeu.fr
-    gamAdUnit: TNL_NS-19041000062/jeu.fr_game_preroll
-  - id: 22239504
-    accountId: 545-a10.com
-    gamAdUnit: TNL_NS-19041000062/a10.com_game_preroll
-  - id: 22245204
-    accountId: 545-jeux.fr
-    gamAdUnit: TNL_NS-19041000062/jeux.fr_game_preroll
-  - id: 22245203
-    accountId: 545-gry.pl
-    gamAdUnit: TNL_NS-19041000062/gry.pl_game_preroll
-  - id: 22492486
-    accountId: 545-mon-programme-tv.be
-    waterfall:
-      - https://www8.smartadserver.com/ac?siteid=314536&pgid=1130786&fmtid=82422&ab=1&tgt=&oc=1&out=vast4&ps=1&pb=0&visit=S&vcn=s&pgdomain=mon-programme-tv.be&gdpr={{gdpr}}&gdpr_consent={{gdpr_consent}}&tmstp={{timestamp}}&vpw=640&vph=480
-      - gam
-  - id: 22492485
-    accountId: 545-dailymotion.com
-    bidFloor: 1.5
-    #    gamAdUnit: /1015413,23328537/pbs/22492485
-    waterfall:
-      - gam_first_look
-      - gam
-      - https://pubads.g.doubleclick.net/gampad/ads?sz=640x480|640x360&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&correlator=&iu=%2F1015413%2Fpbs%2F22492485&url={{referrer}}&description_url={{referrer}}&cust_params=tnl_asset_id%3Dprebidserver%26dm_deal%3D1%26tnl_wog%3D1
-  - id: 22505159
-    accountId: 1915
-    bidFloor: 1.5
-  - id: 22555236
-    accountId: 545-minijuegos.com
-    gamAdUnit: /1015413,7451825/pbs/22555236
-  - id: 22604889
-    accountId: 545-linternaute.com
-    gamAdUnit: /1015413,22260766789/pbs/22604889
-  - id: 22606133
-    accountId: 545-kiz10.com
-    gamAdUnit: /1015413,22260766789/pbs/22606133
-  - id: 22606134
-    accountId: 545-kiz10girls.com
-    gamAdUnit: /1015413,22260766789/pbs/22606134
-  - id: 22606135
-    accountId: 545-taptapking.com
-    gamAdUnit: /1015413,22260766789/pbs/22606135
-  - id: 22606136
-    accountId: 545-kukogames.com
-    gamAdUnit: /1015413,22260766789/pbs/22606136
-  - id: 22606138
-    accountId: 545-fun10games.com
-    gamAdUnit: /1015413,22260766789/pbs/22606138
-  - id: 22606139
-    accountId: 545-playonlinefree.games
-    gamAdUnit: /1015413,22260766789/pbs/22606139
-  - id: 22606164
-    accountId: 545-playit-online.de
-    gamAdUnit: /1015413,22562219898/pbs/22606164
-  - id: 22555237
-    accountId: 545-minijuegos.mx
-    gamAdUnit: /1015413,7451825/pbs/22555237
-  - id: 22555238
-    accountId: 545-miniplay.com
-    gamAdUnit: /1015413,7451825/pbs/22555238
-  - id: 22555239
-    accountId: 545-minigiochi.com
-    gamAdUnit: /1015413,7451825/pbs/22555239
-  - id: 22555240
-    accountId: 545-minispelletjes.com
-    gamAdUnit: /1015413,7451825/pbs/22555240
-  - id: 22555241
-    accountId: 545-minijogos.com.br
-    gamAdUnit: /1015413,7451825/pbs/22555241
-  - id: 22555242
-    accountId: 545-grymini.pl
-    gamAdUnit: /1015413,7451825/pbs/22555242
-  - id: 22637960
-    accountId: 2018

@@ -1,0 +1,24 @@
+{
+  "ext": {
+    "azerion": {
+      "accountId": "950-inapp"
+    },
+    "prebid": {
+      "bidder": {
+        "improvedigital": {
+          "placementId": 20232111
+        }
+      }
+    }
+  },
+  "video": {
+    "context": "instream",
+    "mimes": [
+      "video/mp4"
+    ],
+    "minduration": 1,
+    "maxduration": 30,
+    "linearity": 1,
+    "protocols": [2]
+  }
+}

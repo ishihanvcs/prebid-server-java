@@ -6,7 +6,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.Tuple2;
 import org.prebid.server.json.JacksonMapper;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class JsonUtils {
 
@@ -33,5 +37,17 @@ public class JsonUtils {
                 .map(node -> node.at(path))
                 .findFirst()
                 .orElse(null);
+    }
+
+    public List<String> mapToStringList(JsonNode node, String... defaultValues) {
+        if (node.isMissingNode()) {
+            return new ArrayList<>(Arrays.asList(defaultValues));
+        }
+        if (!node.isArray()) {
+            throw new IllegalArgumentException("node is not an array");
+        }
+        return StreamSupport.stream(node.spliterator(), false)
+                .map(JsonNode::asText)
+                .collect(Collectors.toList());
     }
 }

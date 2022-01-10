@@ -1,0 +1,62 @@
+{
+  "ext": {
+    "prebid": {
+      "azerion": {
+        "accountId": "545-mon-programme-tv.be",
+        "waterfall": {
+          "default":[
+            "https://www8.smartadserver.com/ac?siteid=314536&pgid=1130786&fmtid=82422&ab=1&tgt=&oc=1&out=vast4&ps=1&pb=0&visit=S&vcn=s&pgdomain=mon-programme-tv.be&gdpr={{gdpr}}&gdpr_consent={{gdpr_consent}}&tmstp={{timestamp}}&vpw=640&vph=480",
+            "gam"
+          ]
+        }
+      },
+      "bidder": {
+        "pubmatic": {
+          "publisherId": "156946",
+          "adSlot": "mon-programme-tv.be_ps_instream"
+        },
+        "improvedigital": {
+          "placementId": 22492486
+        },
+        "appnexus": {
+          "use_pmt_rule": false,
+          "placement_id": 21509365
+        },
+        "smartadserver": {
+          "networkId": 3653,
+          "pageId": 1201680,
+          "siteId": 343776,
+          "formatId": 88313
+        }
+      }
+    }
+  },
+  "video": {
+    "context": "instream",
+    "mimes": [
+      "video/mp4",
+      "application/javascript",
+      "video/webm",
+      "video/ogg"
+    ],
+    "minduration": 1,
+    "maxduration": 30,
+    "linearity": 1,
+    "api": [
+      2
+    ],
+    "startdelay": 0,
+    "protocols": [
+      2,
+      3,
+      5,
+      6
+    ],
+    "skippable": true,
+    "frameworks": 0,
+    "w": 640,
+    "h": 480,
+    "placement": 1
+  }
+}
+

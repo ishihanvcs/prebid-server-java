@@ -10,7 +10,7 @@ import java.util.List;
 @Value
 public class GVastParams {
 
-    long placementId;
+    String impId;
 
     String gdpr; // "1"=gdpr applies
 
@@ -23,6 +23,26 @@ public class GVastParams {
     String country; // Country code using ISO-3166-1-alpha-2 (NB: oRTB requires alpha-3)
 
     List<String> cat; // Array of IAB content categories of the site
+
+    String ifa; // oRTB device.ifa
+
+    String ua;  // oRTB device.ua (user agent)
+
+    String bundle; // oRTB app.bundle
+
+    Integer minduration; // oRTB video.minduration;
+
+    Integer maxduration; // oRTB video.maxduration
+
+    Integer w; // oRTB video.w, player width
+
+    Integer h; // oRTB video.h, player height
+
+    List<Integer> protocols; // oRTB video.protocols
+
+    List<Integer> api; // oRTB video.api
+
+    Integer placement; // oRTB video.placement
 
     boolean debug;
 

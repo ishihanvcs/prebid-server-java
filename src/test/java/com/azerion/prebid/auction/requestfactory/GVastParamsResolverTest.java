@@ -62,7 +62,7 @@ public class GVastParamsResolverTest extends VertxTest {
 
         GVastParams result = target.resolve(httpRequest);
         GVastParams expected = emptyParamsBuilder()
-                .placementId(1)
+                .impId("1")
                 .build();
 
         assertThat(result.equals(expected)).isTrue();
@@ -79,7 +79,7 @@ public class GVastParamsResolverTest extends VertxTest {
                 ).build();
         GVastParams result = target.resolve(httpRequest);
         GVastParams expected = emptyParamsBuilder()
-                .placementId(1)
+                .impId("1")
                 .gdpr("1")
                 .build();
 

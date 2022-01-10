@@ -1,6 +1,5 @@
 package com.azerion.prebid.customtrackers;
 
-import com.azerion.prebid.settings.model.Placement;
 import com.iab.openrtb.request.BidRequest;
 import lombok.Getter;
 import lombok.NonNull;
@@ -14,15 +13,12 @@ public class ModuleContext {
     @NonNull
     ApplicationContext applicationContext;
     BidRequest bidRequest;
-    Placement placement;
 
     public static ModuleContext from(
-            ApplicationContext applicationContext,
-            Placement placement
+            ApplicationContext applicationContext
     ) {
         return ModuleContext.builder()
                 .applicationContext(applicationContext)
-                .placement(placement)
                 .build();
     }
 

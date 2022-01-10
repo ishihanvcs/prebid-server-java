@@ -1,7 +1,9 @@
 package com.azerion.prebid.auction;
 
+import com.azerion.prebid.auction.model.BidFloor;
 import com.azerion.prebid.auction.model.GVastParams;
-import com.azerion.prebid.settings.model.Placement;
+import com.azerion.prebid.auction.model.AzerionImpExt;
+import com.azerion.prebid.auction.requestfactory.GVastContext;
 import com.azerion.prebid.utils.FluentMap;
 import com.azerion.prebid.utils.MacroProcessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,12 +16,11 @@ import io.netty.util.AsciiString;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.prebid.server.geolocation.model.GeoInfo;
 import org.prebid.server.util.HttpUtil;
+import org.prebid.server.util.ObjectUtil;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -60,8 +61,10 @@ public class GVastResponseCreator {
         }
     }
 
-    public String create(GVastParams gVastParams, Placement placement, RoutingContext routingContext,
-                         BidResponse bidResponse, boolean prioritizeImprovedigitalDeals) {
+    public String create(GVastContext gVastContext, boolean prioritizeImprovedigitalDeals) {
+        GVastParams gVastParams = gVastContext.getGVastParams();
+        RoutingContext routingContext = gVastContext.getRoutingContext();
+        BidResponse bidResponse = gVastContext.getBidResponse();
         routingContext.response().headers().add(HttpUtil.CONTENT_TYPE_HEADER,
                 AsciiString.cached("application/xml"));
         XmlMapper xmlMapper = new XmlMapper();
@@ -77,8 +80,7 @@ public class GVastResponseCreator {
         final String targeting = formatPrebidGamKeyValueString(bidResponse, prioritizeImprovedigitalDeals);
         return buildVastXmlResponse(
                 targeting,
-                gVastParams,
-                placement,
+                gVastContext,
                 prioritizeImprovedigitalDeals && targeting.contains("hb_deal_improvedigit"),
                 debugInfo
         );
@@ -166,11 +168,50 @@ public class GVastResponseCreator {
         return targeting.toString();
     }
 
-    private String buildGamVastTagUrl(Placement placement, String referrer, String targeting, String gdpr,
-                                      String gdprConsent) {
-        String adUnit = placement.getGamAdUnit();
+    private String resolveCountryCode(Map<String, ?> map, GeoInfo geoInfo) {
+        return ObjectUtil.getIfNotNullOrDefault(geoInfo,
+                gn -> map.containsKey(gn.getCountry())
+                        ? gn.getCountry()
+                        : AzerionImpExt.DEFAULT_CONFIG_KEY,
+                () -> AzerionImpExt.DEFAULT_CONFIG_KEY
+        );
+    }
+
+    private double getBidFloor(AzerionImpExt config, GeoInfo geoInfo) {
+        final double defaultResult = 0.0;
+        final Map<String, BidFloor> bidFloors = config.getBidFloors();
+        if (bidFloors.isEmpty()) {
+            return defaultResult;
+        }
+
+        final String countryCode = resolveCountryCode(bidFloors, geoInfo);
+        // logger.info("countryCode = " + countryCode);
+
+        if (bidFloors.containsKey(countryCode)) {
+            return bidFloors.get(countryCode).getBidFloor();
+        }
+
+        return defaultResult;
+    }
+
+    private List<String> getWaterfall(AzerionImpExt config, GeoInfo geoInfo) {
+        final Map<String, List<String>> waterfall = config.getWaterfall();
+        final List<String> defaultResult = List.of("gam");
+        if (waterfall.isEmpty()) {
+            return defaultResult;
+        }
+        final String countryCode = resolveCountryCode(waterfall, geoInfo);
+
+        if (waterfall.containsKey(countryCode)) {
+            return waterfall.get(countryCode);
+        }
+        return defaultResult;
+    }
+
+    private String getGamAdUnit(GVastParams gVastParams, AzerionImpExt config) {
+        String adUnit = config.getGamAdUnit();
         if (StringUtils.isBlank(adUnit)) {
-            adUnit = "/" + gamNetworkCode + "/pbs/" + placement.getId();
+            adUnit = "/" + gamNetworkCode + "/pbs/" + gVastParams.getImpId();
         } else {
             // If ad unit begins with "/", full ad unit path is expected including the GAM network code
             // otherwise the GAM network code will be prepended
@@ -178,6 +219,15 @@ public class GVastResponseCreator {
                 adUnit = "/" + gamNetworkCode + "/" + adUnit;
             }
         }
+        return adUnit;
+    }
+
+    private String buildGamVastTagUrl(
+            String impId,
+            String adUnit,
+            double bidFloor,
+            String referrer,
+            String targeting, String gdpr, String gdprConsent) {
         String gamTag = GOOGLE_VAST_TAG + System.currentTimeMillis() + "&iu=" + adUnit;
         if (referrer != null) {
             final String encodedReferrer = HttpUtil.encodeUrl(referrer);
@@ -189,8 +239,7 @@ public class GVastResponseCreator {
         if (!StringUtils.isBlank(targeting)) {
             targetingString += targeting;
         }
-        final Double bidFloor = placement.getBidFloor();
-        if (bidFloor != null && bidFloor > 0 && !targetingString.contains("fp=")) {
+        if (bidFloor > 0 && !targetingString.contains("fp=")) {
             targetingString += (targetingString.length() > 0 ? "&" : "") + "fp=" + bidFloor;
         }
         if (!StringUtils.isBlank(targetingString)) {
@@ -198,7 +247,7 @@ public class GVastResponseCreator {
             gamTag += "&cust_params=" + HttpUtil.encodeUrl(targetingString);
         }
 
-        if (placement.getId() != null && placement.getId().equals("22505159")) {
+        if (impId != null && impId.equals("22505159")) {
             gamTag += "&sdki=44d&sdk_apis=2%2C8&sdkv=h.3.460.0&gdpr=" + gdpr;
             if (!StringUtils.isBlank(gdprConsent)) {
                 gamTag += "&gdpr_consent=" + gdprConsent;
@@ -284,19 +333,25 @@ public class GVastResponseCreator {
         return stream.filter(s -> !StringUtils.isBlank(s)).collect(Collectors.joining("&"));
     }
 
-    private String buildVastXmlResponse(String gamPrebidTargeting, GVastParams gvastParams, Placement placement,
+    private String buildVastXmlResponse(String gamPrebidTargeting, GVastContext gVastContext,
                                         boolean isImprovedigitalDeal, String hbAuctionDebugInfo) {
-        final String custParams = gvastParams.getCustParams().toString();
-        final String gdprConsent = gvastParams.getGdprConsentString();
-        final String referrer = gvastParams.getReferrer();
-        final String gdpr = gvastParams.getGdpr();
-        List<String> waterfall = new ArrayList<>(Arrays.asList(ObjectUtils.defaultIfNull(placement.getWaterfall(),
-                new String[]{"gam"})));
-
+        final GVastParams gVastParams = gVastContext.getGVastParams();
+        final String custParams = gVastParams.getCustParams().toString();
+        final String gdprConsent = gVastParams.getGdprConsentString();
+        final String referrer = gVastParams.getReferrer();
+        final String gdpr = gVastParams.getGdpr();
+        final AzerionImpExt config = gVastContext.getAzerionImpExt();
+        final String adUnit = getGamAdUnit(gVastParams, config);
+        final GeoInfo geoInfo = gVastContext.getAuctionContext().getGeoInfo();
+        final String impId = gVastParams.getImpId();
+        final double bidFloor = getBidFloor(config, geoInfo);
+        // logger.info("bidFloor = " + bidFloor);
+        final List<String> waterfall = getWaterfall(config, geoInfo);
         final String categoryTargeting;
-        final List<String> categories = gvastParams.getCat();
+        final List<String> categories = gVastParams.getCat();
+
         if (categories != null && categories.size() > 0) {
-            categoryTargeting = "iab_cat=" + String.join(",", gvastParams.getCat());
+            categoryTargeting = "iab_cat=" + String.join(",", gVastParams.getCat());
         } else {
             categoryTargeting = null;
         }
@@ -314,6 +369,7 @@ public class GVastResponseCreator {
                 waterfall.set(gamIndex, "gam_no_hb");
             }
         }
+        // logger.info("waterfall = " + waterfall);
         final int numTags = waterfall.size();
         int i = 0;
         for (String adTag : waterfall) {
@@ -322,7 +378,7 @@ public class GVastResponseCreator {
                 case "gam":
                 case "gam_improve_deal":
                     sb.append(buildVastAdTag(
-                            buildGamVastTagUrl(placement, referrer,
+                            buildGamVastTagUrl(impId, adUnit, bidFloor, referrer,
                                     buildTargetingString(Stream.of(gamPrebidTargeting, custParams, categoryTargeting)),
                                     gdpr,
                                     gdprConsent),
@@ -330,7 +386,7 @@ public class GVastResponseCreator {
                     break;
                 case "gam_no_hb":
                     sb.append(buildVastAdTag(
-                            buildGamVastTagUrl(placement, referrer,
+                            buildGamVastTagUrl(impId, adUnit, bidFloor, referrer,
                                     buildTargetingString(Stream.of(custParams, categoryTargeting)),
                                     gdpr,
                                     gdprConsent),
@@ -341,7 +397,7 @@ public class GVastResponseCreator {
                 // tnl_wog=1 -> disable AdX & AdSense
                 case "gam_first_look":
                     sb.append(buildVastAdTag(
-                            buildGamVastTagUrl(placement, referrer,
+                            buildGamVastTagUrl(impId, adUnit, bidFloor, referrer,
                                     buildTargetingString(Stream.of(custParams, categoryTargeting, "fl=1&tnl_wog=1")),
                                     gdpr,
                                     gdprConsent),

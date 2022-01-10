@@ -32,6 +32,13 @@ placements:
       - gam_first_look
       - gam
       - https://ad.360yield.com/advast?p=22137694&w=4&h=3&gdpr={{gdpr_consent}}
+  - id: 22643052
+    accountId: 950-inapp
+  - id: 20232111
+    accountId: 950-inapp
+    waterfall:
+      - gam
+      - https://ad.360yield.com/advast?p=22645785&gdpr={{gdpr_consent}}
   - id: 22346851
     accountId: 545-jeu.fr
     gamAdUnit: TNL_NS-19041000062/jeu.fr_game_preroll
@@ -105,4 +112,5 @@ placements:
   - id: 22555242
     accountId: 545-grymini.pl
     gamAdUnit: /1015413,7451825/pbs/22555242
-
+  - id: 22637960
+    accountId: 2018

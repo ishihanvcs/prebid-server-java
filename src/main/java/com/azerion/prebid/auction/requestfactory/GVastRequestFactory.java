@@ -248,6 +248,22 @@ public class GVastRequestFactory {
                                     .language(language)
                                     .ua(gVastParams.getUa())
                                     .build())
+                            .imp(List.of(Imp.builder()
+                                    .id("1")
+                                    .video(Video.builder()
+                                        .minduration(gVastParams.getMinduration())
+                                        .maxduration(gVastParams.getMaxduration())
+                                        .w(gVastParams.getW())
+                                        .h(gVastParams.getH())
+                                        .protocols(gVastParams.getProtocols())
+                                        .api(gVastParams.getApi())
+                                        .placement(gVastParams.getPlacement())
+                                        .build())
+                                    .ext(mapper.mapper().valueToTree(ExtImp.of(ExtImpPrebid.builder()
+                                            .storedrequest(ExtStoredRequest.of("gv-"
+                                                    + account.getId() + "-" + gVastContext.getImp().getId()))
+                                            .build(), null)))
+                                    .build()))
                             .build();
                 }
 

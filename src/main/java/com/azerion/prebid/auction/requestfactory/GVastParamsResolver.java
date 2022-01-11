@@ -91,7 +91,7 @@ public class GVastParamsResolver {
 
         try {
             return Arrays.stream(value.split(","))
-                .mapToInt(num -> Integer.parseInt(num))
+                .mapToInt(Integer::parseInt)
                 .boxed()
                 .collect(Collectors.toList());
         } catch (NumberFormatException e) {

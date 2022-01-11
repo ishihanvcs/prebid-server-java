@@ -7,6 +7,19 @@
       "bidder": {
         "improvedigital": {
           "placementId": 22637960
+        },
+        "pubmatic": {
+          "publisherId": "156946",
+          "adSlot": "plants_zombies_2_rewarded"
+        },
+        "appnexus": {
+          "placement_id": 23692277
+        },
+        "smartadserver": {
+          "networkId": 3653,
+          "pageId": 1509754,
+          "siteId": 479806,
+          "formatId": 88313
         }
       }
     }
@@ -14,16 +27,12 @@
   "video": {
     "context": "instream",
     "mimes": [
-      "video/mp4",
-      "application/javascript",
-      "video/webm",
-      "video/ogg"
+      "video/mp4"
     ],
     "minduration": 1,
-    "maxduration": 30,
+    "maxduration": 60,
     "linearity": 1,
-    "api": [2],
-    "protocols": [2, 3, 5, 6],
+    "protocols": [2],
     "w": 640,
     "h": 480
   }

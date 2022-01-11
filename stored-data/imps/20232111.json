@@ -1,7 +1,13 @@
 {
   "ext": {
     "azerion": {
-      "accountId": "950-inapp"
+      "accountId": "950-inapp",
+      "waterfall": {
+        "default": [
+          "gam",
+          "https://ad.360yield.com/advast?p=22645785&gdpr={{gdpr_consent}}"
+        ]
+      }
     },
     "prebid": {
       "bidder": {

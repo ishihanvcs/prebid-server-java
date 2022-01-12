@@ -2,7 +2,7 @@ package com.improvedigital.prebid.server.auction;
 
 import com.improvedigital.prebid.server.auction.model.BidFloor;
 import com.improvedigital.prebid.server.auction.model.GVastParams;
-import com.improvedigital.prebid.server.auction.model.ImprovedigitalpbsImpExt;
+import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.auction.requestfactory.GVastContext;
 import com.improvedigital.prebid.server.utils.FluentMap;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
@@ -171,12 +171,12 @@ public class GVastResponseCreator {
         return ObjectUtil.getIfNotNullOrDefault(geoInfo,
                 gn -> map.containsKey(gn.getCountry())
                         ? gn.getCountry()
-                        : ImprovedigitalpbsImpExt.DEFAULT_CONFIG_KEY,
-                () -> ImprovedigitalpbsImpExt.DEFAULT_CONFIG_KEY
+                        : ImprovedigitalPbsImpExt.DEFAULT_CONFIG_KEY,
+                () -> ImprovedigitalPbsImpExt.DEFAULT_CONFIG_KEY
         );
     }
 
-    private double getBidFloor(ImprovedigitalpbsImpExt config, GeoInfo geoInfo) {
+    private double getBidFloor(ImprovedigitalPbsImpExt config, GeoInfo geoInfo) {
         final double defaultResult = 0.0;
         final Map<String, BidFloor> bidFloors = config.getBidFloors();
         if (bidFloors.isEmpty()) {
@@ -205,7 +205,7 @@ public class GVastResponseCreator {
         return "vast";
     }
 
-    private List<String> getWaterfall(ImprovedigitalpbsImpExt config, GeoInfo geoInfo) {
+    private List<String> getWaterfall(ImprovedigitalPbsImpExt config, GeoInfo geoInfo) {
         final Map<String, List<String>> waterfall = config.getWaterfall();
         final List<String> defaultResult = List.of("gam");
         if (waterfall.isEmpty()) {
@@ -219,7 +219,7 @@ public class GVastResponseCreator {
         return defaultResult;
     }
 
-    private String getGamAdUnit(GVastParams gVastParams, ImprovedigitalpbsImpExt config) {
+    private String getGamAdUnit(GVastParams gVastParams, ImprovedigitalPbsImpExt config) {
         String adUnit = config.getGamAdUnit();
         if (StringUtils.isBlank(adUnit)) {
             adUnit = "/" + gamNetworkCode + "/pbs/" + gVastParams.getImpId();
@@ -367,7 +367,7 @@ public class GVastResponseCreator {
                                         boolean isImprovedigitalDeal, String hbAuctionDebugInfo) {
         final GVastParams gVastParams = gVastContext.getGVastParams();
         final String custParams = gVastParams.getCustParams().toString();
-        final ImprovedigitalpbsImpExt config = gVastContext.getImprovedigitalpbsImpExt();
+        final ImprovedigitalPbsImpExt config = gVastContext.getImprovedigitalPbsImpExt();
         final String adUnit = getGamAdUnit(gVastParams, config);
         final GeoInfo geoInfo = gVastContext.getAuctionContext().getGeoInfo();
         final String impId = gVastParams.getImpId();

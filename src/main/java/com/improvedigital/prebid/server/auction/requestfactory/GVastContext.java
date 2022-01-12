@@ -1,7 +1,7 @@
 package com.improvedigital.prebid.server.auction.requestfactory;
 
 import com.improvedigital.prebid.server.auction.model.GVastParams;
-import com.improvedigital.prebid.server.auction.model.ImprovedigitalpbsImpExt;
+import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
@@ -21,7 +21,7 @@ public class GVastContext {
     AuctionContext auctionContext;
     Account account;
     Imp imp;
-    ImprovedigitalpbsImpExt improvedigitalpbsImpExt;
+    ImprovedigitalPbsImpExt improvedigitalPbsImpExt;
     BidRequest bidRequest;
     BidResponse bidResponse;
     GVastParams gVastParams;
@@ -31,10 +31,10 @@ public class GVastContext {
     }
 
     public GVastContext with(Imp imp, JacksonMapper mapper) throws JsonProcessingException {
-        ImprovedigitalpbsImpExt improvedigitalpbsImpExt = mapper.mapper().treeToValue(
-                imp.getExt().at("/prebid/improvedigitalpbs"), ImprovedigitalpbsImpExt.class
+        ImprovedigitalPbsImpExt improvedigitalPbsImpExt = mapper.mapper().treeToValue(
+                imp.getExt().at("/prebid/improvedigitalpbs"), ImprovedigitalPbsImpExt.class
         );
-        return this.toBuilder().imp(imp).improvedigitalpbsImpExt(improvedigitalpbsImpExt).build();
+        return this.toBuilder().imp(imp).improvedigitalPbsImpExt(improvedigitalPbsImpExt).build();
     }
 
     public GVastContext with(Account account) {

@@ -2,14 +2,14 @@
   <configuration default="false" name="Application" type="Application" factoryName="Application" nameIsGenerated="true">
     <option name="MAIN_CLASS_NAME" value="org.prebid.server.Application" />
     <module name="prebid-server" />
-    <option name="PROGRAM_PARAMETERS" value="--spring.config.additional-location=config/azerion-config.yaml" />
+    <option name="PROGRAM_PARAMETERS" value="--spring.config.additional-location=improvedigital-config/config.yaml" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="org.prebid.server.*" />
         <option name="ENABLED" value="true" />
       </pattern>
       <pattern>
-        <option name="PATTERN" value="com.azerion.prebid.*" />
+        <option name="PATTERN" value="com.improvedigital.prebid.server.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>

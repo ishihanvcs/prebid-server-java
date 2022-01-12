@@ -1,7 +1,7 @@
 {
   "ext": {
     "prebid": {
-      "azerion": {
+      "improvedigitalpbs": {
         "accountId": "950-inapp"
       },
       "bidder": {

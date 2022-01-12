@@ -531,7 +531,7 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven-surefire-plugin.version}</version>
                     <configuration>
-                        <systemPropertiesFile>config/azerion-test-application.properties</systemPropertiesFile>
+                        <systemPropertiesFile>improvedigital-config/test-application.properties</systemPropertiesFile>
                         <systemPropertyVariables>
                             <launchContainers>false</launchContainers>
                         </systemPropertyVariables>
@@ -626,7 +626,7 @@
                         <exclude>**/proto/**</exclude>
                         <exclude>**/model/**</exclude>
                         <exclude>org/prebid/server/spring/config/**</exclude>
-                        <exclude>com/azerion/prebid/config/**</exclude>
+                        <exclude>com/improvedigital/prebid/server/config/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>

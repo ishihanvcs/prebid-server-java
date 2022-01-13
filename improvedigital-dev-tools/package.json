@@ -11,10 +11,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "colors": "1.4.0",
     "debug": "^4.3.3",
     "express": "^4.17.2",
     "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "node-fetch": "^2.6.6"
   }
 }

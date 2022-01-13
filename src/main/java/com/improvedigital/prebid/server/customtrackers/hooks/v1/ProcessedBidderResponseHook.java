@@ -1,10 +1,8 @@
 package com.improvedigital.prebid.server.customtrackers.hooks.v1;
 
+import com.improvedigital.prebid.server.customtrackers.AuctionRequestModuleContext;
 import com.improvedigital.prebid.server.customtrackers.BidderBidModifier;
-import com.improvedigital.prebid.server.customtrackers.ModuleContext;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
-import com.improvedigital.prebid.server.settings.SettingsLoader;
-import com.improvedigital.prebid.server.settings.model.CustomTrackerSetting;
 import io.vertx.core.Future;
 import org.prebid.server.bidder.model.BidderBid;
 import org.prebid.server.hooks.execution.v1.bidder.BidderResponsePayloadImpl;
@@ -19,13 +17,10 @@ public class ProcessedBidderResponseHook implements org.prebid.server.hooks.v1.b
 
     // private static final Logger logger = LoggerFactory.getLogger(ProcessedBidderResponseHook.class);
     private final BidderBidModifier bidderBidModifier;
-    private final SettingsLoader settingsLoader;
 
     public ProcessedBidderResponseHook(
-            SettingsLoader settingsLoader,
             BidderBidModifier bidderBidModifier
     ) {
-        this.settingsLoader = settingsLoader;
         this.bidderBidModifier = bidderBidModifier;
     }
 
@@ -37,40 +32,28 @@ public class ProcessedBidderResponseHook implements org.prebid.server.hooks.v1.b
         final List<BidderBid> originalBids = bidderResponsePayload.bids();
         final String bidder = invocationContext.bidder();
         final Object moduleContext = invocationContext.moduleContext();
-        return settingsLoader.getCustomTrackerSettingFuture()
-                .compose(
-                        // successMapper
-                        customTrackerSetting -> {
-                            final List<BidderBid> updatedBids = updateBids(
-                                    customTrackerSetting, moduleContext, originalBids, bidder
-                            );
-                            return Future.succeededFuture(
-                                    InvocationResultImpl.succeeded(payload ->
-                                            BidderResponsePayloadImpl.of(updatedBids), moduleContext));
-                        },
-                        // failureMapper
-                        throwable -> Future.succeededFuture(
-                                InvocationResultImpl.succeeded(payload ->
-                                        BidderResponsePayloadImpl.of(originalBids), moduleContext))
-                );
+
+        final List<BidderBid> updatedBids = maybeUpdateBids(
+                moduleContext, originalBids, bidder
+        );
+        return Future.succeededFuture(
+                InvocationResultImpl.succeeded(payload ->
+                        BidderResponsePayloadImpl.of(updatedBids), moduleContext));
     }
 
-    private List<BidderBid> updateBids(
-            CustomTrackerSetting customTrackerSetting,
+    private List<BidderBid> maybeUpdateBids(
             Object moduleContext,
             List<BidderBid> originalBids,
             String bidder
     ) {
-        if (!(moduleContext instanceof ModuleContext)) {
+        if (!(moduleContext instanceof AuctionRequestModuleContext)) {
             return originalBids;
         }
+
         return originalBids.stream()
                 .map(bidderBid -> bidderBidModifier.modifyBidAdm(
-                                customTrackerSetting,
-                                (ModuleContext) moduleContext,
-                                bidderBid, bidder
-                        )
-                )
+                        (AuctionRequestModuleContext) moduleContext, bidderBid, bidder
+                ))
                 .collect(Collectors.toList());
     }
 
@@ -79,3 +62,4 @@ public class ProcessedBidderResponseHook implements org.prebid.server.hooks.v1.b
         return "custom-tracker-processed-bidder-response";
     }
 }
+

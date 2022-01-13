@@ -1,8 +1,7 @@
 package com.improvedigital.prebid.server.settings;
 
 import com.improvedigital.prebid.server.settings.model.CustomTracker;
-import com.improvedigital.prebid.server.settings.model.CustomTrackerSetting;
-import com.improvedigital.prebid.server.settings.model.SettingsFile;
+import com.improvedigital.prebid.server.settings.model.ParsedCustomSettings;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
@@ -14,12 +13,9 @@ import org.prebid.server.exception.PreBidException;
 import org.prebid.server.execution.Timeout;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Implementation of {@link CustomSettings}.
@@ -31,46 +27,46 @@ import java.util.stream.Collectors;
  */
 public class FileCustomSettings implements CustomSettings {
 
-    private static final String JSON_SUFFIX = ".json";
     private static final Logger logger = LoggerFactory.getLogger(FileCustomSettings.class);
 
-    private final CustomTrackerSetting customTrackerSetting;
+    private final Map<String, CustomTracker> trackersMap;
 
     public FileCustomSettings(FileSystem fileSystem, String settingsFileName) {
-        SettingsFile settingsFile = readSettingsFile(Objects.requireNonNull(fileSystem),
+        ParsedCustomSettings parsedCustomSettings = readSettingsFile(Objects.requireNonNull(fileSystem),
                 settingsFileName);
 
-        customTrackerSetting = settingsFile.getCustomTrackers();
+        this.trackersMap = CustomTracker.filterDisabledTrackers(parsedCustomSettings.getTrackers());
     }
 
     @Override
-    public Future<CustomTrackerSetting> getCustomTrackerSetting(Timeout timeout) {
-        return Future.succeededFuture(customTrackerSetting);
+    public Future<Collection<CustomTracker>> getCustomTrackers(Timeout timeout) {
+        return Future.succeededFuture(trackersMap.values());
+    }
+
+    @Override
+    public Future<Map<String, CustomTracker>> getCustomTrackersMap(Timeout timeout) {
+        return Future.succeededFuture(trackersMap);
     }
 
     @Override
     public Future<CustomTracker> getCustomTrackerById(String trackerId, Timeout timeout) {
-        return mapValueToFuture(customTrackerSetting.getTrackersMap(), "CustomTracker", trackerId);
-    }
-
-    private static <T, K, U> Map<K, U> toMap(List<T> list, Function<T, K> keyMapper, Function<T, U> valueMapper) {
-        return list != null ? list.stream().collect(Collectors.toMap(keyMapper, valueMapper)) : Collections.emptyMap();
+        return mapValueToFuture(trackersMap, "CustomTracker", trackerId);
     }
 
     /**
      * Reading YAML settings file.
      */
-    private static SettingsFile readSettingsFile(FileSystem fileSystem, String fileName) {
+    private static ParsedCustomSettings readSettingsFile(FileSystem fileSystem, String fileName) {
         logger.debug("Reading custom settings from: " + fileName);
         if (!StringUtils.isBlank(fileName)) {
             try {
                 final Buffer buf = fileSystem.readFileBlocking(fileName);
-                return new YAMLMapper().readValue(buf.getBytes(), SettingsFile.class);
+                return new YAMLMapper().readValue(buf.getBytes(), ParsedCustomSettings.class);
             } catch (IOException e) {
                 logger.warn("Couldn't read file settings", e);
             }
         }
-        return new SettingsFile();
+        return new ParsedCustomSettings();
     }
 
     private static <T> Future<T> mapValueToFuture(Map<String, T> map, String modelType, String id) {
@@ -80,3 +76,4 @@ public class FileCustomSettings implements CustomSettings {
                 : Future.failedFuture(new PreBidException(String.format("%s not found: %s", modelType, id)));
     }
 }
+

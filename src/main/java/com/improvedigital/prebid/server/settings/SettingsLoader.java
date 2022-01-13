@@ -1,7 +1,7 @@
 package com.improvedigital.prebid.server.settings;
 
 import com.improvedigital.prebid.server.exception.SettingsLoaderException;
-import com.improvedigital.prebid.server.settings.model.CustomTrackerSetting;
+import com.improvedigital.prebid.server.settings.model.CustomTracker;
 import com.iab.openrtb.request.Imp;
 import io.vertx.core.Future;
 import org.apache.commons.lang3.StringUtils;
@@ -14,6 +14,7 @@ import org.prebid.server.settings.ApplicationSettings;
 import org.prebid.server.settings.model.Account;
 import org.prebid.server.settings.model.StoredDataResult;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -85,12 +86,12 @@ public class SettingsLoader {
         return getSettingFuture(accountId, "account", applicationSettings::getAccountById, timeout);
     }
 
-    public Future<CustomTrackerSetting> getCustomTrackerSettingFuture(Timeout timeout) {
-        return customSettings.getCustomTrackerSetting(createTimeoutIfNull(timeout));
+    public Future<Collection<CustomTracker>> getCustomTrackersFuture(Timeout timeout) {
+        return customSettings.getCustomTrackers(createTimeoutIfNull(timeout));
     }
 
-    public Future<CustomTrackerSetting> getCustomTrackerSettingFuture() {
-        return getCustomTrackerSettingFuture(null);
+    public Future<Collection<CustomTracker>> getCustomTrackersFuture() {
+        return getCustomTrackersFuture(null);
     }
 
     public Future<Imp> getStoredImp(String impId, Timeout timeout) {
@@ -101,7 +102,7 @@ public class SettingsLoader {
                         if (StringUtils.isBlank(storedData) || storedData.equals("null")) {
                             return Future.failedFuture(new InvalidRequestException(
                                     String.format("Invalid impId '%s' provided.", impId)
-                                    ));
+                            ));
                         }
                         final Imp imp = mapper.mapper().readValue(storedData, Imp.class);
                         return Future.succeededFuture(imp);
@@ -135,3 +136,4 @@ public class SettingsLoader {
                 });
     }
 }
+

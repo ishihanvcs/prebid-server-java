@@ -138,7 +138,7 @@ public class ExtensionConfig {
         return new CustomTrackerModule(
                 applicationContext,
                 settingsLoader,
-                bidderBidModifier, mapper);
+                bidderBidModifier);
     }
 
     @Bean

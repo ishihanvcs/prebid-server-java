@@ -21,12 +21,5 @@ public class ModuleContext {
                 .applicationContext(applicationContext)
                 .build();
     }
-
-    public ModuleContext with(
-            BidRequest bidRequest
-    ) {
-        return this.toBuilder()
-                .bidRequest(bidRequest)
-                .build();
-    }
 }
+

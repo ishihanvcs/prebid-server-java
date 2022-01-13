@@ -1,14 +1,16 @@
 package com.improvedigital.prebid.server.customtrackers;
 
-import com.improvedigital.prebid.server.customtrackers.contracts.ITrackerMacroResolver;
-import com.improvedigital.prebid.server.settings.model.CustomTrackerSetting;
-import com.improvedigital.prebid.server.utils.MacroProcessor;
+import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.response.Bid;
+import com.improvedigital.prebid.server.customtrackers.contracts.ITrackerMacroResolver;
+import com.improvedigital.prebid.server.settings.model.CustomTracker;
+import com.improvedigital.prebid.server.utils.MacroProcessor;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.bidder.model.BidderBid;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Stack;
 
@@ -23,16 +25,27 @@ public class BidderBidModifier {
         this.macroProcessor = macroProcessor;
     }
 
+    private String resolveAccountId(BidRequest bidRequest) {
+        if (bidRequest.getSite() != null
+                && bidRequest.getSite().getPublisher() != null
+        ) {
+            return bidRequest.getSite().getPublisher().getId();
+        }
+        return null;
+    }
+
     public BidderBid modifyBidAdm(
-            CustomTrackerSetting customTrackerSetting,
-            ModuleContext bidRequestContext,
+            AuctionRequestModuleContext moduleContext,
             BidderBid bidderBid,
             String bidder
     ) {
-        if (bidRequestContext == null
-                || customTrackerSetting == null
-                || !customTrackerSetting.isEnabled()
-        ) {
+        if (moduleContext == null) {
+            return bidderBid;
+        }
+
+        Collection<CustomTracker> customTrackers = moduleContext.getCustomTrackers();
+        if (customTrackers == null || customTrackers.isEmpty()) {
+            logger.warn("No custom trackers are configured & enabled!");
             return bidderBid;
         }
 
@@ -41,12 +54,29 @@ public class BidderBidModifier {
             logger.warn("Skipping bid as adm value is blank!");
             return bidderBid;
         }
+
+        String accountId = resolveAccountId(moduleContext.getBidRequest());
         final Stack<String> admStack = new Stack<>();
         admStack.push(bid.getAdm());
         TrackerContext commonTrackerContext = TrackerContext
-                .from(bidRequestContext)
+                .from(moduleContext)
                 .with(bidderBid, bidder);
-        customTrackerSetting.forEach(customTracker -> {
+        customTrackers.forEach(customTracker -> {
+            if (!customTracker.getEnabled()) {
+                logger.info(String.format(
+                        "Skipping Custom Tracker [id=%s] as it is disabled in configuration", customTracker.getId()
+                ));
+                return;
+            } else if (!customTracker.getExcludedAccounts().isEmpty()
+                    && StringUtils.isNotBlank(accountId)
+                    && customTracker.getExcludedAccounts().contains(accountId)
+            ) {
+                logger.info(String.format(
+                        "Skipping Custom Tracker [id=%s] as [account=%s] is excluded in configuration",
+                        customTracker.getId(), accountId
+                ));
+                return;
+            }
             try {
                 final TrackerContext trackerContext = commonTrackerContext
                         .with(customTracker);

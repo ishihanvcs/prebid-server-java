@@ -10,7 +10,6 @@ import io.vertx.core.logging.LoggerFactory;
 import org.prebid.server.hooks.v1.Hook;
 import org.prebid.server.hooks.v1.InvocationContext;
 import org.prebid.server.hooks.v1.Module;
-import org.prebid.server.json.JacksonMapper;
 import org.springframework.context.ApplicationContext;
 
 import java.util.Arrays;
@@ -22,18 +21,15 @@ public class CustomTrackerModule implements Module {
     private final ApplicationContext applicationContext;
     private final SettingsLoader settingsLoader;
     private final BidderBidModifier bidderBidModifier;
-    private final JacksonMapper mapper;
 
     public CustomTrackerModule(
             ApplicationContext applicationContext,
             SettingsLoader settingsLoader,
-            BidderBidModifier bidderBidModifier,
-            JacksonMapper mapper
+            BidderBidModifier bidderBidModifier
     ) {
         this.applicationContext = applicationContext;
         this.settingsLoader = settingsLoader;
         this.bidderBidModifier = bidderBidModifier;
-        this.mapper = mapper;
     }
 
     @Override
@@ -44,15 +40,10 @@ public class CustomTrackerModule implements Module {
     @Override
     public Collection<? extends Hook<?, ? extends InvocationContext>> hooks() {
         return Arrays.asList(
-                new EntrypointHook(
-                        applicationContext,
-                        settingsLoader
-                ),
+                new EntrypointHook(applicationContext, settingsLoader),
                 new ProcessedAuctionRequestHook(),
-                new ProcessedBidderResponseHook(
-                        settingsLoader,
-                        bidderBidModifier
-                )
+                new ProcessedBidderResponseHook(bidderBidModifier)
         );
     }
 }
+

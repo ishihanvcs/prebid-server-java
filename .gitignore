@@ -15,4 +15,5 @@ target/
 
 .allure/
 /improvedigital-dev-tools/node_modules/
-improvedigital-config/config-local.yaml
+/improvedigital-config/local/
+/.run/Application (Local).run.xml

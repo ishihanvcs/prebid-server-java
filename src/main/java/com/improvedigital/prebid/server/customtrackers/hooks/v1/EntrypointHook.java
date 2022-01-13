@@ -1,9 +1,11 @@
 package com.improvedigital.prebid.server.customtrackers.hooks.v1;
 
-import com.improvedigital.prebid.server.customtrackers.ModuleContext;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
+import com.improvedigital.prebid.server.customtrackers.AuctionRequestModuleContext;
 import io.vertx.core.Future;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.prebid.server.hooks.v1.InvocationContext;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.entrypoint.EntrypointPayload;
@@ -11,6 +13,7 @@ import org.springframework.context.ApplicationContext;
 
 public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.EntrypointHook {
 
+    private static final Logger logger = LoggerFactory.getLogger(EntrypointHook.class);
     private final SettingsLoader settingsLoader;
     private final ApplicationContext applicationContext;
 
@@ -25,12 +28,21 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
     @Override
     public Future<InvocationResult<EntrypointPayload>> call(
             EntrypointPayload entrypointPayload, InvocationContext invocationContext) {
-        final String placementId = entrypointPayload.queryParams().get("p");
 
-        return Future.succeededFuture(InvocationResultImpl.succeeded(
-                payload -> entrypointPayload,
-                ModuleContext.from(applicationContext)
-        ));
+        return settingsLoader.getCustomTrackersFuture(invocationContext.timeout())
+                .compose(customTrackers -> {
+                    final AuctionRequestModuleContext context =
+                            AuctionRequestModuleContext.from(
+                                    applicationContext,
+                                    customTrackers
+                            );
+                    return Future.succeededFuture(InvocationResultImpl.succeeded(
+                            payload -> entrypointPayload,
+                            context));
+                }, t -> {
+                        logger.warn("custom tracker setting loading error:" + t.getMessage());
+                        return Future.succeededFuture(InvocationResultImpl.succeeded(payload -> entrypointPayload));
+                    });
     }
 
     @Override

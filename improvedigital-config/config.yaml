@@ -138,7 +138,7 @@ hooks:
             "entrypoint": {
               "groups": [
                 {
-                  "timeout": 5,
+                  "timeout": 50,
                   "hook-sequence": [
                     {
                       "module-code": "custom-tracker-module",
@@ -178,3 +178,8 @@ hooks:
         }
       }
     }
+
+auction:
+  default-timeout-ms: 10000
+  max-timeout-ms: 15000
+  stored-requests-timeout-ms: 5000

@@ -1,17 +1,16 @@
 package com.improvedigital.prebid.server.auction;
 
-import com.improvedigital.prebid.server.auction.model.BidFloor;
-import com.improvedigital.prebid.server.auction.model.GVastParams;
-import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
-import com.improvedigital.prebid.server.auction.requestfactory.GVastContext;
-import com.improvedigital.prebid.server.utils.FluentMap;
-import com.improvedigital.prebid.server.utils.MacroProcessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.iab.openrtb.response.Bid;
 import com.iab.openrtb.response.BidResponse;
 import com.iab.openrtb.response.SeatBid;
+import com.improvedigital.prebid.server.auction.model.GVastParams;
+import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
+import com.improvedigital.prebid.server.auction.requestfactory.GVastContext;
+import com.improvedigital.prebid.server.utils.FluentMap;
+import com.improvedigital.prebid.server.utils.MacroProcessor;
 import io.netty.util.AsciiString;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -19,7 +18,6 @@ import io.vertx.ext.web.RoutingContext;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.geolocation.model.GeoInfo;
 import org.prebid.server.util.HttpUtil;
-import org.prebid.server.util.ObjectUtil;
 
 import java.util.Iterator;
 import java.util.List;
@@ -167,31 +165,6 @@ public class GVastResponseCreator {
         return targeting.toString();
     }
 
-    private String resolveCountryCode(Map<String, ?> map, GeoInfo geoInfo) {
-        return ObjectUtil.getIfNotNullOrDefault(geoInfo,
-                gn -> map.containsKey(gn.getCountry())
-                        ? gn.getCountry()
-                        : ImprovedigitalPbsImpExt.DEFAULT_CONFIG_KEY,
-                () -> ImprovedigitalPbsImpExt.DEFAULT_CONFIG_KEY
-        );
-    }
-
-    private double getBidFloor(ImprovedigitalPbsImpExt config, GeoInfo geoInfo) {
-        final double defaultResult = 0.0;
-        final Map<String, BidFloor> bidFloors = config.getBidFloors();
-        if (bidFloors.isEmpty()) {
-            return defaultResult;
-        }
-        final String countryCode = resolveCountryCode(bidFloors, geoInfo);
-        // logger.info("countryCode = " + countryCode);
-
-        if (bidFloors.containsKey(countryCode)) {
-            return bidFloors.get(countryCode).getBidFloor();
-        }
-
-        return defaultResult;
-    }
-
     private String resolveGamOutputFromOrtb(List<Integer> protocols) {
         if (protocols != null) {
             if (protocols.contains(7)) {
@@ -203,20 +176,6 @@ public class GVastResponseCreator {
             }
         }
         return "vast";
-    }
-
-    private List<String> getWaterfall(ImprovedigitalPbsImpExt config, GeoInfo geoInfo) {
-        final Map<String, List<String>> waterfall = config.getWaterfall();
-        final List<String> defaultResult = List.of("gam");
-        if (waterfall.isEmpty()) {
-            return defaultResult;
-        }
-        final String countryCode = resolveCountryCode(waterfall, geoInfo);
-
-        if (waterfall.containsKey(countryCode)) {
-            return waterfall.get(countryCode);
-        }
-        return defaultResult;
     }
 
     private String getGamAdUnit(GVastParams gVastParams, ImprovedigitalPbsImpExt config) {
@@ -371,8 +330,8 @@ public class GVastResponseCreator {
         final String adUnit = getGamAdUnit(gVastParams, config);
         final GeoInfo geoInfo = gVastContext.getAuctionContext().getGeoInfo();
         final String impId = gVastParams.getImpId();
-        final double bidFloor = getBidFloor(config, geoInfo);
-        final List<String> waterfall = getWaterfall(config, geoInfo);
+        final double bidFloor = config.getBidFloor(geoInfo);
+        final List<String> waterfall = config.getWaterfall(geoInfo);
         final String categoryTargeting;
         final List<String> categories = gVastParams.getCat();
 

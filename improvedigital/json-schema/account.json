@@ -1,0 +1,205 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "pbs-account-schema",
+  "description": "json schema of an account in PBS",
+  "type": "object",
+  "required": ["id"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "inactive"]
+    },
+    "auction": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "price-granularity": {
+          "type": "string",
+          "enum": ["low", "med", "high", "auto", "dense", "unknown"]
+        },
+        "banner-cache-ttl": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "video-cache-ttl": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "truncate-target-attr": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 255
+        },
+        "default-integration": {
+          "type": "string",
+          "enum": ["web", "app", "amp", "video"]
+        },
+        "bid-validations": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "banner-creative-max-size": {
+              "type": "string",
+              "enum": ["skip", "warn", "enforce"]
+            }
+          }
+        },
+        "events": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ccpa": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "channel-enabled": {
+              "$ref": "#/definitions/enabled-for-request-type"
+            },
+            "integration-enabled": {
+              "$ref": "#/definitions/enabled-for-request-type"
+            }
+          }
+        },
+        "gdpr": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "channel-enabled": {
+              "$ref": "#/definitions/enabled-for-request-type"
+            },
+            "integration-enabled": {
+              "$ref": "#/definitions/enabled-for-request-type"
+            },
+            "purposes": {
+              "type": "object",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^p([1-9]|10)$": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "enforce-purpose": {
+                      "type": "string",
+                      "enum": ["no", "basic", "full"]
+                    },
+                    "enforce-vendors": {
+                      "type": "boolean"
+                    },
+                    "vendor-exceptions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "special-features": {
+              "type": "object",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^sf[1-2]$": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "enforce": {
+                      "type": "boolean"
+                    },
+                    "vendor-exceptions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "purpose-one-treatment-interpretation": {
+              "type": "string",
+              "enum": ["ignore", "no-access-allowed", "access-allowed"]
+            }
+          }
+        }
+      }
+    },
+    "analytics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "auction-events": {
+          "$ref": "#/definitions/enabled-for-request-type"
+        },
+        "modules": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^\\w+$": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "cookie-sync": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default-limit": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "max-limit": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "default-coop-sync": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "positive_int": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "enabled-for-request-type": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "web": {
+          "type": "boolean"
+        },
+        "amp": {
+          "type": "boolean"
+        },
+        "app": {
+          "type": "boolean"
+        },
+        "video": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

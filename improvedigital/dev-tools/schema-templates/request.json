@@ -3,21 +3,14 @@
   "title": "openrtb-v2_5-schema-bid_request",
   "description": "json schema for an openrtb v2.5 bid request",
   "type": "object",
-  "required": [
-    "id",
-    "imp"
-  ],
+  "required": ["id", "imp"],
   "not": {
     "allOf": [
       {
-        "required": [
-          "site"
-        ]
+        "required": ["site"]
       },
       {
-        "required": [
-          "app"
-        ]
+        "required": ["app"]
       }
     ]
   },
@@ -112,78 +105,27 @@
   "definitions": {
     "imp": {
       "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "id": {
-          "type": "string"
+      "required": ["id"],
+      "anyOf": [
+        {
+          "required": ["banner"]
         },
-        "metric": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/metric"
-          }
+        {
+          "required": ["video"]
         },
-        "banner": {
-          "$ref": "#/definitions/banner"
+        {
+          "required": ["audio"]
         },
-        "video": {
-          "$ref": "#/definitions/video"
-        },
-        "audio": {
-          "$ref": "#/definitions/audio"
-        },
-        "native": {
-          "$ref": "#/definitions/native"
-        },
-        "displaymanager": {
-          "type": "string"
-        },
-        "displaymanagerver": {
-          "type": "string"
-        },
-        "instl": {
-          "$ref": "#/definitions/boolean_int"
-        },
-        "tagid": {
-          "type": "string"
-        },
-        "bidfloor": {
-          "$ref": "#/definitions/floor_price"
-        },
-        "bidfloorcur": {
-          "$ref": "#/definitions/currency"
-        },
-        "clickbrowser": {
-          "$ref": "#/definitions/boolean_int"
-        },
-        "secure": {
-          "$ref": "#/definitions/boolean_int"
-        },
-        "iframebuster": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "pmp": {
-          "$ref": "#/definitions/pmp"
-        },
-        "exp": {
-          "$ref": "#/definitions/positive_int"
-        },
-        "ext": {
-          "$ref": "#/definitions/imp_ext"
+        {
+          "required": ["native"]
         }
-      },
-      "title": "openrtb-v2_5-schema-bid_request-imp",
-      "description": "json schema of an imp object with improvedigitalpbs specific custom extensions"
+      ],
+      "additionalProperties": false,
+      "properties": {}
     },
     "metric": {
       "type": "object",
-      "required": [
-        "type",
-        "value"
-      ],
+      "required": ["type", "value"],
       "additionalProperties": false,
       "properties": {
         "type": {
@@ -277,9 +219,7 @@
     },
     "video": {
       "type": "object",
-      "required": [
-        "mimes"
-      ],
+      "required": ["mimes"],
       "additionalProperties": false,
       "properties": {
         "mimes": {
@@ -398,9 +338,7 @@
     },
     "audio": {
       "type": "object",
-      "required": [
-        "mimes"
-      ],
+      "required": ["mimes"],
       "additionalProperties": false,
       "properties": {
         "mimes": {
@@ -488,19 +426,13 @@
       "type": "object",
       "anyOf": [
         {
-          "required": [
-            "request"
-          ]
+          "required": ["request"]
         },
         {
-          "required": [
-            "request_native"
-          ]
+          "required": ["request_native"]
         },
         {
-          "required": [
-            "assets"
-          ]
+          "required": ["assets"]
         }
       ],
       "additionalProperties": false,
@@ -1010,11 +942,7 @@
         },
         "gender": {
           "type": "string",
-          "enum": [
-            "M",
-            "F",
-            "O"
-          ]
+          "enum": ["M", "F", "O"]
         },
         "keywords": {
           "type": "string"
@@ -1040,10 +968,7 @@
                 "consented_providers": {
                   "type": "array",
                   "items": {
-                    "type": [
-                      "integer",
-                      "string"
-                    ]
+                    "type": ["integer", "string"]
                   }
                 }
               }
@@ -1153,9 +1078,7 @@
     },
     "deal": {
       "type": "object",
-      "required": [
-        "id"
-      ],
+      "required": ["id"],
       "additionalProperties": false,
       "properties": {
         "id": {
@@ -1189,11 +1112,7 @@
     },
     "schain": {
       "type": "object",
-      "required": [
-        "complete",
-        "nodes",
-        "ver"
-      ],
+      "required": ["complete", "nodes", "ver"],
       "additionalProperties": false,
       "properties": {
         "complete": {
@@ -1203,11 +1122,7 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": [
-              "asi",
-              "sid",
-              "hp"
-            ],
+            "required": ["asi", "sid", "hp"],
             "additionalProperties": false,
             "properties": {
               "asi": {
@@ -1243,10 +1158,7 @@
     },
     "eid": {
       "type": "object",
-      "required": [
-        "source",
-        "uids"
-      ],
+      "required": ["source", "uids"],
       "properties": {
         "source": {
           "type": "string"
@@ -1262,9 +1174,7 @@
     },
     "uid": {
       "type": "object",
-      "required": [
-        "id"
-      ],
+      "required": ["id"],
       "properties": {
         "id": {
           "type": "string"
@@ -1831,9 +1741,7 @@
     },
     "imp_ext_prebid_improvedigitalpbs": {
       "type": "object",
-      "required": [
-        "accountId"
-      ],
+      "required": ["accountId"],
       "properties": {
         "accountId": {
           "type": "string"
@@ -1843,9 +1751,7 @@
         },
         "bidFloors": {
           "type": "object",
-          "required": [
-            "default"
-          ],
+          "required": ["default"],
           "minProperties": 1,
           "additionalProperties": false,
           "patternProperties": {
@@ -1861,9 +1767,7 @@
         },
         "waterfall": {
           "type": "object",
-          "required": [
-            "default"
-          ],
+          "required": ["default"],
           "minProperties": 1,
           "additionalProperties": false,
           "patternProperties": {
@@ -1884,124 +1788,20 @@
       "additionalProperties": false,
       "minProperties": 1,
       "properties": {
-        "adagio": {
-          "title": "Adagio Adapter Params",
-          "description": "A schema which validates params accepted by the Adagio adapter",
+        "amx": {
+          "title": "AMX RTB Adapter Params",
+          "description": "A schema to validate params accepted by the AMX adapter",
           "type": "object",
-          "required": [
-            "organizationId",
-            "site",
-            "placement"
-          ],
           "properties": {
-            "organizationId": {
+            "tagId": {
               "type": "string",
-              "description": "Name to identify the organization",
-              "minLength": 1
+              "description": "Set a tagId (overrides site.publisher.id, or app.publisher.id)"
             },
-            "site": {
+            "adUnitId": {
               "type": "string",
-              "description": "Name to identify the site",
-              "minLength": 1
-            },
-            "placement": {
-              "type": "string",
-              "description": "Name to identify the placement",
-              "minLength": 1
-            },
-            "pageviewId": {
-              "type": "string",
-              "description": "Name to identify the pageview"
-            },
-            "pagetype": {
-              "type": "string",
-              "description": "Name to identify the page type"
-            },
-            "category": {
-              "type": "string",
-              "description": "Name to identify the category"
-            },
-            "subcategory": {
-              "type": "string",
-              "description": "Name to identify the subcategory"
-            },
-            "environment": {
-              "type": "string",
-              "description": "Name to identify the environment"
-            },
-            "features": {
-              "type": "object",
-              "patternProperties": {
-                "^[a-zA-Z_]": {
-                  "type": "string"
-                }
-              }
-            },
-            "prebidVersion:": {
-              "type": "string",
-              "description": "Name to identify the version of Prebid.js"
-            },
-            "debug": {
-              "type": "object",
-              "properties": {
-                "enabled": {
-                  "type": "boolean"
-                },
-                "cpm": {
-                  "type": "number"
-                },
-                "lazyLoad": {
-                  "type": "object",
-                  "properties": {
-                    "enabled": {
-                      "type": "boolean"
-                    },
-                    "threshold": {
-                      "type": "number"
-                    },
-                    "rootMargin": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            },
-            "native": {
-              "type": "object",
-              "properties": {
-                "context": {
-                  "type": "number"
-                },
-                "plcmttype": {
-                  "type": "number"
-                }
-              }
+              "description": "Override imp.tagid value to provide a custom value in AMX ad unit ID reporting"
             }
           }
-        },
-        "admixer": {
-          "title": "Admixer Adapter Params",
-          "description": "A schema which validates params accepted by the Admixer adapter",
-          "type": "object",
-          "properties": {
-            "zone": {
-              "type": "string",
-              "description": "Zone ID.",
-              "pattern": "^([a-fA-F\\d\\-]{32,36})$"
-            },
-            "customFloor": {
-              "type": "number",
-              "description": "The minimum CPM price in USD.",
-              "minimum": 0
-            },
-            "customParams": {
-              "type": "object",
-              "description": "User-defined targeting key-value pairs."
-            }
-          },
-          "required": [
-            "zone"
-          ]
         },
         "appnexus": {
           "title": "Appnexus Adapter Params",
@@ -2046,9 +1846,7 @@
                     }
                   }
                 },
-                "required": [
-                  "key"
-                ]
+                "required": ["key"]
               }
             },
             "traffic_source_code": {
@@ -2065,10 +1863,7 @@
             },
             "position": {
               "type": "string",
-              "enum": [
-                "above",
-                "below"
-              ],
+              "enum": ["above", "below"],
               "description": "Specifies the ad unit as above or below the fold"
             },
             "use_pmt_rule": {
@@ -2091,10 +1886,7 @@
                     "type": "integer"
                   }
                 },
-                "required": [
-                  "w",
-                  "h"
-                ]
+                "required": ["w", "h"]
               },
               "description": "Private sizes (ex: [{\"w\": 300, \"h\": 250},{...}]), experimental, may not be supported."
             }
@@ -2103,55 +1895,26 @@
             {
               "oneOf": [
                 {
-                  "required": [
-                    "placementId"
-                  ]
+                  "required": ["placementId"]
                 },
                 {
-                  "required": [
-                    "placement_id"
-                  ]
+                  "required": ["placement_id"]
                 }
               ]
             },
             {
               "oneOf": [
                 {
-                  "required": [
-                    "invCode",
-                    "member"
-                  ]
+                  "required": ["invCode", "member"]
                 },
                 {
-                  "required": [
-                    "inv_code",
-                    "member"
-                  ]
+                  "required": ["inv_code", "member"]
                 }
               ]
             }
           ],
           "not": {
-            "required": [
-              "placementId",
-              "invCode",
-              "member"
-            ]
-          }
-        },
-        "amx": {
-          "title": "AMX RTB Adapter Params",
-          "description": "A schema to validate params accepted by the AMX adapter",
-          "type": "object",
-          "properties": {
-            "tagId": {
-              "type": "string",
-              "description": "Set a tagId (overrides site.publisher.id, or app.publisher.id)"
-            },
-            "adUnitId": {
-              "type": "string",
-              "description": "Override imp.tagid value to provide a custom value in AMX ad unit ID reporting"
-            }
+            "required": ["placementId", "invCode", "member"]
           }
         },
         "connectad": {
@@ -2172,10 +1935,7 @@
               "description": "Requests Floorprice"
             }
           },
-          "required": [
-            "networkId",
-            "siteId"
-          ]
+          "required": ["networkId", "siteId"]
         },
         "improvedigital": {
           "title": "Improve Digital Adapter Params",
@@ -2201,16 +1961,11 @@
                   "type": "integer"
                 }
               },
-              "required": [
-                "w",
-                "h"
-              ],
+              "required": ["w", "h"],
               "description": "Placement size"
             }
           },
-          "required": [
-            "placementId"
-          ]
+          "required": ["placementId"]
         },
         "ix": {
           "title": "ix Adapter Params",
@@ -2233,19 +1988,13 @@
           },
           "oneOf": [
             {
-              "required": [
-                "siteid"
-              ]
+              "required": ["siteid"]
             },
             {
-              "required": [
-                "siteId"
-              ]
+              "required": ["siteId"]
             },
             {
-              "required": [
-                "siteID"
-              ]
+              "required": ["siteID"]
             }
           ]
         },
@@ -2264,9 +2013,7 @@
               "description": "A set of custom key-value pairs"
             }
           },
-          "required": [
-            "pubId"
-          ]
+          "required": ["pubId"]
         },
         "openx": {
           "title": "Openx Adapter Params",
@@ -2299,19 +2046,13 @@
               "description": "User-defined targeting key-value pairs."
             }
           },
-          "required": [
-            "unit"
-          ],
+          "required": ["unit"],
           "anyOf": [
             {
-              "required": [
-                "delDomain"
-              ]
+              "required": ["delDomain"]
             },
             {
-              "required": [
-                "platform"
-              ]
+              "required": ["platform"]
             }
           ]
         },
@@ -2349,9 +2090,7 @@
                   "description": "An ID which identifies version of the openwrap profile"
                 }
               },
-              "required": [
-                "profile"
-              ]
+              "required": ["profile"]
             },
             "keywords": {
               "type": "array",
@@ -2371,16 +2110,11 @@
                     }
                   }
                 },
-                "required": [
-                  "key",
-                  "value"
-                ]
+                "required": ["key", "value"]
               }
             }
           },
-          "required": [
-            "publisherId"
-          ]
+          "required": ["publisherId"]
         },
         "smartadserver": {
           "title": "Smartadserver Adapter Params",
@@ -2410,27 +2144,16 @@
           },
           "dependencies": {
             "siteId": {
-              "required": [
-                "pageId",
-                "formatId"
-              ]
+              "required": ["pageId", "formatId"]
             },
             "pageId": {
-              "required": [
-                "siteId",
-                "formatId"
-              ]
+              "required": ["siteId", "formatId"]
             },
             "formatId": {
-              "required": [
-                "siteId",
-                "pageId"
-              ]
+              "required": ["siteId", "pageId"]
             }
           },
-          "required": [
-            "networkId"
-          ]
+          "required": ["networkId"]
         },
         "synacormedia": {
           "title": "Synacormedia Adapter Params",
@@ -2446,9 +2169,7 @@
               "description": "The tag id."
             }
           },
-          "required": [
-            "seatId"
-          ]
+          "required": ["seatId"]
         },
         "triplelift": {
           "title": "Triplelift Adapter Params",
@@ -2464,28 +2185,7 @@
               "description": "the bid floor"
             }
           },
-          "required": [
-            "inventoryCode"
-          ]
-        },
-        "yahoossp": {
-          "title": "YahooSSP Adapter Params",
-          "description": "A schema which validates params accepted by the YahooSSP adapter",
-          "type": "object",
-          "properties": {
-            "dcn": {
-              "type": "string",
-              "description": "Site ID provided by One Mobile"
-            },
-            "pos": {
-              "type": "string",
-              "description": "Placement ID"
-            }
-          },
-          "required": [
-            "dcn",
-            "pos"
-          ]
+          "required": ["inventoryCode"]
         },
         "yieldlab": {
           "title": "Yieldlab Adapter Params",
@@ -2513,22 +2213,19 @@
               "description": "Targeting information in key value pairs"
             }
           },
-          "required": [
-            "adslotId",
-            "supplyId",
-            "adSize"
-          ]
+          "required": ["adslotId", "supplyId", "adSize"]
         }
       }
     },
     "imp_ext_prebid_improvedigitalpbs_bid_floor": {
       "type": "object",
-      "required": [
-        "bidFloor"
-      ],
+      "required": ["floor", "cur"],
       "properties": {
         "bidFloor": {
           "$ref": "#/definitions/floor_price"
+        },
+        "bidFloorCur": {
+          "$ref": "#/definitions/currency"
         }
       }
     },

@@ -90,7 +90,20 @@
     },
     "imp_ext_prebid": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
+        "is_rewarded_inventory": {
+          "type": "boolean"
+        },
+        "exchangepkey": {
+          "type": "string"
+        },
+        "exchangetagid": {
+          "type": "string"
+        },
+        "partner_id": {
+          "type": "string"
+        },
         "improvedigitalpbs": {
           "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs"
         },
@@ -154,124 +167,20 @@
       "additionalProperties": false,
       "minProperties": 1,
       "properties": {
-        "adagio": {
-          "title": "Adagio Adapter Params",
-          "description": "A schema which validates params accepted by the Adagio adapter",
+        "amx": {
+          "title": "AMX RTB Adapter Params",
+          "description": "A schema to validate params accepted by the AMX adapter",
           "type": "object",
-          "required": [
-            "organizationId",
-            "site",
-            "placement"
-          ],
           "properties": {
-            "organizationId": {
+            "tagId": {
               "type": "string",
-              "description": "Name to identify the organization",
-              "minLength": 1
+              "description": "Set a tagId (overrides site.publisher.id, or app.publisher.id)"
             },
-            "site": {
+            "adUnitId": {
               "type": "string",
-              "description": "Name to identify the site",
-              "minLength": 1
-            },
-            "placement": {
-              "type": "string",
-              "description": "Name to identify the placement",
-              "minLength": 1
-            },
-            "pageviewId": {
-              "type": "string",
-              "description": "Name to identify the pageview"
-            },
-            "pagetype": {
-              "type": "string",
-              "description": "Name to identify the page type"
-            },
-            "category": {
-              "type": "string",
-              "description": "Name to identify the category"
-            },
-            "subcategory": {
-              "type": "string",
-              "description": "Name to identify the subcategory"
-            },
-            "environment": {
-              "type": "string",
-              "description": "Name to identify the environment"
-            },
-            "features": {
-              "type": "object",
-              "patternProperties": {
-                "^[a-zA-Z_]": {
-                  "type": "string"
-                }
-              }
-            },
-            "prebidVersion:": {
-              "type": "string",
-              "description": "Name to identify the version of Prebid.js"
-            },
-            "debug": {
-              "type": "object",
-              "properties": {
-                "enabled": {
-                  "type": "boolean"
-                },
-                "cpm": {
-                  "type": "number"
-                },
-                "lazyLoad": {
-                  "type": "object",
-                  "properties": {
-                    "enabled": {
-                      "type": "boolean"
-                    },
-                    "threshold": {
-                      "type": "number"
-                    },
-                    "rootMargin": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            },
-            "native": {
-              "type": "object",
-              "properties": {
-                "context": {
-                  "type": "number"
-                },
-                "plcmttype": {
-                  "type": "number"
-                }
-              }
+              "description": "Override imp.tagid value to provide a custom value in AMX ad unit ID reporting"
             }
           }
-        },
-        "admixer": {
-          "title": "Admixer Adapter Params",
-          "description": "A schema which validates params accepted by the Admixer adapter",
-          "type": "object",
-          "properties": {
-            "zone": {
-              "type": "string",
-              "description": "Zone ID.",
-              "pattern": "^([a-fA-F\\d\\-]{32,36})$"
-            },
-            "customFloor": {
-              "type": "number",
-              "description": "The minimum CPM price in USD.",
-              "minimum": 0
-            },
-            "customParams": {
-              "type": "object",
-              "description": "User-defined targeting key-value pairs."
-            }
-          },
-          "required": [
-            "zone"
-          ]
         },
         "appnexus": {
           "title": "Appnexus Adapter Params",
@@ -407,21 +316,6 @@
               "invCode",
               "member"
             ]
-          }
-        },
-        "amx": {
-          "title": "AMX RTB Adapter Params",
-          "description": "A schema to validate params accepted by the AMX adapter",
-          "type": "object",
-          "properties": {
-            "tagId": {
-              "type": "string",
-              "description": "Set a tagId (overrides site.publisher.id, or app.publisher.id)"
-            },
-            "adUnitId": {
-              "type": "string",
-              "description": "Override imp.tagid value to provide a custom value in AMX ad unit ID reporting"
-            }
           }
         },
         "connectad": {
@@ -738,25 +632,6 @@
             "inventoryCode"
           ]
         },
-        "yahoossp": {
-          "title": "YahooSSP Adapter Params",
-          "description": "A schema which validates params accepted by the YahooSSP adapter",
-          "type": "object",
-          "properties": {
-            "dcn": {
-              "type": "string",
-              "description": "Site ID provided by One Mobile"
-            },
-            "pos": {
-              "type": "string",
-              "description": "Placement ID"
-            }
-          },
-          "required": [
-            "dcn",
-            "pos"
-          ]
-        },
         "yieldlab": {
           "title": "Yieldlab Adapter Params",
           "description": "A schema which validates params accepted by the Yieldlab adapter",
@@ -794,11 +669,15 @@
     "imp_ext_prebid_improvedigitalpbs_bid_floor": {
       "type": "object",
       "required": [
-        "bidFloor"
+        "floor",
+        "cur"
       ],
       "properties": {
         "bidFloor": {
           "$ref": "#/definitions/floor_price"
+        },
+        "bidFloorCur": {
+          "$ref": "#/definitions/currency"
         }
       }
     },

@@ -1,0 +1,2451 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "openrtb-v2_5-schema-bid_request",
+  "description": "json schema for an openrtb v2.5 bid request",
+  "type": "object",
+  "required": [
+    "id",
+    "imp"
+  ],
+  "not": {
+    "allOf": [
+      {
+        "required": [
+          "site"
+        ]
+      },
+      {
+        "required": [
+          "app"
+        ]
+      }
+    ]
+  },
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "imp": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/imp"
+      }
+    },
+    "site": {
+      "$ref": "#/definitions/site"
+    },
+    "app": {
+      "$ref": "#/definitions/app"
+    },
+    "device": {
+      "$ref": "#/definitions/device"
+    },
+    "user": {
+      "$ref": "#/definitions/user"
+    },
+    "test": {
+      "$ref": "#/definitions/boolean_int"
+    },
+    "at": {
+      "type": "integer"
+    },
+    "tmax": {
+      "$ref": "#/definitions/positive_int"
+    },
+    "wseat": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "bseat": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "allimps": {
+      "$ref": "#/definitions/boolean_int"
+    },
+    "cur": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/currency"
+      }
+    },
+    "wlang": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/language"
+      }
+    },
+    "bcat": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "badv": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "bapp": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source": {
+      "$ref": "#/definitions/source"
+    },
+    "regs": {
+      "$ref": "#/definitions/regs"
+    },
+    "ext": {
+      "type": "object"
+    }
+  },
+  "definitions": {
+    "imp": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "anyOf": [
+        {
+          "required": [
+            "banner"
+          ]
+        },
+        {
+          "required": [
+            "video"
+          ]
+        },
+        {
+          "required": [
+            "audio"
+          ]
+        },
+        {
+          "required": [
+            "native"
+          ]
+        }
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "metric": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/metric"
+          }
+        },
+        "banner": {
+          "$ref": "#/definitions/banner"
+        },
+        "video": {
+          "$ref": "#/definitions/video"
+        },
+        "audio": {
+          "$ref": "#/definitions/audio"
+        },
+        "native": {
+          "$ref": "#/definitions/native"
+        },
+        "displaymanager": {
+          "type": "string"
+        },
+        "displaymanagerver": {
+          "type": "string"
+        },
+        "instl": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "tagid": {
+          "type": "string"
+        },
+        "bidfloor": {
+          "$ref": "#/definitions/floor_price"
+        },
+        "bidfloorcur": {
+          "$ref": "#/definitions/currency"
+        },
+        "clickbrowser": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "secure": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "iframebuster": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "pmp": {
+          "$ref": "#/definitions/pmp"
+        },
+        "exp": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "ext": {
+          "$ref": "#/definitions/imp_ext"
+        }
+      },
+      "title": "openrtb-v2_5-schema-bid_request-imp",
+      "description": "json schema of an imp object with improvedigitalpbs specific custom extensions"
+    },
+    "metric": {
+      "type": "object",
+      "required": [
+        "type",
+        "value"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        },
+        "vendor": {
+          "type": "string"
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "banner": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "w": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "h": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "format": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/format"
+          }
+        },
+        "wmax": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "hmax": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "wmin": {
+          "type": "integer"
+        },
+        "hmin": {
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "btype": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/banner_ad_type"
+          }
+        },
+        "battr": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/creative_attribute"
+          }
+        },
+        "pos": {
+          "$ref": "#/definitions/ad_position"
+        },
+        "mimes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "topframe": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "expdir": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/expandable_direction"
+          }
+        },
+        "api": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/api_framework"
+          }
+        },
+        "vcm": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "video": {
+      "type": "object",
+      "required": [
+        "mimes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "mimes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "minduration": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "maxduration": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "protocol": {
+          "$ref": "#/definitions/video_bid_response_protocol"
+        },
+        "protocols": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/video_bid_response_protocol"
+          }
+        },
+        "w": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "h": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "format": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/format"
+          }
+        },
+        "startdelay": {
+          "$ref": "#/definitions/video_start_delay"
+        },
+        "placement": {
+          "$ref": "#/definitions/video_placement_type"
+        },
+        "linearity": {
+          "$ref": "#/definitions/video_linearity"
+        },
+        "skip": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "skipmin": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "skipafter": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "sequence": {
+          "type": "integer"
+        },
+        "battr": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/creative_attribute"
+          }
+        },
+        "maxextended": {
+          "type": "integer",
+          "minimum": -1
+        },
+        "minbitrate": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "maxbitrate": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "boxingallowed": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "playbackmethod": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/video_playback_method"
+          }
+        },
+        "playbackend": {
+          "$ref": "#/definitions/video_playback_cessation_mode"
+        },
+        "delivery": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/content_delivery_method"
+          }
+        },
+        "pos": {
+          "$ref": "#/definitions/ad_position"
+        },
+        "companionad": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/banner"
+          }
+        },
+        "api": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/api_framework"
+          }
+        },
+        "companiontype": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/vast_companion_type"
+          }
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "audio": {
+      "type": "object",
+      "required": [
+        "mimes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "mimes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "minduration": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "maxduration": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "protocols": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/video_bid_response_protocol"
+          }
+        },
+        "startdelay": {
+          "$ref": "#/definitions/video_start_delay"
+        },
+        "sequence": {
+          "type": "integer"
+        },
+        "battr": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/creative_attribute"
+          }
+        },
+        "maxextended": {
+          "type": "integer",
+          "minimum": -1
+        },
+        "minbitrate": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "maxbitrate": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "delivery": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/content_delivery_method"
+          }
+        },
+        "companionad": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/banner"
+          }
+        },
+        "api": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/api_framework"
+          }
+        },
+        "companiontype": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/vast_companion_type"
+          }
+        },
+        "maxseq": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "feed": {
+          "$ref": "#/definitions/audio_feed_type"
+        },
+        "stitched": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "nvol": {
+          "$ref": "#/definitions/volume_normalization_mode"
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "native": {
+      "type": "object",
+      "anyOf": [
+        {
+          "required": [
+            "request"
+          ]
+        },
+        {
+          "required": [
+            "request_native"
+          ]
+        },
+        {
+          "required": [
+            "assets"
+          ]
+        }
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "type": "string"
+        },
+        "ver": {
+          "type": "string"
+        },
+        "api": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/api_framework"
+          }
+        },
+        "battr": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/creative_attribute"
+          }
+        },
+        "ext": {
+          "type": "object"
+        },
+        "request_native": {
+          "type": "object"
+        },
+        "assets": {
+          "type": "array"
+        },
+        "context": {
+          "type": "integer"
+        },
+        "contextsubtype": {
+          "type": "integer"
+        },
+        "plcmttype": {
+          "type": "integer"
+        },
+        "plcmtcnt": {
+          "type": "integer"
+        },
+        "privacy": {
+          "type": "integer"
+        },
+        "aurlsupport": {
+          "type": "integer"
+        }
+      }
+    },
+    "format": {
+      "type": "object",
+      "description": "represents an allowed size for a banner impression",
+      "additionalProperties": false,
+      "properties": {
+        "w": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "h": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "wratio": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "hratio": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "wmin": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "site": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "cat": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/content_category"
+          }
+        },
+        "sectioncat": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/content_category"
+          }
+        },
+        "pagecat": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/content_category"
+          }
+        },
+        "page": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string"
+        },
+        "search": {
+          "type": "string"
+        },
+        "mobile": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "privacypolicy": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "publisher": {
+          "$ref": "#/definitions/publisher"
+        },
+        "content": {
+          "$ref": "#/definitions/content"
+        },
+        "keywords": {
+          "type": "string"
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "app": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "bundle": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "storeurl": {
+          "type": "string"
+        },
+        "cat": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/content_category"
+          }
+        },
+        "sectioncat": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/content_category"
+          }
+        },
+        "pagecat": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/content_category"
+          }
+        },
+        "ver": {
+          "type": "string"
+        },
+        "privacypolicy": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "paid": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "publisher": {
+          "$ref": "#/definitions/publisher"
+        },
+        "content": {
+          "$ref": "#/definitions/content"
+        },
+        "keywords": {
+          "type": "string"
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "publisher": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "cat": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/content_category"
+          }
+        },
+        "domain": {
+          "type": "string"
+        },
+        "ext": {
+          "type": "object",
+          "properties": {
+            "exchangepubid": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "content": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "episode": {
+          "type": "integer"
+        },
+        "title": {
+          "type": "string"
+        },
+        "series": {
+          "type": "string"
+        },
+        "season": {
+          "type": "string"
+        },
+        "artist": {
+          "type": "string"
+        },
+        "genre": {
+          "type": "string"
+        },
+        "album": {
+          "type": "string"
+        },
+        "isrc": {
+          "type": "string"
+        },
+        "producer": {
+          "$ref": "#/definitions/producer"
+        },
+        "url": {
+          "type": "string"
+        },
+        "cat": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/content_category"
+          }
+        },
+        "prodq": {
+          "$ref": "#/definitions/production_quality"
+        },
+        "videoquality": {
+          "$ref": "#/definitions/production_quality"
+        },
+        "context": {
+          "$ref": "#/definitions/content_context"
+        },
+        "contentrating": {
+          "type": "string"
+        },
+        "userrating": {
+          "type": "string"
+        },
+        "qagmediarating": {
+          "$ref": "#/definitions/qag_media_rating"
+        },
+        "keywords": {
+          "type": "string"
+        },
+        "livestream": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "sourcerelationship": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "len": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "language": {
+          "$ref": "#/definitions/language"
+        },
+        "embeddable": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/data"
+          }
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "cat": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/content_category"
+          }
+        },
+        "domain": {
+          "type": "string"
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "device": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ua": {
+          "type": "string"
+        },
+        "geo": {
+          "$ref": "#/definitions/geo"
+        },
+        "dnt": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "lmt": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "ip": {
+          "type": "string"
+        },
+        "ipv6": {
+          "type": "string"
+        },
+        "devicetype": {
+          "$ref": "#/definitions/device_type"
+        },
+        "make": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "os": {
+          "type": "string"
+        },
+        "osv": {
+          "type": "string"
+        },
+        "hwv": {
+          "type": "string"
+        },
+        "h": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "w": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "ppi": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "pxratio": {
+          "type": "number"
+        },
+        "js": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "geofetch": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "flashver": {
+          "type": "string"
+        },
+        "language": {
+          "$ref": "#/definitions/language"
+        },
+        "carrier": {
+          "type": "string"
+        },
+        "mccmnc": {
+          "type": "string"
+        },
+        "connectiontype": {
+          "$ref": "#/definitions/connection_type"
+        },
+        "ifa": {
+          "type": "string"
+        },
+        "didsha1": {
+          "type": "string"
+        },
+        "didmd5": {
+          "type": "string"
+        },
+        "dpidsha1": {
+          "type": "string"
+        },
+        "dpidmd5": {
+          "type": "string"
+        },
+        "macsha1": {
+          "type": "string"
+        },
+        "macmd5": {
+          "type": "string"
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "geo": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "lat": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "lon": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "type": {
+          "$ref": "#/definitions/location_type"
+        },
+        "accuracy": {
+          "type": "integer"
+        },
+        "lastfix": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "ipservice": {
+          "$ref": "#/definitions/ip_location_services"
+        },
+        "country": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 3
+        },
+        "region": {
+          "type": "string"
+        },
+        "regionfips104": {
+          "type": "string"
+        },
+        "metro": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "zip": {
+          "type": "string"
+        },
+        "utcoffset": {
+          "type": "integer"
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "user": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "buyeruid": {
+          "type": "string"
+        },
+        "yob": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 9999
+        },
+        "gender": {
+          "type": "string",
+          "enum": [
+            "M",
+            "F",
+            "O"
+          ]
+        },
+        "keywords": {
+          "type": "string"
+        },
+        "customdata": {
+          "type": "string"
+        },
+        "geo": {
+          "$ref": "#/definitions/geo"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/data"
+          }
+        },
+        "ext": {
+          "type": "object",
+          "properties": {
+            "consented_providers_settings": {
+              "type": "object",
+              "properties": {
+                "consented_providers": {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "integer",
+                      "string"
+                    ]
+                  }
+                }
+              }
+            },
+            "eids": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/eid"
+              }
+            }
+          }
+        }
+      }
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "segment": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/segment"
+          }
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "segment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fd": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "tid": {
+          "type": "string"
+        },
+        "pchain": {
+          "type": "string"
+        },
+        "ext": {
+          "type": "object",
+          "properties": {
+            "schain": {
+              "$ref": "#/definitions/schain"
+            }
+          }
+        }
+      }
+    },
+    "regs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "coppa": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "pmp": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "private_auction": {
+          "$ref": "#/definitions/boolean_int",
+          "default": 0
+        },
+        "deals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/deal"
+          }
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "deal": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "bidfloor": {
+          "$ref": "#/definitions/floor_price"
+        },
+        "bidfloorcur": {
+          "$ref": "#/definitions/currency"
+        },
+        "at": {
+          "type": "integer"
+        },
+        "wseat": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "wadomain": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "schain": {
+      "type": "object",
+      "required": [
+        "complete",
+        "nodes",
+        "ver"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "complete": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "asi",
+              "sid",
+              "hp"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "asi": {
+                "type": "string"
+              },
+              "sid": {
+                "type": "string"
+              },
+              "rid": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "domain": {
+                "type": "string"
+              },
+              "hp": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 1
+              }
+            }
+          }
+        },
+        "ver": {
+          "type": "string"
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "eid": {
+      "type": "object",
+      "required": [
+        "source",
+        "uids"
+      ],
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "uids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/uid"
+          }
+        }
+      }
+    },
+    "uid": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "content_category": {
+      "type": "string",
+      "enum": [
+        "IAB1",
+        "IAB1-1",
+        "IAB1-2",
+        "IAB1-3",
+        "IAB1-4",
+        "IAB1-5",
+        "IAB1-6",
+        "IAB1-7",
+        "IAB2",
+        "IAB2-1",
+        "IAB2-2",
+        "IAB2-3",
+        "IAB2-4",
+        "IAB2-5",
+        "IAB2-6",
+        "IAB2-7",
+        "IAB2-8",
+        "IAB2-9",
+        "IAB2-10",
+        "IAB2-11",
+        "IAB2-12",
+        "IAB2-13",
+        "IAB2-14",
+        "IAB2-15",
+        "IAB2-16",
+        "IAB2-17",
+        "IAB2-18",
+        "IAB2-19",
+        "IAB2-20",
+        "IAB2-21",
+        "IAB2-22",
+        "IAB2-23",
+        "IAB3",
+        "IAB3-1",
+        "IAB3-2",
+        "IAB3-3",
+        "IAB3-4",
+        "IAB3-5",
+        "IAB3-6",
+        "IAB3-7",
+        "IAB3-8",
+        "IAB3-9",
+        "IAB3-10",
+        "IAB3-11",
+        "IAB3-12",
+        "IAB4",
+        "IAB4-1",
+        "IAB4-2",
+        "IAB4-3",
+        "IAB4-4",
+        "IAB4-5",
+        "IAB4-6",
+        "IAB4-7",
+        "IAB4-8",
+        "IAB4-9",
+        "IAB4-10",
+        "IAB4-11",
+        "IAB5",
+        "IAB5-1",
+        "IAB5-2",
+        "IAB5-3",
+        "IAB5-4",
+        "IAB5-5",
+        "IAB5-6",
+        "IAB5-7",
+        "IAB5-8",
+        "IAB5-9",
+        "IAB5-10",
+        "IAB5-11",
+        "IAB5-12",
+        "IAB5-13",
+        "IAB5-14",
+        "IAB5-15",
+        "IAB6",
+        "IAB6-1",
+        "IAB6-2",
+        "IAB6-3",
+        "IAB6-4",
+        "IAB6-5",
+        "IAB6-6",
+        "IAB6-7",
+        "IAB6-8",
+        "IAB6-9",
+        "IAB7",
+        "IAB7-1",
+        "IAB7-2",
+        "IAB7-3",
+        "IAB7-4",
+        "IAB7-5",
+        "IAB7-6",
+        "IAB7-7",
+        "IAB7-8",
+        "IAB7-9",
+        "IAB7-10",
+        "IAB7-11",
+        "IAB7-12",
+        "IAB7-13",
+        "IAB7-14",
+        "IAB7-15",
+        "IAB7-16",
+        "IAB7-17",
+        "IAB7-18",
+        "IAB7-19",
+        "IAB7-20",
+        "IAB7-21",
+        "IAB7-22",
+        "IAB7-23",
+        "IAB7-24",
+        "IAB7-25",
+        "IAB7-26",
+        "IAB7-27",
+        "IAB7-28",
+        "IAB7-29",
+        "IAB7-30",
+        "IAB7-31",
+        "IAB7-32",
+        "IAB7-33",
+        "IAB7-34",
+        "IAB7-35",
+        "IAB7-36",
+        "IAB7-37",
+        "IAB7-38",
+        "IAB7-39",
+        "IAB7-40",
+        "IAB7-41",
+        "IAB7-42",
+        "IAB7-43",
+        "IAB7-44",
+        "IAB7-45",
+        "IAB8",
+        "IAB8-1",
+        "IAB8-2",
+        "IAB8-3",
+        "IAB8-4",
+        "IAB8-5",
+        "IAB8-6",
+        "IAB8-7",
+        "IAB8-8",
+        "IAB8-9",
+        "IAB8-10",
+        "IAB8-11",
+        "IAB8-12",
+        "IAB8-13",
+        "IAB8-14",
+        "IAB8-15",
+        "IAB8-16",
+        "IAB8-17",
+        "IAB8-18",
+        "IAB9",
+        "IAB9-1",
+        "IAB9-2",
+        "IAB9-3",
+        "IAB9-4",
+        "IAB9-5",
+        "IAB9-6",
+        "IAB9-7",
+        "IAB9-8",
+        "IAB9-9",
+        "IAB9-10",
+        "IAB9-11",
+        "IAB9-12",
+        "IAB9-13",
+        "IAB9-14",
+        "IAB9-15",
+        "IAB9-16",
+        "IAB9-17",
+        "IAB9-18",
+        "IAB9-19",
+        "IAB9-20",
+        "IAB9-21",
+        "IAB9-22",
+        "IAB9-23",
+        "IAB9-24",
+        "IAB9-25",
+        "IAB9-26",
+        "IAB9-27",
+        "IAB9-28",
+        "IAB9-29",
+        "IAB9-30",
+        "IAB9-31",
+        "IAB10",
+        "IAB10-1",
+        "IAB10-2",
+        "IAB10-3",
+        "IAB10-4",
+        "IAB10-5",
+        "IAB10-6",
+        "IAB10-7",
+        "IAB10-8",
+        "IAB10-9",
+        "IAB11",
+        "IAB11-1",
+        "IAB11-2",
+        "IAB11-3",
+        "IAB11-4",
+        "IAB11-5",
+        "IAB12",
+        "IAB12-1",
+        "IAB12-2",
+        "IAB12-3",
+        "IAB13",
+        "IAB13-1",
+        "IAB13-2",
+        "IAB13-3",
+        "IAB13-4",
+        "IAB13-5",
+        "IAB13-6",
+        "IAB13-7",
+        "IAB13-8",
+        "IAB13-9",
+        "IAB13-10",
+        "IAB13-11",
+        "IAB13-12",
+        "IAB14",
+        "IAB14-1",
+        "IAB14-2",
+        "IAB14-3",
+        "IAB14-4",
+        "IAB14-5",
+        "IAB14-6",
+        "IAB14-7",
+        "IAB14-8",
+        "IAB15",
+        "IAB15-1",
+        "IAB15-2",
+        "IAB15-3",
+        "IAB15-4",
+        "IAB15-5",
+        "IAB15-6",
+        "IAB15-7",
+        "IAB15-8",
+        "IAB15-9",
+        "IAB15-10",
+        "IAB16",
+        "IAB16-1",
+        "IAB16-2",
+        "IAB16-3",
+        "IAB16-4",
+        "IAB16-5",
+        "IAB16-6",
+        "IAB16-7",
+        "IAB17",
+        "IAB17-1",
+        "IAB17-2",
+        "IAB17-3",
+        "IAB17-4",
+        "IAB17-5",
+        "IAB17-6",
+        "IAB17-7",
+        "IAB17-8",
+        "IAB17-9",
+        "IAB17-10",
+        "IAB17-11",
+        "IAB17-12",
+        "IAB17-13",
+        "IAB17-14",
+        "IAB17-15",
+        "IAB17-16",
+        "IAB17-17",
+        "IAB17-18",
+        "IAB17-19",
+        "IAB17-20",
+        "IAB17-21",
+        "IAB17-22",
+        "IAB17-23",
+        "IAB17-24",
+        "IAB17-25",
+        "IAB17-26",
+        "IAB17-27",
+        "IAB17-28",
+        "IAB17-29",
+        "IAB17-30",
+        "IAB17-31",
+        "IAB17-32",
+        "IAB17-33",
+        "IAB17-34",
+        "IAB17-35",
+        "IAB17-36",
+        "IAB17-37",
+        "IAB17-38",
+        "IAB17-39",
+        "IAB17-40",
+        "IAB17-41",
+        "IAB17-42",
+        "IAB17-43",
+        "IAB17-44",
+        "IAB18",
+        "IAB18-1",
+        "IAB18-2",
+        "IAB18-3",
+        "IAB18-4",
+        "IAB18-5",
+        "IAB18-6",
+        "IAB19",
+        "IAB19-1",
+        "IAB19-2",
+        "IAB19-3",
+        "IAB19-4",
+        "IAB19-5",
+        "IAB19-6",
+        "IAB19-7",
+        "IAB19-8",
+        "IAB19-9",
+        "IAB19-10",
+        "IAB19-11",
+        "IAB19-12",
+        "IAB19-13",
+        "IAB19-14",
+        "IAB19-15",
+        "IAB19-16",
+        "IAB19-17",
+        "IAB19-18",
+        "IAB19-19",
+        "IAB19-20",
+        "IAB19-21",
+        "IAB19-22",
+        "IAB19-23",
+        "IAB19-24",
+        "IAB19-25",
+        "IAB19-26",
+        "IAB19-27",
+        "IAB19-28",
+        "IAB19-29",
+        "IAB19-30",
+        "IAB19-31",
+        "IAB19-32",
+        "IAB19-33",
+        "IAB19-34",
+        "IAB19-35",
+        "IAB19-36",
+        "IAB20",
+        "IAB20-1",
+        "IAB20-2",
+        "IAB20-3",
+        "IAB20-4",
+        "IAB20-5",
+        "IAB20-6",
+        "IAB20-7",
+        "IAB20-8",
+        "IAB20-9",
+        "IAB20-10",
+        "IAB20-11",
+        "IAB20-12",
+        "IAB20-13",
+        "IAB20-14",
+        "IAB20-15",
+        "IAB20-16",
+        "IAB20-17",
+        "IAB20-18",
+        "IAB20-19",
+        "IAB20-20",
+        "IAB20-21",
+        "IAB20-22",
+        "IAB20-23",
+        "IAB20-24",
+        "IAB20-25",
+        "IAB20-26",
+        "IAB20-27",
+        "IAB21",
+        "IAB21-1",
+        "IAB21-2",
+        "IAB21-3",
+        "IAB22",
+        "IAB22-1",
+        "IAB22-2",
+        "IAB22-3",
+        "IAB22-4",
+        "IAB23",
+        "IAB23-1",
+        "IAB23-2",
+        "IAB23-3",
+        "IAB23-4",
+        "IAB23-5",
+        "IAB23-6",
+        "IAB23-7",
+        "IAB23-8",
+        "IAB23-9",
+        "IAB23-10",
+        "IAB24",
+        "IAB25",
+        "IAB25-1",
+        "IAB25-2",
+        "IAB25-3",
+        "IAB25-4",
+        "IAB25-5",
+        "IAB25-6",
+        "IAB25-7",
+        "IAB26",
+        "IAB26-1",
+        "IAB26-2",
+        "IAB26-3",
+        "IAB26-4"
+      ]
+    },
+    "banner_ad_type": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4
+    },
+    "creative_attribute": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 17
+    },
+    "ad_position": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 7
+    },
+    "expandable_direction": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "api_framework": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 7
+    },
+    "video_linearity": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2
+    },
+    "video_bid_response_protocol": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10
+    },
+    "video_placement_type": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 5
+    },
+    "video_playback_method": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 6
+    },
+    "video_playback_cessation_mode": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "video_start_delay": {
+      "type": "integer",
+      "minimum": -2
+    },
+    "production_quality": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3
+    },
+    "vast_companion_type": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "content_delivery_method": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "content_context": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 7
+    },
+    "qag_media_rating": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "location_type": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "device_type": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 7
+    },
+    "connection_type": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 6
+    },
+    "boolean_int": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "positive_int": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "currency": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 3,
+      "pattern": "[a-zA-Z]{3}"
+    },
+    "language": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 2
+    },
+    "audio_feed_type": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "ip_location_services": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4
+    },
+    "volume_normalization_mode": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4
+    },
+    "imp_ext": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "is_rewarded_inventory": {
+          "type": "boolean"
+        },
+        "exchangepkey": {
+          "type": "string"
+        },
+        "exchangetagid": {
+          "type": "string"
+        },
+        "partner_id": {
+          "type": "string"
+        },
+        "prebid": {
+          "$ref": "#/definitions/imp_ext_prebid"
+        }
+      }
+    },
+    "imp_ext_prebid": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "is_rewarded_inventory": {
+          "type": "boolean"
+        },
+        "exchangepkey": {
+          "type": "string"
+        },
+        "exchangetagid": {
+          "type": "string"
+        },
+        "partner_id": {
+          "type": "string"
+        },
+        "improvedigitalpbs": {
+          "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs"
+        },
+        "bidder": {
+          "$ref": "#/definitions/imp_ext_prebid_bidder"
+        }
+      }
+    },
+    "imp_ext_prebid_improvedigitalpbs": {
+      "type": "object",
+      "required": [
+        "accountId"
+      ],
+      "properties": {
+        "accountId": {
+          "type": "string"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "bidFloors": {
+          "type": "object",
+          "required": [
+            "default"
+          ],
+          "minProperties": 1,
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z]{2}$": {
+              "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_bid_floor"
+            }
+          },
+          "properties": {
+            "default": {
+              "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_bid_floor"
+            }
+          }
+        },
+        "waterfall": {
+          "type": "object",
+          "required": [
+            "default"
+          ],
+          "minProperties": 1,
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z]{2}$": {
+              "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_waterfall"
+            }
+          },
+          "properties": {
+            "default": {
+              "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_waterfall"
+            }
+          }
+        }
+      }
+    },
+    "imp_ext_prebid_bidder": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "amx": {
+          "title": "AMX RTB Adapter Params",
+          "description": "A schema to validate params accepted by the AMX adapter",
+          "type": "object",
+          "properties": {
+            "tagId": {
+              "type": "string",
+              "description": "Set a tagId (overrides site.publisher.id, or app.publisher.id)"
+            },
+            "adUnitId": {
+              "type": "string",
+              "description": "Override imp.tagid value to provide a custom value in AMX ad unit ID reporting"
+            }
+          }
+        },
+        "appnexus": {
+          "title": "Appnexus Adapter Params",
+          "description": "A schema which validates params accepted by the AppNexus adapter",
+          "type": "object",
+          "properties": {
+            "placement_id": {
+              "type": "integer",
+              "description": "An ID which identifies this placement of the impression"
+            },
+            "placementId": {
+              "type": "integer",
+              "description": "Deprecated, use placement_id instead."
+            },
+            "inv_code": {
+              "type": "string",
+              "description": "A code identifying the inventory of this placement."
+            },
+            "invCode": {
+              "type": "string",
+              "description": "Deprecated, use inv_code instead."
+            },
+            "member": {
+              "type": "string",
+              "description": "An ID which identifies the member selling the impression."
+            },
+            "keywords": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "description": "A key with one or more values associated with it. These are used in buy-side segment targeting.",
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "key"
+                ]
+              }
+            },
+            "traffic_source_code": {
+              "type": "string",
+              "description": "Specifies the third-party source of this impression."
+            },
+            "trafficSourceCode": {
+              "type": "string",
+              "description": "Deprecated, use traffic_source_code instead."
+            },
+            "reserve": {
+              "type": "number",
+              "description": "The minimium acceptable bid, in CPM, using US Dollars"
+            },
+            "position": {
+              "type": "string",
+              "enum": [
+                "above",
+                "below"
+              ],
+              "description": "Specifies the ad unit as above or below the fold"
+            },
+            "use_pmt_rule": {
+              "type": "boolean",
+              "description": "Boolean to signal AppNexus to apply the relevant payment rule"
+            },
+            "generate_ad_pod_id": {
+              "type": "boolean",
+              "description": "Boolean to signal AppNexus to add ad pod id to each request"
+            },
+            "private_sizes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "w": {
+                    "type": "integer"
+                  },
+                  "h": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "w",
+                  "h"
+                ]
+              },
+              "description": "Private sizes (ex: [{\"w\": 300, \"h\": 250},{...}]), experimental, may not be supported."
+            }
+          },
+          "oneOf": [
+            {
+              "oneOf": [
+                {
+                  "required": [
+                    "placementId"
+                  ]
+                },
+                {
+                  "required": [
+                    "placement_id"
+                  ]
+                }
+              ]
+            },
+            {
+              "oneOf": [
+                {
+                  "required": [
+                    "invCode",
+                    "member"
+                  ]
+                },
+                {
+                  "required": [
+                    "inv_code",
+                    "member"
+                  ]
+                }
+              ]
+            }
+          ],
+          "not": {
+            "required": [
+              "placementId",
+              "invCode",
+              "member"
+            ]
+          }
+        },
+        "connectad": {
+          "title": "ConnectAd S2S dapter Params",
+          "description": "A schema which validates params accepted by the ConnectAd Adapter",
+          "type": "object",
+          "properties": {
+            "networkId": {
+              "type": "integer",
+              "description": "NetworkId"
+            },
+            "siteId": {
+              "type": "integer",
+              "description": "SiteId"
+            },
+            "bidfloor": {
+              "type": "number",
+              "description": "Requests Floorprice"
+            }
+          },
+          "required": [
+            "networkId",
+            "siteId"
+          ]
+        },
+        "improvedigital": {
+          "title": "Improve Digital Adapter Params",
+          "description": "A schema which validates params accepted by Improve Digital adapter",
+          "type": "object",
+          "properties": {
+            "placementId": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "An ID which identifies this placement of the impression"
+            },
+            "keyValues": {
+              "type": "object",
+              "description": "Contains one or more key-value pairings for key-value targeting"
+            },
+            "size": {
+              "type": "object",
+              "properties": {
+                "w": {
+                  "type": "integer"
+                },
+                "h": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "w",
+                "h"
+              ],
+              "description": "Placement size"
+            }
+          },
+          "required": [
+            "placementId"
+          ]
+        },
+        "ix": {
+          "title": "ix Adapter Params",
+          "description": "A schema which validates params accepted by the ix adapter",
+          "type": "object",
+          "properties": {
+            "siteId": {
+              "type": "string",
+              "description": "An ID which identifies the site selling the impression"
+            },
+            "size": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "minItems": 2,
+              "maxItems": 2,
+              "description": "An array of two integer containing the dimension"
+            }
+          },
+          "oneOf": [
+            {
+              "required": [
+                "siteid"
+              ]
+            },
+            {
+              "required": [
+                "siteId"
+              ]
+            },
+            {
+              "required": [
+                "siteID"
+              ]
+            }
+          ]
+        },
+        "onetag": {
+          "title": "Onetag Adapter Params",
+          "description": "A schema which validates params accepted by the Onetag adapter",
+          "type": "object",
+          "properties": {
+            "pubId": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The publisher's ID provided by OneTag"
+            },
+            "ext": {
+              "type": "object",
+              "description": "A set of custom key-value pairs"
+            }
+          },
+          "required": [
+            "pubId"
+          ]
+        },
+        "openx": {
+          "title": "Openx Adapter Params",
+          "description": "A schema which validates params accepted by the Openx adapter",
+          "type": "object",
+          "properties": {
+            "unit": {
+              "type": "string",
+              "description": "The ad unit id.",
+              "pattern": "^[0-9]+$"
+            },
+            "delDomain": {
+              "type": "string",
+              "description": "The delivery domain for the customer.",
+              "pattern": "\\.[a-zA-Z]{2,3}$",
+              "format": "hostname"
+            },
+            "platform": {
+              "type": "string",
+              "description": "The platform id for the customer.",
+              "format": "uuid"
+            },
+            "customFloor": {
+              "type": "number",
+              "description": "The minimum CPM price in USD.",
+              "minimum": 0
+            },
+            "customParams": {
+              "type": "object",
+              "description": "User-defined targeting key-value pairs."
+            }
+          },
+          "required": [
+            "unit"
+          ],
+          "anyOf": [
+            {
+              "required": [
+                "delDomain"
+              ]
+            },
+            {
+              "required": [
+                "platform"
+              ]
+            }
+          ]
+        },
+        "pubmatic": {
+          "title": "Pubmatic Adapter Params",
+          "description": "A schema which validates params accepted by the Pubmatic adapter",
+          "type": "object",
+          "properties": {
+            "publisherId": {
+              "type": "string",
+              "description": "An ID which identifies the publisher"
+            },
+            "adSlot": {
+              "type": "string",
+              "description": "An ID which identifies the ad slot"
+            },
+            "pmzoneid": {
+              "type": "string",
+              "description": "Comma separated zone id. Used im deal targeting & site section targeting. e.g drama,sport"
+            },
+            "dctr": {
+              "type": "string",
+              "description": "Deals Custom Targeting, pipe separated key-value pairs e.g key1=V1,V2,V3|key2=v1|key3=v3,v5"
+            },
+            "wrapper": {
+              "type": "object",
+              "description": "Specifies pubmatic openwrap configuration for a publisher",
+              "properties": {
+                "profile": {
+                  "type": "integer",
+                  "description": "An ID which identifies the openwrap profile of publisher"
+                },
+                "version": {
+                  "type": "integer",
+                  "description": "An ID which identifies version of the openwrap profile"
+                }
+              },
+              "required": [
+                "profile"
+              ]
+            },
+            "keywords": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "description": "A key with one or more values associated with it. These are used in buy-side segment targeting.",
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "key",
+                  "value"
+                ]
+              }
+            }
+          },
+          "required": [
+            "publisherId"
+          ]
+        },
+        "smartadserver": {
+          "title": "Smartadserver Adapter Params",
+          "description": "A schema which validates params accepted by the Smartadserver adapter",
+          "type": "object",
+          "properties": {
+            "siteId": {
+              "type": "integer",
+              "description": "The site id.",
+              "minimum": 1
+            },
+            "pageId": {
+              "type": "integer",
+              "description": "The page id.",
+              "minimum": 1
+            },
+            "formatId": {
+              "type": "integer",
+              "description": "The format id.",
+              "minimum": 1
+            },
+            "networkId": {
+              "type": "integer",
+              "description": "The network id.",
+              "minimum": 1
+            }
+          },
+          "dependencies": {
+            "siteId": {
+              "required": [
+                "pageId",
+                "formatId"
+              ]
+            },
+            "pageId": {
+              "required": [
+                "siteId",
+                "formatId"
+              ]
+            },
+            "formatId": {
+              "required": [
+                "siteId",
+                "pageId"
+              ]
+            }
+          },
+          "required": [
+            "networkId"
+          ]
+        },
+        "synacormedia": {
+          "title": "Synacormedia Adapter Params",
+          "description": "A schema which validates params accepted by the Synacormedia adapter",
+          "type": "object",
+          "properties": {
+            "seatId": {
+              "type": "string",
+              "description": "The seat id."
+            },
+            "tagId": {
+              "type": "string",
+              "description": "The tag id."
+            }
+          },
+          "required": [
+            "seatId"
+          ]
+        },
+        "triplelift": {
+          "title": "Triplelift Adapter Params",
+          "description": "A schema which validates params accepted by the Triplelift adapter",
+          "type": "object",
+          "properties": {
+            "inventoryCode": {
+              "type": "string",
+              "description": "TripleLift inventory code for this ad unit (provided to you by your partner manager)"
+            },
+            "floor": {
+              "type": "number",
+              "description": "the bid floor"
+            }
+          },
+          "required": [
+            "inventoryCode"
+          ]
+        },
+        "yieldlab": {
+          "title": "Yieldlab Adapter Params",
+          "description": "A schema which validates params accepted by the Yieldlab adapter",
+          "type": "object",
+          "properties": {
+            "adslotId": {
+              "type": "string",
+              "description": "Yieldlab ID of the ad slot"
+            },
+            "supplyId": {
+              "type": "string",
+              "description": "Yieldlab ID of the supply"
+            },
+            "adSize": {
+              "type": "string",
+              "description": "Size of the adslot in pixel, e.g. 200x50"
+            },
+            "extId": {
+              "type": "string",
+              "description": "External ID used for reporting"
+            },
+            "targeting": {
+              "type": "object",
+              "description": "Targeting information in key value pairs"
+            }
+          },
+          "required": [
+            "adslotId",
+            "supplyId",
+            "adSize"
+          ]
+        }
+      }
+    },
+    "imp_ext_prebid_improvedigitalpbs_bid_floor": {
+      "type": "object",
+      "required": [
+        "floor",
+        "cur"
+      ],
+      "properties": {
+        "bidFloor": {
+          "$ref": "#/definitions/floor_price"
+        },
+        "bidFloorCur": {
+          "$ref": "#/definitions/currency"
+        }
+      }
+    },
+    "imp_ext_prebid_improvedigitalpbs_waterfall": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "floor_price": {
+      "type": "number",
+      "minimum": 0
+    }
+  }
+}

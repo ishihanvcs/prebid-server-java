@@ -1,6 +1,7 @@
 package com.improvedigital.prebid.server.hooks.v1;
 
 import com.improvedigital.prebid.server.customtrackers.BidderBidModifier;
+import com.improvedigital.prebid.server.customtrackers.hooks.v1.BidderRequestHook;
 import com.improvedigital.prebid.server.customtrackers.hooks.v1.EntrypointHook;
 import com.improvedigital.prebid.server.customtrackers.hooks.v1.ProcessedAuctionRequestHook;
 import com.improvedigital.prebid.server.customtrackers.hooks.v1.ProcessedBidderResponseHook;
@@ -42,6 +43,7 @@ public class CustomTrackerModule implements Module {
         return Arrays.asList(
                 new EntrypointHook(applicationContext, settingsLoader),
                 new ProcessedAuctionRequestHook(),
+                new BidderRequestHook(),
                 new ProcessedBidderResponseHook(bidderBidModifier)
         );
     }

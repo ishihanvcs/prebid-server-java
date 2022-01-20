@@ -1,8 +1,5 @@
 package com.improvedigital.prebid.server.auction.requestfactory;
 
-import com.improvedigital.prebid.server.auction.model.CustParams;
-import com.improvedigital.prebid.server.auction.model.GVastParams;
-import com.improvedigital.prebid.server.settings.SettingsLoader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,6 +14,11 @@ import com.iab.openrtb.request.Site;
 import com.iab.openrtb.request.Source;
 import com.iab.openrtb.request.User;
 import com.iab.openrtb.request.Video;
+import com.improvedigital.prebid.server.auction.model.BidFloor;
+import com.improvedigital.prebid.server.auction.model.CustParams;
+import com.improvedigital.prebid.server.auction.model.GVastParams;
+import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
+import com.improvedigital.prebid.server.settings.SettingsLoader;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
@@ -26,6 +28,7 @@ import io.vertx.ext.web.RoutingContext;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.AuctionContext;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
+import org.prebid.server.currency.CurrencyConversionService;
 import org.prebid.server.execution.Timeout;
 import org.prebid.server.geolocation.GeoLocationService;
 import org.prebid.server.identity.IdGenerator;
@@ -40,6 +43,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
 import org.prebid.server.util.ObjectUtil;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Clock;
@@ -63,18 +67,21 @@ public class GVastRequestFactory {
     private final GVastParamsResolver paramResolver;
     private final GeoLocationService geoLocationService;
     private final Clock clock;
+    private final CurrencyConversionService currencyConversionService;
 
     public GVastRequestFactory(
             SettingsLoader settingsLoader,
             GVastParamsResolver gVastParamsResolver,
             AuctionRequestFactory auctionRequestFactory,
             GeoLocationService geoLocationService,
+            CurrencyConversionService currencyConversionService,
             Clock clock,
             IdGenerator idGenerator,
             JacksonMapper mapper) {
         this.settingsLoader = Objects.requireNonNull(settingsLoader);
         this.clock = clock;
         this.geoLocationService = geoLocationService;
+        this.currencyConversionService = Objects.requireNonNull(currencyConversionService);
         this.auctionRequestFactory = Objects.requireNonNull(auctionRequestFactory);
         this.mapper = Objects.requireNonNull(mapper);
         this.idGenerator = Objects.requireNonNull(idGenerator);
@@ -172,6 +179,19 @@ public class GVastRequestFactory {
         return auctionContext;
     }
 
+    private BigDecimal getBidFloorInUsd(ImprovedigitalPbsImpExt config, BidRequest bidRequest) {
+        BidFloor bidFloor = config.getBidFloor(null);
+        if (bidFloor.getBidFloor().doubleValue() <= 0.0
+                || StringUtils.compareIgnoreCase("USD", bidFloor.getBidFloorCur()) == 0) {
+            return bidFloor.getBidFloor();
+        }
+        return currencyConversionService.convertCurrency(
+                bidFloor.getBidFloor(), bidRequest,
+                "USD",
+                bidFloor.getBidFloorCur()
+        );
+    }
+
     /**
      * Constructs oRTB bid request from /gvast GET params, request header, and stored data
      */
@@ -196,7 +216,7 @@ public class GVastRequestFactory {
         final String accountId = gVastContext.getImprovedigitalPbsImpExt().getAccountId();
         return settingsLoader.getAccountFuture(accountId, initialTimeout)
             .map(account -> {
-                BidRequest commonBidRequest = BidRequest.builder()
+                BidRequest bidRequest = BidRequest.builder()
                         .id(tid)
                         .imp(Collections.singletonList(Imp.builder()
                                 .id("1")
@@ -224,10 +244,9 @@ public class GVastRequestFactory {
                         .test(gVastParams.isDebug() ? 1 : 0)
                         .build();
 
-                final BidRequest bidRequest;
                 if (StringUtils.isBlank(gVastParams.getBundle())) {
                     // web
-                    bidRequest = commonBidRequest.toBuilder()
+                    bidRequest = bidRequest.toBuilder()
                             .site(Site.builder()
                                     .cat(categories)
                                     .domain(gVastParams.getDomain())
@@ -238,7 +257,7 @@ public class GVastRequestFactory {
                             .build();
                 } else {
                     //  app
-                    bidRequest = commonBidRequest.toBuilder()
+                    bidRequest = bidRequest.toBuilder()
                             .app(App.builder()
                                     .bundle(gVastParams.getBundle())
                                     .storeurl(gVastParams.getReferrer())
@@ -266,6 +285,16 @@ public class GVastRequestFactory {
                                     .build()))
                             .build();
                 }
+
+                BigDecimal bidFloorInUsd = getBidFloorInUsd(
+                        gVastContext.getImprovedigitalPbsImpExt(), bidRequest
+                );
+
+                bidRequest.getImp().replaceAll(imp -> imp.toBuilder()
+                        .bidfloor(bidFloorInUsd)
+                        .bidfloorcur("USD")
+                        .build()
+                );
 
                 return gVastContext.with(account).with(bidRequest);
             });

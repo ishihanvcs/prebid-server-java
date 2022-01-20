@@ -330,7 +330,7 @@ public class GVastResponseCreator {
         final String adUnit = getGamAdUnit(gVastParams, config);
         final GeoInfo geoInfo = gVastContext.getAuctionContext().getGeoInfo();
         final String impId = gVastParams.getImpId();
-        final double bidFloor = config.getBidFloor(geoInfo);
+        final double bidFloor = config.getBidFloor(geoInfo).getBidFloor().doubleValue();
         final List<String> waterfall = config.getWaterfall(geoInfo);
         final String categoryTargeting;
         final List<String> categories = gVastParams.getCat();

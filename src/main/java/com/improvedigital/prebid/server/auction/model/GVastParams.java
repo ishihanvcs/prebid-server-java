@@ -12,6 +12,8 @@ public class GVastParams {
 
     String impId;
 
+    Integer coppa; // oRTB regs.coppa 1=yes, 0=no
+
     String gdpr; // "1"=gdpr applies
 
     String gdprConsentString;

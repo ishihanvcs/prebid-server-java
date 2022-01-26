@@ -23,6 +23,7 @@ import org.prebid.server.geolocation.model.GeoInfo;
 import org.prebid.server.util.HttpUtil;
 import org.prebid.server.util.ObjectUtil;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -420,7 +421,7 @@ public class GVastResponseCreator {
         final GeoInfo geoInfo = gVastContext.getAuctionContext().getGeoInfo();
         final String impId = gVastParams.getImpId();
         final double bidFloor = getBidFloor(config, geoInfo);
-        final List<String> waterfall = getWaterfall(config, geoInfo);
+        final List<String> waterfall = new ArrayList<>(getWaterfall(config, geoInfo));
         final String categoryTargeting;
         final List<String> categories = gVastParams.getCat();
 

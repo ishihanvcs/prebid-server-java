@@ -225,7 +225,7 @@ public class GVastRequestFactory {
                                         .storedrequest(ExtStoredRequest.of(String.valueOf(gVastParams.getImpId())))
                                         .build(), null)))
                                 .build()))
-                        .regs(Regs.of(null, ExtRegs.of(gdprInt, null)))
+                        .regs(Regs.of(gVastParams.getCoppa(), ExtRegs.of(gdprInt, null)))
                         .user(User.builder()
                                 .ext(ExtUser.builder()
                                         .consent(gVastParams.getGdprConsentString())

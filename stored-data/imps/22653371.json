@@ -3,7 +3,7 @@
     "prebid": {
       "is_rewarded_inventory": 1,
       "improvedigitalpbs": {
-        "accountId": 2018
+        "accountId": "2018"
       },
       "bidder": {
         "improvedigital": {

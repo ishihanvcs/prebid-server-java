@@ -99,6 +99,20 @@ public class GVastParamsResolver {
         }
     }
 
+    private Integer resolveCoppa(String coppa) {
+        if (StringUtils.isBlank(coppa)) {
+            return null;
+        }
+        switch (coppa) {
+            case "1":
+                return 1;
+            case "0":
+                return 0;
+            default:
+                throw new InvalidRequestException(String.format("Invalid value for 'coppa'"));
+        }
+    }
+
     private Integer resolveIntParam(CaseInsensitiveMultiMap queryParams, String param) {
         final String value = queryParams.get(param);
         if (value == null) {
@@ -123,6 +137,7 @@ public class GVastParamsResolver {
         Integer tmax = resolveIntParam(queryParams, "tmax");
 
         return setGdprParams(httpRequest, GVastParams.builder()
+                .coppa(resolveCoppa(queryParams.get("coppa")))
                 .impId(String.valueOf(placementId))
                 .debug(queryParams.contains("debug") && queryParams.get("debug").equals("1"))
                 .referrer(resolveReferrer(httpRequest))

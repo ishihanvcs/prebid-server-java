@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication(
         scanBasePackages = {
                 "org.prebid.server",
-                "com.azerion.prebid"
+                "com.improvedigital.prebid.server"
         }
 )
 public class Application {

@@ -1,7 +1,10 @@
-FROM adoptopenjdk/openjdk15
+FROM openjdk:11-jre-slim
+
 WORKDIR /
-COPY /target/prebid-server*.jar prebid-server.jar
+
+COPY ./target/prebid-server*.jar prebid-server.jar
 COPY stored-data stored-data
-COPY config config
+COPY improvedigital-config improvedigital-config
+
 EXPOSE 8080
-ENTRYPOINT ["java","-Dlogging.config=/config/azerion-logging.xml","-Dlog4j2.formatMsgNoLookups=true","-jar","/prebid-server.jar", "--spring.config.additional-location=/config/azerion-config.yaml"]
+ENTRYPOINT ["java","-Dlogging.config=/improvedigital-config/logging.xml","-Dlog4j2.formatMsgNoLookups=true","-jar","/prebid-server.jar", "--spring.config.additional-location=/improvedigital-config/config.yaml"]

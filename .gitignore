@@ -12,3 +12,7 @@
 target/
 
 .DS_Store
+
+.allure/
+/improvedigital-dev-tools/node_modules/
+improvedigital-config/config-local.yaml

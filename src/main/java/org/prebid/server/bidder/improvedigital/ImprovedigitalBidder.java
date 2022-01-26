@@ -2,6 +2,7 @@ package org.prebid.server.bidder.improvedigital;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.response.Bid;
@@ -33,9 +34,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-/**
- * ImproveDigital {@link Bidder} implementation.
- */
 public class ImprovedigitalBidder implements Bidder<BidRequest> {
 
     private static final TypeReference<ExtPrebid<?, ExtImpImprovedigital>> IMPROVEDIGITAL_EXT_TYPE_REFERENCE =
@@ -53,9 +51,11 @@ public class ImprovedigitalBidder implements Bidder<BidRequest> {
     @Override
     public Result<List<HttpRequest<BidRequest>>> makeHttpRequests(BidRequest request) {
         final List<BidderError> errors = new ArrayList<>();
+        final List<HttpRequest<BidRequest>> httpRequests = new ArrayList<>();
         for (Imp imp : request.getImp()) {
             try {
                 parseAndValidateImpExt(imp);
+                httpRequests.add(resolveRequest(request, imp));
             } catch (PreBidException e) {
                 errors.add(BidderError.badInput(e.getMessage()));
             }
@@ -65,13 +65,7 @@ public class ImprovedigitalBidder implements Bidder<BidRequest> {
             return Result.withErrors(errors);
         }
 
-        return Result.withValue(HttpRequest.<BidRequest>builder()
-                        .method(HttpMethod.POST)
-                        .uri(endpointUrl)
-                        .headers(HttpUtil.headers())
-                        .payload(request)
-                        .body(mapper.encode(request))
-                        .build());
+        return Result.withValues(httpRequests);
     }
 
     private void parseAndValidateImpExt(Imp imp) {
@@ -86,6 +80,24 @@ public class ImprovedigitalBidder implements Bidder<BidRequest> {
         if (placementId == null) {
             throw new PreBidException("No placementId provided");
         }
+        JsonNode rewardedNode = imp.getExt().at("/prebid/is_rewarded_inventory");
+        if (!rewardedNode.isMissingNode() && rewardedNode.asInt(0) == 1) {
+            imp.getExt().put("is_rewarded_inventory", true);
+        }
+    }
+
+    private HttpRequest<BidRequest> resolveRequest(BidRequest bidRequest, Imp imp) {
+        final BidRequest modifiedRequest = bidRequest.toBuilder()
+                .imp(Collections.singletonList(imp))
+                .build();
+
+        return HttpRequest.<BidRequest>builder()
+                .method(HttpMethod.POST)
+                .uri(endpointUrl)
+                .headers(HttpUtil.headers())
+                .payload(modifiedRequest)
+                .body(mapper.encodeToBytes(modifiedRequest))
+                .build();
     }
 
     @Override

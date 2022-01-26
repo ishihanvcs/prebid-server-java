@@ -16,8 +16,8 @@
 
   - name: Copy prebid-server config template
     template:
-      src: "{{ playbook_dir }}/templates/azerion-config.yaml.j2"
-      dest: "../config/azerion-config.yaml"
+      src: "{{ playbook_dir }}/templates/config.yaml.j2"
+      dest: "../improvedigital-config/config.yaml"
       force: true
 
   - name: Build Docker Image

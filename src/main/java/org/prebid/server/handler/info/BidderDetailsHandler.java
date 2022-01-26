@@ -12,7 +12,7 @@ import lombok.Value;
 import org.prebid.server.bidder.BidderCatalog;
 import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.model.Endpoint;
-import org.prebid.server.proto.response.BidderInfo;
+import org.prebid.server.bidder.BidderInfo;
 import org.prebid.server.util.HttpUtil;
 
 import java.util.Collections;
@@ -54,7 +54,7 @@ public class BidderDetailsHandler implements Handler<RoutingContext> {
 
         return Stream.of(nameToInfo, allToInfos)
                 .flatMap(map -> map.entrySet().stream())
-                .collect(Collectors.toMap(Map.Entry::getKey, map -> mapper.encode(map.getValue())));
+                .collect(Collectors.toMap(Map.Entry::getKey, map -> mapper.encodeToString(map.getValue())));
     }
 
     private ObjectNode bidderNode(BidderCatalog bidderCatalog, String name) {

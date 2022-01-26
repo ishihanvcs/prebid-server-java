@@ -1,0 +1,36 @@
+{
+  "ext": {
+    "prebid": {
+      "is_rewarded_inventory": 1,
+      "improvedigitalpbs": {
+        "accountId": "2018"
+      },
+      "bidder": {
+        "improvedigital": {
+          "placementId": 22653380
+        },
+        "appnexus": {
+          "placement_id": 24015220
+        },
+        "pubmatic": {
+          "publisherId": "156946",
+          "adSlot": "EA_Plants-vs-Zombies-1_Android_RewardedVideo"
+        }
+      }
+    }
+  },
+  "instl": 1,
+  "video": {
+    "context": "instream",
+    "mimes": [
+      "video/mp4"
+    ],
+    "minduration": 1,
+    "maxduration": 60,
+    "linearity": 1,
+    "placement": 5,
+    "protocols": [2],
+    "w": 640,
+    "h": 480
+  }
+}

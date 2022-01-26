@@ -36,6 +36,7 @@ metrics:
     default-verbosity: basic
     detailed-verbosity:
       - 545-dailymotion.com
+      - 2018
   prometheus:
     port: 9112
   graphite:
@@ -51,6 +52,9 @@ cache:
   query: uuid=
   banner-ttl-seconds: 300
   video-ttl-seconds: 300
+default-request:
+  file:
+    path : stored-data/requests/default.json
 settings:
 #  default-loading-timeout: 500 # optional long value in milliseconds, default value is 500 ms
   filesystem:

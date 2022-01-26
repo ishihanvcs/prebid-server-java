@@ -15,52 +15,12 @@
       "bidder": {
         "pubmatic": {
           "publisherId": "156946",
-          "adSlot": "a10.com_game_preroll",
-          "video": {
-            "minduration": 1,
-            "maxduration": 30,
-            "api": [
-              2
-            ],
-            "startdelay": 0,
-            "playbackmethod": [
-              2,
-              3
-            ],
-            "protocols": [
-              2,
-              3,
-              5,
-              6
-            ],
-            "linearity": 1,
-            "placement": 1,
-            "skippable": true,
-            "mimes": [
-              "video/mp4",
-              "application/javascript",
-              "video/webm",
-              "video/ogg"
-            ],
-            "frameworks": 0,
-            "w": 640,
-            "h": 480
-          }
+          "adSlot": "a10.com_game_preroll"
         },
         "improvedigital": {
           "placementId": 22137694
         },
         "appnexus": {
-          "video": {
-            "skippable": true,
-            "mimes": [
-              "video/mp4",
-              "application/javascript",
-              "video/webm",
-              "video/ogg"
-            ],
-            "frameworks": 2
-          },
           "use_pmt_rule": false,
           "placement_id": 18785899
         }

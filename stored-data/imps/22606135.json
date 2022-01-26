@@ -3,7 +3,9 @@
     "prebid": {
       "improvedigitalpbs": {
         "accountId": "545-taptapking.com",
-        "gamAdUnit": "/1015413,22260766789/pbs/22606135"
+        "gam": {
+          "childNetworkCode": "22260766789"
+        }
       },
       "bidder": {
         "pubmatic": {

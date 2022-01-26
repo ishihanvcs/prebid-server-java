@@ -7,20 +7,14 @@
       },
       "bidder": {
         "improvedigital": {
-          "placementId": 22637960
+          "placementId": 22653378
+        },
+        "appnexus": {
+          "placement_id": 24015213
         },
         "pubmatic": {
           "publisherId": "156946",
-          "adSlot": "plants_zombies_2_rewarded"
-        },
-        "appnexus": {
-          "placement_id": 23692277
-        },
-        "smartadserver": {
-          "networkId": 3653,
-          "pageId": 1509754,
-          "siteId": 479806,
-          "formatId": 88313
+          "adSlot": "EA_Bejeweled-Stars_Android_RewardedVideo"
         }
       }
     }

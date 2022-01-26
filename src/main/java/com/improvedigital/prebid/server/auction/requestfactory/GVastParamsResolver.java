@@ -120,15 +120,29 @@ public class GVastParamsResolver {
 
         int placementId = ObjectUtils.defaultIfNull(resolveIntParam(queryParams, "p"), 0);
 
+        Integer tmax = resolveIntParam(queryParams, "tmax");
+
         return setGdprParams(httpRequest, GVastParams.builder()
                 .impId(String.valueOf(placementId))
                 .debug(queryParams.contains("debug") && queryParams.get("debug").equals("1"))
                 .referrer(resolveReferrer(httpRequest))
+                .tmax(tmax == null ? null : tmax.longValue())
                 .custParams(new CustParams(queryParams.get("cust_params")))
                 .cat(resolveCat(queryParams))
+                // Device
+                .carrier(queryParams.get("carrier"))
                 .ifa(queryParams.get("ifa"))
+                .ip(queryParams.get("ip"))
+                .lmt(resolveIntParam(queryParams, "lmt"))
+                .model(queryParams.get("model"))
+                .os(queryParams.get("os"))
+                .osv(queryParams.get("osv"))
                 .ua(queryParams.get("ua"))
+                // App
+                .appName(queryParams.get("appname"))
                 .bundle(queryParams.get("bundle"))
+                .storeUrl(queryParams.get("storeurl"))
+                // Video
                 .minduration(resolveIntParam(queryParams, "minduration"))
                 .maxduration(resolveIntParam(queryParams, "maxduration"))
                 .w(resolveIntParam(queryParams, "w"))

@@ -1,9 +1,9 @@
 {
   "ext": {
     "prebid": {
+      "is_rewarded_inventory": 1,
       "improvedigitalpbs": {
         "accountId": "950",
-        "gamAdUnit": "/1015413/pbs/22137694",
         "waterfall": {
           "default": [
             "gam_first_look",

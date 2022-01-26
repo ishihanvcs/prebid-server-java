@@ -8,6 +8,9 @@
             "bidFloor": 1.5
           }
         },
+        "gam" : {
+          "childNetworkCode": "22665455504"
+        },
         "waterfall": {
           "default": [
             "gam_first_look",
@@ -33,6 +36,9 @@
           "pageId": 1376746,
           "siteId": 408084,
           "formatId": 88313
+        },
+        "triplelift": {
+          "inventoryCode": "Azerion_dailymotion_instream_s2s"
         }
       }
     }

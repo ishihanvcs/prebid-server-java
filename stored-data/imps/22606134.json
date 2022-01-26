@@ -3,7 +3,9 @@
     "prebid": {
       "improvedigitalpbs": {
         "accountId": "545-kiz10girls.com",
-        "gamAdUnit": "/1015413,22260766789/pbs/22606134"
+        "gam": {
+          "childNetworkCode": "22260766789"
+        }
       },
       "bidder": {
         "pubmatic": {

@@ -18,17 +18,35 @@ public class GVastParams {
 
     String referrer;
 
+    Long tmax; // oRTB tmax
+
     CustParams custParams;
 
     String country; // Country code using ISO-3166-1-alpha-2 (NB: oRTB requires alpha-3)
 
     List<String> cat; // Array of IAB content categories of the site
 
+    String carrier; // oRTB device.carrier
+
     String ifa; // oRTB device.ifa
+
+    String ip; // oRTB device.ip
+
+    Integer lmt; // oRTB device.lmt "Limit Ad Tracking" 0=no, 1=yes
+
+    String model; // oRTB device.model
+
+    String os; // oRTB device.os
+
+    String osv; // oRTB device.osv
 
     String ua;  // oRTB device.ua (user agent)
 
+    String appName; // oRTB app.name
+
     String bundle; // oRTB app.bundle
+
+    String storeUrl; // oRTB app.storeurl
 
     Integer minduration; // oRTB video.minduration;
 

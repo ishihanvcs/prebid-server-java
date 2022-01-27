@@ -198,6 +198,17 @@ public class GVastRequestFactory {
             .map(account -> {
                 BidRequest commonBidRequest = BidRequest.builder()
                         .id(tid)
+                        .device(Device.builder()
+                                .carrier(gVastParams.getCarrier())
+                                .ifa(gVastParams.getIfa())
+                                .ip(gVastParams.getIp())
+                                .language(language)
+                                .lmt(gVastParams.getLmt())
+                                .model(gVastParams.getModel())
+                                .os(gVastParams.getOs())
+                                .osv(gVastParams.getOsv())
+                                .ua(gVastParams.getUa())
+                                .build())
                         .imp(Collections.singletonList(Imp.builder()
                                 .id("1")
                                 .video(Video.builder()
@@ -214,7 +225,7 @@ public class GVastRequestFactory {
                                         .storedrequest(ExtStoredRequest.of(String.valueOf(gVastParams.getImpId())))
                                         .build(), null)))
                                 .build()))
-                        .regs(Regs.of(null, ExtRegs.of(gdprInt, null)))
+                        .regs(Regs.of(gVastParams.getCoppa(), ExtRegs.of(gdprInt, null)))
                         .user(User.builder()
                                 .ext(ExtUser.builder()
                                         .consent(gVastParams.getGdprConsentString())
@@ -222,6 +233,7 @@ public class GVastRequestFactory {
                                 .build())
                         .source(Source.builder().tid(tid).build())
                         .test(gVastParams.isDebug() ? 1 : 0)
+                        .tmax(gVastParams.getTmax())
                         .build();
 
                 final BidRequest bidRequest;
@@ -234,36 +246,15 @@ public class GVastRequestFactory {
                                     .page(gVastParams.getReferrer())
                                     .publisher(Publisher.builder().id(account.getId()).build())
                                     .build())
-                            .device(Device.builder().language(language).build())
                             .build();
                 } else {
                     //  app
                     bidRequest = commonBidRequest.toBuilder()
                             .app(App.builder()
                                     .bundle(gVastParams.getBundle())
-                                    .storeurl(gVastParams.getReferrer())
+                                    .name(gVastParams.getAppName())
+                                    .storeurl(gVastParams.getStoreUrl())
                                     .build())
-                            .device(Device.builder()
-                                    .ifa(gVastParams.getIfa())
-                                    .language(language)
-                                    .ua(gVastParams.getUa())
-                                    .build())
-                            .imp(List.of(Imp.builder()
-                                    .id("1")
-                                    .video(Video.builder()
-                                        .minduration(gVastParams.getMinduration())
-                                        .maxduration(gVastParams.getMaxduration())
-                                        .w(gVastParams.getW())
-                                        .h(gVastParams.getH())
-                                        .protocols(gVastParams.getProtocols())
-                                        .api(gVastParams.getApi())
-                                        .placement(gVastParams.getPlacement())
-                                        .build())
-                                    .ext(mapper.mapper().valueToTree(ExtImp.of(ExtImpPrebid.builder()
-                                            .storedrequest(ExtStoredRequest.of("gv-"
-                                                    + account.getId() + "-" + gVastContext.getImp().getId()))
-                                            .build(), null)))
-                                    .build()))
                             .build();
                 }
 

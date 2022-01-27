@@ -3,7 +3,9 @@
     "prebid": {
       "improvedigitalpbs": {
         "accountId": "545-grymini.pl",
-        "gamAdUnit": "/1015413,7451825/pbs/22555242"
+        "gam": {
+          "childNetworkCode": "7451825"
+        }
       },
       "bidder": {
         "pubmatic": {

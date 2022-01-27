@@ -44,6 +44,8 @@ cache:
   host: pbc-proto.360polaris.biz
   path: cache
   query: uuid=
+  banner-ttl-seconds: 300
+  video-ttl-seconds: 300
 default-request:
   file:
     path : improvedigital/stored-data/requests/default.json

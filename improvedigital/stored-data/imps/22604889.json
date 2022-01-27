@@ -3,7 +3,9 @@
     "prebid": {
       "improvedigitalpbs": {
         "accountId": "545-linternaute.com",
-        "gamAdUnit": "/1015413,22260766789/pbs/22604889"
+        "gam": {
+          "childNetworkCode": "22260766789"
+        }
       },
       "bidder": {
         "pubmatic": {

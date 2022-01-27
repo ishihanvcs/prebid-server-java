@@ -17,8 +17,8 @@ public class ImprovedigitalPbsImpExt {
     @JsonProperty("bidFloors")
     Map<String, BidFloor> bidFloors = Map.of(DEFAULT_CONFIG_KEY, BidFloor.of(0.0));
 
-    @JsonProperty("gamAdUnit")
-    String gamAdUnit;
+    @JsonProperty("gam")
+    ImprovedigitalPbsImpExtGam improvedigitalPbsImpExtGam;
 
     Map<String, List<String>> waterfall = Map.of(DEFAULT_CONFIG_KEY, List.of("gam"));
 }

@@ -40,6 +40,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
 import org.prebid.server.util.ObjectUtil;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Clock;
@@ -211,6 +212,8 @@ public class GVastRequestFactory {
                                 .build())
                         .imp(Collections.singletonList(Imp.builder()
                                 .id("1")
+                                .bidfloor(BigDecimal.valueOf(gVastParams.getBidfloor()))
+                                .bidfloorcur(gVastParams.getBidfloorcur())
                                 .video(Video.builder()
                                         .minduration(gVastParams.getMinduration())
                                         .maxduration(gVastParams.getMaxduration())

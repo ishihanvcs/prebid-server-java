@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "title": "pbs-account-schema",
-  "description": "json schema of an account in PBS",
+  "title": "improvedigital-pbs-account-schema",
+  "description": "Improve Digital Prebid Server json schema of account settings",
   "type": "object",
   "required": ["id"],
   "additionalProperties": false,

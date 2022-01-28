@@ -3,9 +3,10 @@
     "prebid": {
       "improvedigitalpbs": {
         "accountId": "545-dailymotion.com",
-        "bidFloors": {
+        "floors": {
           "default": {
-            "bidFloor": 1.5
+            "bidFloor": 1.5,
+            "bidFloorCur": "EUR"
           }
         },
         "gam" : {
@@ -44,7 +45,6 @@
     }
   },
   "video": {
-    "context": "instream",
     "mimes": [
       "video/mp4",
       "application/javascript",

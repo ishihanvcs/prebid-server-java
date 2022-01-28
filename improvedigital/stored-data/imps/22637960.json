@@ -27,7 +27,6 @@
   },
   "instl": 1,
   "video": {
-    "context": "instream",
     "mimes": [
       "video/mp4"
     ],

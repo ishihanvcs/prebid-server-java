@@ -29,7 +29,6 @@
     }
   },
   "video": {
-    "context": "instream",
     "mimes": [
       "video/mp4",
       "application/javascript",
@@ -50,7 +49,6 @@
       6
     ],
     "skip": 1,
-    "frameworks": 0,
     "w": 640,
     "h": 480,
     "placement": 1

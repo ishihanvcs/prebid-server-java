@@ -8,4 +8,7 @@ public class BidFloor {
 
     @JsonProperty("bidFloor")
     double bidFloor;
+
+    @JsonProperty("bidFloorCur")
+    double bidFloorCur;
 }

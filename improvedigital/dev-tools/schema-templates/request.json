@@ -1,9 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "title": "openrtb-v2_5-schema-bid_request",
-  "description": "json schema for an openrtb v2.5 bid request",
+  "title": "improvedigital-pbs-openrtb-v2_5-schema-bid_request",
+  "description": "Improve Digital Prebid Server stored request json schema based on openrtb v2.5 bid request with custom extensions",
   "type": "object",
-  "required": ["id", "imp"],
   "not": {
     "allOf": [
       {
@@ -1730,7 +1729,20 @@
     },
     "imp_ext_prebid": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
+        "is_rewarded_inventory": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "exchangepkey": {
+          "type": "string"
+        },
+        "exchangetagid": {
+          "type": "string"
+        },
+        "partner_id": {
+          "type": "string"
+        },
         "improvedigitalpbs": {
           "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs"
         },
@@ -1749,19 +1761,19 @@
         "requestId": {
           "type": "string"
         },
-        "bidFloors": {
+        "floors": {
           "type": "object",
           "required": ["default"],
           "minProperties": 1,
           "additionalProperties": false,
           "patternProperties": {
             "^[a-z]{2}$": {
-              "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_bid_floor"
+              "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_floor"
             }
           },
           "properties": {
             "default": {
-              "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_bid_floor"
+              "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_floor"
             }
           }
         },
@@ -2217,9 +2229,12 @@
         }
       }
     },
-    "imp_ext_prebid_improvedigitalpbs_bid_floor": {
+    "imp_ext_prebid_improvedigitalpbs_floor": {
       "type": "object",
-      "required": ["floor", "cur"],
+      "required": [
+        "bidFloor",
+        "bidFloorCur"
+      ],
       "properties": {
         "bidFloor": {
           "$ref": "#/definitions/floor_price"

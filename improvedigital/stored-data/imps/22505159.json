@@ -2,10 +2,11 @@
   "ext": {
     "prebid": {
       "improvedigitalpbs": {
-        "accountId": 1915,
-        "bidFloors": {
+        "accountId": "1915",
+        "floors": {
           "default": {
-            "bidFloor": 1.5
+            "bidFloor": 1.5,
+            "bidFloorCur": "EUR"
           }
         }
       },
@@ -31,7 +32,6 @@
     }
   },
   "video": {
-    "context": "instream",
     "mimes": [
       "video/mp4",
       "application/javascript",

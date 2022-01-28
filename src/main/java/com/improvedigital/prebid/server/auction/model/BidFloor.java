@@ -10,5 +10,5 @@ public class BidFloor {
     double bidFloor;
 
     @JsonProperty("bidFloorCur")
-    double bidFloorCur;
+    String bidFloorCur;
 }

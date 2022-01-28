@@ -15,7 +15,7 @@ public class ImprovedigitalPbsImpExt {
     String accountId;
 
     @JsonProperty("bidFloors")
-    Map<String, BidFloor> bidFloors = Map.of(DEFAULT_CONFIG_KEY, BidFloor.of(0.0));
+    Map<String, BidFloor> bidFloors = Map.of(DEFAULT_CONFIG_KEY, BidFloor.of(0.0, "USD"));
 
     @JsonProperty("gam")
     ImprovedigitalPbsImpExtGam improvedigitalPbsImpExtGam;

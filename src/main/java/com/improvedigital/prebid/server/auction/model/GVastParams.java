@@ -28,7 +28,7 @@ public class GVastParams {
 
     List<String> cat; // Array of IAB content categories of the site
 
-    double bidfloor; // oRTB imp.bidfloor
+    Double bidfloor; // oRTB imp.bidfloor
 
     String bidfloorcur; // oRTB imp.bidfloorcur
 

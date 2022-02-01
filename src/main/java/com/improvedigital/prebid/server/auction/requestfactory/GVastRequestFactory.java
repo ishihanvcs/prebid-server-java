@@ -195,6 +195,8 @@ public class GVastRequestFactory {
         final String gdpr = gVastParams.getGdpr();
         final Integer gdprInt = StringUtils.isBlank(gdpr) ? null : Integer.parseInt(gdpr);
         final String accountId = gVastContext.getImprovedigitalPbsImpExt().getAccountId();
+        final BigDecimal bidfloor = gVastParams.getBidfloor() == null
+                ? null : BigDecimal.valueOf(gVastParams.getBidfloor()).stripTrailingZeros();
         return settingsLoader.getAccountFuture(accountId, initialTimeout)
             .map(account -> {
                 BidRequest commonBidRequest = BidRequest.builder()
@@ -212,7 +214,7 @@ public class GVastRequestFactory {
                                 .build())
                         .imp(Collections.singletonList(Imp.builder()
                                 .id("1")
-                                .bidfloor(BigDecimal.valueOf(gVastParams.getBidfloor()))
+                                .bidfloor(bidfloor)
                                 .bidfloorcur(gVastParams.getBidfloorcur())
                                 .video(Video.builder()
                                         .minduration(gVastParams.getMinduration())

@@ -40,6 +40,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
 import org.prebid.server.util.ObjectUtil;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Clock;
@@ -194,6 +195,8 @@ public class GVastRequestFactory {
         final String gdpr = gVastParams.getGdpr();
         final Integer gdprInt = StringUtils.isBlank(gdpr) ? null : Integer.parseInt(gdpr);
         final String accountId = gVastContext.getImprovedigitalPbsImpExt().getAccountId();
+        final BigDecimal bidfloor = gVastParams.getBidfloor() == null
+                ? null : BigDecimal.valueOf(gVastParams.getBidfloor()).stripTrailingZeros();
         return settingsLoader.getAccountFuture(accountId, initialTimeout)
             .map(account -> {
                 BidRequest commonBidRequest = BidRequest.builder()
@@ -211,6 +214,8 @@ public class GVastRequestFactory {
                                 .build())
                         .imp(Collections.singletonList(Imp.builder()
                                 .id("1")
+                                .bidfloor(bidfloor)
+                                .bidfloorcur(gVastParams.getBidfloorcur())
                                 .video(Video.builder()
                                         .minduration(gVastParams.getMinduration())
                                         .maxduration(gVastParams.getMaxduration())

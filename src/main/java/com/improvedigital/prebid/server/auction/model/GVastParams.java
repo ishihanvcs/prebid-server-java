@@ -28,6 +28,10 @@ public class GVastParams {
 
     List<String> cat; // Array of IAB content categories of the site
 
+    Double bidfloor; // oRTB imp.bidfloor
+
+    String bidfloorcur; // oRTB imp.bidfloorcur
+
     String carrier; // oRTB device.carrier
 
     String ifa; // oRTB device.ifa

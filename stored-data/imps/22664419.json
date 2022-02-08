@@ -1,0 +1,37 @@
+{
+  "ext": {
+    "prebid": {
+      "is_rewarded_inventory": 1,
+      "improvedigitalpbs": {
+        "accountId": "2018"
+      },
+      "bidder": {
+        "improvedigital": {
+          "placementId": 22664419
+        },
+        "appnexus": {
+          "placement_id": 24195419
+        },
+        "pubmatic": {
+          "publisherId": "156946",
+          "adSlot": "EA Glu_Covet-Fashion_Android_RewardedVideo"
+        }
+      }
+    }
+  },
+  "instl": 1,
+  "video": {
+    "mimes": [
+      "video/mp4"
+    ],
+    "minduration": 1,
+    "maxduration": 60,
+    "linearity": 1,
+    "placement": 5,
+    "protocols": [
+      2
+    ],
+    "w": 640,
+    "h": 480
+  }
+}

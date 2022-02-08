@@ -125,6 +125,29 @@ public class GVastParamsResolver {
         }
     }
 
+    private Double resolveDoubleParam(CaseInsensitiveMultiMap queryParams, String param) {
+        final String value = queryParams.get(param);
+        if (value == null) {
+            return null;
+        }
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException e) {
+            throw new InvalidRequestException(String.format("'%s' parameter must be a number", param));
+        }
+    }
+
+    private String resolveCurrency(CaseInsensitiveMultiMap queryParams, String param) {
+        final String currency = queryParams.get(param);
+        if (currency == null) {
+            return null;
+        }
+        if (currency.length() != 3) {
+            throw new InvalidRequestException(String.format("Invalid currency code in parameter '%s'", param));
+        }
+        return currency.toUpperCase();
+    }
+
     public GVastParams resolve(HttpRequestContext httpRequest) {
         final CaseInsensitiveMultiMap queryParams = httpRequest.getQueryParams();
 
@@ -144,6 +167,8 @@ public class GVastParamsResolver {
                 .tmax(tmax == null ? null : tmax.longValue())
                 .custParams(new CustParams(queryParams.get("cust_params")))
                 .cat(resolveCat(queryParams))
+                .bidfloor(resolveDoubleParam(queryParams, "bidfloor"))
+                .bidfloorcur(resolveCurrency(queryParams, "bidfloorcur"))
                 // Device
                 .carrier(queryParams.get("carrier"))
                 .ifa(queryParams.get("ifa"))

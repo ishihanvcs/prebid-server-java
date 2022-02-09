@@ -58,12 +58,26 @@ default-request:
 settings:
 #  default-loading-timeout: 500 # optional long value in milliseconds, default value is 500 ms
   filesystem:
-    settings-filename: improvedigital/config/application.yaml
+#    settings-filename: improvedigital/config/settings.yaml
     custom-settings-filename: improvedigital/config/custom-settings.yaml
-    stored-requests-dir: improvedigital/stored-data/requests
-    stored-imps-dir: improvedigital/stored-data/imps
-    stored-responses-dir: improvedigital/stored-data/responses
-    categories-dir: improvedigital/stored-data/categories
+#    stored-requests-dir: improvedigital/stored-data/requests
+#    stored-imps-dir: improvedigital/stored-data/imps
+#    stored-responses-dir: improvedigital/stored-data/responses
+#    categories-dir: improvedigital/stored-data/categories
+  http:
+    endpoint: https://api.headerlift.com/pbs/getconfig
+    amp-endpoint: https://api.headerlift.com/pbs/getconfig?amp=true
+    video-endpoint: https://api.headerlift.com/pbs/getconfig?video=true
+    category-endpoint: http://localhost:8989/categories
+  in-memory-cache:
+    cache-size: 10000
+    ttl-seconds: 600 # 10 minutes in seconds
+    notification-endpoints-enabled: true
+    http-update:
+      endpoint: https://api.headerlift.com/pbs/getconfig
+      amp-endpoint: https://api.headerlift.com/pbs/getconfig?amp=true
+      refresh-rate: 60000 # 1 minute in milliseconds
+      timeout: 2000 # in milliseconds
 gdpr:
   enabled: false
   default-value: 1

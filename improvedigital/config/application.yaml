@@ -31,6 +31,15 @@ adapters:
     enabled: true
   yieldlab:
     enabled: true
+auction:
+  ad-server-currency: USD
+  default-timeout-ms: 1500
+  max-timeout-ms: 5000
+  timeout-adjustment-ms: 30
+  stored-requests-timeout-ms: 200
+  cache:
+    expected-request-time-ms: 50
+    only-winning-bids: false
 currency-converter:
   external-rates:
     enabled: true
@@ -60,26 +69,26 @@ settings:
 #     from within the <project-root>/improvedigital-dev-tools folder
 #  4. Run PBS in another terminal
   filesystem:
-    settings-filename: improvedigital/config/settings.yaml
+#    settings-filename: improvedigital/config/settings.yaml
     custom-settings-filename: improvedigital/config/custom-settings.yaml
-    stored-requests-dir: improvedigital/stored-data/requests
-    stored-imps-dir: improvedigital/stored-data/imps
-    stored-responses-dir: improvedigital/stored-data/responses
-    categories-dir: improvedigital/stored-data/categories
-#  http:
-#    endpoint: http://localhost:8989/config
-#    amp-endpoint: http://localhost:8989/config?amp=true
-#    video-endpoint: http://localhost:8989/config?video=true
-#    category-endpoint: http://localhost:8989/categories
-#  in-memory-cache:
-#    cache-size: 10000
-#    ttl-seconds: 120 # 2 minutes in seconds
-#    notification-endpoints-enabled: true
-#    http-update:
-#      endpoint: http://localhost:8989/config
-#      amp-endpoint: http://localhost:8989/config?amp=true
-#      refresh-rate: 60000 # 1 minute in milliseconds
-#      timeout: 2000 # in milliseconds
+#    stored-requests-dir: improvedigital/stored-data/requests
+#    stored-imps-dir: improvedigital/stored-data/imps
+#    stored-responses-dir: improvedigital/stored-data/responses
+#    categories-dir: improvedigital/stored-data/categories
+  http:
+    endpoint: https://api.headerlift.com/pbs/getconfig
+    amp-endpoint: https://api.headerlift.com/pbs/getconfig?amp=true
+    video-endpoint: https://api.headerlift.com/pbs/getconfig?video=true
+    category-endpoint: http://localhost:8989/categories
+  in-memory-cache:
+    cache-size: 10000
+    ttl-seconds: 600 # 10 minutes in seconds
+    notification-endpoints-enabled: true
+    http-update:
+      endpoint: https://api.headerlift.com/pbs/getconfig
+      amp-endpoint: https://api.headerlift.com/pbs/getconfig?amp=true
+      refresh-rate: 60000 # 1 minute in milliseconds
+      timeout: 2000 # in milliseconds
 
 # cache invalidation endpoints
 admin-endpoints:

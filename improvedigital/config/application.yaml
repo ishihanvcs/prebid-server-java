@@ -82,8 +82,8 @@ settings:
     category-endpoint: http://localhost:8989/categories
   in-memory-cache:
     cache-size: 10000
-    ttl-seconds: 600 # 10 minutes in seconds
-    notification-endpoints-enabled: true
+    ttl-seconds: 600
+    notification-endpoints-enabled: false
     http-update:
       endpoint: https://api.headerlift.com/pbs/getconfig
       amp-endpoint: https://api.headerlift.com/pbs/getconfig?amp=true
@@ -93,12 +93,12 @@ settings:
 # cache invalidation endpoints
 admin-endpoints:
   storedrequest:
-    enabled: true
+    enabled: false
     path: /invalidate/requests
     on-application-port: true
     protected: false
   cache-invalidation:
-    enabled: true
+    enabled: false
     path: /invalidate/accounts
     on-application-port: true
     protected: false

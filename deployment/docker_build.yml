@@ -17,7 +17,7 @@
   - name: Copy prebid-server config template
     template:
       src: "{{ playbook_dir }}/templates/config.yaml.j2"
-      dest: "../improvedigital-config/config.yaml"
+      dest: "../improvedigital/config/application.yaml"
       force: true
 
   - name: Build Docker Image

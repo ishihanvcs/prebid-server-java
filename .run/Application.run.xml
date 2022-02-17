@@ -2,7 +2,7 @@
   <configuration default="false" name="Application" type="Application" factoryName="Application" nameIsGenerated="true">
     <option name="MAIN_CLASS_NAME" value="org.prebid.server.Application" />
     <module name="prebid-server" />
-    <option name="PROGRAM_PARAMETERS" value="--spring.config.additional-location=improvedigital-config/config.yaml" />
+    <option name="PROGRAM_PARAMETERS" value="--spring.config.additional-location=improvedigital/config/application.yaml" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="org.prebid.server.*" />

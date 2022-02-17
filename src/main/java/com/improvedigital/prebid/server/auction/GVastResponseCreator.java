@@ -1,6 +1,6 @@
 package com.improvedigital.prebid.server.auction;
 
-import com.improvedigital.prebid.server.auction.model.BidFloor;
+import com.improvedigital.prebid.server.auction.model.Floor;
 import com.improvedigital.prebid.server.auction.model.GVastParams;
 import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExtGam;
@@ -181,15 +181,15 @@ public class GVastResponseCreator {
 
     private double getBidFloor(ImprovedigitalPbsImpExt config, GeoInfo geoInfo) {
         final double defaultResult = 0.0;
-        final Map<String, BidFloor> bidFloors = config.getBidFloors();
-        if (bidFloors.isEmpty()) {
+        final Map<String, Floor> floors = config.getFloors();
+        if (floors.isEmpty()) {
             return defaultResult;
         }
-        final String countryCode = resolveCountryCode(bidFloors, geoInfo);
+        final String countryCode = resolveCountryCode(floors, geoInfo);
         // logger.info("countryCode = " + countryCode);
 
-        if (bidFloors.containsKey(countryCode)) {
-            return bidFloors.get(countryCode).getBidFloor();
+        if (floors.containsKey(countryCode)) {
+            return floors.get(countryCode).getBidFloor();
         }
 
         return defaultResult;

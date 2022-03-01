@@ -347,7 +347,10 @@ public class Ortb2RequestFactory {
         if (exception instanceof PreBidException) {
             UNKNOWN_ACCOUNT_LOGGER.warn(accountErrorMessage(exception.getMessage(), httpRequest), 100);
         } else {
-            logger.warn("Error occurred while fetching account: {0}", exception.getMessage());
+            if (httpRequest != null) {
+                UNKNOWN_ACCOUNT_LOGGER.warn(accountErrorMessage(exception.getMessage(), httpRequest), 100);
+            }
+            logger.warn("Error occurred while fetching account {0}: {1}", accountId, exception.getMessage());
             logger.debug("Error occurred while fetching account", exception);
         }
 

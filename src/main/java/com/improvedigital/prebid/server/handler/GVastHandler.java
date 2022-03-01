@@ -239,7 +239,7 @@ public class GVastHandler implements Handler<RoutingContext> {
                              MetricName metricRequestStatus, AuctionEvent event, TcfContext tcfContext) {
         // don't send the response if client has gone
         if (context.response().closed()) {
-            logger.warn("The client already closed connection, response will be skipped");
+            logger.debug("The client already closed connection, response will be skipped");
             metrics.updateRequestTypeMetric(requestType, MetricName.networkerr);
         } else {
             context.response()

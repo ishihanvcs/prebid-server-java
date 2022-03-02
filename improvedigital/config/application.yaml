@@ -72,8 +72,8 @@ settings:
 #  1. unless they aren't already, comment out all items in filesystem section except custom-settings-filename
 #  2. comment out all items within the http section that use api.headerlift.com/pbs/getconfig
 #  4  uncomment http items that use localhost:8989
-#  3. Run `./run-mock-server.sh [debug]` command in a separate terminal/console
-#     from within the improvedigital/dev-tools folder
+#  3. Run `npm i` followed by `./run-mock-server.sh [debug]` command in a separate terminal/console from within
+#     the improvedigital/dev-tools folder
 # Restart PBS
   filesystem:
     custom-settings-filename: improvedigital/config/custom-settings.yaml

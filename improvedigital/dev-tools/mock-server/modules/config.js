@@ -2,7 +2,7 @@ const path = require("path");
 const debug = require("debug")("routes:config");
 const fs = require("fs");
 const yaml = require("js-yaml");
-const accountsDataPath = path.resolve(__dirname, "../../../improvedigital-config/settings.yaml");
+const accountsDataPath = path.resolve(__dirname, "../../../config/settings.yaml");
 const requestsDataPath = path.resolve(__dirname, "../../../stored-data/requests");
 const impsDataPath = path.resolve(__dirname, "../../../stored-data/imps");
 

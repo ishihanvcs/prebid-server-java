@@ -36,6 +36,11 @@ import org.prebid.server.model.HttpRequestContext;
 import org.prebid.server.proto.openrtb.ext.request.ExtImp;
 import org.prebid.server.proto.openrtb.ext.request.ExtImpPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRegs;
+import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
+import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
+import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCache;
+import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCacheVastxml;
+import org.prebid.server.proto.openrtb.ext.request.ExtRequestTargeting;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
 import org.prebid.server.util.ObjectUtil;
@@ -56,6 +61,10 @@ public class GVastRequestFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(GVastRequestFactory.class);
     private static final ConditionalLogger EMPTY_ACCOUNT_LOGGER = new ConditionalLogger("empty_account", logger);
+
+    private static final String DEFAULT_PRICE_GRANULARITY = "{\"precision\":2,\"ranges\":"
+            + "[{\"max\":2,\"increment\":0.01},{\"max\":5,\"increment\":0.05},{\"max\":10,\"increment\":0.1},"
+            + "{\"max\":40,\"increment\":0.5},{\"max\":100,\"increment\":1}]}";
 
     private final SettingsLoader settingsLoader;
     private final AuctionRequestFactory auctionRequestFactory;
@@ -179,7 +188,7 @@ public class GVastRequestFactory {
     private Future<GVastContext> updateContextWithAccountAndBidRequest(
             GVastContext gVastContext,
             Timeout initialTimeout
-    ) {
+    ) throws JsonProcessingException {
         final String tid = idGenerator.generateId(); // UUID.randomUUID().toString();
         final GVastParams gVastParams = gVastContext.getGVastParams();
         final RoutingContext routingContext = gVastContext.getRoutingContext();
@@ -197,10 +206,13 @@ public class GVastRequestFactory {
         final String accountId = gVastContext.getImprovedigitalPbsImpExt().getAccountId();
         final BigDecimal bidfloor = gVastParams.getBidfloor() == null
                 ? null : BigDecimal.valueOf(gVastParams.getBidfloor()).stripTrailingZeros();
+        final JsonNode priceGranularity = mapper.mapper().readTree(DEFAULT_PRICE_GRANULARITY);
+
         return settingsLoader.getAccountFuture(accountId, initialTimeout)
             .map(account -> {
                 BidRequest commonBidRequest = BidRequest.builder()
                         .id(tid)
+                        .cur(List.of("EUR"))
                         .device(Device.builder()
                                 .carrier(gVastParams.getCarrier())
                                 .ifa(gVastParams.getIfa())
@@ -239,6 +251,17 @@ public class GVastRequestFactory {
                         .source(Source.builder().tid(tid).build())
                         .test(gVastParams.isDebug() ? 1 : 0)
                         .tmax(gVastParams.getTmax())
+                        .ext(ExtRequest.of(ExtRequestPrebid.builder()
+                                .cache(ExtRequestPrebidCache.of(null,
+                                        ExtRequestPrebidCacheVastxml.of(300, true),
+                                        false))
+                                .targeting(ExtRequestTargeting.builder()
+                                        .includebidderkeys(true)
+                                        .includeformat(true)
+                                        .includewinners(true)
+                                        .pricegranularity(priceGranularity)
+                                        .build())
+                                .build()))
                         .build();
 
                 final BidRequest bidRequest;

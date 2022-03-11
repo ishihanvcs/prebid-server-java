@@ -1,18 +1,19 @@
 package com.improvedigital.prebid.server.customtrackers.resolvers;
 
-import com.improvedigital.prebid.server.customtrackers.TrackerContext;
-import com.improvedigital.prebid.server.customtrackers.contracts.ITrackerMacroResolver;
-import com.improvedigital.prebid.server.utils.FluentMap;
-import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.response.Bid;
+import com.improvedigital.prebid.server.customtrackers.TrackerContext;
+import com.improvedigital.prebid.server.customtrackers.contracts.ITrackerMacroResolver;
+import com.improvedigital.prebid.server.utils.FluentMap;
+import com.improvedigital.prebid.server.utils.JsonUtils;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.prebid.server.bidder.model.BidderBid;
 import org.prebid.server.currency.CurrencyConversionService;
 import org.prebid.server.json.JacksonMapper;
+import org.prebid.server.util.ObjectUtil;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -39,9 +40,16 @@ public class TrackerMacroResolver implements ITrackerMacroResolver {
         final BidderBid bidderBid = context.getBidderBid();
         final Bid bid = bidderBid.getBid();
         final BigDecimal bidPrice = bid.getPrice();
-        final String bidCurrency = bidderBid.getBidCurrency();
         final String bidType = bidderBid.getType().getName();
         final String bidder = context.getBidder();
+
+        // HBT-207: There is a bug in ExchangeService like, it converts bidder's price into adserver's 1st currency
+        // (e.g., bidrequest.cur[0]) but does not update the currency itself. So, fixing here.
+        final String bidCurrency = ObjectUtil.firstNonNull(
+                () -> context.getBidRequest().getCur().get(0),
+                () -> bidderBid.getBidCurrency()
+        );
+
         final BigDecimal bidPriceUsd = currencyConversionService.convertCurrency(
                 bidPrice, context.getBidRequest(),
                 "USD",

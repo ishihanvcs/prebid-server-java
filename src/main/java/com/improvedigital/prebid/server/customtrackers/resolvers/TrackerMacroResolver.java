@@ -13,7 +13,6 @@ import io.vertx.core.logging.LoggerFactory;
 import org.prebid.server.bidder.model.BidderBid;
 import org.prebid.server.currency.CurrencyConversionService;
 import org.prebid.server.json.JacksonMapper;
-import org.prebid.server.util.ObjectUtil;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -39,16 +38,10 @@ public class TrackerMacroResolver implements ITrackerMacroResolver {
         final String placementId = resolvePlacementId(context);
         final BidderBid bidderBid = context.getBidderBid();
         final Bid bid = bidderBid.getBid();
-        final BigDecimal bidPrice = bid.getPrice();
+        final BigDecimal bidPrice = this.jsonUtils.getBigDecimalAt(bid.getExt(), "/origbidcpm", bid.getPrice());
+        final String bidCurrency = this.jsonUtils.getStringAt(bid.getExt(), "/origbidcur", bidderBid.getBidCurrency());
         final String bidType = bidderBid.getType().getName();
         final String bidder = context.getBidder();
-
-        // HBT-207: There is a bug in ExchangeService like, it converts bidder's price into adserver's 1st currency
-        // (e.g., bidrequest.cur[0]) but does not update the currency itself. So, fixing here.
-        final String bidCurrency = ObjectUtil.firstNonNull(
-                () -> context.getBidRequest().getCur().get(0),
-                () -> bidderBid.getBidCurrency()
-        );
 
         final BigDecimal bidPriceUsd = currencyConversionService.convertCurrency(
                 bidPrice, context.getBidRequest(),

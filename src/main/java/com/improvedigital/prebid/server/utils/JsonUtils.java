@@ -66,7 +66,7 @@ public class JsonUtils {
         }
 
         node = node.at(jsonPointerExpr);
-        return node.isMissingNode() || !node.isBigDecimal() ? defaultValue : node.decimalValue();
+        return (node.isMissingNode() || !node.isBigDecimal()) ? defaultValue : node.decimalValue();
     }
 
     /**
@@ -83,6 +83,6 @@ public class JsonUtils {
         }
 
         node = node.at(jsonPointerExpr);
-        return node.isMissingNode() || !node.isTextual() ? defaultValue : node.textValue();
+        return (node.isMissingNode() || !node.isTextual()) ? defaultValue : node.textValue();
     }
 }

@@ -38,8 +38,8 @@ public class TrackerMacroResolver implements ITrackerMacroResolver {
         final String placementId = resolvePlacementId(context);
         final BidderBid bidderBid = context.getBidderBid();
         final Bid bid = bidderBid.getBid();
-        final BigDecimal bidPrice = this.jsonUtils.getBigDecimalAt(bid.getExt(), "/origbidcpm", bid.getPrice());
-        final String bidCurrency = this.jsonUtils.getStringAt(bid.getExt(), "/origbidcur", bidderBid.getBidCurrency());
+        final BigDecimal bidPrice = this.jsonUtils.getBigDecimalAt(bid.getExt(), "/origbidcpm");
+        final String bidCurrency = this.jsonUtils.getStringAt(bid.getExt(), "/origbidcur");
         final String bidType = bidderBid.getType().getName();
         final String bidder = context.getBidder();
 

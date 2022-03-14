@@ -57,6 +57,17 @@ public class JsonUtils {
      *
      * @param node            the node to traverse.
      * @param jsonPointerExpr jackson pointer expression (e.g., "/path/to/a/node")
+     * @return value at the jsonPointerExpr
+     */
+    public BigDecimal getBigDecimalAt(JsonNode node, String jsonPointerExpr) {
+        return getBigDecimalAt(node, jsonPointerExpr, null);
+    }
+
+    /**
+     * Find the decimal value at jsonPointerExpr and expects it to be {@link BigDecimal} and return it.
+     *
+     * @param node            the node to traverse.
+     * @param jsonPointerExpr jackson pointer expression (e.g., "/path/to/a/node")
      * @param defaultValue    default value to return on anything missing.
      * @return value at the jsonPointerExpr
      */
@@ -66,7 +77,18 @@ public class JsonUtils {
         }
 
         node = node.at(jsonPointerExpr);
-        return (node.isMissingNode() || !node.isBigDecimal()) ? defaultValue : node.decimalValue();
+        return (node.isMissingNode() || !node.isNumber()) ? defaultValue : new BigDecimal(node.asDouble());
+    }
+
+    /**
+     * Find the String value at jsonPointerExpr and expects it to be {@link String} and return it.
+     *
+     * @param node            the node to traverse.
+     * @param jsonPointerExpr jackson pointer expression (e.g., "/path/to/a/node")
+     * @return value at the jsonPointerExpr
+     */
+    public String getStringAt(JsonNode node, String jsonPointerExpr) {
+        return getStringAt(node, jsonPointerExpr, null);
     }
 
     /**

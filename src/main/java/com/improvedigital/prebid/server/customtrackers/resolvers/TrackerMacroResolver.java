@@ -1,13 +1,13 @@
 package com.improvedigital.prebid.server.customtrackers.resolvers;
 
-import com.improvedigital.prebid.server.customtrackers.TrackerContext;
-import com.improvedigital.prebid.server.customtrackers.contracts.ITrackerMacroResolver;
-import com.improvedigital.prebid.server.utils.FluentMap;
-import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.response.Bid;
+import com.improvedigital.prebid.server.customtrackers.TrackerContext;
+import com.improvedigital.prebid.server.customtrackers.contracts.ITrackerMacroResolver;
+import com.improvedigital.prebid.server.utils.FluentMap;
+import com.improvedigital.prebid.server.utils.JsonUtils;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.prebid.server.bidder.model.BidderBid;
@@ -38,10 +38,29 @@ public class TrackerMacroResolver implements ITrackerMacroResolver {
         final String placementId = resolvePlacementId(context);
         final BidderBid bidderBid = context.getBidderBid();
         final Bid bid = bidderBid.getBid();
-        final BigDecimal bidPrice = bid.getPrice();
-        final String bidCurrency = bidderBid.getBidCurrency();
         final String bidType = bidderBid.getType().getName();
         final String bidder = context.getBidder();
+
+        /**
+         * HBT-207: {@link org.prebid.server.auction.ExchangeService}'s method updateBidderBidWithBidPriceChanges()
+         * has a bug where it updates the price ({@link Bid#price}) after currency conversion but does not
+         * update the currency ({@link BidderBid#bidCurrency}) accordingly :(
+         *
+         * So, we are using the "bid.ext.origbidcpm" and "bid.ext.origbidcur" for our calculation atomically.
+         * Meaning, if we do not get any of those, we use {@link Bid#price} and adserver-currency both.
+         * This is because, we do not want to use ("bid.ext.origbidcpm" and adserver-currency) pair or
+         * ({@link Bid#price} and "bid.ext.origbidcur") pair.
+         *
+         * Note: at some point, prebid java team might be fixing the bug and we should revisit this code later.
+         */
+        BigDecimal bidPrice = this.jsonUtils.getBigDecimalAt(bid.getExt(), "/origbidcpm");
+        String bidCurrency = this.jsonUtils.getStringAt(bid.getExt(), "/origbidcur");
+        if (bidPrice == null || bidCurrency == null) {
+            logger.warn("Cannot find bid.ext.origbidcpm or bid.ext.origbidcur. Ext={0}. Falling back..", bid.getExt());
+            bidPrice = bid.getPrice();
+            bidCurrency = context.getBidRequest().getCur().get(0);
+        }
+
         final BigDecimal bidPriceUsd = currencyConversionService.convertCurrency(
                 bidPrice, context.getBidRequest(),
                 "USD",

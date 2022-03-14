@@ -47,8 +47,8 @@ public class TrackerMacroResolver implements ITrackerMacroResolver {
          * update the currency ({@link BidderBid#bidCurrency}) accordingly :(
          *
          * So, we are using the "bid.ext.origbidcpm" and "bid.ext.origbidcur" for our calculation atomically.
-         * Meaning, if we do not get any of those, we use {@link Bid#price} and {@link BidderBid#bidCurrency} both.
-         * This is because, we do not want to use ("bid.ext.origbidcpm" and {@link BidderBid#bidCurrency}) pair or
+         * Meaning, if we do not get any of those, we use {@link Bid#price} and adserver-currency both.
+         * This is because, we do not want to use ("bid.ext.origbidcpm" and adserver-currency) pair or
          * ({@link Bid#price} and "bid.ext.origbidcur") pair.
          *
          * Note: at some point, prebid java team might be fixing the bug and we should revisit this code later.
@@ -56,8 +56,9 @@ public class TrackerMacroResolver implements ITrackerMacroResolver {
         BigDecimal bidPrice = this.jsonUtils.getBigDecimalAt(bid.getExt(), "/origbidcpm");
         String bidCurrency = this.jsonUtils.getStringAt(bid.getExt(), "/origbidcur");
         if (bidPrice == null || bidCurrency == null) {
+            logger.warn("Cannot find bid.ext.origbidcpm or bid.ext.origbidcur. Ext={0}. Falling back..", bid.getExt());
             bidPrice = bid.getPrice();
-            bidCurrency = bidderBid.getBidCurrency();
+            bidCurrency = context.getBidRequest().getCur().get(0);
         }
 
         final BigDecimal bidPriceUsd = currencyConversionService.convertCurrency(

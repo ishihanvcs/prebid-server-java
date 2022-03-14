@@ -38,10 +38,27 @@ public class TrackerMacroResolver implements ITrackerMacroResolver {
         final String placementId = resolvePlacementId(context);
         final BidderBid bidderBid = context.getBidderBid();
         final Bid bid = bidderBid.getBid();
-        final BigDecimal bidPrice = this.jsonUtils.getBigDecimalAt(bid.getExt(), "/origbidcpm");
-        final String bidCurrency = this.jsonUtils.getStringAt(bid.getExt(), "/origbidcur");
         final String bidType = bidderBid.getType().getName();
         final String bidder = context.getBidder();
+
+        /**
+         * HBT-207: {@link org.prebid.server.auction.ExchangeService}'s method updateBidderBidWithBidPriceChanges()
+         * has a bug where it updates the price ({@link Bid#price}) after currency conversion but does not
+         * update the currency ({@link BidderBid#bidCurrency}) accordingly :(
+         *
+         * So, we are using the "bid.ext.origbidcpm" and "bid.ext.origbidcur" for our calculation atomically.
+         * Meaning, if we do not get any of those, we use {@link Bid#price} and {@link BidderBid#bidCurrency} both.
+         * This is because, we do not want to use ("bid.ext.origbidcpm" and {@link BidderBid#bidCurrency}) pair or
+         * ({@link Bid#price} and "bid.ext.origbidcur") pair.
+         *
+         * Note: at some point, prebid java team might be fixing the bug and we should revisit this code later.
+         */
+        BigDecimal bidPrice = this.jsonUtils.getBigDecimalAt(bid.getExt(), "/origbidcpm");
+        String bidCurrency = this.jsonUtils.getStringAt(bid.getExt(), "/origbidcur");
+        if (bidPrice == null || bidCurrency == null) {
+            bidPrice = bid.getPrice();
+            bidCurrency = bidderBid.getBidCurrency();
+        }
 
         final BigDecimal bidPriceUsd = currencyConversionService.convertCurrency(
                 bidPrice, context.getBidRequest(),

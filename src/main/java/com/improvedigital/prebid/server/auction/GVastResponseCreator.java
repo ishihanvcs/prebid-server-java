@@ -21,7 +21,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.geolocation.model.GeoInfo;
 import org.prebid.server.util.HttpUtil;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;

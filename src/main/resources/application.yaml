@@ -3,8 +3,8 @@ spring:
     banner-mode: "off"
 app:
   version:
-    pbs: "@project.version@"
-    extension: "@project.extension.version@"
+    core: "@project.version@"
+    improvedigital: "@project.improvedigital.version@"
 vertx:
   worker-pool-size: 20
   uploads-dir: file-uploads

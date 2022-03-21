@@ -48,13 +48,13 @@ public class ExtensionConfig {
 
     @PostConstruct
     public void postConfigure() {
-        final String pbsVersion = applicationContext.getEnvironment().getProperty("app.version.pbs");
+        final String pbsVersion = applicationContext.getEnvironment().getProperty("app.version.core");
         if (pbsVersion != null) {
             logger.info("Core PBS Version: " + pbsVersion);
         }
-        final String extVersion = applicationContext.getEnvironment().getProperty("app.version.extension");
+        final String extVersion = applicationContext.getEnvironment().getProperty("app.version.improvedigital");
         if (extVersion != null) {
-            logger.info("Improve Digital Extension Version: " + extVersion);
+            logger.info("Improve Digital PBS Version: " + extVersion);
         }
     }
 

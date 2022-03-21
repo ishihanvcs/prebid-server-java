@@ -1,0 +1,720 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "improvedigital-pbs-openrtb-v2_5-schema-bid_request-imp",
+  "description": "Improve Digital Prebid Server stored request json schema based on openrtb v2.5 bid request imp object with custom extensions",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "metric": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/metric"
+      }
+    },
+    "banner": {
+      "$ref": "#/definitions/banner"
+    },
+    "video": {
+      "$ref": "#/definitions/video"
+    },
+    "audio": {
+      "$ref": "#/definitions/audio"
+    },
+    "native": {
+      "$ref": "#/definitions/native"
+    },
+    "displaymanager": {
+      "type": "string"
+    },
+    "displaymanagerver": {
+      "type": "string"
+    },
+    "instl": {
+      "$ref": "#/definitions/boolean_int"
+    },
+    "tagid": {
+      "type": "string"
+    },
+    "bidfloor": {
+      "$ref": "#/definitions/floor_price"
+    },
+    "bidfloorcur": {
+      "$ref": "#/definitions/currency"
+    },
+    "clickbrowser": {
+      "$ref": "#/definitions/boolean_int"
+    },
+    "secure": {
+      "$ref": "#/definitions/boolean_int"
+    },
+    "iframebuster": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "pmp": {
+      "$ref": "#/definitions/pmp"
+    },
+    "exp": {
+      "$ref": "#/definitions/positive_int"
+    },
+    "ext": {
+      "$ref": "#/definitions/imp_ext"
+    }
+  },
+  "definitions": {
+    "imp_ext": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "is_rewarded_inventory": {
+          "type": "boolean"
+        },
+        "exchangepkey": {
+          "type": "string"
+        },
+        "exchangetagid": {
+          "type": "string"
+        },
+        "partner_id": {
+          "type": "string"
+        },
+        "prebid": {
+          "$ref": "#/definitions/imp_ext_prebid"
+        }
+      }
+    },
+    "imp_ext_prebid": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "is_rewarded_inventory": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "exchangepkey": {
+          "type": "string"
+        },
+        "exchangetagid": {
+          "type": "string"
+        },
+        "partner_id": {
+          "type": "string"
+        },
+        "improvedigitalpbs": {
+          "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs"
+        },
+        "bidder": {
+          "$ref": "#/definitions/imp_ext_prebid_bidder"
+        }
+      }
+    },
+    "imp_ext_prebid_improvedigitalpbs": {
+      "type": "object",
+      "required": ["accountId"],
+      "properties": {
+        "accountId": {
+          "type": "string"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "floors": {
+          "type": "object",
+          "required": ["default"],
+          "minProperties": 1,
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z]{2}$": {
+              "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_floor"
+            }
+          },
+          "properties": {
+            "default": {
+              "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_floor"
+            }
+          }
+        },
+        "waterfall": {
+          "type": "object",
+          "required": ["default"],
+          "minProperties": 1,
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z]{2}$": {
+              "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_waterfall"
+            }
+          },
+          "properties": {
+            "default": {
+              "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_waterfall"
+            }
+          }
+        }
+      }
+    },
+    "imp_ext_prebid_bidder": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {}
+    },
+    "imp_ext_prebid_improvedigitalpbs_floor": {
+      "type": "object",
+      "required": [
+        "bidFloor",
+        "bidFloorCur"
+      ],
+      "properties": {
+        "bidFloor": {
+          "$ref": "#/definitions/floor_price"
+        },
+        "bidFloorCur": {
+          "$ref": "#/definitions/currency"
+        }
+      }
+    },
+    "imp_ext_prebid_improvedigitalpbs_waterfall": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "floor_price": {
+      "type": "number",
+      "minimum": 0
+    },
+    "metric": {
+      "type": "object",
+      "required": ["type", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        },
+        "vendor": {
+          "type": "string"
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "banner": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "w": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "h": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "format": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/format"
+          }
+        },
+        "wmax": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "hmax": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "wmin": {
+          "type": "integer"
+        },
+        "hmin": {
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "btype": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/banner_ad_type"
+          }
+        },
+        "battr": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/creative_attribute"
+          }
+        },
+        "pos": {
+          "$ref": "#/definitions/ad_position"
+        },
+        "mimes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "topframe": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "expdir": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/expandable_direction"
+          }
+        },
+        "api": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/api_framework"
+          }
+        },
+        "vcm": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "video": {
+      "type": "object",
+      "required": ["mimes"],
+      "additionalProperties": false,
+      "properties": {
+        "mimes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "minduration": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "maxduration": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "protocol": {
+          "$ref": "#/definitions/video_bid_response_protocol"
+        },
+        "protocols": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/video_bid_response_protocol"
+          }
+        },
+        "w": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "h": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "format": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/format"
+          }
+        },
+        "startdelay": {
+          "$ref": "#/definitions/video_start_delay"
+        },
+        "placement": {
+          "$ref": "#/definitions/video_placement_type"
+        },
+        "linearity": {
+          "$ref": "#/definitions/video_linearity"
+        },
+        "skip": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "skipmin": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "skipafter": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "sequence": {
+          "type": "integer"
+        },
+        "battr": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/creative_attribute"
+          }
+        },
+        "maxextended": {
+          "type": "integer",
+          "minimum": -1
+        },
+        "minbitrate": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "maxbitrate": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "boxingallowed": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "playbackmethod": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/video_playback_method"
+          }
+        },
+        "playbackend": {
+          "$ref": "#/definitions/video_playback_cessation_mode"
+        },
+        "delivery": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/content_delivery_method"
+          }
+        },
+        "pos": {
+          "$ref": "#/definitions/ad_position"
+        },
+        "companionad": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/banner"
+          }
+        },
+        "api": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/api_framework"
+          }
+        },
+        "companiontype": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/vast_companion_type"
+          }
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "audio": {
+      "type": "object",
+      "required": ["mimes"],
+      "additionalProperties": false,
+      "properties": {
+        "mimes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "minduration": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "maxduration": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "protocols": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/video_bid_response_protocol"
+          }
+        },
+        "startdelay": {
+          "$ref": "#/definitions/video_start_delay"
+        },
+        "sequence": {
+          "type": "integer"
+        },
+        "battr": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/creative_attribute"
+          }
+        },
+        "maxextended": {
+          "type": "integer",
+          "minimum": -1
+        },
+        "minbitrate": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "maxbitrate": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "delivery": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/content_delivery_method"
+          }
+        },
+        "companionad": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/banner"
+          }
+        },
+        "api": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/api_framework"
+          }
+        },
+        "companiontype": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/vast_companion_type"
+          }
+        },
+        "maxseq": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "feed": {
+          "$ref": "#/definitions/audio_feed_type"
+        },
+        "stitched": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "nvol": {
+          "$ref": "#/definitions/volume_normalization_mode"
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "native": {
+      "type": "object",
+      "anyOf": [
+        {
+          "required": ["request"]
+        },
+        {
+          "required": ["request_native"]
+        },
+        {
+          "required": ["assets"]
+        }
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "type": "string"
+        },
+        "ver": {
+          "type": "string"
+        },
+        "api": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/api_framework"
+          }
+        },
+        "battr": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/creative_attribute"
+          }
+        },
+        "ext": {
+          "type": "object"
+        },
+        "request_native": {
+          "type": "object"
+        },
+        "assets": {
+          "type": "array"
+        },
+        "context": {
+          "type": "integer"
+        },
+        "contextsubtype": {
+          "type": "integer"
+        },
+        "plcmttype": {
+          "type": "integer"
+        },
+        "plcmtcnt": {
+          "type": "integer"
+        },
+        "privacy": {
+          "type": "integer"
+        },
+        "aurlsupport": {
+          "type": "integer"
+        }
+      }
+    },
+    "format": {
+      "type": "object",
+      "description": "represents an allowed size for a banner impression",
+      "additionalProperties": false,
+      "properties": {
+        "w": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "h": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "wratio": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "hratio": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "wmin": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "pmp": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "private_auction": {
+          "$ref": "#/definitions/boolean_int",
+          "default": 0
+        },
+        "deals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/deal"
+          }
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "deal": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "bidfloor": {
+          "$ref": "#/definitions/floor_price"
+        },
+        "bidfloorcur": {
+          "$ref": "#/definitions/currency"
+        },
+        "at": {
+          "type": "integer"
+        },
+        "wseat": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "wadomain": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ext": {
+          "type": "object"
+        }
+      }
+    },
+    "banner_ad_type": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4
+    },
+    "creative_attribute": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 17
+    },
+    "ad_position": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 7
+    },
+    "expandable_direction": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "api_framework": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 7
+    },
+    "video_linearity": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2
+    },
+    "video_bid_response_protocol": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10
+    },
+    "video_placement_type": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 5
+    },
+    "video_playback_method": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 6
+    },
+    "video_playback_cessation_mode": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "video_start_delay": {
+      "type": "integer",
+      "minimum": -2
+    },
+    "vast_companion_type": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "content_delivery_method": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "boolean_int": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "positive_int": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "currency": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 3,
+      "pattern": "[a-zA-Z]{3}"
+    },
+    "audio_feed_type": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "volume_normalization_mode": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4
+    }
+  }
+}

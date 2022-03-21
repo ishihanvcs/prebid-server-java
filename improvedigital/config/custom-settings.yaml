@@ -1,0 +1,28 @@
+---
+trackers:
+  360yield:
+    enabled: false # optional
+    urlTemplate: https://pad.360polaris.biz/ssp_bids?bidder={{bidder}}&cpm={{bid_price_usd}}&pid={{improve_digital_placement_id}} # required
+    # Macros supported by default macroResolver are:
+    # - bidder
+    # - bid_type
+    # - bid_price (original bid price in BidderBid response)
+    # - bid_currency (original bid currency in BidderBid response)
+    # - bid_price_usd (bid price converted to USD)
+    # - improve_digital_placement_id (improvedigital placementId as specified in original BidRequest)
+      # com.improvedigital.prebid.server.customtrackers.TrackerContext class
+
+    macroResolver: "trackerMacroResolver" # optional
+    # When macroResolver is omitted or value left blank, and a bean with named "trackerMacroResolver" + id is available, that will be used
+    # otherwise default "trackerMacroResolver" bean will be used
+    # To know actual implementation details, please refer to getMacroResolver() method of
+    # com.improvedigital.prebid.server.customtrackers.TrackerContext class
+
+    injector: "trackerInjector" # optional
+    # When injector is omitted or value left blank, and a bean with named "trackerInjector" + id is available, that will be used
+    # otherwise default "trackerInjector" bean will be used
+    # To know actual implementation details, please refer to getInjector() method of
+    # com.improvedigital.prebid.server.customtrackers.TrackerContext class
+
+    excludedAccounts: [] # optional, array of account ids for which the tracker should be disabled
+

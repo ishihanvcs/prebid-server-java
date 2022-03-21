@@ -1,0 +1,56 @@
+{
+  "ext": {
+    "prebid": {
+      "improvedigitalpbs": {
+        "accountId": "1915",
+        "floors": {
+          "default": {
+            "bidFloor": 1.5,
+            "bidFloorCur": "EUR"
+          }
+        }
+      },
+      "bidder": {
+        "improvedigital": {
+          "placementId": 22505159
+        },
+        "pubmatic": {
+          "publisherId": "156946",
+          "adSlot": "dailymotion.com_prebidserver_instream"
+        },
+        "appnexus": {
+          "use_pmt_rule": false,
+          "placement_id": 21509275
+        },
+        "smartadserver": {
+          "networkId": 3653,
+          "pageId": 1376746,
+          "siteId": 408084,
+          "formatId": 88313
+        }
+      }
+    }
+  },
+  "video": {
+    "mimes": [
+      "video/mp4",
+      "application/javascript",
+      "video/webm",
+      "video/ogg"
+    ],
+    "minduration": 1,
+    "maxduration": 30,
+    "linearity": 1,
+    "api": [
+      2
+    ],
+    "protocols": [
+      2,
+      3,
+      5,
+      6
+    ],
+    "w": 640,
+    "h": 480
+  }
+}

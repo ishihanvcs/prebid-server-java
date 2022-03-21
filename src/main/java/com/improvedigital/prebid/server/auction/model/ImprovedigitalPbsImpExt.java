@@ -14,11 +14,11 @@ public class ImprovedigitalPbsImpExt {
     @JsonProperty("accountId")
     String accountId;
 
-    @JsonProperty("bidFloors")
-    Map<String, BidFloor> bidFloors = Map.of(DEFAULT_CONFIG_KEY, BidFloor.of(0.0));
+    @JsonProperty("floors")
+    Map<String, Floor> floors = Map.of(DEFAULT_CONFIG_KEY, Floor.of(0.0, "USD"));
 
-    @JsonProperty("gamAdUnit")
-    String gamAdUnit;
+    @JsonProperty("gam")
+    ImprovedigitalPbsImpExtGam improvedigitalPbsImpExtGam;
 
     Map<String, List<String>> waterfall = Map.of(DEFAULT_CONFIG_KEY, List.of("gam"));
 }

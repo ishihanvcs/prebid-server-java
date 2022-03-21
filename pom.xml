@@ -19,7 +19,7 @@
     </organization>
 
     <properties>
-        <project.extension.version>1.0.0</project.extension.version>
+        <project.improvedigital.version>1.6.1</project.improvedigital.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>11</java.version>
@@ -531,7 +531,7 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven-surefire-plugin.version}</version>
                     <configuration>
-                        <systemPropertiesFile>improvedigital-config/test-application.properties</systemPropertiesFile>
+                        <systemPropertiesFile>improvedigital/config/test/application.properties</systemPropertiesFile>
                         <systemPropertyVariables>
                             <launchContainers>false</launchContainers>
                         </systemPropertyVariables>

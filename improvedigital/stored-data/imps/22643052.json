@@ -1,0 +1,23 @@
+{
+  "ext": {
+    "prebid": {
+      "improvedigitalpbs": {
+        "accountId": "950-inapp"
+      },
+      "bidder": {
+        "improvedigital": {
+          "placementId": 22643052
+        }
+      }
+    }
+  },
+  "video": {
+    "mimes": [
+      "video/mp4"
+    ],
+    "minduration": 1,
+    "maxduration": 30,
+    "linearity": 1,
+    "protocols": [2]
+  }
+}

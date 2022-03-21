@@ -19,11 +19,11 @@ public class ImgPixelInjectorForBanner implements IBidTypeSpecificTrackerInjecto
         String imgTag = String.format("<img src=\"%s\">", trackingUrl);
         if (admParts.length == 2) {
             adm = String.join("", admParts[0], imgTag, "</body>", admParts[1]);
-            logger.info("Closing body tag found. Image pixel injected with: "
+            logger.debug("Closing body tag found. Image pixel injected with: "
                     + trackingUrl);
         } else {
             adm = String.join("", adm, imgTag);
-            logger.info("Closing body tag not found. Image pixel appended with: "
+            logger.debug("Closing body tag not found. Image pixel appended with: "
                     + trackingUrl);
         }
         return adm;

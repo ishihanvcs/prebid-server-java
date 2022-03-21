@@ -2,6 +2,7 @@ package org.prebid.server.bidder.improvedigital;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.response.Bid;
@@ -78,6 +79,10 @@ public class ImprovedigitalBidder implements Bidder<BidRequest> {
         final Integer placementId = ext.getPlacementId();
         if (placementId == null) {
             throw new PreBidException("No placementId provided");
+        }
+        JsonNode rewardedNode = imp.getExt().at("/prebid/is_rewarded_inventory");
+        if (!rewardedNode.isMissingNode() && rewardedNode.asInt(0) == 1) {
+            imp.getExt().put("is_rewarded_inventory", true);
         }
     }
 

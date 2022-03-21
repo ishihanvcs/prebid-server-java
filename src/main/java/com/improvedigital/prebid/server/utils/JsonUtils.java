@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.Tuple2;
 import org.prebid.server.json.JacksonMapper;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -49,5 +50,61 @@ public class JsonUtils {
         return StreamSupport.stream(node.spliterator(), false)
                 .map(JsonNode::asText)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Find the decimal value at jsonPointerExpr and expects it to be {@link BigDecimal} and return it.
+     *
+     * @param node            the node to traverse.
+     * @param jsonPointerExpr jackson pointer expression (e.g., "/path/to/a/node")
+     * @return value at the jsonPointerExpr
+     */
+    public BigDecimal getBigDecimalAt(JsonNode node, String jsonPointerExpr) {
+        return getBigDecimalAt(node, jsonPointerExpr, null);
+    }
+
+    /**
+     * Find the decimal value at jsonPointerExpr and expects it to be {@link BigDecimal} and return it.
+     *
+     * @param node            the node to traverse.
+     * @param jsonPointerExpr jackson pointer expression (e.g., "/path/to/a/node")
+     * @param defaultValue    default value to return on anything missing.
+     * @return value at the jsonPointerExpr
+     */
+    public BigDecimal getBigDecimalAt(JsonNode node, String jsonPointerExpr, BigDecimal defaultValue) {
+        if (node == null || node.isMissingNode()) {
+            return defaultValue;
+        }
+
+        node = node.at(jsonPointerExpr);
+        return (node.isMissingNode() || !node.isNumber()) ? defaultValue : new BigDecimal(node.asDouble());
+    }
+
+    /**
+     * Find the String value at jsonPointerExpr and expects it to be {@link String} and return it.
+     *
+     * @param node            the node to traverse.
+     * @param jsonPointerExpr jackson pointer expression (e.g., "/path/to/a/node")
+     * @return value at the jsonPointerExpr
+     */
+    public String getStringAt(JsonNode node, String jsonPointerExpr) {
+        return getStringAt(node, jsonPointerExpr, null);
+    }
+
+    /**
+     * Find the String value at jsonPointerExpr and expects it to be {@link String} and return it.
+     *
+     * @param node            the node to traverse.
+     * @param jsonPointerExpr jackson pointer expression (e.g., "/path/to/a/node")
+     * @param defaultValue    default value to return on anything missing.
+     * @return value at the jsonPointerExpr
+     */
+    public String getStringAt(JsonNode node, String jsonPointerExpr, String defaultValue) {
+        if (node == null || node.isMissingNode()) {
+            return defaultValue;
+        }
+
+        node = node.at(jsonPointerExpr);
+        return (node.isMissingNode() || !node.isTextual()) ? defaultValue : node.textValue();
     }
 }

@@ -1,0 +1,201 @@
+---
+#
+# *** IMPORTANT NOTE ***
+#
+# This file is used for localhost testing. In ImproveDigital deployments it gets replaced by ../deployment/templates/config.yml.j2.
+# Any changes that should have effect in deployed environments must be made in config.yml.j2, not here.
+#
+status-response: "ok"
+adapters:
+  amx:
+    enabled: true
+  appnexus:
+    enabled: true
+  connectad:
+    enabled: true
+  improvedigital:
+    enabled: true
+  ix:
+    enabled: true
+  onetag:
+    enabled: true
+  openx:
+    enabled: true
+  pubmatic:
+    enabled: true
+  smartadserver:
+    enabled: true
+  synacormedia:
+    enabled: true
+  triplelift:
+    enabled: true
+  yieldlab:
+    enabled: true
+auction:
+  ad-server-currency: USD
+  default-timeout-ms: 1500
+  max-timeout-ms: 5000
+  timeout-adjustment-ms: 30
+  stored-requests-timeout-ms: 200
+  cache:
+    expected-request-time-ms: 50
+    only-winning-bids: false
+currency-converter:
+  external-rates:
+    enabled: true
+    url: https://cdn.jsdelivr.net/gh/prebid/currency-file@1/latest.json
+    default-timeout-ms: 4000
+    refresh-period-ms: 1800000
+metrics:
+  prefix: pbs
+cache:
+  scheme: https
+  host: pbc-proto.360polaris.biz
+  path: cache
+  query: uuid=
+  banner-ttl-seconds: 300
+  video-ttl-seconds: 300
+default-request:
+  file:
+    path : improvedigital/stored-data/requests/default.json
+settings:
+#  uncomment & edit following line, if default value needs to be changed from 500 ms
+#  default-loading-timeout: 500
+
+# Stored data doc: https://github.com/prebid/prebid-server-java/blob/master/docs/developers/stored-requests.md
+# PBS prod instance uses api.headerlift.com/pbs/getconfig service to access stored data. In order to access the prod config
+# service from localhost, your external IP address needs to be whitelisted by the HeaderLift backend team.
+# Alternatives: older stored data is available in improvedigital/stored-data folder and PBS can be told to use the locally
+# stored data in 2 ways:
+# Option 1) via "filesystem": uncomment all items in filesystem section and fully comment out http & in-memory-cache sections
+# Option 2) use local HTTP service which serves data from improvedigital/stored-data:
+#  1. unless they aren't already, comment out all items in filesystem section except custom-settings-filename
+#  2. comment out all items within the http section that use api.headerlift.com/pbs/getconfig
+#  4  uncomment http items that use localhost:8989
+#  3. Run `npm i` followed by `./run-mock-server.sh [debug]` command in a separate terminal/console from within
+#     the improvedigital/dev-tools folder
+# Restart PBS
+  filesystem:
+    custom-settings-filename: improvedigital/config/custom-settings.yaml
+#    settings-filename: improvedigital/config/settings.yaml
+#    stored-requests-dir: improvedigital/stored-data/requests
+#    stored-imps-dir: improvedigital/stored-data/imps
+#    stored-responses-dir: improvedigital/stored-data/responses
+#    categories-dir: improvedigital/stored-data/categories
+  http:
+    endpoint: https://api.headerlift.com/pbs/getconfig
+    amp-endpoint: https://api.headerlift.com/pbs/getconfig?amp=true
+    video-endpoint: https://api.headerlift.com/pbs/getconfig?video=true
+    category-endpoint: http://localhost:8989/categories
+#    endpoint: http://localhost:8989/config
+#    amp-endpoint: http://localhost:8989/config?amp=true
+#    video-endpoint: http://localhost:8989/config?video=true
+  in-memory-cache:
+    cache-size: 10000
+    ttl-seconds: 600
+    notification-endpoints-enabled: false
+    http-update:
+      endpoint: https://api.headerlift.com/pbs/getconfig
+      amp-endpoint: https://api.headerlift.com/pbs/getconfig?amp=true
+      refresh-rate: 60000 # 1 minute in milliseconds
+      timeout: 2000 # in milliseconds
+
+# cache invalidation endpoints
+admin-endpoints:
+  storedrequest:
+    enabled: false
+    path: /invalidate/requests
+    on-application-port: true
+    protected: false
+  cache-invalidation:
+    enabled: false
+    path: /invalidate/accounts
+    on-application-port: true
+    protected: false
+
+gdpr:
+  enabled: false
+  default-value: 1
+  host-vendor-id: 253
+  vendorlist:
+    v1:
+      cache-dir: /var/tmp/vendor1
+    v2:
+      cache-dir: /var/tmp/vendor2
+external-url: https://pbs-proto.360polaris.biz
+google-ad-manager:
+  network-code: 1015413
+
+geolocation:
+  enabled: false
+  type: maxmind
+  maxmind:
+    remote-file-syncer:
+      download-url: https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key=6O2UlqKmfUcyXzGP&suffix=tar.gz
+      save-filepath: /var/tmp/prebid/GeoLite2-City.tar.gz
+      retry-count: 3
+      retry-interval-ms: 3000
+      timeout-ms: 300000
+      update-interval-ms: 0
+      http-client:
+        connect-timeout-ms: 3000
+        max-redirects: 3
+
+# Following section defines hooks to inject custom trackers in bid responses
+# for /openrtb2/auction endpoint. Do not change this, if you don't know how
+# hooks are implemented in PBS. As /gvast endpoint internally makes an auction
+# using same code used for /openrtb2/auction handler, these hooks applies
+# for /gvast endpoint as well.
+# Another special note for hooks definition is hooks.host-execution-plan
+# must be a valid JSON string with following structure. Converting it to
+# standard YAML or breaking the JSON syntax will break the application
+# bootstrapping logic and the server will not be started.
+hooks:
+  host-execution-plan: >
+    {
+      "endpoints": {
+        "/openrtb2/auction": {
+          "stages": {
+            "entrypoint": {
+              "groups": [
+                {
+                  "timeout": 50,
+                  "hook-sequence": [
+                    {
+                      "module-code": "custom-tracker-module",
+                      "hook-impl-code": "custom-tracker-entrypoint"
+                    }
+                  ]
+                }
+              ]
+            },
+            "processed-auction-request": {
+              "groups": [
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "custom-tracker-module",
+                      "hook-impl-code": "custom-tracker-processed-auction-request"
+                    }
+                  ]
+                }
+              ]
+            },
+            "processed-bidder-response": {
+              "groups": [
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "custom-tracker-module",
+                      "hook-impl-code": "custom-tracker-processed-bidder-response"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    }

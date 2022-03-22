@@ -13,15 +13,14 @@ import java.util.stream.Collectors;
 
 public class CustParams extends HashedMap<String, Set<String>> {
 
+    private static final String PARAM_TNL_ASSET_ID = "tnl_asset_id";
     private static final String DEFAULT_TNL_ASSET_ID = "prebidserver";
 
     @Override
     protected void init() {
         // tnl_asset_id KV is used in HeaderLift reporting
-        if (!this.containsKey("tnl_asset_id")) {
-            this.put("tnl_asset_id", Arrays.stream(new String[]{DEFAULT_TNL_ASSET_ID})
-                    .collect(Collectors.toSet())
-            );
+        if (!this.containsKey(PARAM_TNL_ASSET_ID)) {
+            this.put(PARAM_TNL_ASSET_ID, Arrays.stream(new String[]{DEFAULT_TNL_ASSET_ID}).collect(Collectors.toSet()));
         }
     }
 
@@ -46,10 +45,12 @@ public class CustParams extends HashedMap<String, Set<String>> {
 
         if (!StringUtils.isBlank(paramString)) {
             FluentMap.fromQueryString(paramString, this, (key, oldValues, newValues) -> {
-                if (StringUtils.equals(key, "tnl_asset_id") && CollectionUtils.isNotEmpty(newValues)) {
-                    return new HashSet<>() {{
-                        add(newValues.stream().findFirst().get());
-                    }};
+                if (StringUtils.equals(key, PARAM_TNL_ASSET_ID) && CollectionUtils.isNotEmpty(newValues)) {
+                    return new HashSet<>() {
+                        {
+                            add(newValues.stream().findFirst().get());
+                        }
+                    };
                 }
                 return FluentMap.concatValues(oldValues, newValues);
             });

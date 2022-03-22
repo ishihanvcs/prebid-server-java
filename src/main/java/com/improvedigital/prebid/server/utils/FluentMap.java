@@ -38,7 +38,9 @@ public class FluentMap<K, V> {
         return fromQueryString(queryString, map, (key, oldValues, newValues) -> concatValues(oldValues, newValues));
     }
 
-    public static FluentMap<String, Set<String>> fromQueryString(String queryString, Map<String, Set<String>> map, SetValueMergeFunction<String> valueMerger) {
+    public static FluentMap<String, Set<String>> fromQueryString(
+            String queryString, Map<String, Set<String>> map, SetValueMergeFunction<String> valueMerger
+    ) {
         if (StringUtils.isBlank(queryString)) {
             return FluentMap.from(map);
         }

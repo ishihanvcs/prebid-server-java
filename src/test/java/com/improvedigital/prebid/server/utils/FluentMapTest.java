@@ -144,11 +144,13 @@ public class FluentMapTest extends VertxTest {
 
     @Test
     public void fromQueryStringWithCustomValueMerger() {
-        Map<String, Set<String>> oldMap = new HashMap<>() {{
-            put("eq1", new HashSet<>(Arrays.asList("101", "102")));
-            put("eq2", new HashSet<>(Arrays.asList("201", "202")));
-            put("eq3", new HashSet<>(Arrays.asList("301", "302")));
-        }};
+        Map<String, Set<String>> oldMap = new HashMap<>() {
+            {
+                put("eq1", new HashSet<>(Arrays.asList("101", "102")));
+                put("eq2", new HashSet<>(Arrays.asList("201", "202")));
+                put("eq3", new HashSet<>(Arrays.asList("301", "302")));
+            }
+        };
         Map<String, Set<String>> map = FluentMap.fromQueryString(
                 "eq1=ab,cd&eq2=ef,gh&eq3=ij,kl",
                 oldMap,

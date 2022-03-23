@@ -18,6 +18,7 @@ import org.prebid.server.settings.model.GdprConfig;
 import org.prebid.server.util.HttpUtil;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -84,6 +85,67 @@ public class GVastParamsResolverTest extends VertxTest {
                 .build();
 
         assertThat(result.equals(expected)).isTrue();
+    }
+
+    @Test
+    public void shouldSetTnlAssetIdWhenItIsAbsentInRequest() {
+        GVastParams result = target.resolve(emptyRequestBuilder()
+                .queryParams(
+                        minQueryParamsBuilder()
+                                .add("cust_params", "tnl_pid=P%2017100600022&fp=0.01")
+                                .build()
+                ).build());
+
+        assertThat(result.getCustParams().size()).isEqualTo(3);
+
+        assertThat(result.getCustParams().get("tnl_pid").size()).isEqualTo(1);
+        assertThat(result.getCustParams().get("tnl_pid").contains("P 17100600022")).isTrue();
+
+        assertThat(result.getCustParams().get("tnl_asset_id").size()).isEqualTo(1);
+        assertThat(result.getCustParams().get("tnl_asset_id").contains("prebidserver")).isTrue();
+
+        assertThat(result.getCustParams().get("fp").size()).isEqualTo(1);
+        assertThat(result.getCustParams().get("fp").contains("0.01")).isTrue();
+    }
+
+    @Test
+    public void shouldSetTnlAssetIdWhenItIsPresentInRequest() {
+        GVastParams result = target.resolve(emptyRequestBuilder()
+                .queryParams(
+                        minQueryParamsBuilder()
+                                .add("cust_params", "tnl_pid=P%2017100600022&tnl_asset_id=game_preroll&fp=0.01")
+                                .build()
+                ).build());
+
+        assertThat(result.getCustParams().size()).isEqualTo(3);
+
+        assertThat(result.getCustParams().get("tnl_pid").size()).isEqualTo(1);
+        assertThat(result.getCustParams().get("tnl_pid").contains("P 17100600022")).isTrue();
+
+        assertThat(result.getCustParams().get("tnl_asset_id").size()).isEqualTo(1);
+        assertThat(result.getCustParams().get("tnl_asset_id").contains("game_preroll")).isTrue();
+
+        assertThat(result.getCustParams().get("fp").size()).isEqualTo(1);
+        assertThat(result.getCustParams().get("fp").contains("0.01")).isTrue();
+    }
+
+    @Test
+    public void shouldSetTnlAssetIdWhenItIsPresentWithMultipleValuesInRequest() {
+        GVastParams result = target.resolve(emptyRequestBuilder()
+                .queryParams(
+                        minQueryParamsBuilder()
+                                .add("cust_params", "tnl_asset_id=game_preroll,abc&fp=0.01")
+                                .build()
+                ).build());
+
+        assertThat(result.getCustParams().size()).isEqualTo(2);
+
+        Set<String> tnlAssetId = result.getCustParams().get("tnl_asset_id");
+        assertThat(tnlAssetId.size()).isEqualTo(1);
+        assertThat(tnlAssetId.contains("game_preroll") || tnlAssetId.contains("abc")).isTrue();
+
+        assertThat(result.getCustParams().get("fp").size()).isEqualTo(1);
+        assertThat(result.getCustParams().get("fp").contains("0.01")).isTrue();
     }
 
     private HttpRequestContext.HttpRequestContextBuilder emptyRequestBuilder() {

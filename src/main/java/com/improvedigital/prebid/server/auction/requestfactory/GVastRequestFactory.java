@@ -40,10 +40,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCache;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCacheVastxml;
-import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidSchainSchain;
-import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidSchainSchainNode;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestTargeting;
-import org.prebid.server.proto.openrtb.ext.request.ExtSource;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
 import org.prebid.server.util.ObjectUtil;
@@ -211,21 +208,6 @@ public class GVastRequestFactory {
                 ? null : BigDecimal.valueOf(gVastParams.getBidfloor()).stripTrailingZeros();
         final JsonNode priceGranularity = mapper.mapper().readTree(DEFAULT_PRICE_GRANULARITY);
 
-        final ExtSource extSource;
-        if (accountId.equals("2018")) {
-            extSource = ExtSource.of(ExtRequestPrebidSchainSchain.of(
-                    "1.0",
-                    1,
-                    List.of(ExtRequestPrebidSchainSchainNode.of(
-                            "bidstack.com",
-                            "c7477cac-af7e-49f1-9532-ec44af76ef2c",
-                            1, null, null, null, null)),
-                    null)
-            );
-        } else {
-            extSource = null;
-        }
-
         return settingsLoader.getAccountFuture(accountId, initialTimeout)
             .map(account -> {
                 BidRequest commonBidRequest = BidRequest.builder()
@@ -266,7 +248,7 @@ public class GVastRequestFactory {
                                         .consent(gVastParams.getGdprConsentString())
                                         .build())
                                 .build())
-                        .source(Source.builder().tid(tid).ext(extSource).build())
+                        .source(Source.builder().tid(tid).build())
                         .test(gVastParams.isDebug() ? 1 : 0)
                         .tmax(gVastParams.getTmax())
                         .ext(ExtRequest.of(ExtRequestPrebid.builder()

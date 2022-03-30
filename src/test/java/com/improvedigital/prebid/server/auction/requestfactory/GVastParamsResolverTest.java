@@ -88,27 +88,6 @@ public class GVastParamsResolverTest extends VertxTest {
     }
 
     @Test
-    public void shouldSetTnlAssetIdWhenItIsAbsentInRequest() {
-        GVastParams result = target.resolve(emptyRequestBuilder()
-                .queryParams(
-                        minQueryParamsBuilder()
-                                .add("cust_params", "tnl_pid=P%2017100600022&fp=0.01")
-                                .build()
-                ).build());
-
-        assertThat(result.getCustParams().size()).isEqualTo(3);
-
-        assertThat(result.getCustParams().get("tnl_pid").size()).isEqualTo(1);
-        assertThat(result.getCustParams().get("tnl_pid").contains("P 17100600022")).isTrue();
-
-        assertThat(result.getCustParams().get("tnl_asset_id").size()).isEqualTo(1);
-        assertThat(result.getCustParams().get("tnl_asset_id").contains("prebidserver")).isTrue();
-
-        assertThat(result.getCustParams().get("fp").size()).isEqualTo(1);
-        assertThat(result.getCustParams().get("fp").contains("0.01")).isTrue();
-    }
-
-    @Test
     public void shouldSetTnlAssetIdWhenItIsPresentInRequest() {
         GVastParams result = target.resolve(emptyRequestBuilder()
                 .queryParams(
@@ -141,8 +120,9 @@ public class GVastParamsResolverTest extends VertxTest {
         assertThat(result.getCustParams().size()).isEqualTo(2);
 
         Set<String> tnlAssetId = result.getCustParams().get("tnl_asset_id");
-        assertThat(tnlAssetId.size()).isEqualTo(1);
-        assertThat(tnlAssetId.contains("game_preroll,abc") || tnlAssetId.contains("abc,game_preroll")).isTrue();
+        assertThat(tnlAssetId.size()).isEqualTo(2);
+        assertThat(tnlAssetId.contains("game_preroll")).isTrue();
+        assertThat(tnlAssetId.contains("abc")).isTrue();
 
         assertThat(result.getCustParams().get("fp").size()).isEqualTo(1);
         assertThat(result.getCustParams().get("fp").contains("0.01")).isTrue();

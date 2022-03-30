@@ -1,28 +1,13 @@
 package com.improvedigital.prebid.server.auction.model;
 
 import com.improvedigital.prebid.server.utils.FluentMap;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class CustParams extends HashedMap<String, Set<String>> {
-
-    private static final String PARAM_TNL_ASSET_ID = "tnl_asset_id";
-    private static final String DEFAULT_TNL_ASSET_ID = "prebidserver";
-
-    @Override
-    protected void init() {
-        // tnl_asset_id KV is used in HeaderLift reporting
-        if (!this.containsKey(PARAM_TNL_ASSET_ID)) {
-            this.put(PARAM_TNL_ASSET_ID, Arrays.stream(new String[]{DEFAULT_TNL_ASSET_ID}).collect(Collectors.toSet()));
-        }
-    }
 
     public CustParams() {
         super();
@@ -44,16 +29,7 @@ public class CustParams extends HashedMap<String, Set<String>> {
         this();
 
         if (!StringUtils.isBlank(paramString)) {
-            FluentMap.fromQueryString(paramString, this, (key, oldValues, newValues) -> {
-                if (StringUtils.equals(key, PARAM_TNL_ASSET_ID) && CollectionUtils.isNotEmpty(newValues)) {
-                    return new HashSet<>() {
-                        {
-                            add(newValues.stream().findFirst().get());
-                        }
-                    };
-                }
-                return FluentMap.concatValues(oldValues, newValues);
-            });
+            FluentMap.fromQueryString(paramString, this);
         }
     }
 

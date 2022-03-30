@@ -297,6 +297,9 @@ public class GVastResponseCreator {
         if (bidFloor > 0 && !targetingString.contains("fp=")) {
             targetingString += (targetingString.length() > 0 ? "&" : "") + "fp=" + bidFloor;
         }
+        if (!targetingString.contains("tnl_asset_id=")) {
+            targetingString += (targetingString.length() > 0 ? "&" : "") + "tnl_asset_id=prebidserver";
+        }
         if (!StringUtils.isBlank(targetingString)) {
             targetingString = targetingString.replace("pbct=2", "pbct=" + pbct); // HACK - fix
             gamTag.append("&cust_params=").append(HttpUtil.encodeUrl(targetingString));

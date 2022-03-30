@@ -27,7 +27,6 @@ public class CustParams extends HashedMap<String, Set<String>> {
 
     public CustParams(String paramString) {
         this();
-
         if (!StringUtils.isBlank(paramString)) {
             FluentMap.fromQueryString(paramString, this);
         }

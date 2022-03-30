@@ -142,7 +142,7 @@ public class GVastParamsResolverTest extends VertxTest {
 
         Set<String> tnlAssetId = result.getCustParams().get("tnl_asset_id");
         assertThat(tnlAssetId.size()).isEqualTo(1);
-        assertThat(tnlAssetId.contains("game_preroll") || tnlAssetId.contains("abc")).isTrue();
+        assertThat(tnlAssetId.contains("game_preroll,abc") || tnlAssetId.contains("abc,game_preroll")).isTrue();
 
         assertThat(result.getCustParams().get("fp").size()).isEqualTo(1);
         assertThat(result.getCustParams().get("fp").contains("0.01")).isTrue();

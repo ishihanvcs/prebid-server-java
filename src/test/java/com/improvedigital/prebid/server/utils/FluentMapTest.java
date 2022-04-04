@@ -143,38 +143,6 @@ public class FluentMapTest extends VertxTest {
     }
 
     @Test
-    public void fromQueryStringWithCustomValueMerger() {
-        Map<String, Set<String>> oldMap = new HashMap<>() {
-            {
-                put("eq1", new HashSet<>(Arrays.asList("101", "102")));
-                put("eq2", new HashSet<>(Arrays.asList("201", "202")));
-                put("eq3", new HashSet<>(Arrays.asList("301", "302")));
-            }
-        };
-        Map<String, Set<String>> map = FluentMap.fromQueryString(
-                "eq1=ab,cd&eq2=ef,gh&eq3=ij,kl",
-                oldMap,
-                (k, v1, v2) -> "eq1".equals(k) ? v1 : ("eq2".equals(k) ? v2 : FluentMap.concatValues(v1, v2))
-        ).result();
-        assertThat(map.size()).isEqualTo(3);
-
-        assertThat(map.get("eq1").contains("101")).isTrue();
-        assertThat(map.get("eq1").contains("102")).isTrue();
-        assertThat(map.get("eq1").contains("ab")).isFalse();
-        assertThat(map.get("eq1").contains("cd")).isFalse();
-
-        assertThat(map.get("eq2").contains("201")).isFalse();
-        assertThat(map.get("eq2").contains("202")).isFalse();
-        assertThat(map.get("eq2").contains("ef")).isTrue();
-        assertThat(map.get("eq2").contains("gh")).isTrue();
-
-        assertThat(map.get("eq3").contains("301")).isTrue();
-        assertThat(map.get("eq3").contains("302")).isTrue();
-        assertThat(map.get("eq3").contains("ij")).isTrue();
-        assertThat(map.get("eq3").contains("kl")).isTrue();
-    }
-
-    @Test
     public void keysInQueryStringResultShouldBeSorted() {
         final String key1 = "1,2,3";
         final String key2 = "4,5,6";
@@ -202,29 +170,6 @@ public class FluentMapTest extends VertxTest {
 
         final String mapToQueryString = FluentMap.from(map).queryString();
         assertThat(queryStringSortedByKey.equals(mapToQueryString)).isTrue();
-    }
-
-    @Test
-    public void concatValues() {
-        assertThat(FluentMap.concatValues(null, null)).isNotNull();
-        assertThat(FluentMap.concatValues(null, null).size()).isEqualTo(0);
-
-        Set<String> map1 = FluentMap.concatValues(null, new HashSet<>(Arrays.asList("abc")));
-        assertThat(map1.size()).isEqualTo(1);
-        assertThat(map1.contains("abc")).isTrue();
-
-        Set<String> map2 = FluentMap.concatValues(new HashSet<>(Arrays.asList("def", "def")), null);
-        assertThat(map2.size()).isEqualTo(1);
-        assertThat(map2.contains("def")).isTrue();
-
-        Set<String> map3 = FluentMap.concatValues(
-                new HashSet<>(Arrays.asList("abc", "def")),
-                new HashSet<>(Arrays.asList("abc", "def", "ghi"))
-        );
-        assertThat(map3.size()).isEqualTo(3);
-        assertThat(map3.contains("abc")).isTrue();
-        assertThat(map3.contains("def")).isTrue();
-        assertThat(map3.contains("ghi")).isTrue();
     }
 
 }

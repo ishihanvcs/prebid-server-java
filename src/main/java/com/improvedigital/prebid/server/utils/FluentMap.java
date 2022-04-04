@@ -35,12 +35,6 @@ public class FluentMap<K, V> {
     }
 
     public static FluentMap<String, Set<String>> fromQueryString(String queryString, Map<String, Set<String>> map) {
-        return fromQueryString(queryString, map, (key, oldValues, newValues) -> concatValues(oldValues, newValues));
-    }
-
-    public static FluentMap<String, Set<String>> fromQueryString(
-            String queryString, Map<String, Set<String>> map, SetValueMergeFunction<String> valueMerger
-    ) {
         if (StringUtils.isBlank(queryString)) {
             return FluentMap.from(map);
         }
@@ -65,20 +59,11 @@ public class FluentMap<K, V> {
                             .collect(Collectors.toSet());
 
             if (!newValueSet.isEmpty()) {
-                Set<String> valueToPut = valueMerger.merge(name, oldValueSet, newValueSet);
-                if (valueToPut != null) {
-                    map.put(name, valueToPut);
-                }
+                oldValueSet.addAll(newValueSet);
+                map.put(name, oldValueSet);
             }
         }
         return FluentMap.from(map);
-    }
-
-    public static Set<String> concatValues(Set<String> values1, Set<String> values2) {
-        return Stream.concat(
-                values1 == null ? Stream.empty() : values1.stream(),
-                values2 == null ? Stream.empty() : values2.stream()
-        ).collect(Collectors.toSet());
     }
 
     private static String decodeAndStrip(String value) {

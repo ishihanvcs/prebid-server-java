@@ -272,14 +272,14 @@ public class GVastResponseCreator {
         StringBuilder gamTag = new StringBuilder();
         gamTag.append("https://pubads.g.doubleclick.net/gampad/ads?gdfp_req=1&env=vp&unviewed_position_start=1")
                 .append("&correlator=").append(System.currentTimeMillis())
-                .append("&iu=").append(adUnit)
+                .append("&iu=").append(HttpUtil.encodeUrl(adUnit))
                 .append("&output=").append(resolveGamOutputFromOrtb(gVastParams.getProtocols()));
 
         // Although we might receive width and height as gvast params, we don't want to send the real size
         // to GAM for 2 reasons:
         // 1) Prebid line item targeting breaks when random sizes are used.
         // 2) GAM test showed a drop in demand with random sizes
-        gamTag.append("&sz=").append("640x480|640x360");
+        gamTag.append("&sz=").append(HttpUtil.encodeUrl("640x480|640x360"));
 
         if (referrer != null) {
             final String encodedReferrer = HttpUtil.encodeUrl(referrer);

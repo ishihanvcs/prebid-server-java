@@ -41,7 +41,6 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .compile("/VAST/Ad[@id='0']/Wrapper/VASTAdTagURI")
                 .evaluate(new InputSource(new StringReader(response.asString())));
 
-        // Make sure we are doing the fix to tnl_asset_id only for google's vast tag.
         assertThat(vastAdTagUri.startsWith("https://pubads.g.doubleclick.net/gampad/ads")).isTrue();
 
         Map<String, List<String>> vastQueryParams = splitQuery(new URL(vastAdTagUri).getQuery());
@@ -67,7 +66,6 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .compile("/VAST/Ad[@id='0']/Wrapper/VASTAdTagURI")
                 .evaluate(new InputSource(new StringReader(response.asString())));
 
-        // Make sure we are doing the fix to tnl_asset_id only for google's vast tag.
         assertThat(vastAdTagUri.startsWith("https://pubads.g.doubleclick.net/gampad/ads")).isTrue();
 
         Map<String, List<String>> vastQueryParams = splitQuery(new URL(vastAdTagUri).getQuery());
@@ -93,7 +91,6 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .compile("/VAST/Ad[@id='0']/Wrapper/VASTAdTagURI")
                 .evaluate(new InputSource(new StringReader(response.asString())));
 
-        // Make sure we are doing the fix to tnl_asset_id only for google's vast tag.
         assertThat(vastAdTagUri.startsWith("https://pubads.g.doubleclick.net/gampad/ads")).isTrue();
 
         Map<String, List<String>> vastQueryParams = splitQuery(new URL(vastAdTagUri).getQuery());
@@ -107,7 +104,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
-    public void gvastReturnsRequestProvidedSingleTnlAssetIdInVastTagUri()
+    public void gvastReturnsRequestProvidedMultipleTnlAssetIdsInVastTagUri()
             throws XPathExpressionException, MalformedURLException {
         Response response = specWithPBSHeader()
                 /* This placement's stored imp contains ext.prebid.improvedigitalpbs.waterfall.default=gam */
@@ -119,7 +116,6 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .compile("/VAST/Ad[@id='0']/Wrapper/VASTAdTagURI")
                 .evaluate(new InputSource(new StringReader(response.asString())));
 
-        // Make sure we are doing the fix to tnl_asset_id only for google's vast tag.
         assertThat(vastAdTagUri.startsWith("https://pubads.g.doubleclick.net/gampad/ads")).isTrue();
 
         Map<String, List<String>> vastQueryParams = splitQuery(new URL(vastAdTagUri).getQuery());

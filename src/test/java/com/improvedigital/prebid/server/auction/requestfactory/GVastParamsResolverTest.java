@@ -18,7 +18,6 @@ import org.prebid.server.settings.model.GdprConfig;
 import org.prebid.server.util.HttpUtil;
 
 import java.util.ArrayList;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -88,7 +87,7 @@ public class GVastParamsResolverTest extends VertxTest {
     }
 
     @Test
-    public void shouldSetTnlAssetIdWhenItIsPresentInRequest() {
+    public void shouldSetCustParams() {
         GVastParams result = target.resolve(emptyRequestBuilder()
                 .queryParams(
                         minQueryParamsBuilder()
@@ -106,26 +105,18 @@ public class GVastParamsResolverTest extends VertxTest {
 
         assertThat(result.getCustParams().get("fp").size()).isEqualTo(1);
         assertThat(result.getCustParams().get("fp").contains("0.01")).isTrue();
-    }
 
-    @Test
-    public void shouldSetTnlAssetIdWhenItIsPresentWithMultipleValuesInRequest() {
-        GVastParams result = target.resolve(emptyRequestBuilder()
+        result = target.resolve(emptyRequestBuilder()
                 .queryParams(
                         minQueryParamsBuilder()
-                                .add("cust_params", "tnl_asset_id=game_preroll,abc&fp=0.01")
+                                .add("cust_params", "tnl_asset_id=game_preroll,abc")
                                 .build()
                 ).build());
 
-        assertThat(result.getCustParams().size()).isEqualTo(2);
-
-        Set<String> tnlAssetId = result.getCustParams().get("tnl_asset_id");
-        assertThat(tnlAssetId.size()).isEqualTo(2);
-        assertThat(tnlAssetId.contains("game_preroll")).isTrue();
-        assertThat(tnlAssetId.contains("abc")).isTrue();
-
-        assertThat(result.getCustParams().get("fp").size()).isEqualTo(1);
-        assertThat(result.getCustParams().get("fp").contains("0.01")).isTrue();
+        assertThat(result.getCustParams().size()).isEqualTo(1);
+        assertThat(result.getCustParams().get("tnl_asset_id").size()).isEqualTo(2);
+        assertThat(result.getCustParams().get("tnl_asset_id").contains("game_preroll")).isTrue();
+        assertThat(result.getCustParams().get("tnl_asset_id").contains("abc")).isTrue();
     }
 
     private HttpRequestContext.HttpRequestContextBuilder emptyRequestBuilder() {

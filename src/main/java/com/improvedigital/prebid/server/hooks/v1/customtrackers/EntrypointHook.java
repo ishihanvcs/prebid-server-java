@@ -1,4 +1,4 @@
-package com.improvedigital.prebid.server.customtrackers.hooks.v1;
+package com.improvedigital.prebid.server.hooks.v1.customtrackers;
 
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
@@ -47,6 +47,6 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
 
     @Override
     public String code() {
-        return "custom-tracker-entrypoint";
+        return "improvedigital-custom-trackers-hooks-entrypoint";
     }
 }

@@ -1,4 +1,4 @@
-package com.improvedigital.prebid.server.customtrackers.hooks.v1;
+package com.improvedigital.prebid.server.hooks.v1.customtrackers;
 
 import com.improvedigital.prebid.server.customtrackers.AuctionRequestModuleContext;
 import com.improvedigital.prebid.server.customtrackers.BidderBidModifier;
@@ -59,7 +59,7 @@ public class ProcessedBidderResponseHook implements org.prebid.server.hooks.v1.b
 
     @Override
     public String code() {
-        return "custom-tracker-processed-bidder-response";
+        return "improvedigital-custom-trackers-hooks-processed-bidder-response";
     }
 }
 

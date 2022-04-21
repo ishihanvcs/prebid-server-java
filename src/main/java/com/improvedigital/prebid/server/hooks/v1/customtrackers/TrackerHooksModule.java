@@ -1,10 +1,6 @@
-package com.improvedigital.prebid.server.hooks.v1;
+package com.improvedigital.prebid.server.hooks.v1.customtrackers;
 
 import com.improvedigital.prebid.server.customtrackers.BidderBidModifier;
-import com.improvedigital.prebid.server.customtrackers.hooks.v1.BidderRequestHook;
-import com.improvedigital.prebid.server.customtrackers.hooks.v1.EntrypointHook;
-import com.improvedigital.prebid.server.customtrackers.hooks.v1.ProcessedAuctionRequestHook;
-import com.improvedigital.prebid.server.customtrackers.hooks.v1.ProcessedBidderResponseHook;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -16,14 +12,14 @@ import org.springframework.context.ApplicationContext;
 import java.util.Arrays;
 import java.util.Collection;
 
-public class CustomTrackerModule implements Module {
+public class TrackerHooksModule implements Module {
 
-    private static final Logger logger = LoggerFactory.getLogger(CustomTrackerModule.class);
+    private static final Logger logger = LoggerFactory.getLogger(TrackerHooksModule.class);
     private final ApplicationContext applicationContext;
     private final SettingsLoader settingsLoader;
     private final BidderBidModifier bidderBidModifier;
 
-    public CustomTrackerModule(
+    public TrackerHooksModule(
             ApplicationContext applicationContext,
             SettingsLoader settingsLoader,
             BidderBidModifier bidderBidModifier
@@ -35,7 +31,7 @@ public class CustomTrackerModule implements Module {
 
     @Override
     public String code() {
-        return "custom-tracker-module";
+        return "improvedigital-custom-trackers-hooks-module";
     }
 
     @Override
@@ -43,7 +39,7 @@ public class CustomTrackerModule implements Module {
         return Arrays.asList(
                 new EntrypointHook(applicationContext, settingsLoader),
                 new ProcessedAuctionRequestHook(),
-                new BidderRequestHook(),
+                // new BidderRequestHook(),
                 new ProcessedBidderResponseHook(bidderBidModifier)
         );
     }

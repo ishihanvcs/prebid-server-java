@@ -9,7 +9,8 @@ import com.improvedigital.prebid.server.customtrackers.contracts.ITrackerMacroRe
 import com.improvedigital.prebid.server.customtrackers.injectors.TrackerInjector;
 import com.improvedigital.prebid.server.customtrackers.resolvers.TrackerMacroResolver;
 import com.improvedigital.prebid.server.handler.GVastHandler;
-import com.improvedigital.prebid.server.hooks.v1.CustomTrackerModule;
+import com.improvedigital.prebid.server.hooks.v1.customtrackers.TrackerHooksModule;
+import com.improvedigital.prebid.server.hooks.v1.gvast.GVastHooksModule;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
 import io.vertx.core.logging.Logger;
@@ -23,6 +24,7 @@ import org.prebid.server.geolocation.GeoLocationService;
 import org.prebid.server.hooks.v1.Module;
 import org.prebid.server.identity.IdGenerator;
 import org.prebid.server.json.JacksonMapper;
+import org.prebid.server.json.JsonMerger;
 import org.prebid.server.log.HttpInteractionLogger;
 import org.prebid.server.metric.Metrics;
 import org.prebid.server.settings.model.GdprConfig;
@@ -129,16 +131,28 @@ public class ExtensionConfig {
     }
 
     @Bean
-    Module customTrackerModule(
+    Module trackersHooksModule(
             ApplicationContext applicationContext,
             SettingsLoader settingsLoader,
             BidderBidModifier bidderBidModifier,
             JacksonMapper mapper
     ) {
-        return new CustomTrackerModule(
+        return new TrackerHooksModule(
                 applicationContext,
                 settingsLoader,
                 bidderBidModifier);
+    }
+
+    @Bean
+    Module gVastHooksModule(
+            SettingsLoader settingsLoader,
+            JacksonMapper mapper,
+            JsonMerger merger
+    ) {
+        return new GVastHooksModule(
+                settingsLoader,
+                mapper,
+                merger);
     }
 
     @Bean

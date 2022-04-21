@@ -1,9 +1,10 @@
 package com.improvedigital.prebid.server.settings;
 
+import com.iab.openrtb.request.Imp;
 import com.improvedigital.prebid.server.exception.SettingsLoaderException;
 import com.improvedigital.prebid.server.settings.model.CustomTracker;
-import com.iab.openrtb.request.Imp;
 import io.vertx.core.Future;
+import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.exception.InvalidRequestException;
 import org.prebid.server.execution.Timeout;
@@ -16,6 +17,8 @@ import org.prebid.server.settings.model.StoredDataResult;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 
@@ -109,6 +112,34 @@ public class SettingsLoader {
                     } catch (Exception e) {
                         return Future.failedFuture(new InvalidRequestException(e.getMessage(), e));
                     }
+                });
+    }
+
+    public Future<Map<String, Imp>> getStoredImps(Set<String> impIds, Timeout timeout) {
+        if (impIds.isEmpty()) {
+            return Future.succeededFuture(new HashMap<>());
+        }
+        return getStoredDataResultFuture(null, Collections.emptySet(), impIds, timeout)
+                .map(storedDataResult -> {
+                    final Map<String, String> storedDataToImp = storedDataResult.getStoredIdToImp();
+                    final Map<String, Imp> imps = new HashedMap<>();
+                    storedDataToImp.forEach((impId, storedData) -> {
+                        boolean error = true;
+                        if (StringUtils.isNotBlank(storedData) && !storedData.equals("null")) {
+                            try {
+                                final Imp imp = mapper.mapper().readValue(storedData, Imp.class);
+                                imps.putIfAbsent(impId, imp);
+                                error = false;
+                            } catch (Exception ignored) { }
+                        }
+
+                        if (error) {
+                            throw new InvalidRequestException(
+                                    String.format("Invalid impId '%s' provided.", impId)
+                            );
+                        }
+                    });
+                    return imps;
                 });
     }
 

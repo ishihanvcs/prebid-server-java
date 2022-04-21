@@ -56,7 +56,6 @@ public class CachingCustomSettings implements CustomSettings {
 
         final T cachedValue = cache.get(key);
         if (cachedValue != null) {
-            logger.info("found in cache: " + key);
             return Future.succeededFuture(cachedValue);
         }
         final String preBidExceptionMessage = errorCache.get(key);
@@ -64,10 +63,8 @@ public class CachingCustomSettings implements CustomSettings {
             return Future.failedFuture(new PreBidException(preBidExceptionMessage));
         }
 
-        logger.info("not found in cache: " + key);
         return retriever.apply(key, timeout)
                 .map(value -> {
-                    logger.info("value retrieved: " + key);
                     cache.put(key, value);
                     return value;
                 })
@@ -75,41 +72,28 @@ public class CachingCustomSettings implements CustomSettings {
     }
 
     private <T> Future<T> getFromObjectCacheOrDelegate(
-            String key,
-            Timeout timeout,
-            Function<Timeout, Future<T>> retriever
-    ) {
-        return getFromObjectCacheOrDelegate(key, timeout, retriever, null);
-    }
-
-    private <T> Future<T> getFromObjectCacheOrDelegate(
-            String key,
             Timeout timeout,
             Function<Timeout, Future<T>> retriever,
             Consumer<T> consumer
     ) {
-        final Object cachedValue = objectCache.get(key);
+        final Object cachedValue = objectCache.get("customTrackers");
         if (cachedValue != null) {
-            logger.info("found in objectCache: " + key);
             return Future.succeededFuture((T) cachedValue);
         }
-        logger.info("not found in objectCache: " + key);
-        final String preBidExceptionMessage = objectToErrorCache.get(key);
+        final String preBidExceptionMessage = objectToErrorCache.get("customTrackers");
         if (preBidExceptionMessage != null) {
-            logger.info("found in objectToErrorCache: " + key);
             return Future.failedFuture(new PreBidException(preBidExceptionMessage));
         }
-        logger.info("not found in objectToErrorCache: " + key);
+
         return retriever.apply(timeout)
                 .map(value -> {
-                    objectCache.put(key, value);
-                    logger.info("value set in objectCache: " + key);
+                    objectCache.put("customTrackers", value);
                     if (consumer != null) {
                         consumer.accept(value);
                     }
                     return value;
                 })
-                .recover(throwable -> cacheAndReturnFailedFuture(throwable, key, objectToErrorCache));
+                .recover(throwable -> cacheAndReturnFailedFuture(throwable, "customTrackers", objectToErrorCache));
     }
 
     private static <T> Future<T> cacheAndReturnFailedFuture(
@@ -118,7 +102,6 @@ public class CachingCustomSettings implements CustomSettings {
             Map<String, String> cache
     ) {
         if (throwable instanceof PreBidException) {
-            logger.warn("set objectToErrorCache: " + key);
             cache.put(key, throwable.getMessage());
         }
 
@@ -127,7 +110,6 @@ public class CachingCustomSettings implements CustomSettings {
 
     private void updateCustomTrackerCache(Map<String, CustomTracker> trackersMap) {
         customTrackerCache.putAll(trackersMap);
-        logger.info("customTrackerCache updated.");
     }
 
     public Future<CustomTracker> getCustomTrackerById(String trackerId, Timeout timeout) {
@@ -137,7 +119,6 @@ public class CachingCustomSettings implements CustomSettings {
 
     public Future<Map<String, CustomTracker>> getCustomTrackersMap(Timeout timeout) {
         return getFromObjectCacheOrDelegate(
-                "customTrackers",
                 timeout,
                 delegate::getCustomTrackersMap,
                 this::updateCustomTrackerCache

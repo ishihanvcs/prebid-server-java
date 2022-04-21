@@ -1,4 +1,4 @@
-package com.improvedigital.prebid.server.customtrackers.hooks.v1;
+package com.improvedigital.prebid.server.hooks.v1.customtrackers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -32,7 +32,7 @@ public class BidderRequestHook implements org.prebid.server.hooks.v1.bidder.Bidd
 
     @Override
     public String code() {
-        return "custom-tracker-bidder-request";
+        return "improvedigital-custom-trackers-hooks-bidder-request";
     }
 
     private BidRequest removeExtraPropertiesFromImpExt(BidRequest request) {

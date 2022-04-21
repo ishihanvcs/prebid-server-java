@@ -419,7 +419,6 @@ public class GVastResponseCreator {
         final ImprovedigitalPbsImpExt config = gVastContext.getImprovedigitalPbsImpExt();
         final String adUnit = getGamAdUnit(gVastParams, config);
         final GeoInfo geoInfo = gVastContext.getAuctionContext().getGeoInfo();
-        final String impId = gVastParams.getImpId();
         final double bidFloor = getBidFloor(config, geoInfo);
         final List<String> waterfall = new ArrayList<>(getWaterfall(config, geoInfo));
         final String categoryTargeting;

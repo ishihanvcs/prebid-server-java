@@ -1,7 +1,7 @@
 ---
 trackers:
   360yield:
-    enabled: false # optional
+    enabled: true # optional
     urlTemplate: https://pad.360polaris.biz/ssp_bids?bidder={{bidder}}&cpm={{bid_price_usd}}&pid={{improve_digital_placement_id}} # required
     # Macros supported by default macroResolver are:
     # - bidder

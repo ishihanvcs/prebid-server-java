@@ -54,7 +54,7 @@ public class BidderBidModifier {
                 final Map<String, String> macroValues = macroResolver.resolveValues(trackerContext);
                 String trackingUrl = macroProcessor.process(customTracker.getUrlTemplate(), macroValues);
                 if (trackingUrl != null) {
-                    logger.info(String.format("resolved trackingUrl = %s", trackingUrl));
+                    logger.debug(String.format("resolved trackingUrl = %s", trackingUrl));
                     admStack.push(
                             trackerContext.getInjector()
                                     .inject(trackingUrl, admStack.pop(), bidder, bidderBid.getType())

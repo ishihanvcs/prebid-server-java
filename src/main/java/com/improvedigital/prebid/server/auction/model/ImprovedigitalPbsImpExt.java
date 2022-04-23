@@ -15,16 +15,16 @@ public class ImprovedigitalPbsImpExt {
     public static final String DEFAULT_CONFIG_KEY = "default";
     public static final BigDecimal DEFAULT_BID_FLOOR_PRICE = BigDecimal.valueOf(0.0);
     public static final String DEFAULT_BID_FLOOR_CUR = "USD";
-    private static final BidFloor DEFAULT_BID_FLOOR = BidFloor.of(DEFAULT_BID_FLOOR_PRICE, DEFAULT_BID_FLOOR_CUR);
+    private static final Floor DEFAULT_BID_FLOOR = Floor.of(DEFAULT_BID_FLOOR_PRICE, DEFAULT_BID_FLOOR_CUR);
 
     @JsonProperty("accountId")
     String accountId;
 
-    @JsonProperty("bidFloors")
-    Map<String, BidFloor> bidFloors = Map.of(DEFAULT_CONFIG_KEY, DEFAULT_BID_FLOOR);
+    @JsonProperty("floors")
+    Map<String, Floor> floors = Map.of(DEFAULT_CONFIG_KEY, DEFAULT_BID_FLOOR);
 
-    @JsonProperty("gamAdUnit")
-    String gamAdUnit;
+    @JsonProperty("gam")
+    ImprovedigitalPbsImpExtGam improvedigitalPbsImpExtGam;
 
     Map<String, List<String>> waterfall = Map.of(DEFAULT_CONFIG_KEY, List.of("gam"));
 
@@ -37,15 +37,15 @@ public class ImprovedigitalPbsImpExt {
         );
     }
 
-    public BidFloor getBidFloor(GeoInfo geoInfo) {
-        final Map<String, BidFloor> bidFloors = this.getBidFloors();
-        if (bidFloors.isEmpty()) {
+    public Floor getFloor(GeoInfo geoInfo) {
+        final Map<String, Floor> floors = this.getFloors();
+        if (floors.isEmpty()) {
             return DEFAULT_BID_FLOOR;
         }
-        final String countryCode = resolveCountryCode(bidFloors, geoInfo);
+        final String countryCode = resolveCountryCode(floors, geoInfo);
 
-        if (bidFloors.containsKey(countryCode)) {
-            return bidFloors.get(countryCode);
+        if (floors.containsKey(countryCode)) {
+            return floors.get(countryCode);
         }
 
         return DEFAULT_BID_FLOOR;

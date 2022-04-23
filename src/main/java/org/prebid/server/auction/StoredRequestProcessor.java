@@ -107,6 +107,7 @@ public class StoredRequestProcessor {
         final Map<BidRequest, String> bidRequestToStoredRequestId;
         final Map<Imp, String> impToStoredRequestId;
         try {
+            bidRequest = mergeDefaultRequest(bidRequest);
             bidRequestToStoredRequestId = mapStoredRequestHolderToStoredRequestId(
                     Collections.singletonList(bidRequest), this::getStoredRequestFromBidRequest);
 
@@ -135,6 +136,7 @@ public class StoredRequestProcessor {
      * Fetches AMP request from the source.
      */
     public Future<BidRequest> processAmpRequest(String accountId, String ampRequestId, BidRequest bidRequest) {
+        bidRequest = mergeDefaultRequest(bidRequest);
         final Future<StoredDataResult> ampStoredDataFuture =
                 applicationSettings.getAmpStoredData(
                         accountId, Collections.singleton(ampRequestId), Collections.emptySet(), timeout(bidRequest))
@@ -240,10 +242,9 @@ public class StoredRequestProcessor {
                                               Map<Imp, String> impToStoredId,
                                               StoredDataResult storedDataResult) {
 
-        return mergeBidRequestImps(
-                mergeBidRequest(mergeDefaultRequest(bidRequest), storedRequestId, storedDataResult),
-                impToStoredId,
-                storedDataResult);
+        return mergeBidRequest(
+                mergeBidRequestImps(bidRequest, impToStoredId, storedDataResult
+        ), storedRequestId, storedDataResult);
     }
 
     private BidRequest mergeDefaultRequest(BidRequest bidRequest) {

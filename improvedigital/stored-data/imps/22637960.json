@@ -1,0 +1,41 @@
+{
+  "ext": {
+    "prebid": {
+      "is_rewarded_inventory": 1,
+      "improvedigitalpbs": {
+        "accountId": "2018"
+      },
+      "bidder": {
+        "improvedigital": {
+          "placementId": 22637960
+        },
+        "pubmatic": {
+          "publisherId": "156946",
+          "adSlot": "plants_zombies_2_rewarded"
+        },
+        "appnexus": {
+          "placement_id": 23692277
+        },
+        "smartadserver": {
+          "networkId": 3653,
+          "pageId": 1509754,
+          "siteId": 479806,
+          "formatId": 88313
+        }
+      }
+    }
+  },
+  "instl": 1,
+  "video": {
+    "mimes": [
+      "video/mp4"
+    ],
+    "minduration": 1,
+    "maxduration": 60,
+    "linearity": 1,
+    "placement": 5,
+    "protocols": [2],
+    "w": 640,
+    "h": 480
+  }
+}

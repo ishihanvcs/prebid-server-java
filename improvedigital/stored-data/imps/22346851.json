@@ -1,0 +1,56 @@
+{
+  "ext": {
+    "prebid": {
+      "improvedigitalpbs": {
+        "accountId": "545-jeu.fr",
+        "gam": {
+          "adUnit": "TNL_NS-19041000062/jeu.fr_game_preroll"
+        }
+      },
+      "bidder": {
+        "pubmatic": {
+          "publisherId": "156946",
+          "adSlot": "jeu_"
+        },
+        "improvedigital": {
+          "placementId": 22346851
+        },
+        "appnexus": {
+          "use_pmt_rule": false,
+          "placement_id": 18580814
+        },
+        "smartadserver": {
+          "networkId": 3653,
+          "pageId": 1229111,
+          "siteId": 350459,
+          "formatId": 88313
+        }
+      }
+    }
+  },
+  "video": {
+    "mimes": [
+      "video/mp4",
+      "application/javascript",
+      "video/webm",
+      "video/ogg"
+    ],
+    "minduration": 1,
+    "maxduration": 30,
+    "linearity": 1,
+    "api": [
+      2
+    ],
+    "startdelay": 0,
+    "protocols": [
+      2,
+      3,
+      5,
+      6
+    ],
+    "skip": 1,
+    "w": 640,
+    "h": 480,
+    "placement": 1
+  }
+}

@@ -46,7 +46,7 @@ public class ImpressionInjectorForVideo implements IBidTypeSpecificTrackerInject
     private String insertAfterExistingImpressionTag(String vastXml, String vastUrlTracking) {
         final String impressionTag = "<Impression><![CDATA[" + vastUrlTracking + "]]></Impression>";
         final int replacementStart = vastXml.lastIndexOf(IMPRESSION_CLOSE_TAG);
-        logger.info("Impression tag injection successful for: " + vastUrlTracking);
+        logger.debug("Impression tag injection successful for: " + vastUrlTracking);
         return vastXml.substring(0, replacementStart)
                 + IMPRESSION_CLOSE_TAG
                 + impressionTag
@@ -64,7 +64,7 @@ public class ImpressionInjectorForVideo implements IBidTypeSpecificTrackerInject
         final String caseSpecificCloseTag =
                 vastXml.substring(indexOfCloseTag, indexOfCloseTag + elementCloseTag.length());
         final String impressionTag = "<Impression><![CDATA[" + vastUrlTracking + "]]></Impression>";
-        logger.info("Impression tag injection successful for: " + vastUrlTracking);
+        logger.debug("Impression tag injection successful for: " + vastUrlTracking);
         return vastXml.replace(caseSpecificCloseTag, impressionTag + caseSpecificCloseTag);
     }
 

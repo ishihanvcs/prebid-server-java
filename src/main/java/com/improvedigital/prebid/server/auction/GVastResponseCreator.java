@@ -8,6 +8,7 @@ import com.iab.openrtb.response.BidResponse;
 import com.iab.openrtb.response.SeatBid;
 import com.improvedigital.prebid.server.auction.model.GVastParams;
 import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
+import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExtGam;
 import com.improvedigital.prebid.server.auction.requestfactory.GVastContext;
 import com.improvedigital.prebid.server.utils.FluentMap;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
@@ -15,6 +16,7 @@ import io.netty.util.AsciiString;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.geolocation.model.GeoInfo;
 import org.prebid.server.util.HttpUtil;
@@ -179,21 +181,45 @@ public class GVastResponseCreator {
     }
 
     private String getGamAdUnit(GVastParams gVastParams, ImprovedigitalPbsImpExt config) {
-        String adUnit = config.getGamAdUnit();
+        ImprovedigitalPbsImpExtGam gamConfig = ObjectUtils.defaultIfNull(config.getImprovedigitalPbsImpExtGam(),
+                ImprovedigitalPbsImpExtGam.of(null, null, null));
+        String adUnit = gamConfig.getAdUnit();
+        String networkCode = ObjectUtils.defaultIfNull(gamConfig.getNetworkCode(), gamNetworkCode);
+        if (!StringUtils.isBlank(gamConfig.getChildNetworkCode())) {
+            networkCode += "," + gamConfig.getChildNetworkCode();
+        }
         if (StringUtils.isBlank(adUnit)) {
-            adUnit = "/" + gamNetworkCode + "/pbs/" + gVastParams.getImpId();
+            adUnit = "/" + networkCode + "/pbs/" + gVastParams.getImpId();
         } else {
             // If ad unit begins with "/", full ad unit path is expected including the GAM network code
             // otherwise the GAM network code will be prepended
             if (adUnit.charAt(0) != '/') {
-                adUnit = "/" + gamNetworkCode + "/" + adUnit;
+                adUnit = "/" + networkCode + "/" + adUnit;
             }
         }
         return adUnit;
     }
 
+    private boolean isApp(GVastParams gVastParams) {
+        return !StringUtils.isBlank(gVastParams.getBundle());
+    }
+
+    // Resolve GAM id type from operating system. See: https://support.google.com/admanager/answer/6238701
+    private String resolveGamIdType(String os) {
+        if (StringUtils.isBlank(os)) {
+            return null;
+        }
+        switch (os.toLowerCase()) {
+            case "ios":
+                return "idfa";
+            case "android":
+                return "adid";
+            default:
+                return null;
+        }
+    }
+
     private String buildGamVastTagUrl(
-            String impId,
             String adUnit,
             double bidFloor,
             GVastParams gVastParams,
@@ -207,17 +233,18 @@ public class GVastResponseCreator {
                 .append("&iu=").append(adUnit)
                 .append("&output=").append(resolveGamOutputFromOrtb(gVastParams.getProtocols()));
 
-        gamTag.append("&sz=");
-        if (gVastParams.getH() != null && gVastParams.getW() != null) {
-            gamTag.append(gVastParams.getW()).append("x").append(gVastParams.getH());
-        } else {
-            gamTag.append("640x480|640x360");
-        }
+        // Although we might receive width and height as gvast params, we don't want to send the real size
+        // to GAM for 2 reasons:
+        // 1) Prebid line item targeting breaks when random sizes are used.
+        // 2) GAM test showed a drop in demand with random sizes
+        gamTag.append("&sz=").append("640x480|640x360");
 
         if (referrer != null) {
             final String encodedReferrer = HttpUtil.encodeUrl(referrer);
-            gamTag.append("&url=").append(encodedReferrer)
-                    .append("&description_url=").append(encodedReferrer);
+            gamTag.append("&description_url=").append(encodedReferrer);
+            if (!isApp(gVastParams)) {
+                gamTag.append("&url=").append(encodedReferrer);
+            }
         }
 
         // cust_params
@@ -233,10 +260,30 @@ public class GVastResponseCreator {
             gamTag.append("&cust_params=").append(HttpUtil.encodeUrl(targetingString));
         }
 
-        if (impId != null && impId.equals("22505159")) {
-            gamTag.append("&sdki=44d&sdk_apis=2%2C8&sdkv=h.3.460.0&gdpr=").append(gdpr);
-            if (!StringUtils.isBlank(gdprConsent)) {
-                gamTag.append("&gdpr_consent=").append(gdprConsent);
+        // Add additional params for apps running without IMA SDK
+        // https://support.google.com/admanager/answer/10660756?hl=en&ref_topic=10684636
+        if (isApp(gVastParams)) {
+            // gamTag.append("&sdki=44d&sdk_apis=2%2C8&sdkv=h.3.460.0");
+            if (!StringUtils.isBlank(gdpr)) {
+                gamTag.append("&gdpr=").append(gdpr);
+                if (!StringUtils.isBlank(gdprConsent)) {
+                    gamTag.append("&gdpr_consent=").append(gdprConsent);
+                }
+            }
+            final String bundleId = ObjectUtils.defaultIfNull(gVastParams.getBundle(), "");
+            gamTag.append("&msid=").append(bundleId)
+                    .append("&an=").append(bundleId)
+                    .append("&url=").append(HttpUtil.encodeUrl(bundleId + ".adsenseformobileapps.com/"));
+            final String ifa = gVastParams.getIfa();
+            if (!StringUtils.isBlank(ifa)) {
+                gamTag.append("&rdid=").append(ifa);
+            }
+            if (gVastParams.getLmt() != null) {
+                gamTag.append("&is_lat=").append(gVastParams.getLmt());
+            }
+            final String idType = resolveGamIdType(gVastParams.getOs());
+            if (idType != null) {
+                gamTag.append("&idtype=").append(idType);
             }
         }
         return gamTag.toString();
@@ -278,8 +325,9 @@ public class GVastResponseCreator {
                 .append(replaceMacros(tagUrl, gdpr, gdprConsent, referrer))
                 .append("]]></VASTAdTagURI><Creatives></Creatives>");
 
-        if (isGam) {
-            // Inject sync pixels as imp pixels
+        if (isGam && !isApp(gVastParams)) {
+            // Inject sync pixels as imp pixels.
+            // Only inject for web, not app as apps can't do cookie syncing and rely on device id (IFA) instead
             // TODO
             // Move list of SSPs to a config
             // Use logic from CookieSyncHandler to generate sync urls
@@ -329,8 +377,7 @@ public class GVastResponseCreator {
         final ImprovedigitalPbsImpExt config = gVastContext.getImprovedigitalPbsImpExt();
         final String adUnit = getGamAdUnit(gVastParams, config);
         final GeoInfo geoInfo = gVastContext.getAuctionContext().getGeoInfo();
-        final String impId = gVastParams.getImpId();
-        final double bidFloor = config.getBidFloor(geoInfo).getBidFloor().doubleValue();
+        final double bidFloor = config.getFloor(geoInfo).getBidFloor().doubleValue();
         final List<String> waterfall = config.getWaterfall(geoInfo);
         final String categoryTargeting;
         final List<String> categories = gVastParams.getCat();
@@ -364,14 +411,14 @@ public class GVastResponseCreator {
                 case "gam_improve_deal":
                     sb.append(buildVastAdTag(
                             buildGamVastTagUrl(
-                                    impId, adUnit, bidFloor, gVastParams,
+                                    adUnit, bidFloor, gVastParams,
                                     buildTargetingString(Stream.of(gamPrebidTargeting, custParams, categoryTargeting))
                             ),
                             true, gVastParams, hbAuctionDebugInfo, i, i == numTags - 1));
                     break;
                 case "gam_no_hb":
                     sb.append(buildVastAdTag(
-                            buildGamVastTagUrl(impId, adUnit, bidFloor, gVastParams,
+                            buildGamVastTagUrl(adUnit, bidFloor, gVastParams,
                                     buildTargetingString(Stream.of(custParams, categoryTargeting))
                             ),
                             true, gVastParams, null, i, i == numTags - 1));
@@ -381,7 +428,7 @@ public class GVastResponseCreator {
                 // tnl_wog=1 -> disable AdX & AdSense
                 case "gam_first_look":
                     sb.append(buildVastAdTag(
-                            buildGamVastTagUrl(impId, adUnit, bidFloor, gVastParams,
+                            buildGamVastTagUrl(adUnit, bidFloor, gVastParams,
                                     buildTargetingString(Stream.of(custParams, categoryTargeting, "fl=1&tnl_wog=1"))
                                 ),
                             true, gVastParams, null, i, i == numTags - 1));

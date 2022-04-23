@@ -1,0 +1,29 @@
+{
+  "ext": {
+    "prebid": {
+      "improvedigitalpbs": {
+        "accountId": "950-inapp",
+        "waterfall": {
+          "default": [
+            "https://ad.360yield.com/advast?p=1234&gdpr={{gdpr_consent}}",
+            "https://ad.360yield.com/advast?p=22645785&gdpr={{gdpr_consent}}"
+          ]
+        }
+      },
+      "bidder": {
+        "improvedigital": {
+          "placementId": 20232111
+        }
+      }
+    }
+  },
+  "video": {
+    "mimes": [
+      "video/mp4"
+    ],
+    "minduration": 1,
+    "maxduration": 30,
+    "linearity": 1,
+    "protocols": [2]
+  }
+}

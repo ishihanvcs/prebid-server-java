@@ -44,7 +44,7 @@ public class GVastContext {
     }
 
     public GVastContext with(AuctionContext auctionContext) {
-        return this.toBuilder().auctionContext(auctionContext).build();
+        return this.toBuilder().auctionContext(auctionContext).bidRequest(auctionContext.getBidRequest()).build();
     }
 
     public GVastContext with(RoutingContext routingContext) {

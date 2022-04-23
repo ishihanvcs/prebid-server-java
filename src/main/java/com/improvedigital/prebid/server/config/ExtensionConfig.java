@@ -72,6 +72,7 @@ public class ExtensionConfig {
             AuctionRequestFactory auctionRequestFactory,
             Clock clock,
             @Autowired(required = false) GeoLocationService geoLocationService,
+            CurrencyConversionService currencyConversionService,
             @Qualifier("sourceIdGenerator") IdGenerator idGenerator,
             JacksonMapper mapper) {
         return new GVastRequestFactory(
@@ -79,6 +80,7 @@ public class ExtensionConfig {
                 gVastParamsResolver,
                 auctionRequestFactory,
                 geoLocationService,
+                currencyConversionService,
                 clock,
                 idGenerator,
                 mapper);

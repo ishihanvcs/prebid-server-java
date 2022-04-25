@@ -9,9 +9,9 @@ import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.request.Publisher;
 import com.iab.openrtb.request.Site;
 import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
-import com.improvedigital.prebid.server.auction.requestfactory.GVastContext;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
+import com.improvedigital.prebid.server.utils.JsonUtils;
 import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -32,7 +32,6 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -41,16 +40,18 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
 
     private static final Logger logger = LoggerFactory.getLogger(EntrypointHook.class);
     private final SettingsLoader settingsLoader;
+    private final JsonUtils jsonUtils;
     private final ObjectMapper mapper;
     private final JsonMerger merger;
 
     public EntrypointHook(
             SettingsLoader settingsLoader,
-            ObjectMapper mapper,
+            JsonUtils jsonUtils,
             JsonMerger merger
     ) {
         this.settingsLoader = settingsLoader;
-        this.mapper = mapper;
+        this.jsonUtils = jsonUtils;
+        this.mapper = jsonUtils.getObjectMapper();
         this.merger = merger;
     }
 
@@ -71,7 +72,6 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
             return settingsLoader.getStoredImps(
                     new HashSet<>(impToStoredRequestId.values()), invocationContext.timeout())
                     .compose(storedImps -> {
-                        final Map<String, GVastContext> contextMap = new HashMap<>();
                         BidRequest updatedBidRequest = originalBidRequest;
                         String accountId = null;
                         String requestId = null;
@@ -121,8 +121,7 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
                                             entrypointPayload.queryParams(),
                                             entrypointPayload.headers(),
                                             updatedBody
-                                    ),
-                                    contextMap));
+                                    )));
                         } catch (JsonProcessingException e) {
                             throw new EncodeException("Failed to encode as JSON: " + e.getMessage());
                         }
@@ -137,19 +136,9 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
 
     }
 
-    private ImprovedigitalPbsImpExt getImprovedigitalPbsImpExt(Imp imp) {
-        try {
-            return mapper.treeToValue(
-                    imp.getExt().at("/prebid/improvedigitalpbs"), ImprovedigitalPbsImpExt.class
-            );
-        } catch (JsonProcessingException e) {
-            return null;
-        }
-    }
-
     private ImprovedigitalPbsImpExt mergedImprovedigitalPbsImpExt(Imp imp, Imp storedImp) {
-        ImprovedigitalPbsImpExt ext1 = getImprovedigitalPbsImpExt(imp);
-        ImprovedigitalPbsImpExt ext2 = getImprovedigitalPbsImpExt(storedImp);
+        ImprovedigitalPbsImpExt ext1 = jsonUtils.getImprovedigitalPbsImpExt(imp);
+        ImprovedigitalPbsImpExt ext2 = jsonUtils.getImprovedigitalPbsImpExt(storedImp);
 
         return merger.merge(ext1, ext2, ImprovedigitalPbsImpExt.class);
     }

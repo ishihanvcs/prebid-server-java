@@ -30,7 +30,6 @@ import org.prebid.server.auction.model.AuctionContext;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
 import org.prebid.server.currency.CurrencyConversionService;
 import org.prebid.server.execution.Timeout;
-import org.prebid.server.geolocation.GeoLocationService;
 import org.prebid.server.identity.IdGenerator;
 import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.log.ConditionalLogger;
@@ -46,7 +45,6 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCacheVastxml;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestTargeting;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
-import org.prebid.server.util.ObjectUtil;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -74,7 +72,7 @@ public class GVastRequestFactory {
     private final JacksonMapper mapper;
     private final IdGenerator idGenerator;
     private final GVastParamsResolver paramResolver;
-    private final GeoLocationService geoLocationService;
+    // private final GeoLocationService geoLocationService;
     private final Clock clock;
     private final CurrencyConversionService currencyConversionService;
 
@@ -82,14 +80,14 @@ public class GVastRequestFactory {
             SettingsLoader settingsLoader,
             GVastParamsResolver gVastParamsResolver,
             AuctionRequestFactory auctionRequestFactory,
-            GeoLocationService geoLocationService,
+            // GeoLocationService geoLocationService,
             CurrencyConversionService currencyConversionService,
             Clock clock,
             IdGenerator idGenerator,
             JacksonMapper mapper) {
         this.settingsLoader = Objects.requireNonNull(settingsLoader);
         this.clock = clock;
-        this.geoLocationService = geoLocationService;
+        // this.geoLocationService = geoLocationService;
         this.currencyConversionService = Objects.requireNonNull(currencyConversionService);
         this.auctionRequestFactory = Objects.requireNonNull(auctionRequestFactory);
         this.mapper = Objects.requireNonNull(mapper);
@@ -122,19 +120,19 @@ public class GVastRequestFactory {
         }
     }
 
-    private Future<AuctionContext> resolveGeoInfoIfNull(AuctionContext auctionContext) {
-        if (auctionContext.getGeoInfo() == null && geoLocationService != null) {
-            final String ipAddress = ObjectUtil.getIfNotNull(
-                    auctionContext.getBidRequest().getDevice(),
-                    Device::getIp
-            );
-            if (StringUtils.isNotBlank(ipAddress)) {
-                return geoLocationService.lookup(ipAddress, auctionContext.getTimeout())
-                        .map(geoInfo -> auctionContext.toBuilder().geoInfo(geoInfo).build());
-            }
-        }
-        return Future.succeededFuture(auctionContext);
-    }
+    // private Future<AuctionContext> resolveGeoInfoIfNull(AuctionContext auctionContext) {
+    //     if (auctionContext.getGeoInfo() == null && geoLocationService != null) {
+    //         final String ipAddress = ObjectUtil.getIfNotNull(
+    //                 auctionContext.getBidRequest().getDevice(),
+    //                 Device::getIp
+    //         );
+    //         if (StringUtils.isNotBlank(ipAddress)) {
+    //             return geoLocationService.lookup(ipAddress, auctionContext.getTimeout())
+    //                     .map(geoInfo -> auctionContext.toBuilder().geoInfo(geoInfo).build());
+    //         }
+    //     }
+    //     return Future.succeededFuture(auctionContext);
+    // }
 
     public Future<GVastContext> fromRequest(RoutingContext routingContext, long startTime) {
         try {
@@ -147,7 +145,7 @@ public class GVastRequestFactory {
                 .compose(gVastContext ->
                     auctionRequestFactory
                         .fromRequest(gVastContext.getRoutingContext(), clock.millis())
-                        .compose(this::resolveGeoInfoIfNull)
+                        // .compose(this::resolveGeoInfoIfNull)
                         .map(auctionContext -> updateAuctionTimeout(auctionContext, startTime))
                         .map(auctionContext -> setImproveDigitalParams(auctionContext, gVastParams))
                         .map(gVastContext::with)

@@ -12,6 +12,7 @@ import com.improvedigital.prebid.server.handler.GVastHandler;
 import com.improvedigital.prebid.server.hooks.v1.customtrackers.TrackerHooksModule;
 import com.improvedigital.prebid.server.hooks.v1.gvast.GVastHooksModule;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
+import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -79,7 +80,7 @@ public class ExtensionConfig {
                 settingsLoader,
                 gVastParamsResolver,
                 auctionRequestFactory,
-                geoLocationService,
+                // geoLocationService,
                 currencyConversionService,
                 clock,
                 idGenerator,
@@ -148,12 +149,12 @@ public class ExtensionConfig {
     @Bean
     Module gVastHooksModule(
             SettingsLoader settingsLoader,
-            JacksonMapper mapper,
+            JsonUtils jsonUtils,
             JsonMerger merger
     ) {
         return new GVastHooksModule(
                 settingsLoader,
-                mapper,
+                jsonUtils,
                 merger);
     }
 

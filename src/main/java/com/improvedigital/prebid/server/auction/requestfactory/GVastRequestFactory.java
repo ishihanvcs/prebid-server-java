@@ -134,12 +134,18 @@ public class GVastRequestFactory {
     //     return Future.succeededFuture(auctionContext);
     // }
 
+    private Imp validateStoredImp(Imp imp) {
+        // Add waterfall validation here - gam and no_gam can't mix
+        return imp;
+    }
+
     public Future<GVastContext> fromRequest(RoutingContext routingContext, long startTime) {
         try {
             final Timeout initialTimeout = settingsLoader.createSettingsLoadingTimeout(startTime);
             validateUri(routingContext);
             GVastParams gVastParams = paramResolver.resolve(getHttpRequestContext(routingContext));
             return settingsLoader.getStoredImp(gVastParams.getImpId(), initialTimeout)
+                .map(this::validateStoredImp)
                 .compose(imp -> this.createContext(imp, routingContext, gVastParams))
                 .map(this::updateRoutingContextBody)
                 .compose(gVastContext ->
@@ -284,7 +290,8 @@ public class GVastRequestFactory {
                         ).build()
                         )
                 ).build();
-         if (StringUtils.isBlank(gVastParams.getBundle())) {
+
+        if (StringUtils.isBlank(gVastParams.getBundle())) {
             // web
             bidRequest = bidRequest.toBuilder()
                     .site(Site.builder()

@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.geolocation.model.GeoInfo;
 import org.prebid.server.util.HttpUtil;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -63,26 +64,77 @@ public class GVastResponseCreator {
     public String create(GVastContext gVastContext, boolean prioritizeImprovedigitalDeals) {
         GVastParams gVastParams = gVastContext.getGVastParams();
         RoutingContext routingContext = gVastContext.getRoutingContext();
-        BidResponse bidResponse = gVastContext.getBidResponse();
         routingContext.response().headers().add(HttpUtil.CONTENT_TYPE_HEADER,
                 AsciiString.cached("application/xml"));
-        XmlMapper xmlMapper = new XmlMapper();
 
         String debugInfo = "";
         if (gVastParams.isDebug()) {
             try {
-                debugInfo = xmlMapper.writeValueAsString(bidResponse.getExt());
+                final XmlMapper xmlMapper = new XmlMapper();
+                debugInfo = xmlMapper.writeValueAsString(gVastContext.getBidResponse().getExt());
             } catch (JsonProcessingException ignored) {
             }
         }
 
-        final String targeting = formatPrebidGamKeyValueString(bidResponse, prioritizeImprovedigitalDeals);
-        return buildVastXmlResponse(
-                targeting,
+        final ImprovedigitalPbsImpExt config = gVastContext.getImprovedigitalPbsImpExt();
+
+        final List<String> waterfall = config.getWaterfall(gVastContext.getAuctionContext().getGeoInfo());
+        // Response without GAM
+        if (!waterfall.isEmpty() && waterfall.contains("no_gam")) {
+            return buildVastXmlResponseWithoutGam(gVastContext, prioritizeImprovedigitalDeals, waterfall, debugInfo);
+        }
+
+        // Response with GAM
+        return buildVastXmlResponseWithGam(
                 gVastContext,
-                prioritizeImprovedigitalDeals && targeting.contains("hb_deal_improvedigit"),
+                prioritizeImprovedigitalDeals,
                 debugInfo
         );
+    }
+
+    private List<String> getCachedBidUrls(BidResponse bidResponse, boolean prioritizeImprovedigitalDeals) {
+        final List<String> vastUrls = new ArrayList<>();
+
+        if (bidResponse.getSeatbid().isEmpty()) {
+            return vastUrls;
+        }
+
+        for (SeatBid seatBid : bidResponse.getSeatbid()) {
+            if (seatBid.getBid().isEmpty()) {
+                continue;
+            }
+            for (Bid bid : seatBid.getBid()) {
+                if (bid.getExt() == null) {
+                    continue;
+                }
+                final JsonNode vastUrlNode = bid.getExt().at("/prebid/cache/vastXml/url");
+                if (vastUrlNode.isMissingNode()) {
+                    continue;
+                }
+
+                final String vastUrl = vastUrlNode.textValue();
+                JsonNode targetingKvs = bid.getExt().at("/prebid/targeting");
+
+                boolean isImproveDeal = false;
+                if (prioritizeImprovedigitalDeals && vastUrls.size() > 0
+                        && seatBid.getSeat().equals("improvedigital")) {
+                    for (Iterator<String> it = targetingKvs.fieldNames(); it.hasNext(); ) {
+                        String key = it.next();
+                        if (key.equals("hb_deal_improvedigit")) {
+                            isImproveDeal = true;
+                            break;
+                        }
+                    }
+                    if (isImproveDeal) {
+                        vastUrls.add(0, vastUrl);
+                    }
+                }
+                if (!isImproveDeal) {
+                    vastUrls.add(vastUrl);
+                }
+            }
+        }
+        return vastUrls;
     }
 
     private String formatPrebidGamKeyValueString(BidResponse bidResponse, boolean prioritizeImprovedigitalDeals) {
@@ -311,7 +363,7 @@ public class GVastResponseCreator {
         return expanded;
     }
 
-    private String buildVastAdTag(String tagUrl, boolean isGam, GVastParams gVastParams,
+    private String buildVastAdTag(String tagUrl, boolean addUserSyncs, GVastParams gVastParams,
                                   String debugInfo, int adIndex, boolean isLastAd) {
         final String gdprConsent = gVastParams.getGdprConsentString();
         final String referrer = gVastParams.getReferrer();
@@ -325,7 +377,7 @@ public class GVastResponseCreator {
                 .append(replaceMacros(tagUrl, gdpr, gdprConsent, referrer))
                 .append("]]></VASTAdTagURI><Creatives></Creatives>");
 
-        if (isGam && !isApp(gVastParams)) {
+        if (addUserSyncs && !isApp(gVastParams)) {
             // Inject sync pixels as imp pixels.
             // Only inject for web, not app as apps can't do cookie syncing and rely on device id (IFA) instead
             // TODO
@@ -370,8 +422,14 @@ public class GVastResponseCreator {
         return stream.filter(s -> !StringUtils.isBlank(s)).collect(Collectors.joining("&"));
     }
 
-    private String buildVastXmlResponse(String gamPrebidTargeting, GVastContext gVastContext,
-                                        boolean isImprovedigitalDeal, String hbAuctionDebugInfo) {
+    private String buildVastXmlResponseWithGam(GVastContext gVastContext,
+                                               boolean prioritizeImprovedigitalDeals,
+                                               String hbAuctionDebugInfo) {
+
+        final String gamPrebidTargeting = formatPrebidGamKeyValueString(gVastContext.getBidResponse(),
+                prioritizeImprovedigitalDeals);
+        final boolean isImprovedigitalDeal = prioritizeImprovedigitalDeals
+                && gamPrebidTargeting.contains("hb_deal_improvedigit");
         final GVastParams gVastParams = gVastContext.getGVastParams();
         final String custParams = gVastParams.getCustParams().toString();
         final ImprovedigitalPbsImpExt config = gVastContext.getImprovedigitalPbsImpExt();
@@ -401,7 +459,6 @@ public class GVastResponseCreator {
                 waterfall.set(gamIndex, "gam_no_hb");
             }
         }
-        // logger.info("waterfall = " + waterfall);
         final int numTags = waterfall.size();
         int i = 0;
         for (String adTag : waterfall) {
@@ -438,6 +495,43 @@ public class GVastResponseCreator {
                             null, i, i == numTags - 1));
             }
             i++;
+        }
+
+        sb.append("</VAST>");
+        return sb.toString();
+    }
+
+    private String buildVastXmlResponseWithoutGam(GVastContext gVastContext,
+                                               boolean prioritizeImprovedigitalDeals,
+                                               List<String> waterfall,
+                                               String hbAuctionDebugInfo) {
+        final List<String> sspVastUrls = getCachedBidUrls(gVastContext.getBidResponse(), prioritizeImprovedigitalDeals);
+        final GVastParams gVastParams = gVastContext.getGVastParams();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?><VAST version=\"2.0\">");
+
+        List<String> vastTags = sspVastUrls;
+
+        if (waterfall.size() > 1) {
+            vastTags = new ArrayList<>();
+            for (String adTag : waterfall) {
+                if (adTag.equals("no_gam")) {
+                    vastTags.addAll(sspVastUrls);
+                } else {
+                    vastTags.add(adTag);
+                }
+            }
+        }
+
+        // If there's no bid/tag but the debug mode is enabled, respond with a test domain and debug info
+        if (gVastParams.isDebug() && vastTags.isEmpty()) {
+            vastTags.add("https://example.com");
+        }
+
+        for (int i = 0; i < vastTags.size(); i++) {
+            sb.append(buildVastAdTag(vastTags.get(i), true, gVastParams,
+                    (i == 0) ? hbAuctionDebugInfo : null, i, i == vastTags.size() - 1));
         }
 
         sb.append("</VAST>");

@@ -12,7 +12,6 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.prebid.server.bidder.model.BidderBid;
 import org.prebid.server.currency.CurrencyConversionService;
-import org.prebid.server.json.JacksonMapper;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -27,10 +26,10 @@ public class TrackerMacroResolver implements ITrackerMacroResolver {
 
     public TrackerMacroResolver(
             CurrencyConversionService currencyConversionService,
-            JacksonMapper mapper
+            JsonUtils jsonUtils
     ) {
         this.currencyConversionService = Objects.requireNonNull(currencyConversionService);
-        this.jsonUtils = new JsonUtils(mapper);
+        this.jsonUtils = jsonUtils;
     }
 
     @Override

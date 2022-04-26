@@ -111,7 +111,7 @@ google-ad-manager:
 # bootstrapping logic and the server will not be started.
 hooks:
   host-execution-plan: >
-    {
+  {
       "endpoints": {
         "/openrtb2/auction": {
           "stages": {
@@ -139,6 +139,15 @@ hooks:
             },
             "processed-auction-request": {
               "groups": [
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "improvedigital-gvast-hooks-module",
+                      "hook-impl-code": "improvedigital-gvast-hooks-processed-auction-request"
+                    }
+                  ]
+                },
                 {
                   "timeout": 5,
                   "hook-sequence": [

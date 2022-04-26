@@ -1,8 +1,8 @@
 package com.improvedigital.prebid.server.auction.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.iab.openrtb.request.Geo;
 import lombok.Value;
-import org.prebid.server.geolocation.model.GeoInfo;
 import org.prebid.server.util.ObjectUtil;
 
 import java.math.BigDecimal;
@@ -31,8 +31,8 @@ public class ImprovedigitalPbsImpExt {
 
     Map<String, List<String>> waterfall = Map.of(DEFAULT_CONFIG_KEY, List.of("gam"));
 
-    private String resolveCountryCode(Map<String, ?> map, GeoInfo geoInfo) {
-        return ObjectUtil.getIfNotNullOrDefault(geoInfo,
+    private String resolveCountryCode(Map<String, ?> map, Geo geo) {
+        return ObjectUtil.getIfNotNullOrDefault(geo,
                 gn -> map.containsKey(gn.getCountry())
                         ? gn.getCountry()
                         : DEFAULT_CONFIG_KEY,
@@ -40,12 +40,12 @@ public class ImprovedigitalPbsImpExt {
         );
     }
 
-    public Floor getFloor(GeoInfo geoInfo) {
+    public Floor getFloor(Geo geo) {
         final Map<String, Floor> floors = this.getFloors();
         if (floors.isEmpty()) {
             return DEFAULT_BID_FLOOR;
         }
-        final String countryCode = resolveCountryCode(floors, geoInfo);
+        final String countryCode = resolveCountryCode(floors, geo);
 
         if (floors.containsKey(countryCode)) {
             return floors.get(countryCode);
@@ -54,13 +54,13 @@ public class ImprovedigitalPbsImpExt {
         return DEFAULT_BID_FLOOR;
     }
 
-    public List<String> getWaterfall(GeoInfo geoInfo) {
+    public List<String> getWaterfall(Geo geo) {
         final Map<String, List<String>> waterfall = this.getWaterfall();
         final List<String> defaultResult = List.of("gam");
         if (waterfall.isEmpty()) {
             return defaultResult;
         }
-        final String countryCode = resolveCountryCode(waterfall, geoInfo);
+        final String countryCode = resolveCountryCode(waterfall, geo);
 
         if (waterfall.containsKey(countryCode)) {
             return waterfall.get(countryCode);

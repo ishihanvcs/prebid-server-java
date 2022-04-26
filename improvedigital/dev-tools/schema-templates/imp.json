@@ -128,7 +128,7 @@
           "minProperties": 1,
           "additionalProperties": false,
           "patternProperties": {
-            "^[a-z]{2}$": {
+            "^[A-Z]{3}$": {
               "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_floor"
             }
           },
@@ -144,7 +144,7 @@
           "minProperties": 1,
           "additionalProperties": false,
           "patternProperties": {
-            "^[a-z]{2}$": {
+            "^[A-Z]{3}$": {
               "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_waterfall"
             }
           },

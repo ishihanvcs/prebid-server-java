@@ -1,10 +1,10 @@
 package com.improvedigital.prebid.server.customtrackers;
 
-import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.response.Bid;
 import com.improvedigital.prebid.server.customtrackers.contracts.ITrackerMacroResolver;
 import com.improvedigital.prebid.server.settings.model.CustomTracker;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
+import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.StringUtils;
@@ -18,20 +18,14 @@ public class BidderBidModifier {
 
     private static final Logger logger = LoggerFactory.getLogger(BidderBidModifier.class);
     private final MacroProcessor macroProcessor;
+    private final RequestUtils requestUtils;
 
     public BidderBidModifier(
-            MacroProcessor macroProcessor
+            MacroProcessor macroProcessor,
+            RequestUtils requestUtils
     ) {
         this.macroProcessor = macroProcessor;
-    }
-
-    private String resolveAccountId(BidRequest bidRequest) {
-        if (bidRequest.getSite() != null
-                && bidRequest.getSite().getPublisher() != null
-        ) {
-            return bidRequest.getSite().getPublisher().getId();
-        }
-        return null;
+        this.requestUtils = requestUtils;
     }
 
     public BidderBid modifyBidAdm(
@@ -55,7 +49,7 @@ public class BidderBidModifier {
             return bidderBid;
         }
 
-        String accountId = resolveAccountId(moduleContext.getBidRequest());
+        String accountId = requestUtils.getAccountId(moduleContext.getBidRequest());
         final Stack<String> admStack = new Stack<>();
         admStack.push(bid.getAdm());
         TrackerContext commonTrackerContext = TrackerContext

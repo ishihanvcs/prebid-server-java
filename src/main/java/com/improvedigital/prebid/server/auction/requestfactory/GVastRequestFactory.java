@@ -14,9 +14,7 @@ import com.iab.openrtb.request.Source;
 import com.iab.openrtb.request.User;
 import com.iab.openrtb.request.Video;
 import com.improvedigital.prebid.server.auction.model.CustParams;
-import com.improvedigital.prebid.server.auction.model.Floor;
 import com.improvedigital.prebid.server.auction.model.GVastParams;
-import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
@@ -24,7 +22,6 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.AuctionContext;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
@@ -72,7 +69,6 @@ public class GVastRequestFactory {
     private final JacksonMapper mapper;
     private final IdGenerator idGenerator;
     private final GVastParamsResolver paramResolver;
-    // private final GeoLocationService geoLocationService;
     private final Clock clock;
     private final CurrencyConversionService currencyConversionService;
 
@@ -80,14 +76,12 @@ public class GVastRequestFactory {
             SettingsLoader settingsLoader,
             GVastParamsResolver gVastParamsResolver,
             AuctionRequestFactory auctionRequestFactory,
-            // GeoLocationService geoLocationService,
             CurrencyConversionService currencyConversionService,
             Clock clock,
             IdGenerator idGenerator,
             JacksonMapper mapper) {
         this.settingsLoader = Objects.requireNonNull(settingsLoader);
         this.clock = clock;
-        // this.geoLocationService = geoLocationService;
         this.currencyConversionService = Objects.requireNonNull(currencyConversionService);
         this.auctionRequestFactory = Objects.requireNonNull(auctionRequestFactory);
         this.mapper = Objects.requireNonNull(mapper);
@@ -119,20 +113,6 @@ public class GVastRequestFactory {
             return Future.failedFuture(e);
         }
     }
-
-    // private Future<AuctionContext> resolveGeoInfoIfNull(AuctionContext auctionContext) {
-    //     if (auctionContext.getGeoInfo() == null && geoLocationService != null) {
-    //         final String ipAddress = ObjectUtil.getIfNotNull(
-    //                 auctionContext.getBidRequest().getDevice(),
-    //                 Device::getIp
-    //         );
-    //         if (StringUtils.isNotBlank(ipAddress)) {
-    //             return geoLocationService.lookup(ipAddress, auctionContext.getTimeout())
-    //                     .map(geoInfo -> auctionContext.toBuilder().geoInfo(geoInfo).build());
-    //         }
-    //     }
-    //     return Future.succeededFuture(auctionContext);
-    // }
 
     private Imp validateStoredImp(Imp imp) {
         // Add waterfall validation here - gam and no_gam can't mix
@@ -188,28 +168,6 @@ public class GVastRequestFactory {
             ((ObjectNode) improveParamsNode).set("keyValues", mapper.valueToTree(custParams));
         }
         return auctionContext;
-    }
-
-    private BigDecimal getBidFloorInUsd(Imp imp, ImprovedigitalPbsImpExt config, BidRequest bidRequest) {
-        Floor floor = config.getFloor(null);
-        BigDecimal bidFloor = ObjectUtils.defaultIfNull(imp.getBidfloor(), floor.getBidFloor());
-        if (bidFloor == null) {
-            return null;
-        }
-        String bidFloorCur = ObjectUtils.defaultIfNull(
-                ObjectUtils.defaultIfNull(imp.getBidfloorcur(), floor.getBidFloorCur()),
-                "USD"
-        );
-
-        if (bidFloor.doubleValue() <= 0.0
-                || StringUtils.compareIgnoreCase("USD", bidFloorCur) == 0) {
-            return bidFloor;
-        }
-        return currencyConversionService.convertCurrency(
-                bidFloor, bidRequest,
-                "USD",
-                bidFloorCur
-        );
     }
 
     /**
@@ -293,35 +251,22 @@ public class GVastRequestFactory {
 
         if (StringUtils.isBlank(gVastParams.getBundle())) {
             // web
-            bidRequest = bidRequest.toBuilder()
+            return bidRequest.toBuilder()
                     .site(Site.builder()
                             .cat(categories)
                             .domain(gVastParams.getDomain())
                             .page(gVastParams.getReferrer())
                             .build())
                     .build();
-        } else {
-            //  app
-            bidRequest = bidRequest.toBuilder()
-                    .app(App.builder()
-                            .bundle(gVastParams.getBundle())
-                            .name(gVastParams.getAppName())
-                            .storeurl(gVastParams.getStoreUrl())
-                            .build())
-                    .build();
         }
-
-        BidRequest finalBidRequest = bidRequest;
-        bidRequest.getImp().replaceAll(imp -> {
-            BigDecimal bidFloorInUsd = getBidFloorInUsd(
-                    imp, gVastContext.getImprovedigitalPbsImpExt(), finalBidRequest
-            );
-            return imp.toBuilder()
-                            .bidfloor(bidFloorInUsd)
-                            .bidfloorcur("USD")
-                            .build();
-        });
-        return bidRequest;
+        //  app
+        return bidRequest.toBuilder()
+                .app(App.builder()
+                        .bundle(gVastParams.getBundle())
+                        .name(gVastParams.getAppName())
+                        .storeurl(gVastParams.getStoreUrl())
+                        .build())
+                .build();
     }
 
     private static CaseInsensitiveMultiMap toCaseInsensitiveMultiMap(MultiMap originalMap) {

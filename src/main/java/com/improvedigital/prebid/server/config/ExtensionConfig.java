@@ -14,6 +14,7 @@ import com.improvedigital.prebid.server.hooks.v1.gvast.GVastHooksModule;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
 import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
+import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
@@ -128,9 +129,10 @@ public class ExtensionConfig {
 
     @Bean
     BidderBidModifier bidderBidModifier(
-            MacroProcessor macroProcessor
+            MacroProcessor macroProcessor,
+            RequestUtils requestUtils
     ) {
-        return new BidderBidModifier(macroProcessor);
+        return new BidderBidModifier(macroProcessor, requestUtils);
     }
 
     @Bean
@@ -147,15 +149,29 @@ public class ExtensionConfig {
     }
 
     @Bean
+    JsonUtils jsonUtils(JacksonMapper mapper) {
+        return new JsonUtils(mapper);
+    }
+
+    @Bean
+    RequestUtils requestUtils() {
+        return new RequestUtils();
+    }
+
+    @Bean
     Module gVastHooksModule(
             SettingsLoader settingsLoader,
             JsonUtils jsonUtils,
-            JsonMerger merger
+            RequestUtils requestUtils,
+            JsonMerger merger,
+            CurrencyConversionService currencyConversionService
     ) {
         return new GVastHooksModule(
                 settingsLoader,
                 jsonUtils,
-                merger);
+                requestUtils,
+                merger,
+                currencyConversionService);
     }
 
     @Bean
@@ -166,9 +182,9 @@ public class ExtensionConfig {
     @Bean
     ITrackerMacroResolver trackerMacroResolver(
             CurrencyConversionService currencyConversionService,
-            JacksonMapper mapper
+            JsonUtils jsonUtils
     ) {
-        return new TrackerMacroResolver(currencyConversionService, mapper);
+        return new TrackerMacroResolver(currencyConversionService, jsonUtils);
     }
 
     @Bean

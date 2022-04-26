@@ -1,17 +1,15 @@
 package com.improvedigital.prebid.server.hooks.v1.gvast;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.iab.openrtb.request.App;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.request.Publisher;
-import com.iab.openrtb.request.Site;
 import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
 import com.improvedigital.prebid.server.utils.JsonUtils;
+import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -26,8 +24,6 @@ import org.prebid.server.hooks.v1.entrypoint.EntrypointPayload;
 import org.prebid.server.json.EncodeException;
 import org.prebid.server.json.JsonMerger;
 import org.prebid.server.proto.openrtb.ext.request.ExtImp;
-import org.prebid.server.proto.openrtb.ext.request.ExtPublisher;
-import org.prebid.server.proto.openrtb.ext.request.ExtPublisherPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
@@ -42,16 +38,19 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
     private final SettingsLoader settingsLoader;
     private final JsonUtils jsonUtils;
     private final ObjectMapper mapper;
+    private final RequestUtils requestUtils;
     private final JsonMerger merger;
 
     public EntrypointHook(
             SettingsLoader settingsLoader,
             JsonUtils jsonUtils,
+            RequestUtils requestUtils,
             JsonMerger merger
     ) {
         this.settingsLoader = settingsLoader;
         this.jsonUtils = jsonUtils;
         this.mapper = jsonUtils.getObjectMapper();
+        this.requestUtils = requestUtils;
         this.merger = merger;
     }
 
@@ -59,14 +58,16 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
     public Future<InvocationResult<EntrypointPayload>> call(
             EntrypointPayload entrypointPayload, InvocationContext invocationContext) {
 
-        final BidRequest originalBidRequest = parseBidRequest(entrypointPayload.body());
+        final BidRequest originalBidRequest = jsonUtils.parseBidRequest(entrypointPayload.body());
 
-        final boolean hasAccountId = StringUtils.isNotBlank(accountIdFromBidRequest(originalBidRequest));
-        final boolean hasStoredRequest = StringUtils.isNotBlank(requestIdFromBidRequest(originalBidRequest));
+        final boolean hasAccountId = StringUtils.isNotBlank(requestUtils.getAccountId(originalBidRequest));
+        final boolean hasStoredRequest = StringUtils.isNotBlank(
+                requestUtils.getStoredRequestId(originalBidRequest.getExt())
+        );
 
         if (!hasAccountId || !hasStoredRequest) {
             final Map<Imp, String> impToStoredRequestId = originalBidRequest.getImp().stream()
-                    .map(this::mapImpToStoredRequestId)
+                    .map(this::getImpToStoredRequestIdTuple)
                     .collect(Collectors.toMap(Tuple2::getLeft, Tuple2::getRight));
 
             return settingsLoader.getStoredImps(
@@ -78,7 +79,7 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
                         for (final Imp imp : originalBidRequest.getImp()) {
                             final String storedRequestId = impToStoredRequestId.get(imp);
                             final Imp storedImp = storedRequestId != null ? storedImps.get(storedRequestId) : null;
-                            final ImprovedigitalPbsImpExt pbsImpExt = mergedImprovedigitalPbsImpExt(imp, storedImp);
+                            final ImprovedigitalPbsImpExt pbsImpExt = mergeImprovedigitalPbsImpExt(imp, storedImp);
                             if (pbsImpExt != null) {
                                 if (pbsImpExt.getAccountId() != null) {
                                     if (accountId == null) {
@@ -136,70 +137,24 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
 
     }
 
-    private ImprovedigitalPbsImpExt mergedImprovedigitalPbsImpExt(Imp imp, Imp storedImp) {
+    private ImprovedigitalPbsImpExt mergeImprovedigitalPbsImpExt(Imp imp, Imp storedImp) {
         ImprovedigitalPbsImpExt ext1 = jsonUtils.getImprovedigitalPbsImpExt(imp);
         ImprovedigitalPbsImpExt ext2 = jsonUtils.getImprovedigitalPbsImpExt(storedImp);
 
         return merger.merge(ext1, ext2, ImprovedigitalPbsImpExt.class);
     }
 
-    private Tuple2<Imp, String> mapImpToStoredRequestId(Imp imp) {
+    private Tuple2<Imp, String> getImpToStoredRequestIdTuple(Imp imp) {
         String storedImpId = null;
         if (imp != null && imp.getExt().isObject()) {
             try {
                 ExtImp extImp = mapper.treeToValue(imp.getExt(), ExtImp.class);
-                if (extImp.getPrebid().getStoredrequest() != null) {
-                    storedImpId = extImp.getPrebid().getStoredrequest().getId();
-                }
+                storedImpId = requestUtils.getStoredImpId(extImp);
             } catch (JsonProcessingException e) {
                 throw new InvalidRequestException(String.format("Error decoding imp.ext: %s", e.getMessage()));
             }
         }
         return Tuple2.of(imp, storedImpId);
-    }
-
-    private BidRequest parseBidRequest(String body) {
-        try {
-            JsonNode bidRequestNode = mapper.readTree(body);
-            return mapper.treeToValue(bidRequestNode, BidRequest.class);
-        } catch (JsonProcessingException e) {
-            throw new InvalidRequestException(String.format("Error decoding bidRequest: %s", e.getMessage()));
-        }
-    }
-
-    private String accountIdFromBidRequest(BidRequest bidRequest) {
-        final App app = bidRequest.getApp();
-        final Publisher appPublisher = app != null ? app.getPublisher() : null;
-        final Site site = bidRequest.getSite();
-        final Publisher sitePublisher = site != null ? site.getPublisher() : null;
-
-        final Publisher publisher = ObjectUtils.defaultIfNull(appPublisher, sitePublisher);
-        final String publisherId = publisher != null ? resolvePublisherId(publisher) : null;
-        return ObjectUtils.defaultIfNull(publisherId, StringUtils.EMPTY);
-    }
-
-    /**
-     * Resolves what value should be used as a publisher id - either taken from publisher.ext.parentAccount
-     * or publisher.id in this respective priority.
-     */
-    private String resolvePublisherId(Publisher publisher) {
-        final String parentAccountId = parentAccountIdFromExtPublisher(publisher.getExt());
-        return ObjectUtils.defaultIfNull(parentAccountId, publisher.getId());
-    }
-
-    /**
-     * Parses publisher.ext and returns parentAccount value from it. Returns null if any parsing error occurs.
-     */
-    private String parentAccountIdFromExtPublisher(ExtPublisher extPublisher) {
-        final ExtPublisherPrebid extPublisherPrebid = extPublisher != null ? extPublisher.getPrebid() : null;
-        return extPublisherPrebid != null ? StringUtils.stripToNull(extPublisherPrebid.getParentAccount()) : null;
-    }
-
-    private String requestIdFromBidRequest(BidRequest bidRequest) {
-        if (bidRequest.getExt().getPrebid().getStoredrequest() != null) {
-            return bidRequest.getExt().getPrebid().getStoredrequest().getId();
-        }
-        return null;
     }
 
     private BidRequest setAccountId(BidRequest bidRequest, String accountId) {

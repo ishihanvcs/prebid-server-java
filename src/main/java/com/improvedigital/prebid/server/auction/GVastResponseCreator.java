@@ -3,6 +3,7 @@ package com.improvedigital.prebid.server.auction;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.iab.openrtb.request.Geo;
 import com.iab.openrtb.response.Bid;
 import com.iab.openrtb.response.BidResponse;
 import com.iab.openrtb.response.SeatBid;
@@ -18,7 +19,6 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.prebid.server.geolocation.model.GeoInfo;
 import org.prebid.server.util.HttpUtil;
 
 import java.util.ArrayList;
@@ -78,7 +78,9 @@ public class GVastResponseCreator {
 
         final ImprovedigitalPbsImpExt config = gVastContext.getImprovedigitalPbsImpExt();
 
-        final List<String> waterfall = config.getWaterfall(gVastContext.getAuctionContext().getGeoInfo());
+        final List<String> waterfall = config.getWaterfall(
+                gVastContext.getAuctionContext().getBidRequest().getDevice().getGeo()
+        );
         // Response without GAM
         if (!waterfall.isEmpty() && waterfall.contains("no_gam")) {
             return buildVastXmlResponseWithoutGam(gVastContext, prioritizeImprovedigitalDeals, waterfall, debugInfo);
@@ -434,9 +436,9 @@ public class GVastResponseCreator {
         final String custParams = gVastParams.getCustParams().toString();
         final ImprovedigitalPbsImpExt config = gVastContext.getImprovedigitalPbsImpExt();
         final String adUnit = getGamAdUnit(gVastParams, config);
-        final GeoInfo geoInfo = gVastContext.getAuctionContext().getGeoInfo();
-        final double bidFloor = config.getFloor(geoInfo).getBidFloor().doubleValue();
-        final List<String> waterfall = config.getWaterfall(geoInfo);
+        final Geo geo = gVastContext.getAuctionContext().getBidRequest().getDevice().getGeo();
+        final double bidFloor = config.getFloor(geo).getBidFloor().doubleValue();
+        final List<String> waterfall = config.getWaterfall(geo);
         final String categoryTargeting;
         final List<String> categories = gVastParams.getCat();
 

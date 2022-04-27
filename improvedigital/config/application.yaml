@@ -152,68 +152,68 @@ geolocation:
 # bootstrapping logic and the server will not be started.
 hooks:
   host-execution-plan: >
-  {
-    "endpoints": {
-      "/openrtb2/auction": {
-        "stages": {
-          "entrypoint": {
-            "groups": [
-              {
-                "timeout": 500,
-                "hook-sequence": [
-                  {
-                    "module-code": "improvedigital-gvast-hooks-module",
-                    "hook-impl-code": "improvedigital-gvast-hooks-entrypoint"
-                  }
-                ]
-              },
-              {
-                "timeout": 50,
-                "hook-sequence": [
-                  {
-                    "module-code": "improvedigital-custom-trackers-hooks-module",
-                    "hook-impl-code": "improvedigital-custom-trackers-hooks-entrypoint"
-                  }
-                ]
-              }
-            ]
-          },
-          "processed-auction-request": {
-            "groups": [
-              {
-                "timeout": 5,
-                "hook-sequence": [
-                  {
-                    "module-code": "improvedigital-gvast-hooks-module",
-                    "hook-impl-code": "improvedigital-gvast-hooks-processed-auction-request"
-                  }
-                ]
-              },
-              {
-                "timeout": 5,
-                "hook-sequence": [
-                  {
-                    "module-code": "improvedigital-custom-trackers-hooks-module",
-                    "hook-impl-code": "improvedigital-custom-trackers-hooks-processed-auction-request"
-                  }
-                ]
-              }
-            ]
-          },
-          "processed-bidder-response": {
-            "groups": [
-              {
-                "timeout": 5,
-                "hook-sequence": [
-                  {
-                    "module-code": "improvedigital-custom-trackers-hooks-module",
-                    "hook-impl-code": "improvedigital-custom-trackers-hooks-processed-bidder-response"
-                  }
-                ]
-              }
-            ]
+    {
+      "endpoints": {
+        "/openrtb2/auction": {
+          "stages": {
+            "entrypoint": {
+              "groups": [
+                {
+                  "timeout": 500,
+                  "hook-sequence": [
+                    {
+                      "module-code": "improvedigital-gvast-hooks-module",
+                      "hook-impl-code": "improvedigital-gvast-hooks-entrypoint"
+                    }
+                  ]
+                },
+                {
+                  "timeout": 50,
+                  "hook-sequence": [
+                    {
+                      "module-code": "improvedigital-custom-trackers-hooks-module",
+                      "hook-impl-code": "improvedigital-custom-trackers-hooks-entrypoint"
+                    }
+                  ]
+                }
+              ]
+            },
+            "processed-auction-request": {
+              "groups": [
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "improvedigital-gvast-hooks-module",
+                      "hook-impl-code": "improvedigital-gvast-hooks-processed-auction-request"
+                    }
+                  ]
+                },
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "improvedigital-custom-trackers-hooks-module",
+                      "hook-impl-code": "improvedigital-custom-trackers-hooks-processed-auction-request"
+                    }
+                  ]
+                }
+              ]
+            },
+            "processed-bidder-response": {
+              "groups": [
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "improvedigital-custom-trackers-hooks-module",
+                      "hook-impl-code": "improvedigital-custom-trackers-hooks-processed-bidder-response"
+                    }
+                  ]
+                }
+              ]
+            }
           }
         }
       }
     }
-  }

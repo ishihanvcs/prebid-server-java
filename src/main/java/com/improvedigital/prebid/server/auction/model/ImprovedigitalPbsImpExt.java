@@ -29,6 +29,8 @@ public class ImprovedigitalPbsImpExt {
     @JsonProperty("gam")
     ImprovedigitalPbsImpExtGam improvedigitalPbsImpExtGam;
 
+    boolean gvast = true;
+
     Map<String, List<String>> waterfall = Map.of(DEFAULT_CONFIG_KEY, List.of("gam"));
 
     private String resolveCountryCode(Map<String, ?> map, Geo geo) {

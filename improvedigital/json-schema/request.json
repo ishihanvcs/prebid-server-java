@@ -1875,6 +1875,9 @@
         "requestId": {
           "type": "string"
         },
+        "gvast": {
+          "type": "boolean"
+        },
         "floors": {
           "type": "object",
           "required": [

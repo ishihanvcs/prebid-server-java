@@ -4,8 +4,9 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "dev": "npx node mock-server/index.js",
-    "debug": "DEBUG=routes:* npm run dev"
+    "server": "npx node mock-server/index.js",
+    "server:debug": "DEBUG=routes:* npm run server",
+    "schema:update": "npx node update-json-schema.js"
   },
   "keywords": [],
   "author": "",

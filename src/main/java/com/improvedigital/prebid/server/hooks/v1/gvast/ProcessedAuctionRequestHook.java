@@ -15,7 +15,6 @@ import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.currency.CurrencyConversionService;
-import org.prebid.server.hooks.execution.v1.auction.AuctionRequestPayloadImpl;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.auction.AuctionInvocationContext;
 import org.prebid.server.hooks.v1.auction.AuctionRequestPayload;
@@ -24,6 +23,7 @@ import org.prebid.server.util.ObjectUtil;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.auction.ProcessedAuctionRequestHook {
 
@@ -45,34 +45,51 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
     public Future<InvocationResult<AuctionRequestPayload>> call(
             AuctionRequestPayload auctionRequestPayload, AuctionInvocationContext invocationContext) {
         BidRequest bidRequest = auctionRequestPayload.bidRequest();
-        if (invocationContext.moduleContext() == null) {
+        Object moduleContext = invocationContext.moduleContext();
+        if (moduleContext == null) {
             GVastHooksModuleContext context = createModuleContext(bidRequest);
-            context = context.with(bidRequest);
-            BidRequest updatedBidRequest = updateImpsWithBidFloor(context);
-            context = context.with(updatedBidRequest);
-            return Future.succeededFuture(InvocationResultImpl.succeeded(
-                    payload -> AuctionRequestPayloadImpl.of(updatedBidRequest), context
-            ));
+            updateImpsWithBidFloorInUsd(bidRequest, context::getEffectiveFloor);
+            moduleContext = context;
         }
         return Future.succeededFuture(InvocationResultImpl.succeeded(
-                payload -> auctionRequestPayload, invocationContext.moduleContext()
+                payload -> auctionRequestPayload, moduleContext
         ));
     }
 
     private GVastHooksModuleContext createModuleContext(BidRequest bidRequest) {
         final Map<String, ImprovedigitalPbsImpExt> impIdToPbsImpExt = new HashMap<>();
+        Geo geoInfo = ObjectUtil.getIfNotNull(bidRequest.getDevice(), Device::getGeo);
+        Map<String, Floor> impIdToEffectiveFloor = new HashMap<>();
         for (final Imp imp : bidRequest.getImp()) {
-            impIdToPbsImpExt.put(imp.getId(), jsonUtils.getImprovedigitalPbsImpExt(imp));
+            final String impId = imp.getId();
+            final ImprovedigitalPbsImpExt pbsImpExt = jsonUtils.getImprovedigitalPbsImpExt(imp);
+            impIdToPbsImpExt.put(impId, pbsImpExt);
+            impIdToEffectiveFloor.put(impId, computeEffectiveFloor(imp, pbsImpExt, geoInfo));
         }
-        return GVastHooksModuleContext.from(impIdToPbsImpExt);
+        return GVastHooksModuleContext
+                        .from(impIdToPbsImpExt)
+                        .with(impIdToEffectiveFloor)
+                        .with(bidRequest);
     }
 
-    public BidRequest updateImpsWithBidFloor(GVastHooksModuleContext context) {
-        BidRequest bidRequest = context.getBidRequest();
+    public void updateImpsWithBidFloorInUsd(BidRequest bidRequest, Function<Imp, Floor> floorRetriever) {
         bidRequest.getImp().replaceAll(imp -> {
-            BigDecimal bidFloorInUsd = this.getBidFloorInUsd(
-                    imp, context
-            );
+            Floor effectiveFloor = floorRetriever.apply(imp);
+            if (effectiveFloor == null) {
+                return imp;
+            }
+            final BigDecimal bidFloorInUsd;
+            if (effectiveFloor.getBidFloor().doubleValue() <= 0.0
+                    || StringUtils.compareIgnoreCase("USD", effectiveFloor.getBidFloorCur()) == 0) {
+                bidFloorInUsd = BigDecimal.valueOf(0.0);
+            } else {
+                bidFloorInUsd = currencyConversionService.convertCurrency(
+                        effectiveFloor.getBidFloor(), bidRequest,
+                        "USD",
+                        effectiveFloor.getBidFloorCur()
+                );
+            }
+
             if (bidFloorInUsd == null) {
                 return imp;
             }
@@ -81,38 +98,36 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
                     .bidfloorcur("USD")
                     .build();
         });
-        return bidRequest;
     }
 
-    private BigDecimal getBidFloorInUsd(Imp imp, GVastHooksModuleContext context) {
-        BidRequest bidRequest = context.getBidRequest();
-        Geo geoInfo = ObjectUtil.getIfNotNull(bidRequest.getDevice(), Device::getGeo);
-        Floor floor = ObjectUtil.getIfNotNull(context.getPbsImpExt(imp), pie -> pie.getFloor(geoInfo));
-        BigDecimal bidFloor = ObjectUtils.defaultIfNull(
-                imp.getBidfloor(),
-                ObjectUtil.getIfNotNull(floor, Floor::getBidFloor)
-        );
-        if (bidFloor == null) {
-            return null;
+    private Floor computeEffectiveFloor(Imp imp, ImprovedigitalPbsImpExt pbsImpExt, Geo geo) {
+        Floor floor = ObjectUtil.getIfNotNull(pbsImpExt, pie -> pie.getFloor(geo));
+        BigDecimal effectiveFloorPrice = getEffectiveFloorPrice(imp, floor);
+        if (effectiveFloorPrice == null) {
+            return floor;
         }
-        String bidFloorCur = ObjectUtils.defaultIfNull(
-                ObjectUtils.defaultIfNull(
-                        imp.getBidfloorcur(),
-                        ObjectUtil.getIfNotNull(
-                                floor, Floor::getBidFloorCur
-                        )
+        String effectiveFloorCur = getEffectiveFloorCur(imp, floor);
+        return Floor.of(effectiveFloorPrice, effectiveFloorCur);
+    }
+
+    private String getEffectiveFloorCur(Imp imp, Floor floor) {
+        if (imp.getBidfloorcur() != null) {
+            return imp.getBidfloorcur();
+        }
+        return ObjectUtils.defaultIfNull(
+                ObjectUtil.getIfNotNull(
+                        floor, Floor::getBidFloorCur
                 ),
                 ImprovedigitalPbsImpExt.DEFAULT_BID_FLOOR_CUR
         );
+    }
 
-        if (bidFloor.doubleValue() <= 0.0
-                || StringUtils.compareIgnoreCase("USD", bidFloorCur) == 0) {
-            return bidFloor;
-        }
-        return currencyConversionService.convertCurrency(
-                bidFloor, bidRequest,
-                "USD",
-                bidFloorCur
+    private BigDecimal getEffectiveFloorPrice(Imp imp, Floor floor) {
+        return ObjectUtils.defaultIfNull(
+                imp.getBidfloor(),
+                ObjectUtil.getIfNotNull(
+                        floor, Floor::getBidFloor
+                )
         );
     }
 

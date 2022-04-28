@@ -2,6 +2,7 @@ package com.improvedigital.prebid.server.hooks.v1.gvast;
 
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
+import com.improvedigital.prebid.server.auction.model.Floor;
 import com.improvedigital.prebid.server.auction.model.GVastParams;
 import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
 import lombok.Builder;
@@ -15,6 +16,7 @@ import java.util.Map;
 public class GVastHooksModuleContext {
 
     Map<String, ImprovedigitalPbsImpExt> impIdToPbsImpExt;
+    Map<String, Floor> impIdToEffectiveFloor;
     BidRequest bidRequest;
     GVastParams gVastParams;
 
@@ -28,11 +30,19 @@ public class GVastHooksModuleContext {
         return this.toBuilder().bidRequest(bidRequest).build();
     }
 
+    public GVastHooksModuleContext with(Map<String, Floor> impIdToFloor) {
+        return this.toBuilder().impIdToEffectiveFloor(impIdToFloor).build();
+    }
+
     public GVastHooksModuleContext with(GVastParams gVastParams) {
         return this.toBuilder().gVastParams(gVastParams).build();
     }
 
     public ImprovedigitalPbsImpExt getPbsImpExt(Imp imp) {
         return ObjectUtil.getIfNotNull(imp, i -> impIdToPbsImpExt.get(i.getId()));
+    }
+
+    public Floor getEffectiveFloor(Imp imp) {
+        return ObjectUtil.getIfNotNull(imp, i -> impIdToEffectiveFloor.get(i.getId()));
     }
 }

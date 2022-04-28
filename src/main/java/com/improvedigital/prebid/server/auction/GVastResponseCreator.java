@@ -1,5 +1,11 @@
 package com.improvedigital.prebid.server.auction;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.iab.openrtb.response.Bid;
+import com.iab.openrtb.response.BidResponse;
+import com.iab.openrtb.response.SeatBid;
 import com.improvedigital.prebid.server.auction.model.Floor;
 import com.improvedigital.prebid.server.auction.model.GVastParams;
 import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
@@ -7,12 +13,6 @@ import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExtGam
 import com.improvedigital.prebid.server.auction.requestfactory.GVastContext;
 import com.improvedigital.prebid.server.utils.FluentMap;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.iab.openrtb.response.Bid;
-import com.iab.openrtb.response.BidResponse;
-import com.iab.openrtb.response.SeatBid;
 import io.netty.util.AsciiString;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -269,23 +270,23 @@ public class GVastResponseCreator {
         final String gdprConsent = gVastParams.getGdprConsentString();
         final String referrer = gVastParams.getReferrer();
         final String gdpr = gVastParams.getGdpr();
-        StringBuilder gamTag = new StringBuilder();
-        gamTag.append("https://pubads.g.doubleclick.net/gampad/ads?gdfp_req=1&env=vp&unviewed_position_start=1")
-                .append("&correlator=").append(System.currentTimeMillis())
-                .append("&iu=").append(HttpUtil.encodeUrl(adUnit))
-                .append("&output=").append(resolveGamOutputFromOrtb(gVastParams.getProtocols()));
+        FluentMap<String, Set<String>> gamTagParams = FluentMap.fromQueryString(
+                "gdfp_req=1&env=vp&unviewed_position_start=1"
+        );
+        gamTagParams.put("correlator", Set.of("" + System.currentTimeMillis()));
+        gamTagParams.put("iu", Set.of(adUnit));
+        gamTagParams.put("output", Set.of(resolveGamOutputFromOrtb(gVastParams.getProtocols())));
 
         // Although we might receive width and height as gvast params, we don't want to send the real size
         // to GAM for 2 reasons:
         // 1) Prebid line item targeting breaks when random sizes are used.
         // 2) GAM test showed a drop in demand with random sizes
-        gamTag.append("&sz=").append(HttpUtil.encodeUrl("640x480|640x360"));
+        gamTagParams.put("sz", Set.of("640x480|640x360"));
 
         if (referrer != null) {
-            final String encodedReferrer = HttpUtil.encodeUrl(referrer);
-            gamTag.append("&description_url=").append(encodedReferrer);
+            gamTagParams.put("description_url", Set.of(referrer));
             if (!isApp(gVastParams)) {
-                gamTag.append("&url=").append(encodedReferrer);
+                gamTagParams.put("url", Set.of(referrer));
             }
         }
 
@@ -302,7 +303,7 @@ public class GVastResponseCreator {
         }
         if (!StringUtils.isBlank(targetingString)) {
             targetingString = targetingString.replace("pbct=2", "pbct=" + pbct); // HACK - fix
-            gamTag.append("&cust_params=").append(HttpUtil.encodeUrl(targetingString));
+            gamTagParams.put("cust_params", Set.of(targetingString));
         }
 
         // Add additional params for apps running without IMA SDK
@@ -310,28 +311,28 @@ public class GVastResponseCreator {
         if (isApp(gVastParams)) {
             // gamTag.append("&sdki=44d&sdk_apis=2%2C8&sdkv=h.3.460.0");
             if (!StringUtils.isBlank(gdpr)) {
-                gamTag.append("&gdpr=").append(gdpr);
+                gamTagParams.put("gdpr", Set.of(gdpr));
                 if (!StringUtils.isBlank(gdprConsent)) {
-                    gamTag.append("&gdpr_consent=").append(gdprConsent);
+                    gamTagParams.put("gdpr_consent", Set.of(gdprConsent));
                 }
             }
             final String bundleId = ObjectUtils.defaultIfNull(gVastParams.getBundle(), "");
-            gamTag.append("&msid=").append(bundleId)
-                    .append("&an=").append(bundleId)
-                    .append("&url=").append(HttpUtil.encodeUrl(bundleId + ".adsenseformobileapps.com/"));
+            gamTagParams.put("msid", Set.of(bundleId));
+            gamTagParams.put("an", Set.of(bundleId));
+            gamTagParams.put("url", Set.of(bundleId + ".adsenseformobileapps.com/"));
             final String ifa = gVastParams.getIfa();
             if (!StringUtils.isBlank(ifa)) {
-                gamTag.append("&rdid=").append(ifa);
+                gamTagParams.put("rdid", Set.of(ifa));
             }
             if (gVastParams.getLmt() != null) {
-                gamTag.append("&is_lat=").append(gVastParams.getLmt());
+                gamTagParams.put("is_lat", Set.of("" + gVastParams.getLmt()));
             }
             final String idType = resolveGamIdType(gVastParams.getOs());
             if (idType != null) {
-                gamTag.append("&idtype=").append(idType);
+                gamTagParams.put("idtype", Set.of(idType));
             }
         }
-        return gamTag.toString();
+        return "https://pubads.g.doubleclick.net/gampad/ads?" + gamTagParams.queryString();
     }
 
     private String getRedirect(String externalUrl, String bidder, String gdpr, String gdprConsent,

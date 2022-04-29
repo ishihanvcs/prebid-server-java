@@ -153,6 +153,30 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
+    public void gvastDoesNotHaveUnnecessaryQueryParamsInVastTagUriForAppRequest()
+            throws XPathExpressionException, MalformedURLException {
+        Response response = specWithPBSHeader()
+                /* This placement's stored imp contains ext.prebid.improvedigitalpbs.waterfall.default=gam */
+                .queryParam("p", "20220325")
+                .queryParam("bundle", "com.improvedigital.ittests")
+                .queryParam("os", "UNKNOWN")
+                .get(GVastHandler.END_POINT);
+
+        String vastAdTagUri = XPathFactory.newInstance().newXPath()
+                .compile("/VAST/Ad[@id='0']/Wrapper/VASTAdTagURI")
+                .evaluate(new InputSource(new StringReader(response.asString())));
+
+        assertThat(vastAdTagUri.startsWith("https://pubads.g.doubleclick.net/gampad/ads")).isTrue();
+
+        Map<String, List<String>> vastQueryParams = splitQuery(new URL(vastAdTagUri).getQuery());
+
+        assertThat(vastQueryParams.get("gdpr_consent")).isNull();
+        assertThat(vastQueryParams.get("rdid")).isNull();
+        assertThat(vastQueryParams.get("is_lat")).isNull();
+        assertThat(vastQueryParams.get("idtype")).isNull();
+    }
+
+    @Test
     public void gvastReturnsDefaultTnlAssetIdInVastTagUri() throws XPathExpressionException, MalformedURLException {
         Response response = specWithPBSHeader()
                 /* This placement's stored imp contains ext.prebid.improvedigitalpbs.waterfall.default=gam */

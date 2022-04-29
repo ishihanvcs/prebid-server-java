@@ -81,6 +81,22 @@ public class FluentMap<K, V> {
         return this;
     }
 
+    public FluentMap<K, V> putIfNotNull(K key, V value) {
+        return putIf(key, value != null, value);
+    }
+
+    public FluentMap<K, V> putIfNotBlank(K key, String value) {
+        return putIf(key, StringUtils.isNotBlank(value), (V) value);
+    }
+
+    public FluentMap<K, V> putIf(K key, boolean isToPut, V value) {
+        // This will help on method chaining where we need to put a value based on a condition.
+        if (isToPut) {
+            map.put(key, value);
+        }
+        return this;
+    }
+
     public FluentMap<K, V> putAll(Map<? extends K, ? extends V> source) {
         map.putAll(source);
         return this;

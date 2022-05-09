@@ -9,11 +9,10 @@ import org.prebid.server.exception.PreBidException;
 public class ImpressionInjectorForVideo implements IBidTypeSpecificTrackerInjector {
 
     private static final Logger logger = LoggerFactory.getLogger(ImpressionInjectorForVideo.class);
-    protected static final String IN_LINE_TAG = "<InLine>";
+    protected static final String IN_LINE_START_TAG_MARKER = "<InLine";
     protected static final String IN_LINE_CLOSE_TAG = "</InLine>";
-    protected static final String WRAPPER_TAG = "<Wrapper>";
+    protected static final String WRAPPER_START_TAG_MARKER = "<Wrapper";
     protected static final String WRAPPER_CLOSE_TAG = "</Wrapper>";
-    protected static final String IMPRESSION_CLOSE_TAG = "</Impression>";
 
     /**
      * Implementation borrowed from {@link org.prebid.server.vast.VastModifier}
@@ -24,8 +23,8 @@ public class ImpressionInjectorForVideo implements IBidTypeSpecificTrackerInject
      * @return String modified vastXml after appending Impression tag in appropriate place
      */
     private String appendTrackingUrlToVastXml(String vastXml, String vastUrlTracking, String bidder) {
-        final int inLineTagIndex = StringUtils.indexOfIgnoreCase(vastXml, IN_LINE_TAG);
-        final int wrapperTagIndex = StringUtils.indexOfIgnoreCase(vastXml, WRAPPER_TAG);
+        final int inLineTagIndex = StringUtils.indexOfIgnoreCase(vastXml, IN_LINE_START_TAG_MARKER);
+        final int wrapperTagIndex = StringUtils.indexOfIgnoreCase(vastXml, WRAPPER_START_TAG_MARKER);
 
         if (inLineTagIndex != -1) {
             return appendTrackingUrl(vastXml, vastUrlTracking, IN_LINE_CLOSE_TAG);
@@ -37,20 +36,7 @@ public class ImpressionInjectorForVideo implements IBidTypeSpecificTrackerInject
     }
 
     private String appendTrackingUrl(String vastXml, String vastUrlTracking, String elementCloseTag) {
-        if (vastXml.contains(IMPRESSION_CLOSE_TAG)) {
-            return insertAfterExistingImpressionTag(vastXml, vastUrlTracking);
-        }
         return insertBeforeElementCloseTag(vastXml, vastUrlTracking, elementCloseTag);
-    }
-
-    private String insertAfterExistingImpressionTag(String vastXml, String vastUrlTracking) {
-        final String impressionTag = "<Impression><![CDATA[" + vastUrlTracking + "]]></Impression>";
-        final int replacementStart = vastXml.lastIndexOf(IMPRESSION_CLOSE_TAG);
-        logger.debug("Impression tag injection successful for: " + vastUrlTracking);
-        return vastXml.substring(0, replacementStart)
-                + IMPRESSION_CLOSE_TAG
-                + impressionTag
-                + vastXml.substring(replacementStart + IMPRESSION_CLOSE_TAG.length());
     }
 
     private String insertBeforeElementCloseTag(String vastXml, String vastUrlTracking, String elementCloseTag) {

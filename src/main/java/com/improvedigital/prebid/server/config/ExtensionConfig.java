@@ -155,7 +155,7 @@ public class ExtensionConfig {
     }
 
     @Bean
-    ITrackerInjector trackerInjector() {
-        return new TrackerInjector();
+    ITrackerInjector trackerInjector(JacksonMapper mapper) {
+        return new TrackerInjector(mapper);
     }
 }

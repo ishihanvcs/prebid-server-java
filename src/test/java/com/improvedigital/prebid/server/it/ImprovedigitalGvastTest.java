@@ -25,14 +25,16 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @TestPropertySource(properties = {
-        "auction.generate-source-tid=true"
+        "auction.generate-source-tid=true",
+        "admin.port=18060",
+        "http.port=18080",
 })
 @RunWith(SpringRunner.class)
 public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
     @Test
     public void gvastHasProperQueryParamsInVastTagUri() throws XPathExpressionException, MalformedURLException {
-        Response response = specWithPBSHeader()
+        Response response = specWithPBSHeader(18080)
                 /* This placement's stored imp contains ext.prebid.improvedigitalpbs.waterfall.default=gam */
                 .queryParam("p", "20220325")
                 .get(GVastHandler.END_POINT);
@@ -80,7 +82,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     @Test
     public void gvastHasProperQueryParamsInVastTagUriForAppRequest()
             throws XPathExpressionException, MalformedURLException {
-        Response response = specWithPBSHeader()
+        Response response = specWithPBSHeader(18080)
                 /* This placement's stored imp contains ext.prebid.improvedigitalpbs.waterfall.default=gam */
                 .queryParam("p", "20220325")
                 .queryParam("bundle", "com.improvedigital.ittests")
@@ -155,7 +157,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     @Test
     public void gvastDoesNotHaveUnnecessaryQueryParamsInVastTagUriForAppRequest()
             throws XPathExpressionException, MalformedURLException {
-        Response response = specWithPBSHeader()
+        Response response = specWithPBSHeader(18080)
                 /* This placement's stored imp contains ext.prebid.improvedigitalpbs.waterfall.default=gam */
                 .queryParam("p", "20220325")
                 .queryParam("bundle", "com.improvedigital.ittests")
@@ -178,7 +180,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
     @Test
     public void gvastReturnsDefaultTnlAssetIdInVastTagUri() throws XPathExpressionException, MalformedURLException {
-        Response response = specWithPBSHeader()
+        Response response = specWithPBSHeader(18080)
                 /* This placement's stored imp contains ext.prebid.improvedigitalpbs.waterfall.default=gam */
                 .queryParam("p", "20220325")
                 .queryParam("cust_params", "abc=def")
@@ -203,7 +205,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     @Test
     public void gvastReturnsRequestProvidedTnlAssetIdInVastTagUri()
             throws XPathExpressionException, MalformedURLException {
-        Response response = specWithPBSHeader()
+        Response response = specWithPBSHeader(18080)
                 /* This placement's stored imp contains ext.prebid.improvedigitalpbs.waterfall.default=gam */
                 .queryParam("p", "20220325")
                 .queryParam("cust_params", "abc=def&tnl_asset_id=custom_tnl_123")
@@ -228,7 +230,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     @Test
     public void gvastReturnsRequestProvidedMultipleTnlAssetIdsInVastTagUri()
             throws XPathExpressionException, MalformedURLException {
-        Response response = specWithPBSHeader()
+        Response response = specWithPBSHeader(18080)
                 /* This placement's stored imp contains ext.prebid.improvedigitalpbs.waterfall.default=gam */
                 .queryParam("p", "20220325")
                 .queryParam("cust_params", "abc=def&tnl_asset_id=custom_2_tnl,custom_1_tnl")

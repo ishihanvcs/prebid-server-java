@@ -20,13 +20,11 @@ import static io.restassured.RestAssured.given;
 )
 @TestPropertySource(properties = {
         "settings.filesystem.stored-imps-dir=src/test/resources/com/improvedigital/prebid/server/it/storedimps",
-        "admin.port=18060",
-        "http.port=18080",
 })
 public class ImprovedigitalIntegrationTest extends IntegrationTest {
 
-    protected static RequestSpecification specWithPBSHeader() {
-        return given(spec())
+    protected static RequestSpecification specWithPBSHeader(int port) {
+        return given(spec(port))
                 .header("Referer", "http://pbs.improvedigital.com")
                 .header("X-Forwarded-For", "193.168.244.1")
                 .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -34,10 +32,10 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 .header("Origin", "http://pbs.improvedigital.com");
     }
 
-    private static RequestSpecification spec() {
+    private static RequestSpecification spec(int port) {
         return new RequestSpecBuilder()
                 .setBaseUri("http://localhost")
-                .setPort(18080)
+                .setPort(port)
                 .setConfig(RestAssuredConfig.config()
                         .objectMapperConfig(new ObjectMapperConfig(new Jackson2Mapper((aClass, s) -> mapper))))
                 .build();

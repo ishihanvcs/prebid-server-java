@@ -54,9 +54,9 @@ public class FluentMap<K, V> {
 
             final Set<String> newValueSet =
                     Arrays.stream(value.split(","))
-                    .map(String::strip)
-                    .filter(StringUtils::isNotBlank)
-                    .collect(Collectors.toSet());
+                            .map(String::strip)
+                            .filter(StringUtils::isNotBlank)
+                            .collect(Collectors.toSet());
 
             if (!newValueSet.isEmpty()) {
                 oldValueSet.addAll(newValueSet);
@@ -78,6 +78,22 @@ public class FluentMap<K, V> {
 
     public FluentMap<K, V> put(K key, V value) {
         map.put(key, value);
+        return this;
+    }
+
+    public FluentMap<K, V> putIfNotNull(K key, V value) {
+        return putIf(key, value != null, value);
+    }
+
+    public FluentMap<K, V> putIfNotBlank(K key, String value) {
+        return putIf(key, StringUtils.isNotBlank(value), (V) value);
+    }
+
+    public FluentMap<K, V> putIf(K key, boolean isToPut, V value) {
+        // This will help on method chaining where we need to put a value based on a condition.
+        if (isToPut) {
+            map.put(key, value);
+        }
         return this;
     }
 

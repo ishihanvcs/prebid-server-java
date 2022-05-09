@@ -86,6 +86,39 @@ public class GVastParamsResolverTest extends VertxTest {
         assertThat(result.equals(expected)).isTrue();
     }
 
+    @Test
+    public void shouldSetCustParams() {
+        GVastParams result = target.resolve(emptyRequestBuilder()
+                .queryParams(
+                        minQueryParamsBuilder()
+                                .add("cust_params", "tnl_pid=P%2017100600022&tnl_asset_id=game_preroll&fp=0.01")
+                                .build()
+                ).build());
+
+        assertThat(result.getCustParams().size()).isEqualTo(3);
+
+        assertThat(result.getCustParams().get("tnl_pid").size()).isEqualTo(1);
+        assertThat(result.getCustParams().get("tnl_pid").contains("P 17100600022")).isTrue();
+
+        assertThat(result.getCustParams().get("tnl_asset_id").size()).isEqualTo(1);
+        assertThat(result.getCustParams().get("tnl_asset_id").contains("game_preroll")).isTrue();
+
+        assertThat(result.getCustParams().get("fp").size()).isEqualTo(1);
+        assertThat(result.getCustParams().get("fp").contains("0.01")).isTrue();
+
+        result = target.resolve(emptyRequestBuilder()
+                .queryParams(
+                        minQueryParamsBuilder()
+                                .add("cust_params", "tnl_asset_id=game_preroll,abc")
+                                .build()
+                ).build());
+
+        assertThat(result.getCustParams().size()).isEqualTo(1);
+        assertThat(result.getCustParams().get("tnl_asset_id").size()).isEqualTo(2);
+        assertThat(result.getCustParams().get("tnl_asset_id").contains("game_preroll")).isTrue();
+        assertThat(result.getCustParams().get("tnl_asset_id").contains("abc")).isTrue();
+    }
+
     private HttpRequestContext.HttpRequestContextBuilder emptyRequestBuilder() {
         return HttpRequestContext.builder()
             .queryParams(CaseInsensitiveMultiMap.empty())

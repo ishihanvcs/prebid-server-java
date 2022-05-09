@@ -1,3 +1,6 @@
 ---
 customTrackers:
-  enabled: false
+  enabled: true
+  trackers:
+    - id: 360yield # required and must be unique across all trackers
+      urlTemplate: https://it.pbs.com/ssp_bids?bidder={{bidder}}&cpm={{bid_price_usd}}&pid={{improve_digital_placement_id}} # required

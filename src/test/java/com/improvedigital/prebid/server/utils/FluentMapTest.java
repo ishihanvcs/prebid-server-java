@@ -1,9 +1,6 @@
 package com.improvedigital.prebid.server.utils;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 import org.prebid.server.VertxTest;
 import org.prebid.server.util.HttpUtil;
 
@@ -13,9 +10,6 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class FluentMapTest extends VertxTest {
-
-    @Rule
-    public final MockitoRule mockitoRule = MockitoJUnit.rule();
 
     @Test
     public void fromQueryStringShouldReturnEmptyMapForNull() {
@@ -174,4 +168,5 @@ public class FluentMapTest extends VertxTest {
         final String mapToQueryString = FluentMap.from(map).queryString();
         assertThat(queryStringSortedByKey.equals(mapToQueryString)).isTrue();
     }
+
 }

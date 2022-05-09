@@ -4,25 +4,10 @@ import com.improvedigital.prebid.server.utils.FluentMap;
 import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class CustParams extends HashedMap<String, Set<String>> {
-
-    private static final String DEFAULT_TNL_ASSET_ID = "prebidserver";
-
-    @Override
-    protected void init() {
-        // tnl_asset_id KV is used in HeaderLift reporting
-        if (!this.containsKey("tnl_asset_id")) {
-            this.put("tnl_asset_id", Arrays.stream(
-                    new String[]{ DEFAULT_TNL_ASSET_ID })
-                    .collect(Collectors.toSet())
-            );
-        }
-    }
 
     public CustParams() {
         super();

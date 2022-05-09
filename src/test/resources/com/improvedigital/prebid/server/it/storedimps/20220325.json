@@ -1,0 +1,38 @@
+{
+  "ext": {
+    "prebid": {
+      "is_rewarded_inventory": 1,
+      "improvedigitalpbs": {
+        "accountId": "14062",
+        "waterfall": {
+          "default": [
+            "gam"
+          ]
+        }
+      },
+      "bidder": {
+        "appnexus": {
+          "placement_id": 24195404
+        },
+        "pubmatic": {
+          "publisherId": "156946",
+          "adSlot": "EA_Sims-Mobile_Android_RewardedVideo"
+        }
+      }
+    }
+  },
+  "video": {
+    "mimes": [
+      "video/mp4"
+    ],
+    "minduration": 1,
+    "maxduration": 60,
+    "linearity": 1,
+    "placement": 5,
+    "protocols": [
+      2
+    ],
+    "w": 640,
+    "h": 480
+  }
+}

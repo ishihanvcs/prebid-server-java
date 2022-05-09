@@ -1875,8 +1875,13 @@
         "requestId": {
           "type": "string"
         },
-        "gvast": {
-          "type": "boolean"
+        "responseType": {
+          "type": "string",
+          "enum": [
+            "vast",
+            "gvast",
+            "waterfall"
+          ]
         },
         "floors": {
           "type": "object",

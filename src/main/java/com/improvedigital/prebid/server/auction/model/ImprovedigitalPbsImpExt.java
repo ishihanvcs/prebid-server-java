@@ -29,7 +29,8 @@ public class ImprovedigitalPbsImpExt {
     @JsonProperty("gam")
     ImprovedigitalPbsImpExtGam improvedigitalPbsImpExtGam;
 
-    boolean gvast = true;
+    @JsonProperty("responseType")
+    VastResponseType responseType = VastResponseType.vast;
 
     Map<String, List<String>> waterfall = Map.of(DEFAULT_CONFIG_KEY, List.of("gam"));
 

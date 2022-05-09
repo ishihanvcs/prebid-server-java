@@ -26,18 +26,20 @@ import static io.restassured.RestAssured.given;
 public class ImprovedigitalIntegrationTest extends IntegrationTest {
 
     protected static RequestSpecification specWithPBSHeader() {
-        RequestSpecification spec = new RequestSpecBuilder()
-                .setBaseUri("http://localhost")
-                .setPort(18080)
-                .setConfig(RestAssuredConfig.config()
-                        .objectMapperConfig(new ObjectMapperConfig(new Jackson2Mapper((aClass, s) -> mapper))))
-                .build();
-
-        return given(spec)
+        return given(spec())
                 .header("Referer", "http://pbs.improvedigital.com")
                 .header("X-Forwarded-For", "193.168.244.1")
                 .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                         + "(KHTML, like Gecko) Chrome/100.0.4896.60 Safari/537.36")
                 .header("Origin", "http://pbs.improvedigital.com");
+    }
+
+    private static RequestSpecification spec() {
+        return new RequestSpecBuilder()
+                .setBaseUri("http://localhost")
+                .setPort(18080)
+                .setConfig(RestAssuredConfig.config()
+                        .objectMapperConfig(new ObjectMapperConfig(new Jackson2Mapper((aClass, s) -> mapper))))
+                .build();
     }
 }

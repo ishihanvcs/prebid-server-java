@@ -1,6 +1,7 @@
 package com.improvedigital.prebid.server.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -47,6 +48,39 @@ public class JsonUtils {
             }
         }
         return Tuple2.of(root, leaf);
+    }
+
+    public JsonNode valueToTree(Object fromValue) {
+        return objectMapper.valueToTree(fromValue);
+    }
+
+    public <T> T treeToValue(TreeNode node, Class<T> clazz) {
+        try {
+            return objectMapper.treeToValue(node, clazz);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public <T> T objectPathToValue(ObjectNode objNode, String path, Class<T> clazz) {
+        return objectPathToValue(objNode, path, clazz, null);
+    }
+
+    public <T> T objectPathToValue(ObjectNode objNode, String path, Class<T> clazz, T defaultValue) {
+        try {
+            if (objNode == null || objNode.isMissingNode()) {
+                return defaultValue;
+            }
+            JsonNode node = objNode.at(path);
+            if (node.isMissingNode()) {
+                return defaultValue;
+            }
+            return objectMapper.treeToValue(node, clazz);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return defaultValue;
     }
 
     public JsonNode findFirstNode(List<? extends JsonNode> nodeList, String path) {

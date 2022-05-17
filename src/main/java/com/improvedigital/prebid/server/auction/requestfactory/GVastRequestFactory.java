@@ -2,7 +2,6 @@ package com.improvedigital.prebid.server.auction.requestfactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.App;
 import com.iab.openrtb.request.BidRequest;
@@ -13,8 +12,8 @@ import com.iab.openrtb.request.Site;
 import com.iab.openrtb.request.Source;
 import com.iab.openrtb.request.User;
 import com.iab.openrtb.request.Video;
-import com.improvedigital.prebid.server.auction.model.CustParams;
 import com.improvedigital.prebid.server.auction.model.GVastParams;
+import com.improvedigital.prebid.server.auction.model.VastResponseType;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
@@ -25,7 +24,6 @@ import io.vertx.ext.web.RoutingContext;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.AuctionContext;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
-import org.prebid.server.currency.CurrencyConversionService;
 import org.prebid.server.execution.Timeout;
 import org.prebid.server.identity.IdGenerator;
 import org.prebid.server.json.JacksonMapper;
@@ -70,19 +68,16 @@ public class GVastRequestFactory {
     private final IdGenerator idGenerator;
     private final GVastParamsResolver paramResolver;
     private final Clock clock;
-    private final CurrencyConversionService currencyConversionService;
 
     public GVastRequestFactory(
             SettingsLoader settingsLoader,
             GVastParamsResolver gVastParamsResolver,
             AuctionRequestFactory auctionRequestFactory,
-            CurrencyConversionService currencyConversionService,
             Clock clock,
             IdGenerator idGenerator,
             JacksonMapper mapper) {
         this.settingsLoader = Objects.requireNonNull(settingsLoader);
         this.clock = clock;
-        this.currencyConversionService = Objects.requireNonNull(currencyConversionService);
         this.auctionRequestFactory = Objects.requireNonNull(auctionRequestFactory);
         this.mapper = Objects.requireNonNull(mapper);
         this.idGenerator = Objects.requireNonNull(idGenerator);
@@ -97,45 +92,22 @@ public class GVastRequestFactory {
         }
     }
 
-    private Future<GVastContext> createContext(
-            Imp imp,
-            RoutingContext routingContext,
-            GVastParams gVastParams
-    ) {
-        try {
-            GVastContext gVastContext = GVastContext.from(gVastParams)
-                    .with(routingContext)
-                    .with(imp, mapper);
-            BidRequest bidRequest = createBidRequest(gVastContext);
-
-            return Future.succeededFuture(gVastContext.with(bidRequest));
-        } catch (JsonProcessingException e) {
-            return Future.failedFuture(e);
-        }
-    }
-
     private Imp validateStoredImp(Imp imp) {
         // Add waterfall validation here - gam and no_gam can't mix
         return imp;
     }
 
-    public Future<GVastContext> fromRequest(RoutingContext routingContext, long startTime) {
+    public Future<AuctionContext> fromRequest(RoutingContext routingContext, long startTime) {
         try {
             final Timeout initialTimeout = settingsLoader.createSettingsLoadingTimeout(startTime);
             validateUri(routingContext);
             GVastParams gVastParams = paramResolver.resolve(getHttpRequestContext(routingContext));
-            return settingsLoader.getStoredImp(gVastParams.getImpId(), initialTimeout)
-                .map(this::validateStoredImp)
-                .compose(imp -> this.createContext(imp, routingContext, gVastParams))
-                .map(this::updateRoutingContextBody)
-                .compose(gVastContext ->
-                    auctionRequestFactory
-                        .fromRequest(gVastContext.getRoutingContext(), clock.millis())
-                        // .compose(this::resolveGeoInfoIfNull)
-                        .map(auctionContext -> updateAuctionTimeout(auctionContext, startTime))
-                        .map(auctionContext -> setImproveDigitalParams(auctionContext, gVastParams))
-                        .map(gVastContext::with)
-                );
+            BidRequest bidRequest = createBidRequest(routingContext, gVastParams);
+            String body = mapper.encodeToString(bidRequest);
+            routingContext.setBody(Buffer.buffer(body));
+            return auctionRequestFactory
+                    .fromRequest(routingContext, clock.millis())
+                    .map(auctionContext -> updateAuctionTimeout(auctionContext, startTime));
         } catch (Throwable throwable) {
             return Future.failedFuture(throwable);
         }
@@ -147,37 +119,12 @@ public class GVastRequestFactory {
     }
 
     /**
-     * Sets some Improve Digital request params from the GVAST GET params
-     */
-    private AuctionContext setImproveDigitalParams(AuctionContext auctionContext, GVastParams gVastParams) {
-        JsonNode impExt = auctionContext.getBidRequest().getImp().get(0).getExt();
-
-        if (impExt.isMissingNode()) {
-            return auctionContext;
-        }
-
-        JsonNode improveParamsNode = impExt.at("/prebid/bidder/improvedigital");
-
-        if (improveParamsNode.isMissingNode()) {
-            return auctionContext;
-        }
-
-        CustParams custParams = gVastParams.getCustParams();
-        if (!custParams.isEmpty()) {
-            ObjectMapper mapper = new ObjectMapper();
-            ((ObjectNode) improveParamsNode).set("keyValues", mapper.valueToTree(custParams));
-        }
-        return auctionContext;
-    }
-
-    /**
      * Constructs oRTB bid request from /gvast GET params, request header, and stored data
      */
     private BidRequest createBidRequest(
-            GVastContext gVastContext
+            RoutingContext routingContext,
+            GVastParams gVastParams
     ) throws JsonProcessingException {
-        GVastParams gVastParams = gVastContext.getGVastParams();
-        RoutingContext routingContext = gVastContext.getRoutingContext();
         final String tid = idGenerator.generateId(); // UUID.randomUUID().toString();
         final String language = routingContext.preferredLanguage() == null
                 ? null : routingContext.preferredLanguage().tag();
@@ -193,6 +140,21 @@ public class GVastRequestFactory {
         final BigDecimal bidfloor = gVastParams.getBidfloor() == null
                 ? null : BigDecimal.valueOf(gVastParams.getBidfloor()).stripTrailingZeros();
         final JsonNode priceGranularity = mapper.mapper().readTree(DEFAULT_PRICE_GRANULARITY);
+        final ObjectNode impExt = mapper.mapper().valueToTree(
+                ExtImp.of(ExtImpPrebid.builder()
+                        .storedrequest(ExtStoredRequest.of(String.valueOf(gVastParams.getImpId())))
+                        .build(), null));
+
+        ((ObjectNode) impExt.at("/prebid"))
+                .putObject("improvedigitalpbs")
+                .put("responseType", VastResponseType.gvast.name());
+
+        if (!gVastParams.getCustParams().isEmpty()) {
+            ((ObjectNode) impExt.at("/prebid"))
+                    .putObject("bidder")
+                    .putObject("improvedigital")
+                    .set("keyValues", mapper.mapper().valueToTree(gVastParams.getCustParams()));
+        }
 
         BidRequest bidRequest = BidRequest.builder()
                 .id(tid)
@@ -221,10 +183,7 @@ public class GVastRequestFactory {
                             .api(gVastParams.getApi())
                             .placement(gVastParams.getPlacement())
                             .build())
-                    .ext(mapper.mapper().valueToTree(
-                            ExtImp.of(ExtImpPrebid.builder()
-                            .storedrequest(ExtStoredRequest.of(String.valueOf(gVastParams.getImpId())))
-                            .build(), null)))
+                    .ext(impExt)
                     .build())))
                 .regs(Regs.of(gVastParams.getCoppa(), ExtRegs.of(gdprInt, null)))
                 .user(User.builder()
@@ -285,14 +244,5 @@ public class GVastRequestFactory {
             .scheme(routingContext.request().scheme())
             .remoteHost(routingContext.request().remoteAddress().host())
             .build();
-    }
-
-    /**
-     * Sets/replaces request body in the routing context
-     */
-    private GVastContext updateRoutingContextBody(GVastContext gVastContext) {
-        String body = mapper.encodeToString(gVastContext.getBidRequest());
-        gVastContext.getRoutingContext().setBody(Buffer.buffer(body));
-        return gVastContext;
     }
 }

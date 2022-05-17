@@ -2,6 +2,7 @@ package com.improvedigital.prebid.server.auction.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.iab.openrtb.request.Geo;
+import lombok.Builder;
 import lombok.Value;
 import org.prebid.server.util.ObjectUtil;
 
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @Value(staticConstructor = "of")
+@Builder(toBuilder = true)
 public class ImprovedigitalPbsImpExt {
 
     public static final String DEFAULT_CONFIG_KEY = "default";

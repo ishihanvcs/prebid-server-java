@@ -1,11 +1,10 @@
 package com.improvedigital.prebid.server.handler;
 
-import com.improvedigital.prebid.server.auction.GVastResponseCreator;
-import com.improvedigital.prebid.server.auction.requestfactory.GVastContext;
-import com.improvedigital.prebid.server.auction.requestfactory.GVastRequestFactory;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
+import com.improvedigital.prebid.server.auction.requestfactory.GVastRequestFactory;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.util.AsciiString;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
@@ -24,11 +23,9 @@ import org.prebid.server.log.ConditionalLogger;
 import org.prebid.server.log.HttpInteractionLogger;
 import org.prebid.server.metric.MetricName;
 import org.prebid.server.metric.Metrics;
-import org.prebid.server.model.HttpRequestContext;
 import org.prebid.server.privacy.gdpr.model.TcfContext;
 import org.prebid.server.privacy.model.PrivacyContext;
 import org.prebid.server.util.HttpUtil;
-import org.springframework.context.ApplicationContext;
 
 import java.time.Clock;
 import java.util.Collections;
@@ -64,32 +61,24 @@ public class GVastHandler implements Handler<RoutingContext> {
 
     public static final String END_POINT = "/gvast";
 
-    private static final boolean PRIORITIZE_IMPROVE_DIGITAL_DEALS = true;
-
     private static final Logger logger = LoggerFactory.getLogger(GVastHandler.class);
     private static final ConditionalLogger conditionalLogger = new ConditionalLogger(logger);
 
     private final GVastRequestFactory gVastRequestFactory;
-    private final GVastResponseCreator gVastResponseCreator;
     private final ExchangeService exchangeService;
     private final AnalyticsReporterDelegator analyticsDelegator;
     private final Metrics metrics;
     private final Clock clock;
     private final HttpInteractionLogger httpInteractionLogger;
-    private final ApplicationContext applicationContext;
 
     public GVastHandler(
-            ApplicationContext applicationContext,
             GVastRequestFactory gVastRequestFactory,
-            GVastResponseCreator gVastResponseCreator,
             ExchangeService exchangeService,
             AnalyticsReporterDelegator analyticsDelegator,
             Metrics metrics,
             Clock clock,
             HttpInteractionLogger httpInteractionLogger) {
-        this.applicationContext = Objects.requireNonNull(applicationContext);
         this.gVastRequestFactory = Objects.requireNonNull(gVastRequestFactory);
-        this.gVastResponseCreator = Objects.requireNonNull(gVastResponseCreator);
         this.exchangeService = Objects.requireNonNull(exchangeService);
         this.analyticsDelegator = Objects.requireNonNull(analyticsDelegator);
         this.metrics = Objects.requireNonNull(metrics);
@@ -110,35 +99,33 @@ public class GVastHandler implements Handler<RoutingContext> {
         // more accurately if we note the real start time, and use it to compute the auction timeout.
 
         final long startTime = clock.millis();
-        gVastRequestFactory.fromRequest(routingContext, startTime)
-                .setHandler(result -> {
-                    if (!routingContext.response().closed()) {
-                        if (result.failed()) {
-                            routingContext.response()
-                                    .exceptionHandler(throwable -> handleResponseException(throwable,
-                                            MetricName.badinput))
-                                    .setStatusCode(400)
-                                    .end(result.cause().getMessage());
-                        } else {
-                            result.map(gVastContext -> this.executeAuction(gVastContext, startTime));
-                        }
-                    }
-                });
+        gVastRequestFactory.fromRequest(routingContext, startTime).onComplete(result -> {
+            if (!routingContext.response().closed()) {
+                if (result.failed()) {
+                    routingContext.response()
+                            .exceptionHandler(throwable -> handleResponseException(throwable,
+                                    MetricName.badinput))
+                            .setStatusCode(400)
+                            .end(result.cause().getMessage());
+                } else {
+                    result.map(auctionContext -> this.executeAuction(routingContext, auctionContext, startTime));
+                }
+            }
+        });
     }
 
-    private GVastContext executeAuction(GVastContext gVastContext, long startTime) {
-        final AuctionContext auctionContext = gVastContext.getAuctionContext();
-        final RoutingContext routingContext = gVastContext.getRoutingContext();
+    private RoutingContext executeAuction(
+            RoutingContext routingContext, AuctionContext auctionContext, long startTime) {
         final AuctionEvent.AuctionEventBuilder auctionEventBuilder = AuctionEvent.builder()
-                .httpContext(HttpRequestContext.from(routingContext));
+                .httpContext(auctionContext.getHttpRequest());
 
         updateAppAndNoCookieAndImpsMetrics(auctionContext);
         addToEvent(auctionContext, auctionEventBuilder::auctionContext, auctionContext);
         exchangeService.holdAuction(auctionContext)
                 .map(context -> addToEvent(context, auctionEventBuilder::auctionContext, context))
                 .map(context -> addToEvent(context.getBidResponse(), auctionEventBuilder::bidResponse, context))
-                .setHandler(context -> handleResult(context, auctionEventBuilder, gVastContext, startTime));
-        return gVastContext;
+                .onComplete(asyncResult -> handleResult(asyncResult, auctionEventBuilder, routingContext, startTime));
+        return routingContext;
     }
 
     private void updateAppAndNoCookieAndImpsMetrics(AuctionContext context) {
@@ -153,13 +140,12 @@ public class GVastHandler implements Handler<RoutingContext> {
     }
 
     private void handleResult(
-            AsyncResult<AuctionContext> responseResult,
+            AsyncResult<AuctionContext> asyncResult,
             AuctionEvent.AuctionEventBuilder auctionEventBuilder,
-            GVastContext gVastContext,
+            RoutingContext routingContext,
             long startTime
     ) {
-        final AuctionContext auctionContext = responseResult.succeeded() ? responseResult.result() : null;
-        final RoutingContext routingContext = gVastContext.getRoutingContext();
+        final AuctionContext auctionContext = asyncResult.succeeded() ? asyncResult.result() : null;
 
         final MetricName requestType = auctionContext != null
                 ? auctionContext.getRequestTypeMetric()
@@ -170,16 +156,17 @@ public class GVastHandler implements Handler<RoutingContext> {
         final int status;
         final String body;
 
-        if (auctionContext != null) {
+        if (auctionContext != null
+                && !auctionContext.getBidResponse().getSeatbid().isEmpty()
+                && !auctionContext.getBidResponse().getSeatbid().get(0).getBid().isEmpty()) {
             metricRequestStatus = MetricName.ok;
             errorMessages = Collections.emptyList();
             status = HttpResponseStatus.OK.code();
-            body = gVastResponseCreator.create(
-                    gVastContext.with(auctionContext.getBidResponse()),
-                    PRIORITIZE_IMPROVE_DIGITAL_DEALS
-            );
+            routingContext.response().headers().add(HttpUtil.CONTENT_TYPE_HEADER,
+                    AsciiString.cached("application/xml"));
+            body = auctionContext.getBidResponse().getSeatbid().get(0).getBid().get(0).getAdm();
         } else {
-            final Throwable exception = responseResult.cause();
+            final Throwable exception = asyncResult.cause();
             if (exception instanceof InvalidRequestException) {
                 metricRequestStatus = MetricName.badinput;
 

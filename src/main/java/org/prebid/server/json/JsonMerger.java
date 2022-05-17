@@ -54,8 +54,9 @@ public class JsonMerger {
         final JsonNode originJsonNode = mapper.mapper().valueToTree(originalObject);
         final JsonNode mergingObjectJsonNode = mapper.mapper().valueToTree(mergingObject);
         try {
-            final JsonNode mergedNode = mapper.mapper().readValue(originJsonNode.toString(), JsonMergePatch.class)
-                    .apply(mergingObjectJsonNode);
+            final JsonNode mergedNode = JsonMergePatch.fromJson(originJsonNode).apply(mergingObjectJsonNode);
+            // final JsonNode mergedNode = mapper.mapper().readValue(originJsonNode.toString(), JsonMergePatch.class)
+            //         .apply(mergingObjectJsonNode);
             return mapper.mapper().treeToValue(mergedNode, classToCast);
         } catch (JsonPatchException e) {
             throw new InvalidRequestException(String.format(

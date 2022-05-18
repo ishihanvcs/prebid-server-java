@@ -59,6 +59,7 @@ default-request:
   file:
     path : improvedigital/stored-data/requests/default.json
 settings:
+  enforce-valid-account: true
 #  uncomment & edit following line, if default value needs to be changed from 500 ms
 #  default-loading-timeout: 500
 

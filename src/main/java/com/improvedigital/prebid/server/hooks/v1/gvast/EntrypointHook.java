@@ -24,6 +24,8 @@ import org.prebid.server.hooks.v1.entrypoint.EntrypointPayload;
 import org.prebid.server.json.EncodeException;
 import org.prebid.server.json.JsonMerger;
 import org.prebid.server.proto.openrtb.ext.request.ExtImp;
+import org.prebid.server.proto.openrtb.ext.request.ExtPublisher;
+import org.prebid.server.proto.openrtb.ext.request.ExtPublisherPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
@@ -60,7 +62,10 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
 
         final BidRequest originalBidRequest = jsonUtils.parseBidRequest(entrypointPayload.body());
 
-        final boolean hasAccountId = StringUtils.isNotBlank(requestUtils.getAccountId(originalBidRequest));
+        final boolean hasAccountId = StringUtils.isNotBlank(
+                requestUtils.getParentAccountId(originalBidRequest)
+        );
+
         final boolean hasStoredRequest = StringUtils.isNotBlank(
                 requestUtils.getStoredRequestId(originalBidRequest.getExt())
         );
@@ -108,7 +113,7 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
                         }
 
                         if (!hasAccountId) {
-                            updatedBidRequest = setAccountId(updatedBidRequest, accountId);
+                            updatedBidRequest = setParentAccountId(updatedBidRequest, accountId);
                         }
 
                         if (!hasStoredRequest) {
@@ -157,23 +162,31 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
         return Tuple2.of(imp, storedImpId);
     }
 
-    private BidRequest setAccountId(BidRequest bidRequest, String accountId) {
+    private BidRequest setParentAccountId(BidRequest bidRequest, String accountId) {
         if (accountId != null) {
             BidRequest.BidRequestBuilder requestBuilder = bidRequest.toBuilder();
             if (bidRequest.getSite() != null) {
                 requestBuilder.site(
                         bidRequest.getSite().toBuilder().publisher(
-                                ObjectUtils.defaultIfNull(bidRequest.getSite()
-                                                .getPublisher(), Publisher.builder().build())
-                                .toBuilder().id(accountId).build()
+                                ObjectUtils.defaultIfNull(bidRequest.getSite().getPublisher(),
+                                        Publisher.builder().build()
+                                ).toBuilder().ext(
+                                        ExtPublisher.of(
+                                                ExtPublisherPrebid.of(accountId)
+                                        )
+                                ).build()
                         ).build()
                 );
             } else {
                 requestBuilder.app(
                         bidRequest.getApp().toBuilder().publisher(
-                                ObjectUtils.defaultIfNull(bidRequest.getApp()
-                                                .getPublisher(), Publisher.builder().build())
-                                        .toBuilder().id(accountId).build()
+                                ObjectUtils.defaultIfNull(bidRequest.getApp().getPublisher(),
+                                        Publisher.builder().build()
+                                ).toBuilder().ext(
+                                        ExtPublisher.of(
+                                                ExtPublisherPrebid.of(accountId)
+                                        )
+                                ).build()
                         ).build()
                 ).build();
             }

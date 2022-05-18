@@ -18,21 +18,30 @@ import org.prebid.server.util.ObjectUtil;
 public class RequestUtils {
 
     public String getAccountId(BidRequest bidRequest) {
+        final Publisher publisher = resolvePublisher(bidRequest);
+        final String publisherId = publisher != null ? resolvePublisherId(publisher) : null;
+        return ObjectUtils.defaultIfNull(publisherId, StringUtils.EMPTY);
+    }
+
+    public String getParentAccountId(BidRequest bidRequest) {
+        final Publisher publisher = resolvePublisher(bidRequest);
+        return publisher != null ? parentAccountIdFromExtPublisher(publisher.getExt()) : StringUtils.EMPTY;
+    }
+
+    public Publisher resolvePublisher(BidRequest bidRequest) {
         final App app = bidRequest.getApp();
         final Publisher appPublisher = app != null ? app.getPublisher() : null;
         final Site site = bidRequest.getSite();
         final Publisher sitePublisher = site != null ? site.getPublisher() : null;
 
-        final Publisher publisher = ObjectUtils.defaultIfNull(appPublisher, sitePublisher);
-        final String publisherId = publisher != null ? resolvePublisherId(publisher) : null;
-        return ObjectUtils.defaultIfNull(publisherId, StringUtils.EMPTY);
+        return ObjectUtils.defaultIfNull(appPublisher, sitePublisher);
     }
 
     /**
      * Resolves what value should be used as a publisher id - either taken from publisher.ext.parentAccount
      * or publisher.id in this respective priority.
      */
-    private String resolvePublisherId(Publisher publisher) {
+    public String resolvePublisherId(Publisher publisher) {
         final String parentAccountId = parentAccountIdFromExtPublisher(publisher.getExt());
         return ObjectUtils.defaultIfNull(parentAccountId, publisher.getId());
     }
@@ -40,7 +49,7 @@ public class RequestUtils {
     /**
      * Parses publisher.ext and returns parentAccount value from it. Returns null if any parsing error occurs.
      */
-    private String parentAccountIdFromExtPublisher(ExtPublisher extPublisher) {
+    public String parentAccountIdFromExtPublisher(ExtPublisher extPublisher) {
         final ExtPublisherPrebid extPublisherPrebid = extPublisher != null ? extPublisher.getPrebid() : null;
         return extPublisherPrebid != null ? StringUtils.stripToNull(extPublisherPrebid.getParentAccount()) : null;
     }

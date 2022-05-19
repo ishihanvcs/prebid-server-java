@@ -32,11 +32,13 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRegs;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
 import org.prebid.server.util.HttpUtil;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -79,7 +81,6 @@ public class GVastBidCreator {
     private Integer lmt;
     private String os;
     private boolean isApp;
-    private Bid improveBid;
 
     public GVastBidCreator(
             MacroProcessor macroProcessor,
@@ -141,10 +142,9 @@ public class GVastBidCreator {
         this.adUnit = resolveGamAdUnit();
     }
 
-    public Bid create(Imp imp, SeatBid seatBid, Bid improveBid) {
+    public Bid create(Imp imp, SeatBid seatBid) {
         this.imp = Objects.requireNonNull(imp);
         this.seatBid = Objects.requireNonNull(seatBid);
-        this.improveBid = improveBid; // should we validate it to be no null??
         this.initGVastParams();
         String debugInfo = "";
         if (isDebug) {
@@ -167,12 +167,12 @@ public class GVastBidCreator {
             adm = buildVastXmlResponseWithGam(debugInfo);
         }
 
-        Bid.BidBuilder bidBuilder = improveBid != null
-                ? improveBid.toBuilder()
-                : Bid.builder()
-                    .impid(imp.getId());
-
-        return bidBuilder.adm(adm).build();
+        return Bid.builder()
+                .id(UUID.randomUUID().toString())
+                .impid(imp.getId())
+                .adm(adm)
+                .price(BigDecimal.ZERO) // TODO: set price as per imp configuration
+                .build();
     }
 
     private List<String> getCachedBidUrls() {

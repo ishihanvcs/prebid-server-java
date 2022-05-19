@@ -10,6 +10,7 @@ import com.improvedigital.prebid.server.auction.model.VastResponseType;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
+import com.improvedigital.prebid.server.utils.Nullable;
 import io.vertx.core.Future;
 import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.lang3.ObjectUtils;
@@ -27,7 +28,6 @@ import java.util.stream.Collectors;
 
 public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.AuctionResponseHook {
 
-    private static final boolean PRIORITIZE_IMPROVE_DIGITAL_DEALS = true;
     private static final String IMPROVE_SEATBID_NAME = "improvedigital";
 
     private final JsonUtils jsonUtils;
@@ -78,7 +78,7 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
                 gamNetworkCode,
                 cacheHost
         );
-        final Map<String, SeatBid> lookupSeatBids = new HashedMap<>();
+        final Map<String, SeatBid> resultSeatBids = new HashedMap<>();
         SeatBid improveSeatBid = null;
         for (final Imp imp : bidRequest.getImp()) {
             final List<SeatBid> seatBidsForImp = bidResponse.getSeatbid().stream()
@@ -87,7 +87,7 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
                     ).collect(Collectors.toList());
             if (!shouldProcess(imp)) {
                 for (final SeatBid seatBid : seatBidsForImp) {
-                    final SeatBid resultSeatBid = findOrCopySeatBidInLookupMap(lookupSeatBids, seatBid);
+                    final SeatBid resultSeatBid = copyEmptySeatBidIntoResultMapIfNotExist(resultSeatBids, seatBid);
                     resultSeatBid.getBid().addAll(
                             getBidsForImpId(seatBid, imp)
                     );
@@ -96,33 +96,37 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
                 improveSeatBid = ObjectUtils.defaultIfNull(improveSeatBid, seatBidsForImp.stream()
                         .filter(seatBid ->
                                 IMPROVE_SEATBID_NAME.equals(seatBid.getSeat())
-                        ).findFirst().orElseThrow());
+                        ).findFirst().orElse(
+                                SeatBid.builder()
+                                        .seat(IMPROVE_SEATBID_NAME)
+                                        .bid(new ArrayList<>())
+                                        .build()
+                        ));
 
                 final SeatBid tempSeatBid = improveSeatBid.toBuilder()
                         .bid(
                                 getBidsForImpId(seatBidsForImp, imp)
                         ).build();
-                final Bid improveBid = getBidsForImpId(improveSeatBid, imp)
-                        .stream().findFirst().orElse(null);
-                final Bid gVastBid = bidCreator.create(imp, tempSeatBid, improveBid);
 
-                improveSeatBid = findOrCopySeatBidInLookupMap(lookupSeatBids, improveSeatBid);
-                improveSeatBid.getBid().add(gVastBid);
+                final Bid gVastBid = bidCreator.create(imp, tempSeatBid);
+
+                copyEmptySeatBidIntoResultMapIfNotExist(resultSeatBids, improveSeatBid)
+                        .getBid().add(gVastBid);
             }
         }
         return bidResponse.toBuilder().seatbid(
-                new ArrayList<>(lookupSeatBids.values())
+                new ArrayList<>(resultSeatBids.values())
         ).build();
     }
 
-    private SeatBid findOrCopySeatBidInLookupMap(Map<String, SeatBid> lookupMap, SeatBid srcSeatBid) {
+    private SeatBid copyEmptySeatBidIntoResultMapIfNotExist(Map<String, SeatBid> resultMap, SeatBid srcSeatBid) {
         final SeatBid seatBid = ObjectUtil.getIfNotNullOrDefault(
-                lookupMap.get(srcSeatBid.getSeat()),
+                resultMap.get(srcSeatBid.getSeat()),
                 sb -> sb,
                 () -> srcSeatBid.toBuilder().bid(new ArrayList<>()).build()
         );
 
-        lookupMap.put(seatBid.getSeat(), seatBid);
+        resultMap.put(seatBid.getSeat(), seatBid);
         return seatBid;
     }
 
@@ -137,13 +141,10 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
     }
 
     private boolean shouldProcess(Imp imp) {
-        return imp.getVideo() != null && ObjectUtils.defaultIfNull(
-                ObjectUtil.getIfNotNull(
-                        ObjectUtil.getIfNotNull(imp, jsonUtils::getImprovedigitalPbsImpExt),
-                        pbsImpExt -> pbsImpExt.getResponseType() != VastResponseType.vast
-                ),
-                false
-        );
+        return imp.getVideo() != null
+                && Nullable.of(imp).get(jsonUtils::getImprovedigitalPbsImpExt)
+                    .get(pbsImpExt -> pbsImpExt.getResponseType() != VastResponseType.vast)
+                    .value(false);
     }
 
     @Override

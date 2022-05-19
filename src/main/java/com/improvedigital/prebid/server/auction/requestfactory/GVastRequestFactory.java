@@ -24,7 +24,6 @@ import io.vertx.ext.web.RoutingContext;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.AuctionContext;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
-import org.prebid.server.execution.Timeout;
 import org.prebid.server.identity.IdGenerator;
 import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.log.ConditionalLogger;
@@ -99,7 +98,6 @@ public class GVastRequestFactory {
 
     public Future<AuctionContext> fromRequest(RoutingContext routingContext, long startTime) {
         try {
-            final Timeout initialTimeout = settingsLoader.createSettingsLoadingTimeout(startTime);
             validateUri(routingContext);
             GVastParams gVastParams = paramResolver.resolve(getHttpRequestContext(routingContext));
             BidRequest bidRequest = createBidRequest(routingContext, gVastParams);

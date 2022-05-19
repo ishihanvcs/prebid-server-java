@@ -95,7 +95,7 @@ class HttpInteractionSpec extends BaseSpec {
         assert idLogs.size() == 1
 
         def requestLog = getRequestFromLog(idLogs.first(), request.bidder.value)
-        def retrievedRequest = mapper.decode(requestLog, BidRequest)
+        def retrievedRequest = decode(requestLog, BidRequest)
 
         and: "Logged request should not contain bidder parameters in imp[].ext.prebid.bidder.BIDDER"
         assert !retrievedRequest?.imp?.first()?.ext?.prebid?.bidder?.generic
@@ -110,10 +110,6 @@ class HttpInteractionSpec extends BaseSpec {
 
     private static List<String> getLogsByBidder(List<String> logs, BidderName bidderName) {
         logs.findAll { it.contains("Request body to ${bidderName.value}:") }
-    }
-
-    private static List<String> getLogsByText(List<String> logs, String text) {
-        logs.findAll { it.contains(text) }
     }
 
     private static String getRequestFromLog(String log, String bidderName) {

@@ -443,18 +443,18 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
     private Response doBannerRequestAndGetResponse(Map<String, String> responseMacroReplacers) throws IOException {
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(jsonFrom(
+                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
                                 "/com/improvedigital/prebid/server/it/test-banner-improvedigital-bid-request.json",
                                 null
                         )))
-                        .willReturn(aResponse().withBody(jsonFrom(
+                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
                                 "/com/improvedigital/prebid/server/it/test-banner-improvedigital-bid-response.json",
                                 responseMacroReplacers
                         )))
         );
 
         return specWithPBSHeader(18081)
-                .body(jsonFrom(
+                .body(jsonFromFileWithMacro(
                         "/com/improvedigital/prebid/server/it/test-banner-auction-improvedigital-request.json",
                         null
                 ))
@@ -464,18 +464,18 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
     private Response doVideoRequestAndGetResponse(Map<String, String> responseMacroReplacers) throws IOException {
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(jsonFrom(
+                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
                                 "/com/improvedigital/prebid/server/it/test-video-improvedigital-bid-request.json",
                                 null
                         )))
-                        .willReturn(aResponse().withBody(jsonFrom(
+                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
                                 "/com/improvedigital/prebid/server/it/test-video-improvedigital-bid-response.json",
                                 responseMacroReplacers
                         )))
         );
 
         return specWithPBSHeader(18081)
-                .body(jsonFrom(
+                .body(jsonFromFileWithMacro(
                         "/com/improvedigital/prebid/server/it/test-video-auction-improvedigital-request.json",
                         null
                 ))
@@ -485,18 +485,18 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
     private Response doNativeRequestAndGetResponse(Map<String, String> responseMacroReplacers) throws IOException {
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(jsonFrom(
+                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
                                 "/com/improvedigital/prebid/server/it/test-native-improvedigital-bid-request.json",
                                 null
                         )))
-                        .willReturn(aResponse().withBody(jsonFrom(
+                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
                                 "/com/improvedigital/prebid/server/it/test-native-improvedigital-bid-response.json",
                                 responseMacroReplacers
                         )))
         );
 
         return specWithPBSHeader(18081)
-                .body(jsonFrom(
+                .body(jsonFromFileWithMacro(
                         "/com/improvedigital/prebid/server/it/test-native-auction-improvedigital-request.json",
                         null
                 ))
@@ -580,7 +580,8 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .getString("type");
     }
 
-    private static String jsonFrom(String file, Map<String, String> macrosInFileContent) throws IOException {
+    private static String jsonFromFileWithMacro(String file, Map<String, String> macrosInFileContent)
+            throws IOException {
         // workaround to clear formatting
         String fileContent = mapper.writeValueAsString(
                 mapper.readTree(ImprovedigitalIntegrationTest.class.getResourceAsStream(file))

@@ -59,6 +59,11 @@ metrics:
     detailed-verbosity:
       - 545-dailymotion.com
       - 2018
+      - 777745e9-52c7-4961-9493-c1256b1eb096
+      - f581e297-04f7-4cbc-a5bb-45aadff70adc
+      - 506614d0-1293-419d-920f-8ee3d7f2affa
+      - 1c18ec6f-e568-4672-949b-b1be7d92952c
+      - 1c13fe55-df1a-40c4-82fc-703493b50eda
   prometheus:
     port: 9112
   graphite:
@@ -73,7 +78,7 @@ cache:
   path: cache
   query: uuid=
   banner-ttl-seconds: 300
-  video-ttl-seconds: 300
+  video-ttl-seconds: 900
 default-request:
   file:
     path : stored-data/requests/default.json

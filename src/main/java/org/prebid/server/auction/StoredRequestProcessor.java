@@ -88,6 +88,7 @@ public class StoredRequestProcessor {
         final Map<BidRequest, String> bidRequestToStoredRequestId;
         final Map<Imp, String> impToStoredRequestId;
         try {
+            bidRequest = mergeDefaultRequest(bidRequest);
             bidRequestToStoredRequestId = mapStoredRequestHolderToStoredRequestId(
                     Collections.singletonList(bidRequest), StoredRequestProcessor::getStoredRequestIdFromBidRequest);
 

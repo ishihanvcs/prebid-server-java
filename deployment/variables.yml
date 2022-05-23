@@ -4,6 +4,16 @@ prebid_server_docker_image_uri: "{{ account_id }}.dkr.ecr.{{ region }}.amazonaws
 prebid_server_log_path: "/opt/prebid-server/logs"
 prebid_server_container_port: 8080
 
+prebid_cache_domain_prefix:
+  proto:
+    eu-west-1: "euw-"
+  prod:
+    eu-west-1: "euw-"
+    eu-central-1: "euc-"
+    us-east-1: "use-"
+
+regional_pbc_url: "{{ prebid_cache_domain_prefix[stage][region] }}{{ pbc_url }}"
+
 # vars defined at build
 external_url:
 jar_version:

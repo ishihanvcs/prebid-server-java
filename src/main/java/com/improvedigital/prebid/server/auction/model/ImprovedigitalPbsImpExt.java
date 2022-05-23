@@ -3,6 +3,7 @@ package com.improvedigital.prebid.server.auction.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.iab.openrtb.request.Geo;
 import lombok.Value;
+import org.prebid.server.geolocation.model.GeoInfo;
 import org.prebid.server.util.ObjectUtil;
 
 import java.math.BigDecimal;
@@ -43,6 +44,7 @@ public class ImprovedigitalPbsImpExt {
     }
 
     public Floor getFloor(Geo geo) {
+        final double defaultResult = 0.0;
         final Map<String, Floor> floors = this.getFloors();
         if (floors.isEmpty()) {
             return DEFAULT_BID_FLOOR;

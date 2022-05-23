@@ -11,21 +11,18 @@ import org.prebid.server.functional.testcontainers.PBSTest
 import org.prebid.server.functional.testcontainers.PbsServiceFactory
 import org.prebid.server.functional.testcontainers.scaffolding.Bidder
 import org.prebid.server.functional.testcontainers.scaffolding.PrebidCache
-import org.prebid.server.functional.util.ObjectMapperWrapper
 import org.prebid.server.functional.util.PBSUtils
 import spock.lang.Specification
 
 import static org.prebid.server.functional.testcontainers.Dependencies.mysqlContainer
 import static org.prebid.server.functional.testcontainers.Dependencies.networkServiceContainer
-import static org.prebid.server.functional.testcontainers.Dependencies.objectMapperWrapper
 
 @PBSTest
 abstract class BaseSpec extends Specification {
 
-    protected static final ObjectMapperWrapper mapper = objectMapperWrapper
-    protected static final PbsServiceFactory pbsServiceFactory = new PbsServiceFactory(networkServiceContainer, objectMapperWrapper)
-    protected static final Bidder bidder = new Bidder(networkServiceContainer, objectMapperWrapper)
-    protected static final PrebidCache prebidCache = new PrebidCache(networkServiceContainer, objectMapperWrapper)
+    protected static final PbsServiceFactory pbsServiceFactory = new PbsServiceFactory(networkServiceContainer)
+    protected static final Bidder bidder = new Bidder(networkServiceContainer)
+    protected static final PrebidCache prebidCache = new PrebidCache(networkServiceContainer)
     protected static final PrebidServerService defaultPbsService = pbsServiceFactory.getService([:])
 
     protected static final HibernateRepositoryService repository = new HibernateRepositoryService(mysqlContainer)

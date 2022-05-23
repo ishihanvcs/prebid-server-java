@@ -97,7 +97,7 @@ public class GVastBidCreator {
         this.bidResponse = Objects.requireNonNull(bidResponse);
         this.externalUrl = HttpUtil.validateUrl(Objects.requireNonNull(externalUrl));
         this.gamNetworkCode = Objects.requireNonNull(gamNetworkCode);
-        this.pbct = PROTO_CACHE_HOST.equals(cacheHost) ? "3" : "1";
+        this.pbct = PROTO_CACHE_HOST.endsWith(cacheHost) ? "3" : "1";
     }
 
     private void initGVastParams() {

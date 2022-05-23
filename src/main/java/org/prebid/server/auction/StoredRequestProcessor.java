@@ -8,6 +8,7 @@ import io.vertx.core.Future;
 import io.vertx.core.file.FileSystem;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.prebid.server.exception.InvalidRequestException;
 import org.prebid.server.exception.InvalidStoredImpException;
 import org.prebid.server.exception.InvalidStoredRequestException;
@@ -88,7 +89,6 @@ public class StoredRequestProcessor {
         final Map<BidRequest, String> bidRequestToStoredRequestId;
         final Map<Imp, String> impToStoredRequestId;
         try {
-            bidRequest = mergeDefaultRequest(bidRequest);
             bidRequestToStoredRequestId = mapStoredRequestHolderToStoredRequestId(
                     Collections.singletonList(bidRequest), StoredRequestProcessor::getStoredRequestIdFromBidRequest);
 
@@ -290,10 +290,15 @@ public class StoredRequestProcessor {
         if (impToStoredId.isEmpty()) {
             return bidRequest;
         }
+
+        Map<Integer, String> impHashCodeToStoredId = impToStoredId.entrySet().stream().collect(
+                Collectors.toMap(e -> toHashCode(e.getKey()), e -> e.getValue())
+        );
+
         final List<Imp> mergedImps = new ArrayList<>(bidRequest.getImp());
         for (int i = 0; i < mergedImps.size(); i++) {
             final Imp imp = mergedImps.get(i);
-            final String storedRequestId = impToStoredId.get(imp);
+            final String storedRequestId = impHashCodeToStoredId.get(toHashCode(imp));
             if (storedRequestId != null) {
                 final String storedImp = storedDataResult.getStoredIdToImp().get(storedRequestId);
                 final Imp mergedImp = jsonMerger.merge(imp, storedImp, storedRequestId, Imp.class);
@@ -390,5 +395,28 @@ public class StoredRequestProcessor {
     private Timeout timeout(BidRequest bidRequest) {
         final Long tmax = bidRequest.getTmax();
         return timeoutFactory.create(tmax != null && tmax > 0 ? tmax : defaultTimeout);
+    }
+
+    private Integer toHashCode(Imp i) {
+        return new HashCodeBuilder(17, 37)
+                .append(i.getId())
+                .append(i.getBanner())
+                .append(i.getMetric())
+                .append(i.getVideo())
+                .append(i.getAudio())
+                .append(i.getXNative())
+                .append(i.getPmp())
+                .append(i.getDisplaymanager())
+                .append(i.getDisplaymanagerver())
+                .append(i.getInstl())
+                .append(i.getTagid())
+                .append(i.getBidfloor() == null ? 0.0 : i.getBidfloor().doubleValue())
+                .append(i.getBidfloorcur())
+                .append(i.getClickbrowser())
+                .append(i.getSecure())
+                .append(i.getIframebuster())
+                .append(i.getExp())
+                .append(i.getExt())
+                .toHashCode();
     }
 }

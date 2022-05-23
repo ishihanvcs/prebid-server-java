@@ -67,14 +67,12 @@ public class ExtensionConfig {
 
     @Bean
     GVastRequestFactory gvastRequestFactory(
-            SettingsLoader settingsLoader,
             GVastParamsResolver gVastParamsResolver,
             AuctionRequestFactory auctionRequestFactory,
             Clock clock,
             @Qualifier("sourceIdGenerator") IdGenerator idGenerator,
             JacksonMapper mapper) {
         return new GVastRequestFactory(
-                settingsLoader,
                 gVastParamsResolver,
                 auctionRequestFactory,
                 clock,
@@ -129,8 +127,8 @@ public class ExtensionConfig {
     }
 
     @Bean
-    RequestUtils requestUtils() {
-        return new RequestUtils();
+    RequestUtils requestUtils(JsonUtils jsonUtils) {
+        return new RequestUtils(jsonUtils);
     }
 
     @Bean

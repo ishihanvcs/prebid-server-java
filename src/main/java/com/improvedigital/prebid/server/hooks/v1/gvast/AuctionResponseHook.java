@@ -6,11 +6,10 @@ import com.iab.openrtb.response.Bid;
 import com.iab.openrtb.response.BidResponse;
 import com.iab.openrtb.response.SeatBid;
 import com.improvedigital.prebid.server.auction.GVastBidCreator;
-import com.improvedigital.prebid.server.auction.model.VastResponseType;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
-import com.improvedigital.prebid.server.utils.Nullable;
+import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.Future;
 import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.lang3.ObjectUtils;
@@ -35,14 +34,17 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
     private final String externalUrl;
     private final String gamNetworkCode;
     private final String cacheHost;
+    private final RequestUtils requestUtils;
 
     public AuctionResponseHook(
             JsonUtils jsonUtils,
+            RequestUtils requestUtils,
             MacroProcessor macroProcessor,
             String externalUrl,
             String gamNetworkCode,
             String cacheHost) {
         this.jsonUtils = jsonUtils;
+        this.requestUtils = requestUtils;
         this.macroProcessor = macroProcessor;
         this.externalUrl = externalUrl;
         this.gamNetworkCode = gamNetworkCode;
@@ -85,7 +87,7 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
                     .filter(seatBid -> seatBid.getBid().stream()
                             .anyMatch(bid -> Objects.equals(bid.getImpid(), imp.getId()))
                     ).collect(Collectors.toList());
-            if (!shouldProcess(imp)) {
+            if (!requestUtils.isNonVastVideo(imp)) {
                 for (final SeatBid seatBid : seatBidsForImp) {
                     final SeatBid resultSeatBid = copyEmptySeatBidIntoResultMapIfNotExist(resultSeatBids, seatBid);
                     resultSeatBid.getBid().addAll(
@@ -138,13 +140,6 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
         return seatBids.stream().flatMap(seatBid ->
                 seatBid.getBid().stream().filter(bid -> bid.getImpid().equals(imp.getId())))
                 .collect(Collectors.toList());
-    }
-
-    private boolean shouldProcess(Imp imp) {
-        return imp.getVideo() != null
-                && Nullable.of(imp).get(jsonUtils::getImprovedigitalPbsImpExt)
-                    .get(pbsImpExt -> pbsImpExt.getResponseType() != VastResponseType.vast)
-                    .value(false);
     }
 
     @Override

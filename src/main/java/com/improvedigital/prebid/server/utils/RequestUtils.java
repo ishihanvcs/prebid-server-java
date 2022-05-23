@@ -2,8 +2,11 @@ package com.improvedigital.prebid.server.utils;
 
 import com.iab.openrtb.request.App;
 import com.iab.openrtb.request.BidRequest;
+import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.request.Publisher;
 import com.iab.openrtb.request.Site;
+import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
+import com.improvedigital.prebid.server.auction.model.VastResponseType;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.proto.openrtb.ext.request.ExtImp;
@@ -15,7 +18,15 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 import org.prebid.server.util.ObjectUtil;
 
+import java.util.ArrayList;
+
 public class RequestUtils {
+
+    private final JsonUtils jsonUtils;
+
+    public RequestUtils(JsonUtils jsonUtils) {
+        this.jsonUtils = jsonUtils;
+    }
 
     public String getAccountId(BidRequest bidRequest) {
         final Publisher publisher = resolvePublisher(bidRequest);
@@ -64,5 +75,25 @@ public class RequestUtils {
         ExtImpPrebid prebid = ObjectUtil.getIfNotNull(extImp, ExtImp::getPrebid);
         ExtStoredRequest storedRequest = ObjectUtil.getIfNotNull(prebid, ExtImpPrebid::getStoredrequest);
         return ObjectUtil.getIfNotNull(storedRequest, ExtStoredRequest::getId);
+    }
+
+    public boolean isNonVastVideo(Imp imp) {
+        return imp.getVideo() != null && Nullable.of(imp).get(jsonUtils::getImprovedigitalPbsImpExt)
+                .get(pbsImpExt -> pbsImpExt.getResponseType() != VastResponseType.vast)
+                .value(false);
+    }
+
+    public boolean isNonVastVideo(Imp imp, ImprovedigitalPbsImpExt impExt) {
+        return Nullable.of(imp).get(Imp::getVideo).isNotNull()
+                && Nullable.of(impExt)
+                    .get(pbsImpExt -> pbsImpExt.getResponseType() != VastResponseType.vast)
+                    .value(false);
+    }
+
+    public boolean hasNonVastVideo(BidRequest bidRequest) {
+        return Nullable.of(bidRequest).get(BidRequest::getImp)
+                .value(new ArrayList<>())
+                .stream()
+                .anyMatch(this::isNonVastVideo);
     }
 }

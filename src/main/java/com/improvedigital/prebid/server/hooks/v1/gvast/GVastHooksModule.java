@@ -58,8 +58,8 @@ public class GVastHooksModule implements Module {
     public Collection<? extends Hook<?, ? extends InvocationContext>> hooks() {
         return Arrays.asList(
                 new EntrypointHook(settingsLoader, jsonUtils, requestUtils, merger),
-                new ProcessedAuctionRequestHook(jsonUtils, currencyConversionService),
-                new AuctionResponseHook(jsonUtils, macroProcessor,
+                new ProcessedAuctionRequestHook(jsonUtils, requestUtils, currencyConversionService),
+                new AuctionResponseHook(jsonUtils, requestUtils, macroProcessor,
                         externalUrl, gamNetworkCode, cacheHost)
         );
     }

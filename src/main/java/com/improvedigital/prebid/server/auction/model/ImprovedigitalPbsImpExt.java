@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.iab.openrtb.request.Geo;
 import lombok.Builder;
 import lombok.Value;
-import org.prebid.server.geolocation.model.GeoInfo;
 import org.prebid.server.util.ObjectUtil;
 
 import java.math.BigDecimal;

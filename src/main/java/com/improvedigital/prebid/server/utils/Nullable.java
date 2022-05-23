@@ -29,4 +29,8 @@ public class Nullable<V> {
     public boolean isNull() {
         return value == null;
     }
+
+    public boolean isNotNull() {
+        return !this.isNull();
+    }
 }

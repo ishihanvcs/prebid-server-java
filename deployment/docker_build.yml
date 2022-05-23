@@ -11,7 +11,7 @@
   - name: Copy taskdef template
     template:
       src: "{{ playbook_dir }}/templates/{{ stage }}-ecs-task-definition.json.j2"
-      dest: "../ecs-task-definition.json"
+      dest: "../ecs-task-definition-{{ region }}.json"
       force: true
 
   - name: Copy prebid-server config template

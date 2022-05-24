@@ -46,7 +46,6 @@ public class ImprovedigitalPbsImpExt {
     }
 
     public Floor getFloor(Geo geo) {
-        final double defaultResult = 0.0;
         final Map<String, Floor> floors = this.getFloors();
         if (floors.isEmpty()) {
             return DEFAULT_BID_FLOOR;

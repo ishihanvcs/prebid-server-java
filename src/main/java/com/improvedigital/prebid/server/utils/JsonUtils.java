@@ -159,6 +159,9 @@ public class JsonUtils {
     }
 
     public ImprovedigitalPbsImpExt getImprovedigitalPbsImpExt(Imp imp) {
+        if (imp == null) {
+            return null;
+        }
         try {
             return objectMapper.treeToValue(
                     imp.getExt().at("/prebid/improvedigitalpbs"), ImprovedigitalPbsImpExt.class

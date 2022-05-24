@@ -73,9 +73,11 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
         if (!hasAccountId || !hasStoredRequest) {
             final Map<Imp, String> impToStoredRequestId = originalBidRequest.getImp().stream()
                     .map(this::getImpToStoredRequestIdTuple)
+                    .filter(t -> StringUtils.isNotBlank(t.getRight()))
                     .collect(Collectors.toMap(Tuple2::getLeft, Tuple2::getRight));
 
-            return settingsLoader.getStoredImps(
+            // let core logic for auction handle errors in later phase of hook execution
+            return settingsLoader.getStoredImpsSafely(
                     new HashSet<>(impToStoredRequestId.values()), invocationContext.timeout())
                     .compose(storedImps -> {
                         BidRequest updatedBidRequest = originalBidRequest;

@@ -4,6 +4,8 @@ import com.iab.openrtb.request.Imp;
 import com.improvedigital.prebid.server.exception.SettingsLoaderException;
 import com.improvedigital.prebid.server.settings.model.CustomTracker;
 import io.vertx.core.Future;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.exception.InvalidRequestException;
@@ -25,6 +27,7 @@ import java.util.function.BiFunction;
 public class SettingsLoader {
 
     private static final long DEFAULT_SETTINGS_LOADING_TIMEOUT = 500L;
+    private static final Logger logger = LoggerFactory.getLogger(SettingsLoader.class);
 
     private final ApplicationSettings applicationSettings;
     private final CustomSettings customSettings;
@@ -116,6 +119,10 @@ public class SettingsLoader {
     }
 
     public Future<Map<String, Imp>> getStoredImps(Set<String> impIds, Timeout timeout) {
+        return this.getStoredImps(impIds, timeout, false);
+    }
+
+    public Future<Map<String, Imp>> getStoredImps(Set<String> impIds, Timeout timeout, boolean suppressErrors) {
         if (impIds.isEmpty()) {
             return Future.succeededFuture(new HashMap<>());
         }
@@ -134,13 +141,20 @@ public class SettingsLoader {
                         }
 
                         if (error) {
-                            throw new InvalidRequestException(
-                                    String.format("Invalid impId '%s' provided.", impId)
-                            );
+                            final String errorMessage = String.format("Invalid impId '%s' provided.", impId);
+                            if (!suppressErrors) {
+                                throw new InvalidRequestException(errorMessage);
+                            } else {
+                                logger.warn(errorMessage);
+                            }
                         }
                     });
                     return imps;
                 });
+    }
+
+    public Future<Map<String, Imp>> getStoredImpsSafely(Set<String> impIds, Timeout timeout) {
+        return this.getStoredImps(impIds, timeout, true);
     }
 
     public Future<StoredDataResult> getStoredDataResultFuture(

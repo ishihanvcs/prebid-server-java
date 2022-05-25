@@ -6,8 +6,10 @@ import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.request.Video;
 import io.vertx.core.Future;
 import io.vertx.core.file.FileSystem;
+import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.prebid.server.exception.InvalidRequestException;
 import org.prebid.server.exception.InvalidStoredImpException;
 import org.prebid.server.exception.InvalidStoredRequestException;
@@ -289,10 +291,15 @@ public class StoredRequestProcessor {
         if (impToStoredId.isEmpty()) {
             return bidRequest;
         }
+
+        Map<Integer, String> impHashCodeToStoredId = impToStoredId.entrySet().stream().collect(
+                Collectors.toMap(e -> toHashCode(e.getKey()), e -> e.getValue())
+        );
+
         final List<Imp> mergedImps = new ArrayList<>(bidRequest.getImp());
         for (int i = 0; i < mergedImps.size(); i++) {
             final Imp imp = mergedImps.get(i);
-            final String storedRequestId = impToStoredId.get(imp);
+            final String storedRequestId = impHashCodeToStoredId.get(toHashCode(imp));
             if (storedRequestId != null) {
                 final String storedImp = storedDataResult.getStoredIdToImp().get(storedRequestId);
                 final Imp mergedImp = jsonMerger.merge(imp, storedImp, storedRequestId, Imp.class);
@@ -389,5 +396,18 @@ public class StoredRequestProcessor {
     private Timeout timeout(BidRequest bidRequest) {
         final Long tmax = bidRequest.getTmax();
         return timeoutFactory.create(tmax != null && tmax > 0 ? tmax : defaultTimeout);
+    }
+
+    private Integer toHashCode(Imp imp) {
+        String impExtStoredRequestId = getStoredRequestIdFromImp(imp);
+        if (StringUtils.isEmpty(imp.getId()) && StringUtils.isEmpty(impExtStoredRequestId)) {
+            LoggerFactory.getLogger(StoredRequestProcessor.class)
+                    .warn("No imp id found as well as no imp.ext.prebid.storedrequest.id");
+        }
+
+        return new HashCodeBuilder(17, 37)
+                .append(imp.getId())
+                .append(impExtStoredRequestId)
+                .toHashCode();
     }
 }

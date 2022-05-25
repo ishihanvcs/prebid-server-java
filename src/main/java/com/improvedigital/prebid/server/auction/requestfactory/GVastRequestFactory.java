@@ -1,8 +1,5 @@
 package com.improvedigital.prebid.server.auction.requestfactory;
 
-import com.improvedigital.prebid.server.auction.model.CustParams;
-import com.improvedigital.prebid.server.auction.model.GVastParams;
-import com.improvedigital.prebid.server.settings.SettingsLoader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,6 +14,9 @@ import com.iab.openrtb.request.Site;
 import com.iab.openrtb.request.Source;
 import com.iab.openrtb.request.User;
 import com.iab.openrtb.request.Video;
+import com.improvedigital.prebid.server.auction.model.CustParams;
+import com.improvedigital.prebid.server.auction.model.GVastParams;
+import com.improvedigital.prebid.server.settings.SettingsLoader;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
@@ -211,9 +211,8 @@ public class GVastRequestFactory {
         final Integer gdprInt = StringUtils.isBlank(gdpr) ? null : Integer.parseInt(gdpr);
         final String accountId = gVastContext.getImprovedigitalPbsImpExt().getAccountId();
         final BigDecimal bidfloor = gVastParams.getBidfloor() == null
-                ? null : BigDecimal.valueOf(gVastParams.getBidfloor()).stripTrailingZeros();
+                ? null : BigDecimal.valueOf(gVastParams.getBidfloor());
         final JsonNode priceGranularity = mapper.mapper().readTree(DEFAULT_PRICE_GRANULARITY);
-
         return settingsLoader.getAccountFuture(accountId, initialTimeout)
             .map(account -> {
                 BidRequest commonBidRequest = BidRequest.builder()

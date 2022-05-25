@@ -6,6 +6,7 @@ import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.request.Video;
 import io.vertx.core.Future;
 import io.vertx.core.file.FileSystem;
+import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -397,26 +398,15 @@ public class StoredRequestProcessor {
         return timeoutFactory.create(tmax != null && tmax > 0 ? tmax : defaultTimeout);
     }
 
-    private Integer toHashCode(Imp i) {
+    private Integer toHashCode(Imp imp) {
+        String impExtStoredRequestId = getStoredRequestIdFromImp(imp);
+        if (StringUtils.isEmpty(imp.getId()) && StringUtils.isEmpty(impExtStoredRequestId)) {
+            LoggerFactory.getLogger(StoredRequestProcessor.class).warn("No imp id found as well as no imp.ext.prebid.storedrequest.id");
+        }
+
         return new HashCodeBuilder(17, 37)
-                .append(i.getId())
-                .append(i.getBanner())
-                .append(i.getMetric())
-                .append(i.getVideo())
-                .append(i.getAudio())
-                .append(i.getXNative())
-                .append(i.getPmp())
-                .append(i.getDisplaymanager())
-                .append(i.getDisplaymanagerver())
-                .append(i.getInstl())
-                .append(i.getTagid())
-                .append(i.getBidfloor() == null ? 0.0 : i.getBidfloor().doubleValue())
-                .append(i.getBidfloorcur())
-                .append(i.getClickbrowser())
-                .append(i.getSecure())
-                .append(i.getIframebuster())
-                .append(i.getExp())
-                .append(i.getExt())
+                .append(imp.getId())
+                .append(impExtStoredRequestId)
                 .toHashCode();
     }
 }

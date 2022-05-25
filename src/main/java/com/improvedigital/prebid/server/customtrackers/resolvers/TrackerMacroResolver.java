@@ -63,8 +63,8 @@ public class TrackerMacroResolver implements ITrackerMacroResolver {
 
         final BigDecimal bidPriceUsd = currencyConversionService.convertCurrency(
                 bidPrice, context.getBidRequest(),
-                "USD",
-                bidCurrency
+                bidCurrency,
+                "USD"
         );
 
         return FluentMap.<String, String>create()

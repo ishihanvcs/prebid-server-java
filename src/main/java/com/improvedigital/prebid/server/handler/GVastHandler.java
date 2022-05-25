@@ -10,6 +10,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
+import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.analytics.AnalyticsReporterDelegator;
 import org.prebid.server.analytics.model.AuctionEvent;
 import org.prebid.server.auction.ExchangeService;
@@ -156,15 +157,20 @@ public class GVastHandler implements Handler<RoutingContext> {
         final int status;
         final String body;
 
-        if (auctionContext != null
-                && !auctionContext.getBidResponse().getSeatbid().isEmpty()
-                && !auctionContext.getBidResponse().getSeatbid().get(0).getBid().isEmpty()) {
+        if (auctionContext != null) {
             metricRequestStatus = MetricName.ok;
             errorMessages = Collections.emptyList();
-            status = HttpResponseStatus.OK.code();
-            routingContext.response().headers().add(HttpUtil.CONTENT_TYPE_HEADER,
-                    AsciiString.cached("application/xml"));
-            body = auctionContext.getBidResponse().getSeatbid().get(0).getBid().get(0).getAdm();
+            if (!auctionContext.getBidResponse().getSeatbid().isEmpty()
+                    && !auctionContext.getBidResponse().getSeatbid().get(0).getBid().isEmpty()) {
+                status = HttpResponseStatus.OK.code();
+                routingContext.response().headers().add(HttpUtil.CONTENT_TYPE_HEADER,
+                        AsciiString.cached("application/xml"));
+                body = auctionContext.getBidResponse().getSeatbid().get(0).getBid().get(0).getAdm();
+            } else {
+                logger.warn("No seatbids or bids found in response");
+                status = HttpResponseStatus.NO_CONTENT.code();
+                body = StringUtils.EMPTY;
+            }
         } else {
             final Throwable exception = asyncResult.cause();
             if (exception instanceof InvalidRequestException) {

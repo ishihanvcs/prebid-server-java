@@ -21,6 +21,7 @@ import org.prebid.server.hooks.execution.v1.auction.AuctionRequestPayloadImpl;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.auction.AuctionInvocationContext;
 import org.prebid.server.hooks.v1.auction.AuctionRequestPayload;
+import org.prebid.server.json.JsonMerger;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCache;
@@ -42,16 +43,19 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
     private static final Logger logger = LoggerFactory.getLogger(ProcessedAuctionRequestHook.class);
     private final CurrencyConversionService currencyConversionService;
     private final JsonUtils jsonUtils;
-    private final JsonNode priceGranularity;
+    private final ExtRequest defaultExtRequest;
     private final RequestUtils requestUtils;
+    private final JsonMerger merger;
 
     public ProcessedAuctionRequestHook(
             JsonUtils jsonUtils,
+            JsonMerger merger,
             RequestUtils requestUtils,
             CurrencyConversionService currencyConversionService
     ) {
         this.jsonUtils = jsonUtils;
         this.requestUtils = requestUtils;
+        this.merger = merger;
         this.currencyConversionService = currencyConversionService;
 
         JsonNode priceGranularity;
@@ -61,7 +65,19 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
             logger.warn("Unable to parse priceGranularity: " + e.getMessage(), e);
             priceGranularity = null;
         }
-        this.priceGranularity = priceGranularity;
+
+        this.defaultExtRequest = ExtRequest.of(ExtRequestPrebid.builder()
+                .cache(ExtRequestPrebidCache.of(null,
+                        ExtRequestPrebidCacheVastxml.of(null, true),
+                        false))
+                .targeting(ExtRequestTargeting.builder()
+                        .includebidderkeys(true)
+                        .includeformat(true)
+                        .includewinners(true)
+                        .pricegranularity(priceGranularity)
+                        .build()
+                ).build()
+        );
     }
 
     @Override
@@ -105,21 +121,10 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
     }
 
     private BidRequest updateExtWithCacheSettings(BidRequest bidRequest) {
-        return bidRequest.toBuilder()
-                .ext(
-                        ExtRequest.of(ExtRequestPrebid.builder()
-                                .cache(ExtRequestPrebidCache.of(null,
-                                        ExtRequestPrebidCacheVastxml.of(300, true),
-                                        false))
-                                .targeting(ExtRequestTargeting.builder()
-                                        .includebidderkeys(true)
-                                        .includeformat(true)
-                                        .includewinners(true)
-                                        .pricegranularity(priceGranularity)
-                                        .build()
-                                ).build()
-                        )
-                ).build();
+        final ExtRequest mergedExtRequest = merger.merge(
+                bidRequest.getExt(), defaultExtRequest, ExtRequest.class
+        );
+        return bidRequest.toBuilder().ext(mergedExtRequest).build();
     }
 
     public void updateImpsWithBidFloorInUsd(BidRequest bidRequest, Function<Imp, Floor> floorRetriever) {

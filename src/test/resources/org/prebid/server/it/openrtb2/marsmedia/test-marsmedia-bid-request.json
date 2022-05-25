@@ -9,7 +9,7 @@
       },
       "ext": {
         "bidder": {
-          "zoneId": "zone_1"
+          "zoneId": 999
         }
       }
     }
@@ -36,6 +36,18 @@
   "regs": {
     "ext": {
       "gdpr": 0
+    }
+  },
+  "ext": {
+    "prebid": {
+      "pbs": {
+        "endpoint": "/openrtb2/auction"
+      },
+      "server": {
+        "externalurl": "http://localhost:8080",
+        "gvlid": 1,
+        "datacenter": "local"
+      }
     }
   }
 }

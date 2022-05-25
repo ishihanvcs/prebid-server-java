@@ -14,8 +14,8 @@ import io.vertx.ext.web.RoutingContext;
 import lombok.Value;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.prebid.server.analytics.AnalyticsReporterDelegator;
 import org.prebid.server.analytics.model.SetuidEvent;
+import org.prebid.server.analytics.reporter.AnalyticsReporterDelegator;
 import org.prebid.server.auction.PrivacyEnforcementService;
 import org.prebid.server.auction.model.SetuidContext;
 import org.prebid.server.bidder.BidderCatalog;
@@ -107,7 +107,7 @@ public class SetuidHandler implements Handler<RoutingContext> {
     @Override
     public void handle(RoutingContext routingContext) {
         toSetuidContext(routingContext)
-                .setHandler(setuidContextResult -> handleSetuidContextResult(setuidContextResult, routingContext));
+                .onComplete(setuidContextResult -> handleSetuidContextResult(setuidContextResult, routingContext));
     }
 
     private Future<SetuidContext> toSetuidContext(RoutingContext routingContext) {
@@ -152,7 +152,7 @@ public class SetuidHandler implements Handler<RoutingContext> {
             }
 
             isAllowedForHostVendorId(tcfContext)
-                    .setHandler(hostTcfResponseResult -> respondByTcfResponse(hostTcfResponseResult, setuidContext));
+                    .onComplete(hostTcfResponseResult -> respondByTcfResponse(hostTcfResponseResult, setuidContext));
         } else {
             final Throwable error = setuidContextResult.cause();
             handleErrors(error, routingContext, null);
@@ -168,7 +168,7 @@ public class SetuidHandler implements Handler<RoutingContext> {
         }
 
         final TcfContext tcfContext = setuidContext.getPrivacyContext().getTcfContext();
-        if (StringUtils.equals(tcfContext.getGdpr(), "1") && BooleanUtils.isFalse(tcfContext.getIsConsentValid())) {
+        if (tcfContext.isInGdprScope() && !tcfContext.isConsentValid()) {
             metrics.updateUserSyncTcfInvalidMetric(bidder);
             throw new InvalidRequestException("Consent string is invalid");
         }

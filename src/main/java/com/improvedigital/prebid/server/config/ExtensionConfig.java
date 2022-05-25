@@ -18,7 +18,7 @@ import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
-import org.prebid.server.analytics.AnalyticsReporterDelegator;
+import org.prebid.server.analytics.reporter.AnalyticsReporterDelegator;
 import org.prebid.server.auction.ExchangeService;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
 import org.prebid.server.currency.CurrencyConversionService;

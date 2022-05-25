@@ -9,6 +9,7 @@ import org.prebid.server.functional.model.request.amp.AmpRequest
 import org.prebid.server.functional.model.request.auction.BidRequest
 import org.prebid.server.functional.model.request.auction.Device
 import org.prebid.server.functional.model.request.auction.Geo
+import org.prebid.server.functional.model.request.auction.Imp
 import org.prebid.server.functional.model.request.auction.PrebidStoredRequest
 import org.prebid.server.functional.model.request.auction.RegsExt
 import org.prebid.server.functional.model.request.vtrack.VtrackRequest
@@ -17,17 +18,14 @@ import org.prebid.server.functional.model.response.auction.ErrorType
 import org.prebid.server.functional.testcontainers.PBSTest
 import org.prebid.server.functional.util.PBSUtils
 import org.prebid.server.functional.util.privacy.CcpaConsent
-import spock.lang.PendingFeature
-import spock.lang.Unroll
 
 import static org.prebid.server.functional.model.bidder.BidderName.APPNEXUS
-import static org.prebid.server.functional.util.privacy.CcpaConsent.Signal.ENFORCED
 import static org.prebid.server.functional.model.response.auction.ErrorType.PREBID
+import static org.prebid.server.functional.util.privacy.CcpaConsent.Signal.ENFORCED
 
 @PBSTest
 class BidderParamsSpec extends BaseSpec {
 
-    @Unroll
     def "PBS should send request to bidder when adapter-defaults.enabled = #adapterDefault and adapters.BIDDER.enabled = #generic"() {
         given: "PBS with adapter configuration"
         def pbsService = pbsServiceFactory.getService(adapterConfig)
@@ -54,7 +52,6 @@ class BidderParamsSpec extends BaseSpec {
                                     "adapters.generic.enabled": generic]
     }
 
-    @Unroll
     def "PBS should not send request to bidder and emit error when adapter-defaults.enabled = #adapterDefault and adapters.BIDDER.enabled = #generic"() {
         given: "PBS with adapter configuration"
         def pbsService = pbsServiceFactory.getService(adapterConfig)
@@ -78,7 +75,6 @@ class BidderParamsSpec extends BaseSpec {
                                     "adapters.generic.enabled"   : generic]
     }
 
-    @Unroll
     def "PBS should modify vast xml when adapter-defaults.modifying-vast-xml-allowed = #adapterDefault and BIDDER.modifying-vast-xml-allowed = #generic"() {
         given: "PBS with adapter configuration"
         def pbsService = pbsServiceFactory.getService(["adapter-defaults.modifying-vast-xml-allowed": adapterDefault,
@@ -86,7 +82,7 @@ class BidderParamsSpec extends BaseSpec {
 
         and: "Default VtrackRequest"
         String payload = PBSUtils.randomString
-        def request = VtrackRequest.getDefaultVtrackRequest(mapper.encodeXml(Vast.getDefaultVastModel(payload)))
+        def request = VtrackRequest.getDefaultVtrackRequest(encodeXml(Vast.getDefaultVastModel(payload)))
         def accountId = PBSUtils.randomNumber
 
         and: "Account in the DB"
@@ -107,7 +103,6 @@ class BidderParamsSpec extends BaseSpec {
         "false"        | "true"
     }
 
-    @Unroll
     def "PBS should not modify vast xml when adapter-defaults.modifying-vast-xml-allowed = #adapterDefault and BIDDER.modifying-vast-xml-allowed = #generic"() {
         given: "PBS with adapter configuration"
         def pbsService = pbsServiceFactory.getService(["adapter-defaults.modifying-vast-xml-allowed": adapterDefault,
@@ -115,7 +110,7 @@ class BidderParamsSpec extends BaseSpec {
 
         and: "Default VtrackRequest"
         String payload = PBSUtils.randomString
-        def request = VtrackRequest.getDefaultVtrackRequest(mapper.encodeXml(Vast.getDefaultVastModel(payload)))
+        def request = VtrackRequest.getDefaultVtrackRequest(encodeXml(Vast.getDefaultVastModel(payload)))
         def accountId = PBSUtils.randomNumber
 
         and: "Account in the DB"
@@ -136,7 +131,6 @@ class BidderParamsSpec extends BaseSpec {
         "false"        | "false"
     }
 
-    @Unroll
     def "PBS should mask values when adapter-defaults.pbs-enforces-ccpa = #adapterDefault settings when BIDDER.pbs-enforces-ccpa = #generic"() {
         given: "PBS with adapter configuration"
         def pbsService = pbsServiceFactory.getService(["adapter-defaults.pbs-enforces-ccpa": adapterDefault,
@@ -164,7 +158,6 @@ class BidderParamsSpec extends BaseSpec {
         "false"        | "true"
     }
 
-    @Unroll
     def "PBS should not mask values when adapter-defaults.pbs-enforces-ccpa = #adapterDefault settings when BIDDER.pbs-enforces-ccpa = #generic"() {
         given: "PBS with adapter configuration"
         def pbsService = pbsServiceFactory.getService(["adapter-defaults.pbs-enforces-ccpa": adapterDefault,
@@ -281,32 +274,31 @@ class BidderParamsSpec extends BaseSpec {
         assert response.ext?.errors[ErrorType.GENERIC]*.message == ["no empty host accepted"]
     }
 
-    @PendingFeature
     def "PBS should reject bidder when bidder params from request doesn't satisfy json-schema for auction request"() {
         given: "BidRequest with bad bidder datatype"
         def bidRequest = BidRequest.defaultBidRequest.tap {
+            imp << Imp.defaultImpression
             imp[0].ext.prebid.bidder.generic.exampleProperty = PBSUtils.randomNumber
         }
 
         when: "PBS processes auction request"
         def response = defaultPbsService.sendAuctionRequest(bidRequest)
 
-        then: "Bidder should be dropped"
-        assert response.ext?.errors[ErrorType.GENERIC]*.code == [999]
-        assert response.ext?.errors[ErrorType.GENERIC]*.message ==
+        then: "PBS should not fail the entire auction"
+        assert response.seatbid[0].bid.size() == 1
+
+        and: "PBS should call bidder"
+        assert bidder.getRequestCount(bidRequest.id) == 1
+
+        and: "Bidder with invalid params should be dropped"
+        assert response.ext?.warnings[PREBID]*.code == [999, 999]
+        assert response.ext?.warnings[PREBID]*.message ==
                 ["WARNING: request.imp[0].ext.prebid.bidder.generic was dropped with a reason: " +
-                         "request.imp[0].ext.prebid.bidder.generic failed validation" +
+                         "request.imp[0].ext.prebid.bidder.generic failed validation.\n" +
                          "\$.exampleProperty: integer found, string expected",
                  "WARNING: request.imp[0].ext must contain at least one valid bidder"]
-
-        and: "PBS should not call bidder"
-        assert bidder.getRequestCount(bidRequest.id) == 0
-
-        and: "seatbid should be empty"
-        assert response.seatbid.isEmpty()
     }
 
-    @PendingFeature
     def "PBS should reject bidder when bidder params from stored request doesn't satisfy json-schema for auction request"() {
         given: "BidRequest with stored request, without imp"
         def bidRequest = BidRequest.defaultBidRequest.tap {
@@ -327,10 +319,10 @@ class BidderParamsSpec extends BaseSpec {
         def response = defaultPbsService.sendAuctionRequest(bidRequest)
 
         then: "Bidder should be dropped"
-        assert response.ext?.errors[ErrorType.GENERIC]*.code == [999]
-        assert response.ext?.errors[ErrorType.GENERIC]*.message ==
+        assert response.ext?.warnings[PREBID]*.code == [999, 999]
+        assert response.ext?.warnings[PREBID]*.message ==
                 ["WARNING: request.imp[0].ext.prebid.bidder.generic was dropped with a reason: " +
-                         "request.imp[0].ext.prebid.bidder.generic failed validation" +
+                         "request.imp[0].ext.prebid.bidder.generic failed validation.\n" +
                          "\$.exampleProperty: integer found, string expected",
                  "WARNING: request.imp[0].ext must contain at least one valid bidder"]
 
@@ -341,7 +333,6 @@ class BidderParamsSpec extends BaseSpec {
         assert response.seatbid.isEmpty()
     }
 
-    @PendingFeature
     def "PBS should reject bidder when bidder params from stored request doesn't satisfy json-schema for amp request"() {
         given: "AmpRequest with bad bidder datatype"
         def ampRequest = AmpRequest.defaultAmpRequest
@@ -358,10 +349,10 @@ class BidderParamsSpec extends BaseSpec {
         def response = defaultPbsService.sendAmpRequest(ampRequest)
 
         then: "Bidder should be dropped"
-        assert response.ext?.errors[ErrorType.GENERIC]*.code == [999]
-        assert response.ext?.errors[PREBID]*.message ==
+        assert response.ext?.warnings[PREBID]*.code == [999, 999]
+        assert response.ext?.warnings[PREBID]*.message ==
                 ["WARNING: request.imp[0].ext.prebid.bidder.generic was dropped with a reason: " +
-                         "request.imp[0].ext.prebid.bidder.generic failed validation" +
+                         "request.imp[0].ext.prebid.bidder.generic failed validation.\n" +
                          "\$.exampleProperty: integer found, string expected",
                  "WARNING: request.imp[0].ext must contain at least one valid bidder"]
 
@@ -370,5 +361,28 @@ class BidderParamsSpec extends BaseSpec {
 
         and: "targeting should be empty"
         assert response.targeting.isEmpty()
+    }
+
+    def "PBS should send server specific info to bidder when such is set in PBS config"() {
+        given: "PBS with server info configuration"
+        def serverDataCenter = PBSUtils.randomString
+        def serverExternalUrl = "https://${PBSUtils.randomString}.com/"
+        def serverHostVendorId = PBSUtils.randomNumber
+        def pbsService = pbsServiceFactory.getService(["datacenter-region"  : serverDataCenter,
+                                                       "external-url"       : serverExternalUrl as String,
+                                                       "gdpr.host-vendor-id": serverHostVendorId as String])
+
+        and: "Bid request"
+        def bidRequest = BidRequest.defaultBidRequest
+
+        when: "PBS auction is requested"
+        pbsService.sendAuctionRequest(bidRequest)
+
+        then: "PBS has sent server info to bidder during auction"
+        def bidderRequest = bidder.getBidderRequest(bidRequest.id)
+
+        assert bidderRequest?.ext?.prebid?.server?.externalUrl == serverExternalUrl
+        assert bidderRequest.ext.prebid.server.datacenter == serverDataCenter
+        assert bidderRequest.ext.prebid.server.gvlId == serverHostVendorId
     }
 }

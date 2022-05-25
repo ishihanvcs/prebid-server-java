@@ -401,7 +401,8 @@ public class StoredRequestProcessor {
     private Integer toHashCode(Imp imp) {
         String impExtStoredRequestId = getStoredRequestIdFromImp(imp);
         if (StringUtils.isEmpty(imp.getId()) && StringUtils.isEmpty(impExtStoredRequestId)) {
-            LoggerFactory.getLogger(StoredRequestProcessor.class).warn("No imp id found as well as no imp.ext.prebid.storedrequest.id");
+            LoggerFactory.getLogger(StoredRequestProcessor.class)
+                    .warn("No imp id found as well as no imp.ext.prebid.storedrequest.id");
         }
 
         return new HashCodeBuilder(17, 37)

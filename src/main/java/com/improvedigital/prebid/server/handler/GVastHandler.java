@@ -11,8 +11,8 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 import org.apache.commons.lang3.StringUtils;
-import org.prebid.server.analytics.AnalyticsReporterDelegator;
 import org.prebid.server.analytics.model.AuctionEvent;
+import org.prebid.server.analytics.reporter.AnalyticsReporterDelegator;
 import org.prebid.server.auction.ExchangeService;
 import org.prebid.server.auction.model.AuctionContext;
 import org.prebid.server.cookie.UidsCookie;
@@ -196,7 +196,7 @@ public class GVastHandler implements Handler<RoutingContext> {
                 status = HttpResponseStatus.UNAUTHORIZED.code();
                 body = message;
                 final String accountId = ((UnauthorizedAccountException) exception).getAccountId();
-                metrics.updateAccountRequestRejectedMetrics(accountId);
+                metrics.updateAccountRequestRejectedByInvalidAccountMetrics(accountId);
             } else if (exception instanceof BlacklistedAppException
                     || exception instanceof BlacklistedAccountException) {
                 metricRequestStatus = exception instanceof BlacklistedAccountException

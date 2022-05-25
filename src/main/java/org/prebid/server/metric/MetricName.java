@@ -64,6 +64,7 @@ public enum MetricName {
     badserverresponse,
     failedtorequestbids,
     timeout,
+    bid_validation,
     unknown_error,
     err,
     networkerr,
@@ -111,7 +112,9 @@ public enum MetricName {
     xml,
 
     // account.*.requests.
-    rejected,
+    rejected_by_invalid_account("rejected.invalid-account"),
+    rejected_by_invalid_stored_impr("rejected.invalid-stored-impr"),
+    rejected_by_invalid_stored_request("rejected.invalid-stored-request"),
 
     // currency rates
     stale,
@@ -134,6 +137,9 @@ public enum MetricName {
     failure,
     execution_error("execution-error"),
     duration,
+
+    // price-floors
+    price_floors("price-floors"),
 
     // win notifications
     win_notifications,

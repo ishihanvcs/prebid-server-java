@@ -109,7 +109,7 @@
       "value": {
         "id": "222214214214",
         "impid": "impId1",
-        "price": 2.0,
+        "price": 2,
         "adm": "some-test-ad1",
         "adid": "69595837",
         "adomain": [
@@ -136,7 +136,7 @@
             "bidder_id": 2,
             "bid_ad_type": 1
           },
-          "origbidcpm": 2.0,
+          "origbidcpm": 2,
           "origbidcur": "USD"
         },
         "wurl": "http://localhost:8080/event?t=win&b=222214214214&a=5001&aid=tid&ts=1000&bidder=appnexus&f=i&int="

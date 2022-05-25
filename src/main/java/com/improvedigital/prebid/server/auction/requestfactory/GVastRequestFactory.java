@@ -121,7 +121,7 @@ public class GVastRequestFactory {
         final String gdpr = gVastParams.getGdpr();
         final Integer gdprInt = StringUtils.isBlank(gdpr) ? null : Integer.parseInt(gdpr);
         final BigDecimal bidfloor = gVastParams.getBidfloor() == null
-                ? null : BigDecimal.valueOf(gVastParams.getBidfloor()).stripTrailingZeros();
+                ? null : BigDecimal.valueOf(gVastParams.getBidfloor());
         final ObjectNode impExt = mapper.mapper().valueToTree(
                 ExtImp.of(ExtImpPrebid.builder()
                         .storedrequest(ExtStoredRequest.of(String.valueOf(gVastParams.getImpId())))

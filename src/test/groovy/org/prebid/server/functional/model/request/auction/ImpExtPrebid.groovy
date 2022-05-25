@@ -5,11 +5,14 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming
 import groovy.transform.ToString
 
 @ToString(includeNames = true, ignoreNulls = true)
-@JsonNaming(PropertyNamingStrategies.LowerCamelCaseStrategy)
+@JsonNaming(PropertyNamingStrategies.LowerCaseStrategy)
 class ImpExtPrebid {
 
     Bidder bidder
     StoredAuctionResponse storedAuctionResponse
+    List<StoredBidResponse> storedBidResponse
+    PrebidStoredRequest storedRequest
+    ImpExtPrebidFloors floors
 
     static ImpExtPrebid getDefaultImpExtPrebid() {
         new ImpExtPrebid().tap {

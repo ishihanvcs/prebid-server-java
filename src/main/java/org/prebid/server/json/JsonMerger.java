@@ -55,8 +55,6 @@ public class JsonMerger {
         final JsonNode mergingObjectJsonNode = mapper.mapper().valueToTree(mergingObject);
         try {
             final JsonNode mergedNode = JsonMergePatch.fromJson(originJsonNode).apply(mergingObjectJsonNode);
-            // final JsonNode mergedNode = mapper.mapper().readValue(originJsonNode.toString(), JsonMergePatch.class)
-            //         .apply(mergingObjectJsonNode);
             return mapper.mapper().treeToValue(mergedNode, classToCast);
         } catch (JsonPatchException e) {
             throw new InvalidRequestException(String.format(

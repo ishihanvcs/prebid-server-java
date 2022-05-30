@@ -29,6 +29,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCacheVastxml;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestTargeting;
 import org.prebid.server.util.ObjectUtil;
 
+import javax.validation.ValidationException;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -84,6 +85,15 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
     public Future<InvocationResult<AuctionRequestPayload>> call(
             AuctionRequestPayload auctionRequestPayload, AuctionInvocationContext invocationContext) {
         BidRequest bidRequest = auctionRequestPayload.bidRequest();
+        try {
+            validateRequestWithBusinessLogic(bidRequest);
+        } catch (Throwable t) {
+            logger.error(bidRequest, t);
+            return Future.succeededFuture(
+                    InvocationResultImpl.rejected(t.getMessage())
+            );
+        }
+
         Object moduleContext = invocationContext.moduleContext();
         if (moduleContext == null) {
             GVastHooksModuleContext context = createModuleContext(bidRequest);
@@ -95,6 +105,16 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         return Future.succeededFuture(InvocationResultImpl.succeeded(
                 payload -> AuctionRequestPayloadImpl.of(finalBidRequest), moduleContext
         ));
+    }
+
+    public void validateRequestWithBusinessLogic(BidRequest bidRequest) {
+        if (!bidRequest.getImp().parallelStream().allMatch(
+                imp -> requestUtils.getImprovePlacementId(imp) != null
+        )) {
+            throw new ValidationException(
+                    "improvedigital placementId is not defined for one or more imp(s)"
+            );
+        }
     }
 
     private GVastHooksModuleContext createModuleContext(BidRequest bidRequest) {

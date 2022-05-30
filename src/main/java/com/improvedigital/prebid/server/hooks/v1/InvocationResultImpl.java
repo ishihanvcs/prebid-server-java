@@ -57,6 +57,7 @@ public class InvocationResultImpl<PAYLOAD> implements InvocationResult<PAYLOAD> 
         return InvocationResultImpl.<PAYLOAD>builder()
                 .status(InvocationStatus.failure)
                 .message(message)
+                .errors(List.of(message))
                 .build();
     }
 
@@ -72,6 +73,7 @@ public class InvocationResultImpl<PAYLOAD> implements InvocationResult<PAYLOAD> 
                 .status(InvocationStatus.success)
                 .action(InvocationAction.reject)
                 .message(message)
+                .errors(List.of(message))
                 .build();
     }
 }

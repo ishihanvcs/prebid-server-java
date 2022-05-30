@@ -13,11 +13,11 @@ import io.vertx.core.logging.LoggerFactory;
 import org.prebid.server.bidder.model.BidderBid;
 import org.prebid.server.currency.CurrencyConversionService;
 import org.prebid.server.json.JacksonMapper;
+import org.prebid.server.util.ObjectUtil;
 
 import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class TrackerMacroResolver implements ITrackerMacroResolver {
 
@@ -79,14 +79,21 @@ public class TrackerMacroResolver implements ITrackerMacroResolver {
 
     protected String resolvePlacementId(TrackerContext context) throws Exception {
         final BidRequest bidRequest = context.getBidRequest();
-        final JsonNode placementIdNode = jsonUtils.findFirstNode(
-                bidRequest.getImp().stream()
-                        .map(Imp::getExt).collect(Collectors.toList()),
-                "/prebid/bidder/improvedigital/placementId"
+        final String impId = context.getBidderBid().getBid().getImpid();
+        final Imp imp = bidRequest.getImp().stream()
+                .filter(i -> i.getId().equals(impId))
+                .findFirst().orElse(null);
+
+        if (imp == null) {
+            throw new Exception("Cannot find matching imp in request with id: " + impId);
+        }
+
+        final JsonNode placementIdNode = ObjectUtil.getIfNotNull(imp.getExt(),
+                impExt -> impExt.at("/prebid/bidder/improvedigital/placementId")
         );
 
-        if (placementIdNode == null) {
-            throw new Exception("improve_digital_placement_id could not be resolved from bidRequest");
+        if (placementIdNode == null || placementIdNode.isMissingNode()) {
+            throw new Exception("imp[" + impId + "].ext.prebid.bidder.improvedigital.placementId is not defined!");
         }
         return placementIdNode.asText();
     }

@@ -124,7 +124,7 @@ public class GVastRequestFactory {
                 ? null : BigDecimal.valueOf(gVastParams.getBidfloor());
         final ObjectNode impExt = mapper.mapper().valueToTree(
                 ExtImp.of(ExtImpPrebid.builder()
-                        .storedrequest(ExtStoredRequest.of(String.valueOf(gVastParams.getImpId())))
+                        .storedrequest(ExtStoredRequest.of(gVastParams.getImpId()))
                         .build(), null));
 
         ((ObjectNode) impExt.at("/prebid"))

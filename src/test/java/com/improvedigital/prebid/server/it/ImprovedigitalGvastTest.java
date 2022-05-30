@@ -2,6 +2,7 @@ package com.improvedigital.prebid.server.it;
 
 import com.improvedigital.prebid.server.handler.GVastHandler;
 import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.TestPropertySource;
@@ -20,24 +21,30 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@TestPropertySource(properties = {
-        "auction.generate-source-tid=true",
-        "admin.port=18060",
-        "http.port=18080",
-})
+@TestPropertySource(
+        locations = {
+                "/com/improvedigital/prebid/server/it/test-application-improvedigital-hooks.properties"
+        },
+        properties = {
+                "auction.generate-source-tid=true",
+                "admin.port=18060",
+                "http.port=18080",
+        }
+)
 @RunWith(SpringRunner.class)
 public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
+    /* This placement's stored imp contains ext.prebid.improvedigitalpbs.waterfall.default=gam */
+    private static final String VALID_PLACEMENT_ID = "20220325";
+
     @Test
     public void gvastHasProperQueryParamsInVastTagUri() throws XPathExpressionException, MalformedURLException {
-        Response response = specWithPBSHeader(18080)
-                /* This placement's stored imp contains ext.prebid.improvedigitalpbs.waterfall.default=gam */
-                .queryParam("p", "20220325")
-                .get(GVastHandler.END_POINT);
+        Response response = getGvastResponse();
 
         String vastAdTagUri = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='0']/Wrapper/VASTAdTagURI")
@@ -64,7 +71,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertThat(vastQueryParams.get("iu").get(0)).isEqualTo("/1015413/pbs/20220325");
 
         assertThat(vastQueryParams.get("output").size()).isEqualTo(1);
-        assertThat(vastQueryParams.get("output").get(0)).isEqualTo("vast");
+        assertThat(vastQueryParams.get("output").get(0)).isEqualTo("xml_vast2");
 
         assertThat(vastQueryParams.get("sz").size()).isEqualTo(1);
         assertThat(vastQueryParams.get("sz").get(0)).isEqualTo("640x480|640x360");
@@ -82,16 +89,15 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     @Test
     public void gvastHasProperQueryParamsInVastTagUriForAppRequest()
             throws XPathExpressionException, MalformedURLException {
-        Response response = specWithPBSHeader(18080)
-                /* This placement's stored imp contains ext.prebid.improvedigitalpbs.waterfall.default=gam */
-                .queryParam("p", "20220325")
+        Response response = getGvastResponse(spec -> spec
                 .queryParam("bundle", "com.improvedigital.ittests")
+                .queryParam("storeurl", "http://pbs.improvedigital.com")
                 .queryParam("gdpr", "1")
                 .queryParam("gdpr_consent", "BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA")
                 .queryParam("ifa", "V0Z851OEHUF5MYVVFQVG8FLSASLFIODF")
                 .queryParam("lmt", "0")
                 .queryParam("os", "Android")
-                .get(GVastHandler.END_POINT);
+        );
 
         String vastAdTagUri = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='0']/Wrapper/VASTAdTagURI")
@@ -118,7 +124,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertThat(vastQueryParams.get("iu").get(0)).isEqualTo("/1015413/pbs/20220325");
 
         assertThat(vastQueryParams.get("output").size()).isEqualTo(1);
-        assertThat(vastQueryParams.get("output").get(0)).isEqualTo("vast");
+        assertThat(vastQueryParams.get("output").get(0)).isEqualTo("xml_vast2");
 
         assertThat(vastQueryParams.get("sz").size()).isEqualTo(1);
         assertThat(vastQueryParams.get("sz").get(0)).isEqualTo("640x480|640x360");
@@ -157,12 +163,10 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     @Test
     public void gvastDoesNotHaveUnnecessaryQueryParamsInVastTagUriForAppRequest()
             throws XPathExpressionException, MalformedURLException {
-        Response response = specWithPBSHeader(18080)
-                /* This placement's stored imp contains ext.prebid.improvedigitalpbs.waterfall.default=gam */
-                .queryParam("p", "20220325")
+        Response response = getGvastResponse(spec -> spec
                 .queryParam("bundle", "com.improvedigital.ittests")
                 .queryParam("os", "UNKNOWN")
-                .get(GVastHandler.END_POINT);
+        );
 
         String vastAdTagUri = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='0']/Wrapper/VASTAdTagURI")
@@ -180,11 +184,9 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
     @Test
     public void gvastReturnsDefaultTnlAssetIdInVastTagUri() throws XPathExpressionException, MalformedURLException {
-        Response response = specWithPBSHeader(18080)
-                /* This placement's stored imp contains ext.prebid.improvedigitalpbs.waterfall.default=gam */
-                .queryParam("p", "20220325")
+        Response response = getGvastResponse(spec -> spec
                 .queryParam("cust_params", "abc=def")
-                .get(GVastHandler.END_POINT);
+        );
 
         String vastAdTagUri = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='0']/Wrapper/VASTAdTagURI")
@@ -205,11 +207,9 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     @Test
     public void gvastReturnsRequestProvidedTnlAssetIdInVastTagUri()
             throws XPathExpressionException, MalformedURLException {
-        Response response = specWithPBSHeader(18080)
-                /* This placement's stored imp contains ext.prebid.improvedigitalpbs.waterfall.default=gam */
-                .queryParam("p", "20220325")
+        Response response = getGvastResponse(spec -> spec
                 .queryParam("cust_params", "abc=def&tnl_asset_id=custom_tnl_123")
-                .get(GVastHandler.END_POINT);
+        );
 
         String vastAdTagUri = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='0']/Wrapper/VASTAdTagURI")
@@ -230,11 +230,9 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     @Test
     public void gvastReturnsRequestProvidedMultipleTnlAssetIdsInVastTagUri()
             throws XPathExpressionException, MalformedURLException {
-        Response response = specWithPBSHeader(18080)
-                /* This placement's stored imp contains ext.prebid.improvedigitalpbs.waterfall.default=gam */
-                .queryParam("p", "20220325")
+        Response response = getGvastResponse(spec -> spec
                 .queryParam("cust_params", "abc=def&tnl_asset_id=custom_2_tnl,custom_1_tnl")
-                .get(GVastHandler.END_POINT);
+        );
 
         String vastAdTagUri = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='0']/Wrapper/VASTAdTagURI")
@@ -263,6 +261,28 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         LinkedHashMap::new,
                         Collectors.mapping(Map.Entry::getValue, Collectors.toList()))
                 );
+    }
+
+    private Response getGvastResponse() {
+        return getGvastResponse(null);
+    }
+
+    private Response getGvastResponse(
+            Function<RequestSpecification, RequestSpecification> modifier
+    ) {
+        return getGvastResponse(VALID_PLACEMENT_ID, modifier);
+    }
+
+    private Response getGvastResponse(
+            String placementId,
+            Function<RequestSpecification, RequestSpecification> modifier
+    ) {
+        RequestSpecification spec = specWithPBSHeader(18080)
+                .queryParam("p", placementId);
+        if (modifier != null) {
+            spec = modifier.apply(spec);
+        }
+        return spec.get(GVastHandler.END_POINT);
     }
 
     private AbstractMap.SimpleImmutableEntry<String, String> splitQueryParameter(String it) {

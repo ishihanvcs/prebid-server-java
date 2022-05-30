@@ -11,6 +11,9 @@
         }
       },
       "bidder": {
+        "improvedigital": {
+          "placementId": 20220325
+        },
         "appnexus": {
           "placement_id": 24195404
         },

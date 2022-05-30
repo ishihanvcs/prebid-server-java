@@ -69,6 +69,7 @@ public class GVastBidCreator {
     private SeatBid seatBid;
     private ImprovedigitalPbsImpExt config;
     private String referrer;
+    private String encodedReferrer;
     private String gdprConsent;
     private String gdpr;
     private boolean isDebug;
@@ -137,11 +138,18 @@ public class GVastBidCreator {
                 ))
                 .value(new CustParams());
 
-        this.referrer = nullableSite.get(Site::getPage).value();
         this.categories = nullableSite.get(Site::getCat).value();
 
         this.bundleId = nullableApp.get(App::getBundle).value("");
         this.isApp = !nullableApp.isNull() && !StringUtils.isBlank(bundleId);
+
+        if (this.isApp) {
+            this.referrer = nullableApp.get(App::getStoreurl)
+                    .value(this.bundleId + ".adsenseformobileapps.com/");
+        } else {
+            this.referrer = nullableSite.get(Site::getPage).value();
+        }
+        this.encodedReferrer = Nullable.of(this.referrer).get(HttpUtil::encodeUrl).value();
         this.adUnit = resolveGamAdUnit();
     }
 
@@ -158,14 +166,10 @@ public class GVastBidCreator {
             }
         }
 
-        final List<String> waterfall = config.getWaterfall(
-                bidRequest.getDevice().getGeo()
-        );
-
         final String adm;
         // Response without GAM
         if (!waterfall.isEmpty() && config.getResponseType() == VastResponseType.waterfall) {
-            adm = buildVastXmlResponseWithoutGam(waterfall, debugInfo);
+            adm = buildVastXmlResponseWithoutGam(debugInfo);
         } else { // Response with GAM
             adm = buildVastXmlResponseWithGam(debugInfo);
         }
@@ -219,77 +223,72 @@ public class GVastBidCreator {
         return vastUrls;
     }
 
-    private String formatPrebidGamKeyValueString(BidResponse bidResponse) {
-        if (bidResponse.getSeatbid().isEmpty()) {
-            return "";
-        }
+    private String formatPrebidGamKeyValueString() {
 
         StringBuilder targeting = new StringBuilder();
         boolean improvedigitalDealWon = false;
-        for (SeatBid seatBid : bidResponse.getSeatbid()) {
-            if (seatBid.getBid().isEmpty()) {
+
+        if (seatBid.getBid().isEmpty()) {
+            return StringUtils.EMPTY;
+        }
+
+        for (Bid bid : seatBid.getBid()) {
+            if (bid.getExt() == null) {
                 continue;
             }
-            for (Bid bid : seatBid.getBid()) {
-                if (bid.getExt() == null) {
+            StringBuilder bidderKeyValues = new StringBuilder();
+            JsonNode targetingKvs = bid.getExt().at("/prebid/targeting");
+            boolean isDeal = false;
+            boolean hasUuid = false;
+            double price = 0;
+
+            for (Iterator<String> it = targetingKvs.fieldNames(); it.hasNext(); ) {
+                String key = it.next();
+                bidderKeyValues.append(key).append("=").append(targetingKvs.get(key).asText()).append("&");
+
+                if (key.equals("hb_deal_improvedigit")) {
+                    isDeal = true;
                     continue;
                 }
-                StringBuilder bidderKeyValues = new StringBuilder();
-                JsonNode targetingKvs = bid.getExt().at("/prebid/targeting");
-                boolean isDeal = false;
-                boolean hasUuid = false;
-                double price = 0;
-
-                for (Iterator<String> it = targetingKvs.fieldNames(); it.hasNext(); ) {
-                    String key = it.next();
-                    bidderKeyValues.append(key).append("=").append(targetingKvs.get(key).asText()).append("&");
-
-                    if (key.equals("hb_deal_improvedigit")) {
-                        isDeal = true;
-                        continue;
-                    }
-                    if (key.startsWith("hb_uuid")) {
-                        hasUuid = true;
-                        continue;
-                    }
-                    if (key.startsWith("hb_pb_")) {
-                        price = targetingKvs.get(key).asDouble();
-                    }
-                }
-
-                // Discard the bid if VastXML couldn't be cached, i.e. hb_uuid KV wasn't set
-                if (!hasUuid) {
+                if (key.startsWith("hb_uuid")) {
+                    hasUuid = true;
                     continue;
                 }
-
-                if (isDeal && price >= IMPROVE_DIGITAL_DEAL_FLOOR) {
-                    // ImproveDigital deal won't always win if there's a higher bid. In that case we need to add
-                    // winner Prebid KVs
-                    if (bidderKeyValues.indexOf("hb_pb=") == -1) {
-                        for (Iterator<String> it = targetingKvs.fieldNames(); it.hasNext(); ) {
-                            String key = it.next();
-                            // Create winner keys by removing the bidder name from the key,
-                            // i.e. hb_pb_improvedigital -> hb_pb
-                            String winnerKey = key.substring(0, key.lastIndexOf('_'));
-                            bidderKeyValues
-                                    .append(winnerKey)
-                                    .append("=")
-                                    .append(targetingKvs.get(key).asText())
-                                    .append("&");
-                        }
-                    }
-                    // Discard bids from other SSPs when prioritizing deal/campaigns from Improve Digital
-                    targeting = new StringBuilder(bidderKeyValues.toString());
-                    improvedigitalDealWon = true;
-                    break;
+                if (key.startsWith("hb_pb_")) {
+                    price = targetingKvs.get(key).asDouble();
                 }
-
-                targeting.append(bidderKeyValues);
             }
-            if (improvedigitalDealWon) {
+
+            // Discard the bid if VastXML couldn't be cached, i.e. hb_uuid KV wasn't set
+            if (!hasUuid) {
+                continue;
+            }
+
+            if (isDeal && price >= IMPROVE_DIGITAL_DEAL_FLOOR) {
+                // ImproveDigital deal won't always win if there's a higher bid. In that case we need to add
+                // winner Prebid KVs
+                if (bidderKeyValues.indexOf("hb_pb=") == -1) {
+                    for (Iterator<String> it = targetingKvs.fieldNames(); it.hasNext(); ) {
+                        String key = it.next();
+                        // Create winner keys by removing the bidder name from the key,
+                        // i.e. hb_pb_improvedigital -> hb_pb
+                        String winnerKey = key.substring(0, key.lastIndexOf('_'));
+                        bidderKeyValues
+                                .append(winnerKey)
+                                .append("=")
+                                .append(targetingKvs.get(key).asText())
+                                .append("&");
+                    }
+                }
+                // Discard bids from other SSPs when prioritizing deal/campaigns from Improve Digital
+                targeting = new StringBuilder(bidderKeyValues.toString());
+                improvedigitalDealWon = true;
                 break;
             }
+
+            targeting.append(bidderKeyValues);
         }
+
         if (targeting.length() > 0) {
             // Target ImproveDigital Prebid cache line items (creatives) in GAM
             targeting.append("pbct=").append(pbct);
@@ -422,7 +421,7 @@ public class GVastBidCreator {
                         .put("gdpr", gdpr)
                         .put("gdpr_consent", gdprConsent)
                         .put("timestamp", Long.toString(System.currentTimeMillis()))
-                        .put("referrer", HttpUtil.encodeUrl(referrer))
+                        .putIfNotNull("referrer", encodedReferrer)
                         .result();
         String expanded = "";
         try {
@@ -490,7 +489,7 @@ public class GVastBidCreator {
     }
 
     private String buildVastXmlResponseWithGam(String hbAuctionDebugInfo) {
-        final String gamPrebidTargeting = formatPrebidGamKeyValueString(bidResponse);
+        final String gamPrebidTargeting = formatPrebidGamKeyValueString();
         final boolean isImprovedigitalDeal = gamPrebidTargeting.contains("hb_deal_improvedigit");
         final String custParams = this.custParams.toString();
         final String categoryTargeting;
@@ -507,6 +506,7 @@ public class GVastBidCreator {
         // In order to prioritize Improve Digital deal over other ads, a second GAM tag is added
         // The first GAM call will disable AdX/AdSense. In case Improve's VAST doesn't fill or the ad
         // fails to play, the second GAM call is added as a fallback to give AdX a chance to backfill
+        final List<String> waterfall = new ArrayList<>(this.waterfall);
         if (isImprovedigitalDeal) {
             waterfall.add(0, "gam_improve_deal");
             final int gamIndex = waterfall.indexOf("gam");
@@ -555,23 +555,15 @@ public class GVastBidCreator {
         return sb.toString();
     }
 
-    private String buildVastXmlResponseWithoutGam(List<String> waterfall,
-                                               String hbAuctionDebugInfo) {
-        final List<String> sspVastUrls = getCachedBidUrls();
-
+    private String buildVastXmlResponseWithoutGam(String hbAuctionDebugInfo) {
         StringBuilder sb = new StringBuilder();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?><VAST version=\"2.0\">");
 
-        List<String> vastTags = sspVastUrls;
+        List<String> vastTags = getCachedBidUrls();
 
-        if (waterfall.size() > 1) {
-            vastTags = new ArrayList<>();
-            for (String adTag : waterfall) {
-                if (adTag.equals("no_gam")) {
-                    vastTags.addAll(sspVastUrls);
-                } else {
-                    vastTags.add(adTag);
-                }
+        for (String adTag : waterfall) {
+            if (!adTag.equals("no_gam")) {
+                vastTags.add(adTag);
             }
         }
 

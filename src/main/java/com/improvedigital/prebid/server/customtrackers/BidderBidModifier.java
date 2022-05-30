@@ -71,9 +71,9 @@ public class BidderBidModifier {
                 ));
                 return;
             }
+            final TrackerContext trackerContext = commonTrackerContext
+                    .with(customTracker);
             try {
-                final TrackerContext trackerContext = commonTrackerContext
-                        .with(customTracker);
                 final ITrackerMacroResolver macroResolver = trackerContext.getMacroResolver();
                 final Map<String, String> macroValues = macroResolver.resolveValues(trackerContext);
                 String trackingUrl = macroProcessor.process(customTracker.getUrlTemplate(), macroValues);
@@ -84,14 +84,16 @@ public class BidderBidModifier {
                                     .inject(trackingUrl, admStack.pop(), bidder, bidderBid.getType())
                     );
                 } else {
-                    logger.warn("Could not generate tracking url for bidder: " + bidder + "!");
+                    logger.warn(trackerContext, new Exception(
+                            "Could not generate tracking url for bidder: " + bidder + "!")
+                    );
                 }
             } catch (Exception ex) {
                 logger.warn(
-                        String.format(
-                                "Could not inject impression tag for tagType = %s",
+                        trackerContext, new Exception(String.format(
+                                "Could not inject impression tag for tracker = %s",
                                 customTracker.getId()
-                        ), ex
+                        ), ex)
                 );
             }
         });

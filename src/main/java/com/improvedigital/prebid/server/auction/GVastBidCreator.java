@@ -24,6 +24,7 @@ import com.improvedigital.prebid.server.utils.FluentMap;
 import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
 import com.improvedigital.prebid.server.utils.Nullable;
+import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.ObjectUtils;
@@ -55,9 +56,9 @@ public class GVastBidCreator {
     private static final Logger logger = LoggerFactory.getLogger(GVastBidCreator.class);
 
     private final JsonUtils jsonUtils;
+    private final RequestUtils requestUtils;
     private final BidRequest bidRequest;
     private final BidResponse bidResponse;
-    // private final GVastParams gVastParams;
 
     private final String externalUrl;
     private final String gamNetworkCode;
@@ -85,6 +86,7 @@ public class GVastBidCreator {
     public GVastBidCreator(
             MacroProcessor macroProcessor,
             JsonUtils jsonUtils,
+            RequestUtils requestUtils,
             BidRequest bidRequest,
             BidResponse bidResponse,
             String externalUrl,
@@ -93,6 +95,7 @@ public class GVastBidCreator {
     ) {
         this.macroProcessor = Objects.requireNonNull(macroProcessor);
         this.jsonUtils = Objects.requireNonNull(jsonUtils);
+        this.requestUtils = Objects.requireNonNull(requestUtils);
         this.bidRequest = Objects.requireNonNull(bidRequest);
         this.bidResponse = Objects.requireNonNull(bidResponse);
         this.externalUrl = HttpUtil.validateUrl(Objects.requireNonNull(externalUrl));
@@ -323,7 +326,7 @@ public class GVastBidCreator {
             networkCode += "," + gamConfig.getChildNetworkCode();
         }
         if (StringUtils.isBlank(adUnit)) {
-            adUnit = "/" + networkCode + "/pbs/" + imp.getId();
+            adUnit = "/" + networkCode + "/pbs/" + requestUtils.getImprovePlacementId(imp);
         } else {
             // If ad unit begins with "/", full ad unit path is expected including the GAM network code
             // otherwise the GAM network code will be prepended

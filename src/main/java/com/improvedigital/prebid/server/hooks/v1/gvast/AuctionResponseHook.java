@@ -27,8 +27,6 @@ import java.util.stream.Collectors;
 
 public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.AuctionResponseHook {
 
-    private static final String IMPROVE_SEATBID_NAME = "improvedigital";
-
     private final JsonUtils jsonUtils;
     private final MacroProcessor macroProcessor;
     private final String externalUrl;
@@ -74,6 +72,7 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
         final GVastBidCreator bidCreator = new GVastBidCreator(
                 macroProcessor,
                 jsonUtils,
+                requestUtils,
                 bidRequest,
                 bidResponse,
                 externalUrl,
@@ -97,10 +96,10 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
             } else {
                 improveSeatBid = ObjectUtils.defaultIfNull(improveSeatBid, seatBidsForImp.stream()
                         .filter(seatBid ->
-                                IMPROVE_SEATBID_NAME.equals(seatBid.getSeat())
+                                RequestUtils.IMPROVE_BIDDER_NAME.equals(seatBid.getSeat())
                         ).findFirst().orElse(
                                 SeatBid.builder()
-                                        .seat(IMPROVE_SEATBID_NAME)
+                                        .seat(RequestUtils.IMPROVE_BIDDER_NAME)
                                         .bid(new ArrayList<>())
                                         .build()
                         ));

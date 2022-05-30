@@ -1,5 +1,6 @@
 package com.improvedigital.prebid.server.utils;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.iab.openrtb.request.App;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
@@ -21,6 +22,8 @@ import org.prebid.server.util.ObjectUtil;
 import java.util.ArrayList;
 
 public class RequestUtils {
+
+    public static final String IMPROVE_BIDDER_NAME = "improvedigital";
 
     private final JsonUtils jsonUtils;
 
@@ -95,5 +98,36 @@ public class RequestUtils {
                 .value(new ArrayList<>())
                 .stream()
                 .anyMatch(this::isNonVastVideo);
+    }
+
+    public Integer getImprovePlacementId(Imp imp) {
+        JsonNode node = extractBidderInfo(imp, IMPROVE_BIDDER_NAME, "/placementId");
+        if (node != null && node.isInt()) {
+            return node.asInt();
+        }
+        return null;
+    }
+
+    public JsonNode extractBidderInfo(Imp imp, String bidderName, String path) {
+        return Nullable.of(imp)
+                .get(Imp::getExt)
+                .get(this::normalizeImpExt)
+                .get(ExtImp::getPrebid)
+                .get(ExtImpPrebid::getBidder)
+                .get(node -> node.get(bidderName))
+                .get(node -> node.at(path))
+                .value();
+    }
+
+    private ExtImp normalizeImpExt(Object impExt) {
+        if (impExt == null) {
+            return null;
+        }
+
+        if (impExt instanceof ExtImp) {
+            return (ExtImp) impExt;
+        }
+
+        return jsonUtils.getObjectMapper().convertValue(impExt, ExtImp.class);
     }
 }

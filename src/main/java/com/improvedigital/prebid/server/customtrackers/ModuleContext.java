@@ -3,11 +3,13 @@ package com.improvedigital.prebid.server.customtrackers;
 import com.iab.openrtb.request.BidRequest;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.springframework.context.ApplicationContext;
 
 @SuperBuilder(toBuilder = true)
 @Getter
+@ToString
 public class ModuleContext {
 
     @NonNull

@@ -440,6 +440,30 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         assertThatCustomTrackerExistsInImpTrackers(customTrackerUrl, "1.424", "13245");
     }
 
+    @Test
+    public void shouldGetErrorWhenNoPlacementIdIsProvidedInBidRequest() throws Exception {
+        WIRE_MOCK_RULE.stubFor(
+                post(urlPathEqualTo("/generic-exchange"))
+                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/test-no-placementid-bid-request.json",
+                                null
+                        )))
+                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/test-no-placementid-bid-response.json",
+                                null
+                        )))
+        );
+
+        final Response response = specWithPBSHeader(18081)
+                .body(jsonFromFileWithMacro(
+                        "/com/improvedigital/prebid/server/it/test-no-placementid-auction-request.json",
+                        null
+                ))
+                .post(Endpoint.openrtb2_auction.value());
+
+        assertThat(response.statusCode()).isEqualTo(400);
+    }
+
     private Response doBannerRequestAndGetResponse(Map<String, String> responseMacroReplacers) throws IOException {
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
@@ -592,7 +616,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
             return macrosInFileContent.entrySet().stream()
                     .map(m -> (Function<String, String>) s -> s.replace(m.getKey(), m.getValue()))
                     .reduce(Function.identity(), Function::andThen)
-                    .apply(fileContent.toString());
+                    .apply(fileContent);
         }
 
         return fileContent;

@@ -93,7 +93,7 @@ public class TrackerMacroResolver implements ITrackerMacroResolver {
         );
 
         if (placementIdNode == null || placementIdNode.isMissingNode()) {
-            throw new Exception("imp[" + impId + "].ext.prebid.bidder.improvedigital.placementId is not defined!");
+            throw new Exception("imp[" + impId + "]: Improve Digital placement ID is not defined!");
         }
         return placementIdNode.asText();
     }

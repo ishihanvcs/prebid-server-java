@@ -18,6 +18,7 @@ public class ImprovedigitalPbsImpExt {
     public static final BigDecimal DEFAULT_BID_FLOOR_PRICE = BigDecimal.valueOf(0.0);
     public static final String DEFAULT_BID_FLOOR_CUR = "USD";
     private static final Floor DEFAULT_BID_FLOOR = Floor.of(DEFAULT_BID_FLOOR_PRICE, DEFAULT_BID_FLOOR_CUR);
+    private static final List<String> DEFAULT_WATERFALL = List.of("gam");
 
     @JsonProperty("accountId")
     String accountId;
@@ -26,15 +27,19 @@ public class ImprovedigitalPbsImpExt {
     String requestId;
 
     @JsonProperty("floors")
-    Map<String, Floor> floors = Map.of(DEFAULT_CONFIG_KEY, DEFAULT_BID_FLOOR);
+    Map<String, Floor> floors;
 
     @JsonProperty("gam")
     ImprovedigitalPbsImpExtGam improvedigitalPbsImpExtGam;
 
     @JsonProperty("responseType")
-    VastResponseType responseType = VastResponseType.vast;
+    VastResponseType responseType;
 
-    Map<String, List<String>> waterfall = Map.of(DEFAULT_CONFIG_KEY, List.of("gam"));
+    Map<String, List<String>> waterfall;
+
+    public VastResponseType getResponseType() {
+        return responseType == null ? VastResponseType.vast : responseType;
+    }
 
     private String resolveCountryCode(Map<String, ?> map, Geo geo) {
         return ObjectUtil.getIfNotNullOrDefault(geo,
@@ -43,6 +48,10 @@ public class ImprovedigitalPbsImpExt {
                         : DEFAULT_CONFIG_KEY,
                 () -> DEFAULT_CONFIG_KEY
         );
+    }
+
+    public Map<String, Floor> getFloors() {
+        return floors == null ? Map.of(DEFAULT_CONFIG_KEY, DEFAULT_BID_FLOOR) : floors;
     }
 
     public Floor getFloor(Geo geo) {
@@ -59,17 +68,20 @@ public class ImprovedigitalPbsImpExt {
         return DEFAULT_BID_FLOOR;
     }
 
+    public Map<String, List<String>> getWaterfall() {
+        return waterfall == null ? Map.of(DEFAULT_CONFIG_KEY, DEFAULT_WATERFALL) : waterfall;
+    }
+
     public List<String> getWaterfall(Geo geo) {
         final Map<String, List<String>> waterfall = this.getWaterfall();
-        final List<String> defaultResult = List.of("gam");
         if (waterfall.isEmpty()) {
-            return defaultResult;
+            return DEFAULT_WATERFALL;
         }
         final String countryCode = resolveCountryCode(waterfall, geo);
 
         if (waterfall.containsKey(countryCode)) {
             return waterfall.get(countryCode);
         }
-        return defaultResult;
+        return DEFAULT_WATERFALL;
     }
 }

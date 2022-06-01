@@ -523,7 +523,8 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .post(Endpoint.openrtb2_auction.value());
     }
 
-    private Response doVideoMultiImpRequestAndGetResponse(Map<String, String> responseMacroReplacers) throws IOException {
+    private Response doVideoMultiImpRequestAndGetResponse(
+            Map<String, String> responseMacroReplacers) throws IOException {
         final String stubScenario = "Multi imp";
         final String stubStateNextImp = "Next imp";
         WIRE_MOCK_RULE.stubFor(
@@ -531,7 +532,8 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                         .inScenario(stubScenario)
                         .whenScenarioStateIs(Scenario.STARTED)
                         .willReturn(aResponse().withBody(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/test-video-multiimp-improvedigital-bid-response-1.json",
+                                "/com/improvedigital/prebid/server/it/"
+                                        + "test-video-multiimp-improvedigital-bid-response-1.json",
                                 responseMacroReplacers
                         )))
                         .willSetStateTo(stubStateNextImp)
@@ -541,7 +543,8 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                         .inScenario(stubScenario)
                         .whenScenarioStateIs(stubStateNextImp)
                         .willReturn(aResponse().withBody(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/test-video-multiimp-improvedigital-bid-response-2.json",
+                                "/com/improvedigital/prebid/server/it/"
+                                        + "test-video-multiimp-improvedigital-bid-response-2.json",
                                 responseMacroReplacers
                         )))
                         .willSetStateTo(Scenario.STARTED)

@@ -1,5 +1,6 @@
 package com.improvedigital.prebid.server.it;
 
+import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import io.restassured.response.Response;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -298,6 +299,46 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
     }
 
     @Test
+    public void shouldAddCorrectPlacementIdInCustomTrackerOnVideoResponse() throws Exception {
+        String vastXmlResponse1 = getVastXmlWrapper("20220601_1", false)
+                .replace("\"", "\\\"");
+        String vastXmlResponse2 = getVastXmlInline("20220601_2", false)
+                .replace("\"", "\\\"");
+        final Response response = doVideoMultiImpRequestAndGetResponse(Map.of(
+                "IT_TEST_MACRO_ADM_1", vastXmlResponse1,
+                "IT_TEST_MACRO_ADM_2", vastXmlResponse2,
+                "IT_TEST_MACRO_CURRENCY", "USD"
+        ));
+
+        JSONObject responseJson = new JSONObject(response.asString());
+        assertThat(getExtPrebidTypeOfNthBid(responseJson, 0)).isEqualTo("video");
+        assertThat(getExtPrebidTypeOfNthBid(responseJson, 1)).isEqualTo("video");
+        assertCurrency(responseJson, "USD");
+
+        String adm1 = getAdmOfNthBid(responseJson, 0);
+        String adm2 = getAdmOfNthBid(responseJson, 1);
+
+        // Swapping the multi responses so that adm1 contains the imp_1's and adm2 contains imp_2's response.
+        if (adm2.contains("20220601_1")) {
+            String temp = adm1;
+            adm1 = adm2;
+            adm2 = temp;
+        }
+
+        // 1st imp's tracker.
+        String trackingImpPixel1 = XPathFactory.newInstance().newXPath()
+                .compile("/VAST/Ad[@id='20220601_1']/Wrapper/Impression[1]")
+                .evaluate(new InputSource(new StringReader(adm1)));
+        assertThat(trackingImpPixel1).isEqualTo(getCustomTrackerUrl("1.25", "12345"));
+
+        // 2nd imp's tracker.
+        String trackingImpPixel2 = XPathFactory.newInstance().newXPath()
+                .compile("/VAST/Ad[@id='20220601_2']/InLine/Impression[1]")
+                .evaluate(new InputSource(new StringReader(adm2)));
+        assertThat(trackingImpPixel2).isEqualTo(getCustomTrackerUrl("2.15", "54321"));
+    }
+
+    @Test
     public void shouldNotAddCustomTrackerOnNativeResponseWhenNoTrackersReturnedFromBidder() throws Exception {
         final Response response = doNativeRequestAndGetResponse(Map.of(
                 "IT_TEST_MACRO_EVENT_TRACKERS", "",
@@ -482,6 +523,41 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .post(Endpoint.openrtb2_auction.value());
     }
 
+    private Response doVideoMultiImpRequestAndGetResponse(
+            Map<String, String> responseMacroReplacers) throws IOException {
+        final String stubScenario = "Multi imp";
+        final String stubStateNextImp = "Next imp";
+        WIRE_MOCK_RULE.stubFor(
+                post(urlPathEqualTo("/improvedigital-exchange"))
+                        .inScenario(stubScenario)
+                        .whenScenarioStateIs(Scenario.STARTED)
+                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/"
+                                        + "test-video-multiimp-improvedigital-bid-response-1.json",
+                                responseMacroReplacers
+                        )))
+                        .willSetStateTo(stubStateNextImp)
+        );
+        WIRE_MOCK_RULE.stubFor(
+                post(urlPathEqualTo("/improvedigital-exchange"))
+                        .inScenario(stubScenario)
+                        .whenScenarioStateIs(stubStateNextImp)
+                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/"
+                                        + "test-video-multiimp-improvedigital-bid-response-2.json",
+                                responseMacroReplacers
+                        )))
+                        .willSetStateTo(Scenario.STARTED)
+        );
+
+        return specWithPBSHeader(18081)
+                .body(jsonFromFileWithMacro(
+                        "/com/improvedigital/prebid/server/it/test-video-multiimp-auction-improvedigital-request.json",
+                        null
+                ))
+                .post(Endpoint.openrtb2_auction.value());
+    }
+
     private Response doNativeRequestAndGetResponse(Map<String, String> responseMacroReplacers) throws IOException {
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
@@ -557,8 +633,12 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         return null;
     }
 
-    @NotNull
     private String getAdmOf1stBid(JSONObject responseJson) throws JSONException {
+        return getAdmOfNthBid(responseJson, 0);
+    }
+
+    @NotNull
+    private String getAdmOfNthBid(JSONObject responseJson, int bidIndex) throws JSONException {
         assertThat(responseJson.getJSONArray("seatbid").length())
                 .isGreaterThanOrEqualTo(1);
 
@@ -567,14 +647,18 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
         return responseJson
                 .getJSONArray("seatbid").getJSONObject(0)
-                .getJSONArray("bid").getJSONObject(0)
+                .getJSONArray("bid").getJSONObject(bidIndex)
                 .getString("adm");
     }
 
     private String getExtPrebidTypeOf1stBid(JSONObject responseJson) throws JSONException {
+        return getExtPrebidTypeOfNthBid(responseJson, 0);
+    }
+
+    private String getExtPrebidTypeOfNthBid(JSONObject responseJson, int bidIndex) throws JSONException {
         return responseJson
                 .getJSONArray("seatbid").getJSONObject(0)
-                .getJSONArray("bid").getJSONObject(0)
+                .getJSONArray("bid").getJSONObject(bidIndex)
                 .getJSONObject("ext")
                 .getJSONObject("prebid")
                 .getString("type");
@@ -592,7 +676,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
             return macrosInFileContent.entrySet().stream()
                     .map(m -> (Function<String, String>) s -> s.replace(m.getKey(), m.getValue()))
                     .reduce(Function.identity(), Function::andThen)
-                    .apply(fileContent.toString());
+                    .apply(fileContent);
         }
 
         return fileContent;

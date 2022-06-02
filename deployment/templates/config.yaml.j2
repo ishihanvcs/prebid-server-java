@@ -67,6 +67,8 @@ metrics:
   prometheus:
     enabled: true
     port: 9112
+    namespace: prebid
+    subsystem: server
   graphite:
     enabled: false
     host: carbon.{{ env_tag }}.iceberg.improve

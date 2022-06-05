@@ -79,9 +79,10 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
                 return imp;
             }
             final BigDecimal bidFloorInUsd;
-            if (effectiveFloor.getBidFloor().doubleValue() <= 0.0
-                    || StringUtils.compareIgnoreCase("USD", effectiveFloor.getBidFloorCur()) == 0) {
-                bidFloorInUsd = BigDecimal.valueOf(0.0);
+            if (StringUtils.compareIgnoreCase("USD", effectiveFloor.getBidFloorCur()) == 0) {
+                bidFloorInUsd = effectiveFloor.getBidFloor().doubleValue() <= 0.0
+                        ? BigDecimal.valueOf(0.0)
+                        : effectiveFloor.getBidFloor();
             } else {
                 bidFloorInUsd = currencyConversionService.convertCurrency(
                         effectiveFloor.getBidFloor(), bidRequest,

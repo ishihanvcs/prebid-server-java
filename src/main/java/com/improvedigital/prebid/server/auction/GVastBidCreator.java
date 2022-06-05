@@ -83,6 +83,7 @@ public class GVastBidCreator {
     private Integer lmt;
     private String os;
     private boolean isApp;
+    private boolean prioritizeImprovedigitalDeals;
 
     public GVastBidCreator(
             MacroProcessor macroProcessor,
@@ -153,9 +154,10 @@ public class GVastBidCreator {
         this.adUnit = resolveGamAdUnit();
     }
 
-    public Bid create(Imp imp, SeatBid seatBid) {
+    public Bid create(Imp imp, SeatBid seatBid, boolean prioritizeImprovedigitalDeals) {
         this.imp = Objects.requireNonNull(imp);
         this.seatBid = Objects.requireNonNull(seatBid);
+        this.prioritizeImprovedigitalDeals = prioritizeImprovedigitalDeals;
         this.initGVastParams();
         String debugInfo = "";
         if (isDebug) {
@@ -202,8 +204,7 @@ public class GVastBidCreator {
             JsonNode targetingKvs = bid.getExt().at("/prebid/targeting");
 
             boolean isImproveDeal = false;
-            if (vastUrls.size() > 0
-                    && seatBid.getSeat().equals("improvedigital")) {
+            if (prioritizeImprovedigitalDeals && vastUrls.size() > 0) {
                 for (Iterator<String> it = targetingKvs.fieldNames(); it.hasNext(); ) {
                     String key = it.next();
                     if (key.equals("hb_deal_improvedigit")) {
@@ -264,7 +265,7 @@ public class GVastBidCreator {
                 continue;
             }
 
-            if (isDeal && price >= IMPROVE_DIGITAL_DEAL_FLOOR) {
+            if (prioritizeImprovedigitalDeals && isDeal && price >= IMPROVE_DIGITAL_DEAL_FLOOR) {
                 // ImproveDigital deal won't always win if there's a higher bid. In that case we need to add
                 // winner Prebid KVs
                 if (bidderKeyValues.indexOf("hb_pb=") == -1) {
@@ -490,7 +491,8 @@ public class GVastBidCreator {
 
     private String buildVastXmlResponseWithGam(String hbAuctionDebugInfo) {
         final String gamPrebidTargeting = formatPrebidGamKeyValueString();
-        final boolean isImprovedigitalDeal = gamPrebidTargeting.contains("hb_deal_improvedigit");
+        final boolean isImprovedigitalDeal = prioritizeImprovedigitalDeals
+                && gamPrebidTargeting.contains("hb_deal_improvedigit");
         final String custParams = this.custParams.toString();
         final String categoryTargeting;
 

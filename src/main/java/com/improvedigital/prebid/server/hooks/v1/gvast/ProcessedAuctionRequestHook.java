@@ -47,6 +47,7 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
     private final ExtRequest defaultExtRequest;
     private final RequestUtils requestUtils;
     private final JsonMerger merger;
+    private final ExtRequest prioritizedExtRequestForGVast;
 
     public ProcessedAuctionRequestHook(
             JsonUtils jsonUtils,
@@ -76,6 +77,16 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
                         .includeformat(true)
                         .includewinners(true)
                         .pricegranularity(priceGranularity)
+                        .build()
+                ).build()
+        );
+
+        // Set attributes that needs to be prioritized for gvast, over attributes specified in
+        // client provided bid request.
+        // Currently, only ext.prebid.targeting.includebidderkeys is set to true
+        this.prioritizedExtRequestForGVast = ExtRequest.of(ExtRequestPrebid.builder()
+                .targeting(ExtRequestTargeting.builder()
+                        .includebidderkeys(true)
                         .build()
                 ).build()
         );
@@ -122,17 +133,21 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         Geo geoInfo = ObjectUtil.getIfNotNull(bidRequest.getDevice(), Device::getGeo);
         Map<String, Floor> impIdToEffectiveFloor = new HashMap<>();
         boolean enableCache = false;
+        boolean hasGVastImp = false;
         for (final Imp imp : bidRequest.getImp()) {
             final String impId = imp.getId();
             final ImprovedigitalPbsImpExt pbsImpExt = jsonUtils.getImprovedigitalPbsImpExt(imp);
             if (!enableCache && requestUtils.isNonVastVideo(imp, pbsImpExt)) {
                 enableCache = true;
+                if (requestUtils.hasGVastResponseType(pbsImpExt)) {
+                    hasGVastImp = true;
+                }
             }
             impIdToPbsImpExt.put(impId, pbsImpExt);
             impIdToEffectiveFloor.put(impId, computeEffectiveFloor(imp, pbsImpExt, geoInfo));
         }
         if (enableCache) {
-            bidRequest = updateExtWithCacheSettings(bidRequest);
+            bidRequest = updateExtWithCacheSettings(bidRequest, hasGVastImp);
         }
         return GVastHooksModuleContext
                         .from(impIdToPbsImpExt)
@@ -140,10 +155,17 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
                         .with(bidRequest);
     }
 
-    private BidRequest updateExtWithCacheSettings(BidRequest bidRequest) {
-        final ExtRequest mergedExtRequest = merger.merge(
+    private BidRequest updateExtWithCacheSettings(BidRequest bidRequest, boolean hasGVastImp) {
+        ExtRequest mergedExtRequest = merger.merge(
                 bidRequest.getExt(), defaultExtRequest, ExtRequest.class
         );
+
+        // prioritize some specific ext attributes for gvast
+        if (hasGVastImp) {
+            mergedExtRequest = merger.merge(
+                    prioritizedExtRequestForGVast, mergedExtRequest, ExtRequest.class
+            );
+        }
         return bidRequest.toBuilder().ext(mergedExtRequest).build();
     }
 

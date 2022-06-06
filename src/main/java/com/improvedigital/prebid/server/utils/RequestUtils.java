@@ -109,6 +109,14 @@ public class RequestUtils {
                     .value(false);
     }
 
+    public boolean hasGVastResponseType(ImprovedigitalPbsImpExt impExt) {
+        return isOfResponseType(impExt, VastResponseType.gvast);
+    }
+
+    public boolean hasWaterfallResponseType(ImprovedigitalPbsImpExt impExt) {
+        return isOfResponseType(impExt, VastResponseType.waterfall);
+    }
+
     public boolean hasNonVastVideo(BidRequest bidRequest) {
         return Nullable.of(bidRequest).get(BidRequest::getImp)
                 .value(new ArrayList<>())
@@ -145,5 +153,11 @@ public class RequestUtils {
         }
 
         return jsonUtils.getObjectMapper().convertValue(impExt, ExtImp.class);
+    }
+
+    private boolean isOfResponseType(ImprovedigitalPbsImpExt impExt, VastResponseType responseType) {
+        return Nullable.of(impExt)
+                .get(pbsImpExt -> pbsImpExt.getResponseType() == responseType)
+                .value(false);
     }
 }

@@ -19,7 +19,6 @@ import com.iab.openrtb.response.SeatBid;
 import com.improvedigital.prebid.server.auction.model.CustParams;
 import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExtGam;
-import com.improvedigital.prebid.server.auction.model.VastResponseType;
 import com.improvedigital.prebid.server.utils.FluentMap;
 import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
@@ -170,7 +169,7 @@ public class GVastBidCreator {
 
         final String adm;
         // Response without GAM
-        if (!waterfall.isEmpty() && config.getResponseType() == VastResponseType.waterfall) {
+        if (requestUtils.hasWaterfallResponseType(config)) {
             adm = buildVastXmlResponseWithoutGam(debugInfo);
         } else { // Response with GAM
             adm = buildVastXmlResponseWithGam(debugInfo);
@@ -508,7 +507,12 @@ public class GVastBidCreator {
         // In order to prioritize Improve Digital deal over other ads, a second GAM tag is added
         // The first GAM call will disable AdX/AdSense. In case Improve's VAST doesn't fill or the ad
         // fails to play, the second GAM call is added as a fallback to give AdX a chance to backfill
-        final List<String> waterfall = new ArrayList<>(this.waterfall);
+        final List<String> waterfall = new ArrayList<>(
+                this.waterfall.isEmpty()
+                        ? List.of("gam")
+                        : this.waterfall
+                );
+
         if (isImprovedigitalDeal) {
             waterfall.add(0, "gam_improve_deal");
             final int gamIndex = waterfall.indexOf("gam");
@@ -563,11 +567,7 @@ public class GVastBidCreator {
 
         List<String> vastTags = getCachedBidUrls();
 
-        for (String adTag : waterfall) {
-            if (!adTag.equals("no_gam")) {
-                vastTags.add(adTag);
-            }
-        }
+        vastTags.addAll(waterfall);
 
         // If there's no bid/tag but the debug mode is enabled, respond with a test domain and debug info
         if (isDebug && vastTags.isEmpty()) {

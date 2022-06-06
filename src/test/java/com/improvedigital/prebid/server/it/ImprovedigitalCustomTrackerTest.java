@@ -461,7 +461,20 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 ))
                 .post(Endpoint.openrtb2_auction.value());
 
-        assertThat(response.statusCode()).isEqualTo(400);
+        // For this error, we get 200 with empty respose and proper error message (as we used test=1).
+        assertThat(response.statusCode()).isEqualTo(200);
+
+        JSONObject responseJson = new JSONObject(response.asString());
+        assertThat(responseJson.getJSONArray("seatbid").length()).isEqualTo(0);
+        assertThat(responseJson
+                .getJSONObject("ext")
+                .getJSONObject("prebid")
+                .getJSONObject("modules")
+                .getJSONObject("errors")
+                .getJSONObject("improvedigital-gvast-hooks-module")
+                .getJSONArray("improvedigital-gvast-hooks-processed-auction-request")
+                .getString(0)
+        ).isEqualTo("improvedigital placementId is not defined for one or more imp(s)");
     }
 
     private Response doBannerRequestAndGetResponse(Map<String, String> responseMacroReplacers) throws IOException {

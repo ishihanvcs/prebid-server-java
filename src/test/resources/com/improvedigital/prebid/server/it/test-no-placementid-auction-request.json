@@ -15,6 +15,7 @@
     }
   ],
   "tmax": 5000,
+  "test": 1,
   "regs": {
     "ext": {
       "gdpr": 0

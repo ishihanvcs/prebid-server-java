@@ -20,6 +20,7 @@ import org.prebid.server.hooks.execution.v1.entrypoint.EntrypointPayloadImpl;
 import org.prebid.server.hooks.v1.InvocationContext;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.entrypoint.EntrypointPayload;
+import org.prebid.server.json.EncodeException;
 import org.prebid.server.json.JsonMerger;
 import org.prebid.server.proto.openrtb.ext.request.ExtImp;
 import org.prebid.server.proto.openrtb.ext.request.ExtPublisher;
@@ -81,67 +82,56 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
                         BidRequest updatedBidRequest = originalBidRequest;
                         String accountId = null;
                         String requestId = null;
-                        boolean hasMismatchedAccount = false;
-                        boolean hasMismatchedRequest = false;
-
                         for (final Imp imp : originalBidRequest.getImp()) {
                             final String storedRequestId = impToStoredRequestId.get(imp);
                             final Imp storedImp = storedRequestId != null ? storedImps.get(storedRequestId) : null;
                             final ImprovedigitalPbsImpExt pbsImpExt = mergeImprovedigitalPbsImpExt(imp, storedImp);
                             if (pbsImpExt != null) {
-                                if (!hasAccountId && pbsImpExt.getAccountId() != null) {
+                                if (pbsImpExt.getAccountId() != null) {
                                     if (accountId == null) {
                                         accountId = pbsImpExt.getAccountId();
                                     } else if (!accountId.equals(pbsImpExt.getAccountId())) {
-                                        hasMismatchedAccount = true;
+                                        return Future.succeededFuture(
+                                                InvocationResultImpl.rejected(
+                                                        "accountId mismatched in imp[].prebid.improvedigitalpbs"
+                                                )
+                                        );
                                     }
                                 }
 
-                                if (!hasStoredRequest && pbsImpExt.getRequestId() != null) {
+                                if (pbsImpExt.getRequestId() != null) {
                                     if (requestId == null) {
                                         requestId = pbsImpExt.getRequestId();
                                     } else if (!requestId.equals(pbsImpExt.getRequestId())) {
-                                        hasMismatchedRequest = true;
+                                        return Future.succeededFuture(
+                                                InvocationResultImpl.rejected(
+                                                        "requestId mismatched in imp[].prebid.improvedigitalpbs"
+                                                )
+                                        );
                                     }
                                 }
                             }
                         }
 
-                        if (!hasMismatchedAccount) {
+                        if (!hasAccountId) {
                             updatedBidRequest = setParentAccountId(updatedBidRequest, accountId);
-                        } else {
-                            logger.warn(
-                                    entrypointPayload,
-                                    new InvalidRequestException(
-                                            "accountId mismatched in imp[].prebid.improvedigitalpbs"
-                                    )
-                            );
                         }
 
-                        if (!hasMismatchedRequest) {
+                        if (!hasStoredRequest) {
                             updatedBidRequest = setRequestId(updatedBidRequest, requestId);
-                        } else {
-                            logger.warn(
-                                    entrypointPayload,
-                                    new InvalidRequestException(
-                                            "requestId mismatched in imp[].prebid.improvedigitalpbs"
-                                    )
-                            );
                         }
 
-                        String updatedBody = entrypointPayload.body();
                         try {
-                            updatedBody = mapper.writeValueAsString(updatedBidRequest);
+                            final String updatedBody = mapper.writeValueAsString(updatedBidRequest);
+                            return Future.succeededFuture(InvocationResultImpl.succeeded(
+                                    payload -> EntrypointPayloadImpl.of(
+                                            entrypointPayload.queryParams(),
+                                            entrypointPayload.headers(),
+                                            updatedBody
+                                    )));
                         } catch (JsonProcessingException e) {
-                            logger.warn(entrypointPayload, e);
+                            throw new EncodeException("Failed to encode as JSON: " + e.getMessage());
                         }
-                        final String finalUpdatedBody = updatedBody;
-                        return Future.succeededFuture(InvocationResultImpl.succeeded(
-                                payload -> EntrypointPayloadImpl.of(
-                                        entrypointPayload.queryParams(),
-                                        entrypointPayload.headers(),
-                                        finalUpdatedBody
-                                )));
                     }, t -> Future.succeededFuture(InvocationResultImpl.rejected(t.getMessage())));
         }
 
@@ -174,37 +164,37 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
     }
 
     private BidRequest setParentAccountId(BidRequest bidRequest, String accountId) {
-        if (accountId == null) {
-            return bidRequest;
-        }
-        BidRequest.BidRequestBuilder requestBuilder = bidRequest.toBuilder();
-        final Publisher publisherWithParentAccount = Publisher.builder().ext(
-                ExtPublisher.of(
-                        ExtPublisherPrebid.of(accountId)
-                )
-        ).build();
-        if (bidRequest.getSite() != null) {
-            requestBuilder.site(
-                    bidRequest.getSite().toBuilder().publisher(
-                            merger.merge(
-                                    publisherWithParentAccount,
-                                    bidRequest.getSite().getPublisher(),
-                                    Publisher.class
-                            )
-                    ).build()
-            );
-        } else {
-            requestBuilder.app(
-                    bidRequest.getApp().toBuilder().publisher(
-                            merger.merge(
-                                    publisherWithParentAccount,
-                                    bidRequest.getApp().getPublisher(),
-                                    Publisher.class
-                            )
-                    ).build()
+        if (accountId != null) {
+            BidRequest.BidRequestBuilder requestBuilder = bidRequest.toBuilder();
+            final Publisher publisherWithParentAccount = Publisher.builder().ext(
+                    ExtPublisher.of(
+                            ExtPublisherPrebid.of(accountId)
+                    )
             ).build();
+            if (bidRequest.getSite() != null) {
+                requestBuilder.site(
+                        bidRequest.getSite().toBuilder().publisher(
+                                merger.merge(
+                                        publisherWithParentAccount,
+                                        bidRequest.getSite().getPublisher(),
+                                        Publisher.class
+                                )
+                        ).build()
+                );
+            } else {
+                requestBuilder.app(
+                        bidRequest.getApp().toBuilder().publisher(
+                                merger.merge(
+                                        publisherWithParentAccount,
+                                        bidRequest.getApp().getPublisher(),
+                                        Publisher.class
+                                )
+                        ).build()
+                ).build();
+            }
+            return requestBuilder.build();
         }
-        return requestBuilder.build();
+        throw new InvalidRequestException("accountId not defined in bidRequest or any of the imps");
     }
 
     private BidRequest setRequestId(BidRequest bidRequest, String requestId) {

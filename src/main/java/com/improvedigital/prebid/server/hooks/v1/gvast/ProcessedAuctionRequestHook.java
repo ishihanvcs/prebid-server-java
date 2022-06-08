@@ -183,8 +183,8 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
             } else {
                 bidFloorInUsd = currencyConversionService.convertCurrency(
                         effectiveFloor.getBidFloor(), bidRequest,
-                        "USD",
-                        effectiveFloor.getBidFloorCur()
+                        effectiveFloor.getBidFloorCur(),
+                        "USD"
                 );
             }
 

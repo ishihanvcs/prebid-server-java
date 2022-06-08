@@ -164,9 +164,9 @@ public class ExtensionConfig {
     @Bean
     ITrackerMacroResolver trackerMacroResolver(
             CurrencyConversionService currencyConversionService,
-            JsonUtils jsonUtils
+            RequestUtils requestUtils
     ) {
-        return new TrackerMacroResolver(currencyConversionService, jsonUtils);
+        return new TrackerMacroResolver(currencyConversionService, requestUtils);
     }
 
     @Bean

@@ -19,6 +19,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class RequestUtils {
 
@@ -27,7 +28,11 @@ public class RequestUtils {
     private final JsonUtils jsonUtils;
 
     public RequestUtils(JsonUtils jsonUtils) {
-        this.jsonUtils = jsonUtils;
+        this.jsonUtils = Objects.requireNonNull(jsonUtils);
+    }
+
+    public JsonUtils getJsonUtils() {
+        return jsonUtils;
     }
 
     public String getAccountId(BidRequest bidRequest) {
@@ -130,6 +135,15 @@ public class RequestUtils {
             return node.asInt();
         }
         return null;
+    }
+
+    public Integer getImprovePlacementId(BidRequest bidRequest, String impId) {
+        return getImprovePlacementId(
+                bidRequest.getImp().stream()
+                .filter(i -> i.getId().equals(impId))
+                .findFirst()
+                        .orElse(null)
+        );
     }
 
     public JsonNode extractBidderInfo(Imp imp, String bidderName, String path) {

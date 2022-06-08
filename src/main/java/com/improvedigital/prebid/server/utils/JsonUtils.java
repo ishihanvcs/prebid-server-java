@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -26,7 +27,7 @@ public class JsonUtils {
     private final ObjectMapper objectMapper;
 
     public JsonUtils(JacksonMapper mapper) {
-        this.mapper = mapper;
+        this.mapper = Objects.requireNonNull(mapper);
         this.objectMapper = mapper.mapper();
     }
 

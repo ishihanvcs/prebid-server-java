@@ -20,7 +20,7 @@ public class JsonUtilsTest extends VertxTest {
     public void testGetBigDecimalAt() throws JsonProcessingException {
         JsonNode node = mapper.readTree(getJsonInputExampleBidResponse());
         assertThat(jsonUtils.getBigDecimalAt(node, "/my_price"))
-                .isEqualTo(new BigDecimal(45.67));
+                .isEqualTo(new BigDecimal("45.67"));
         assertThat(jsonUtils.getBigDecimalAt(node, "/seatbid/0/bid/0/ext/origbidcpm"))
                 .isEqualTo(new BigDecimal(15));
 

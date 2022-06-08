@@ -93,7 +93,13 @@ public class JsonUtils {
         }
 
         node = node.at(jsonPointerExpr);
-        return (node.isMissingNode() || !node.isNumber()) ? defaultValue : new BigDecimal(node.asDouble());
+        return node.isMissingNode() || !node.isNumber()
+                ? defaultValue
+                : node.isBigDecimal()
+                    ? node.decimalValue()
+                    : node.isDouble()
+                        ? BigDecimal.valueOf(node.doubleValue())
+                        : new BigDecimal(node.asText());
     }
 
     /**

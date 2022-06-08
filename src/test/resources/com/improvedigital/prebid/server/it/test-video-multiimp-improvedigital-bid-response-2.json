@@ -1,0 +1,19 @@
+{
+  "id": "request_id",
+  "seatbid": [
+    {
+      "bid": [
+        {
+          "id": "bid_id",
+          "impid": "imp_id_2",
+          "price": 2.15,
+          "crid": "crid001",
+          "adm": "IT_TEST_MACRO_ADM_2",
+          "adid": "adid001",
+          "cid": "cid001"
+        }
+      ]
+    }
+  ],
+  "cur": "IT_TEST_MACRO_CURRENCY"
+}

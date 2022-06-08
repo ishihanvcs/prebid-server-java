@@ -1,10 +1,14 @@
 package com.improvedigital.prebid.server.utils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.MissingNode;
 import com.iab.openrtb.request.App;
 import com.iab.openrtb.request.BidRequest;
+import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.request.Publisher;
 import com.iab.openrtb.request.Site;
-import org.apache.commons.lang3.ObjectUtils;
+import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
+import com.improvedigital.prebid.server.auction.model.VastResponseType;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.proto.openrtb.ext.request.ExtImp;
 import org.prebid.server.proto.openrtb.ext.request.ExtImpPrebid;
@@ -13,56 +17,161 @@ import org.prebid.server.proto.openrtb.ext.request.ExtPublisherPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
-import org.prebid.server.util.ObjectUtil;
+
+import java.util.ArrayList;
+import java.util.Objects;
 
 public class RequestUtils {
 
+    public static final String IMPROVE_BIDDER_NAME = "improvedigital";
+
+    private final JsonUtils jsonUtils;
+
+    public RequestUtils(JsonUtils jsonUtils) {
+        this.jsonUtils = Objects.requireNonNull(jsonUtils);
+    }
+
+    public JsonUtils getJsonUtils() {
+        return jsonUtils;
+    }
+
     public String getAccountId(BidRequest bidRequest) {
         final Publisher publisher = resolvePublisher(bidRequest);
-        final String publisherId = publisher != null ? resolvePublisherId(publisher) : null;
-        return ObjectUtils.defaultIfNull(publisherId, StringUtils.EMPTY);
+        final Nullable<Publisher> publisherNullable = Nullable.of(publisher);
+        return publisherNullable
+                .get(this::parentAccountIdFromPublisher)
+                .value(publisherNullable
+                        .get(Publisher::getId)
+                        .get(StringUtils::stripToNull)
+                        .value()
+                );
     }
 
     public String getParentAccountId(BidRequest bidRequest) {
         final Publisher publisher = resolvePublisher(bidRequest);
-        return publisher != null ? parentAccountIdFromExtPublisher(publisher.getExt()) : StringUtils.EMPTY;
+        return Nullable.of(publisher)
+                .get(this::parentAccountIdFromPublisher)
+                .value();
     }
 
-    public Publisher resolvePublisher(BidRequest bidRequest) {
-        final App app = bidRequest.getApp();
-        final Publisher appPublisher = app != null ? app.getPublisher() : null;
-        final Site site = bidRequest.getSite();
-        final Publisher sitePublisher = site != null ? site.getPublisher() : null;
-
-        return ObjectUtils.defaultIfNull(appPublisher, sitePublisher);
-    }
-
-    /**
-     * Resolves what value should be used as a publisher id - either taken from publisher.ext.parentAccount
-     * or publisher.id in this respective priority.
-     */
-    public String resolvePublisherId(Publisher publisher) {
-        final String parentAccountId = parentAccountIdFromExtPublisher(publisher.getExt());
-        return ObjectUtils.defaultIfNull(parentAccountId, publisher.getId());
+    private Publisher resolvePublisher(BidRequest bidRequest) {
+        return Nullable.of(bidRequest)
+                .get(BidRequest::getApp)
+                .get(App::getPublisher)
+                .value(Nullable.of(bidRequest)
+                        .get(BidRequest::getSite)
+                        .get(Site::getPublisher)
+                        .value());
     }
 
     /**
      * Parses publisher.ext and returns parentAccount value from it. Returns null if any parsing error occurs.
      */
-    public String parentAccountIdFromExtPublisher(ExtPublisher extPublisher) {
-        final ExtPublisherPrebid extPublisherPrebid = extPublisher != null ? extPublisher.getPrebid() : null;
-        return extPublisherPrebid != null ? StringUtils.stripToNull(extPublisherPrebid.getParentAccount()) : null;
+    private String parentAccountIdFromPublisher(Publisher publisher) {
+        return Nullable.of(publisher)
+                .get(Publisher::getExt)
+                .get(ExtPublisher::getPrebid)
+                .get(ExtPublisherPrebid::getParentAccount)
+                .get(StringUtils::stripToNull)
+                .value();
     }
 
     public String getStoredRequestId(ExtRequest extRequest) {
-        ExtRequestPrebid prebid = ObjectUtil.getIfNotNull(extRequest, ExtRequest::getPrebid);
-        ExtStoredRequest storedRequest = ObjectUtil.getIfNotNull(prebid, ExtRequestPrebid::getStoredrequest);
-        return ObjectUtil.getIfNotNull(storedRequest, ExtStoredRequest::getId);
+        return Nullable.of(extRequest)
+                .get(ExtRequest::getPrebid)
+                .get(ExtRequestPrebid::getStoredrequest)
+                .get(this::storedRequestIdFromExtStoredRequest)
+                .value();
     }
 
     public String getStoredImpId(ExtImp extImp) {
-        ExtImpPrebid prebid = ObjectUtil.getIfNotNull(extImp, ExtImp::getPrebid);
-        ExtStoredRequest storedRequest = ObjectUtil.getIfNotNull(prebid, ExtImpPrebid::getStoredrequest);
-        return ObjectUtil.getIfNotNull(storedRequest, ExtStoredRequest::getId);
+        return Nullable.of(extImp)
+                .get(ExtImp::getPrebid)
+                .get(ExtImpPrebid::getStoredrequest)
+                .get(this::storedRequestIdFromExtStoredRequest)
+                .value();
+    }
+
+    private String storedRequestIdFromExtStoredRequest(ExtStoredRequest extStoredRequest) {
+        return Nullable.of(extStoredRequest)
+                .get(ExtStoredRequest::getId)
+                .get(StringUtils::stripToNull)
+                .value();
+    }
+
+    public boolean isNonVastVideo(Imp imp) {
+        return Nullable.of(imp).get(Imp::getVideo).isNotNull()
+                && Nullable.of(imp)
+                    .get(jsonUtils::getImprovedigitalPbsImpExt)
+                    .get(pbsImpExt -> pbsImpExt.getResponseType() != VastResponseType.vast)
+                    .value(false);
+    }
+
+    public boolean isNonVastVideo(Imp imp, ImprovedigitalPbsImpExt impExt) {
+        return Nullable.of(imp).get(Imp::getVideo).isNotNull()
+                && Nullable.of(impExt)
+                    .get(pbsImpExt -> pbsImpExt.getResponseType() != VastResponseType.vast)
+                    .value(false);
+    }
+
+    public boolean hasGVastResponseType(ImprovedigitalPbsImpExt impExt) {
+        return isOfResponseType(impExt, VastResponseType.gvast);
+    }
+
+    public boolean hasWaterfallResponseType(ImprovedigitalPbsImpExt impExt) {
+        return isOfResponseType(impExt, VastResponseType.waterfall);
+    }
+
+    public boolean hasNonVastVideo(BidRequest bidRequest) {
+        return Nullable.of(bidRequest).get(BidRequest::getImp)
+                .value(new ArrayList<>())
+                .stream()
+                .anyMatch(this::isNonVastVideo);
+    }
+
+    public Integer getImprovePlacementId(Imp imp) {
+        JsonNode node = extractBidderInfo(imp, IMPROVE_BIDDER_NAME, "/placementId");
+        if (!node.isMissingNode() && node.isInt()) {
+            return node.asInt();
+        }
+        return null;
+    }
+
+    public Integer getImprovePlacementId(BidRequest bidRequest, String impId) {
+        return getImprovePlacementId(
+                bidRequest.getImp().stream()
+                .filter(i -> i.getId().equals(impId))
+                .findFirst()
+                        .orElse(null)
+        );
+    }
+
+    public JsonNode extractBidderInfo(Imp imp, String bidderName, String path) {
+        return Nullable.of(imp)
+                .get(Imp::getExt)
+                .get(this::normalizeImpExt)
+                .get(ExtImp::getPrebid)
+                .get(ExtImpPrebid::getBidder)
+                .get(node -> node.get(bidderName))
+                .get(node -> node.at(path))
+                .value(MissingNode.getInstance());
+    }
+
+    private ExtImp normalizeImpExt(Object impExt) {
+        if (impExt == null) {
+            return null;
+        }
+
+        if (impExt instanceof ExtImp) {
+            return (ExtImp) impExt;
+        }
+
+        return jsonUtils.getObjectMapper().convertValue(impExt, ExtImp.class);
+    }
+
+    private boolean isOfResponseType(ImprovedigitalPbsImpExt impExt, VastResponseType responseType) {
+        return Nullable.of(impExt)
+                .get(pbsImpExt -> pbsImpExt.getResponseType() == responseType)
+                .value(false);
     }
 }

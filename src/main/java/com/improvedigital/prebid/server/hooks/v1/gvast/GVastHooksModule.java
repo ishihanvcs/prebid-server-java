@@ -2,6 +2,7 @@ package com.improvedigital.prebid.server.hooks.v1.gvast;
 
 import com.improvedigital.prebid.server.settings.SettingsLoader;
 import com.improvedigital.prebid.server.utils.JsonUtils;
+import com.improvedigital.prebid.server.utils.MacroProcessor;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -21,19 +22,31 @@ public class GVastHooksModule implements Module {
     private final JsonUtils jsonUtils;
     private final JsonMerger merger;
     private final CurrencyConversionService currencyConversionService;
+    private final MacroProcessor macroProcessor;
+    private final String externalUrl;
+    private final String gamNetworkCode;
+    private final String cacheHost;
     private final RequestUtils requestUtils;
 
     public GVastHooksModule(
             SettingsLoader settingsLoader,
             JsonUtils jsonUtils,
             RequestUtils requestUtils, JsonMerger merger,
-            CurrencyConversionService currencyConversionService
+            CurrencyConversionService currencyConversionService,
+            MacroProcessor macroProcessor,
+            String externalUrl,
+            String gamNetworkCode,
+            String cacheHost
     ) {
         this.settingsLoader = settingsLoader;
         this.jsonUtils = jsonUtils;
         this.requestUtils = requestUtils;
         this.merger = merger;
         this.currencyConversionService = currencyConversionService;
+        this.macroProcessor = macroProcessor;
+        this.externalUrl = externalUrl;
+        this.gamNetworkCode = gamNetworkCode;
+        this.cacheHost = cacheHost;
     }
 
     @Override
@@ -45,8 +58,9 @@ public class GVastHooksModule implements Module {
     public Collection<? extends Hook<?, ? extends InvocationContext>> hooks() {
         return Arrays.asList(
                 new EntrypointHook(settingsLoader, jsonUtils, requestUtils, merger),
-                new RawAuctionRequestHook(jsonUtils),
-                new ProcessedAuctionRequestHook(jsonUtils, currencyConversionService)
+                new ProcessedAuctionRequestHook(jsonUtils, merger, requestUtils, currencyConversionService),
+                new AuctionResponseHook(jsonUtils, requestUtils, macroProcessor,
+                        externalUrl, gamNetworkCode, cacheHost)
         );
     }
 }

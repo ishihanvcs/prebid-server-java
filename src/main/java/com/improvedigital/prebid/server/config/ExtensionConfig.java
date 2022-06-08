@@ -1,6 +1,5 @@
 package com.improvedigital.prebid.server.config;
 
-import com.improvedigital.prebid.server.auction.GVastResponseCreator;
 import com.improvedigital.prebid.server.auction.requestfactory.GVastParamsResolver;
 import com.improvedigital.prebid.server.auction.requestfactory.GVastRequestFactory;
 import com.improvedigital.prebid.server.customtrackers.BidderBidModifier;
@@ -22,7 +21,6 @@ import org.prebid.server.analytics.reporter.AnalyticsReporterDelegator;
 import org.prebid.server.auction.ExchangeService;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
 import org.prebid.server.currency.CurrencyConversionService;
-import org.prebid.server.geolocation.GeoLocationService;
 import org.prebid.server.hooks.v1.Module;
 import org.prebid.server.identity.IdGenerator;
 import org.prebid.server.json.JacksonMapper;
@@ -69,45 +67,22 @@ public class ExtensionConfig {
 
     @Bean
     GVastRequestFactory gvastRequestFactory(
-            SettingsLoader settingsLoader,
             GVastParamsResolver gVastParamsResolver,
             AuctionRequestFactory auctionRequestFactory,
             Clock clock,
-            @Autowired(required = false) GeoLocationService geoLocationService,
-            CurrencyConversionService currencyConversionService,
             @Qualifier("sourceIdGenerator") IdGenerator idGenerator,
             JacksonMapper mapper) {
         return new GVastRequestFactory(
-                settingsLoader,
                 gVastParamsResolver,
                 auctionRequestFactory,
-                // geoLocationService,
-                currencyConversionService,
                 clock,
                 idGenerator,
                 mapper);
     }
 
     @Bean
-    GVastResponseCreator gVastResponseCreator(
-            MacroProcessor macroProcessor,
-            @Value("${external-url}") String externalUrl,
-            @Value("${google-ad-manager.network-code}") String gamNetworkCode,
-            @Value("${cache.host}") String cacheHost
-    ) {
-        return new GVastResponseCreator(
-                macroProcessor,
-                externalUrl,
-                gamNetworkCode,
-                cacheHost
-        );
-    }
-
-    @Bean
     GVastHandler gVastHandler(
-            ApplicationContext applicationContext,
             GVastRequestFactory gVastRequestFactory,
-            GVastResponseCreator gVastResponseCreator,
             ExchangeService exchangeService,
             AnalyticsReporterDelegator analyticsReporter,
             Metrics metrics,
@@ -115,9 +90,7 @@ public class ExtensionConfig {
             HttpInteractionLogger httpInteractionLogger,
             Router router) {
         GVastHandler handler = new GVastHandler(
-                applicationContext,
                 gVastRequestFactory,
-                gVastResponseCreator,
                 exchangeService,
                 analyticsReporter,
                 metrics,
@@ -154,8 +127,8 @@ public class ExtensionConfig {
     }
 
     @Bean
-    RequestUtils requestUtils() {
-        return new RequestUtils();
+    RequestUtils requestUtils(JsonUtils jsonUtils) {
+        return new RequestUtils(jsonUtils);
     }
 
     @Bean
@@ -164,14 +137,23 @@ public class ExtensionConfig {
             JsonUtils jsonUtils,
             RequestUtils requestUtils,
             JsonMerger merger,
-            CurrencyConversionService currencyConversionService
+            CurrencyConversionService currencyConversionService,
+            MacroProcessor macroProcessor,
+            @Value("${external-url}") String externalUrl,
+            @Value("${google-ad-manager.network-code}") String gamNetworkCode,
+            @Value("${cache.host}") String cacheHost
     ) {
         return new GVastHooksModule(
                 settingsLoader,
                 jsonUtils,
                 requestUtils,
                 merger,
-                currencyConversionService);
+                currencyConversionService,
+                macroProcessor,
+                externalUrl,
+                gamNetworkCode,
+                cacheHost
+        );
     }
 
     @Bean
@@ -182,9 +164,9 @@ public class ExtensionConfig {
     @Bean
     ITrackerMacroResolver trackerMacroResolver(
             CurrencyConversionService currencyConversionService,
-            JsonUtils jsonUtils
+            RequestUtils requestUtils
     ) {
-        return new TrackerMacroResolver(currencyConversionService, jsonUtils);
+        return new TrackerMacroResolver(currencyConversionService, requestUtils);
     }
 
     @Bean

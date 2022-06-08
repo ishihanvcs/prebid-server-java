@@ -1,18 +1,16 @@
 package com.improvedigital.prebid.server.customtrackers.resolvers;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.iab.openrtb.request.BidRequest;
-import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.response.Bid;
 import com.improvedigital.prebid.server.customtrackers.TrackerContext;
 import com.improvedigital.prebid.server.customtrackers.contracts.ITrackerMacroResolver;
 import com.improvedigital.prebid.server.utils.FluentMap;
 import com.improvedigital.prebid.server.utils.JsonUtils;
+import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.prebid.server.bidder.model.BidderBid;
 import org.prebid.server.currency.CurrencyConversionService;
-import org.prebid.server.util.ObjectUtil;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -23,13 +21,15 @@ public class TrackerMacroResolver implements ITrackerMacroResolver {
     private static final Logger logger = LoggerFactory.getLogger(TrackerMacroResolver.class);
     private final CurrencyConversionService currencyConversionService;
     private final JsonUtils jsonUtils;
+    private final RequestUtils requestUtils;
 
     public TrackerMacroResolver(
             CurrencyConversionService currencyConversionService,
-            JsonUtils jsonUtils
+            RequestUtils requestUtils
     ) {
         this.currencyConversionService = Objects.requireNonNull(currencyConversionService);
-        this.jsonUtils = jsonUtils;
+        this.requestUtils = Objects.requireNonNull(requestUtils);
+        this.jsonUtils = requestUtils.getJsonUtils();
     }
 
     @Override
@@ -79,21 +79,11 @@ public class TrackerMacroResolver implements ITrackerMacroResolver {
     protected String resolvePlacementId(TrackerContext context) throws Exception {
         final BidRequest bidRequest = context.getBidRequest();
         final String impId = context.getBidderBid().getBid().getImpid();
-        final Imp imp = bidRequest.getImp().stream()
-                .filter(i -> i.getId().equals(impId))
-                .findFirst().orElse(null);
+        final Integer placementId = requestUtils.getImprovePlacementId(bidRequest, impId);
 
-        if (imp == null) {
-            throw new Exception("Cannot find matching imp in request with id: " + impId);
-        }
-
-        final JsonNode placementIdNode = ObjectUtil.getIfNotNull(imp.getExt(),
-                impExt -> impExt.at("/prebid/bidder/improvedigital/placementId")
-        );
-
-        if (placementIdNode == null || placementIdNode.isMissingNode()) {
+        if (placementId == null) {
             throw new Exception("imp[" + impId + "]: Improve Digital placement ID is not defined!");
         }
-        return placementIdNode.asText();
+        return placementId.toString();
     }
 }

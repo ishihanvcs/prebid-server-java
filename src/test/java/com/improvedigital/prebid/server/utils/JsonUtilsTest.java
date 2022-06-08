@@ -13,8 +13,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class JsonUtilsTest extends VertxTest {
 
-    private ObjectMapper mapper = new ObjectMapper();
-    private JsonUtils jsonUtils = new JsonUtils(new JacksonMapper(mapper));
+    private final ObjectMapper mapper = new ObjectMapper();
+    private final JsonUtils jsonUtils = new JsonUtils(new JacksonMapper(mapper));
 
     @Test
     public void testGetBigDecimalAt() throws JsonProcessingException {

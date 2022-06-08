@@ -13,7 +13,6 @@ import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.Tuple2;
 import org.prebid.server.exception.InvalidRequestException;
@@ -167,28 +166,29 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
     private BidRequest setParentAccountId(BidRequest bidRequest, String accountId) {
         if (accountId != null) {
             BidRequest.BidRequestBuilder requestBuilder = bidRequest.toBuilder();
+            final Publisher publisherWithParentAccount = Publisher.builder().ext(
+                    ExtPublisher.of(
+                            ExtPublisherPrebid.of(accountId)
+                    )
+            ).build();
             if (bidRequest.getSite() != null) {
                 requestBuilder.site(
                         bidRequest.getSite().toBuilder().publisher(
-                                ObjectUtils.defaultIfNull(bidRequest.getSite().getPublisher(),
-                                        Publisher.builder().build()
-                                ).toBuilder().ext(
-                                        ExtPublisher.of(
-                                                ExtPublisherPrebid.of(accountId)
-                                        )
-                                ).build()
+                                merger.merge(
+                                        publisherWithParentAccount,
+                                        bidRequest.getSite().getPublisher(),
+                                        Publisher.class
+                                )
                         ).build()
                 );
             } else {
                 requestBuilder.app(
                         bidRequest.getApp().toBuilder().publisher(
-                                ObjectUtils.defaultIfNull(bidRequest.getApp().getPublisher(),
-                                        Publisher.builder().build()
-                                ).toBuilder().ext(
-                                        ExtPublisher.of(
-                                                ExtPublisherPrebid.of(accountId)
-                                        )
-                                ).build()
+                                merger.merge(
+                                        publisherWithParentAccount,
+                                        bidRequest.getApp().getPublisher(),
+                                        Publisher.class
+                                )
                         ).build()
                 ).build();
             }
@@ -202,15 +202,16 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
             return bidRequest;
         }
 
+        ExtRequest extRequest = ExtRequest.of(
+                ExtRequestPrebid.builder()
+                        .storedrequest(ExtStoredRequest.of(requestId))
+                        .build()
+        );
+
         return bidRequest.toBuilder()
-                .ext(ExtRequest.of(
-                    ObjectUtils.defaultIfNull(
-                            bidRequest.getExt().getPrebid(),
-                            ExtRequestPrebid.builder().build()
-                    ).toBuilder()
-                    .storedrequest(ExtStoredRequest.of(requestId))
-                    .build()
-                ))
+                .ext(
+                        merger.merge(extRequest, bidRequest.getExt(), ExtRequest.class)
+                )
         .build();
     }
 

@@ -213,6 +213,19 @@ hooks:
                   ]
                 }
               ]
+            },
+            "auction-response": {
+              "groups": [
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "improvedigital-gvast-hooks-module",
+                      "hook-impl-code": "improvedigital-gvast-hooks-auction-response"
+                    }
+                  ]
+                }
+              ]
             }
           }
         }

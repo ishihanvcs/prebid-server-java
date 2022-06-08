@@ -9,9 +9,12 @@ import com.improvedigital.prebid.server.customtrackers.contracts.ITrackerMacroRe
 import com.improvedigital.prebid.server.customtrackers.injectors.TrackerInjector;
 import com.improvedigital.prebid.server.customtrackers.resolvers.TrackerMacroResolver;
 import com.improvedigital.prebid.server.handler.GVastHandler;
-import com.improvedigital.prebid.server.hooks.v1.CustomTrackerModule;
+import com.improvedigital.prebid.server.hooks.v1.customtrackers.TrackerHooksModule;
+import com.improvedigital.prebid.server.hooks.v1.gvast.GVastHooksModule;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
+import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
+import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
@@ -23,6 +26,7 @@ import org.prebid.server.geolocation.GeoLocationService;
 import org.prebid.server.hooks.v1.Module;
 import org.prebid.server.identity.IdGenerator;
 import org.prebid.server.json.JacksonMapper;
+import org.prebid.server.json.JsonMerger;
 import org.prebid.server.log.HttpInteractionLogger;
 import org.prebid.server.metric.Metrics;
 import org.prebid.server.settings.model.GdprConfig;
@@ -70,13 +74,15 @@ public class ExtensionConfig {
             AuctionRequestFactory auctionRequestFactory,
             Clock clock,
             @Autowired(required = false) GeoLocationService geoLocationService,
+            CurrencyConversionService currencyConversionService,
             @Qualifier("sourceIdGenerator") IdGenerator idGenerator,
             JacksonMapper mapper) {
         return new GVastRequestFactory(
                 settingsLoader,
                 gVastParamsResolver,
                 auctionRequestFactory,
-                geoLocationService,
+                // geoLocationService,
+                currencyConversionService,
                 clock,
                 idGenerator,
                 mapper);
@@ -123,22 +129,49 @@ public class ExtensionConfig {
 
     @Bean
     BidderBidModifier bidderBidModifier(
-            MacroProcessor macroProcessor
+            MacroProcessor macroProcessor,
+            RequestUtils requestUtils
     ) {
-        return new BidderBidModifier(macroProcessor);
+        return new BidderBidModifier(macroProcessor, requestUtils);
     }
 
     @Bean
-    Module customTrackerModule(
+    Module trackersHooksModule(
             ApplicationContext applicationContext,
             SettingsLoader settingsLoader,
             BidderBidModifier bidderBidModifier,
             JacksonMapper mapper
     ) {
-        return new CustomTrackerModule(
+        return new TrackerHooksModule(
                 applicationContext,
                 settingsLoader,
-                bidderBidModifier, mapper);
+                bidderBidModifier);
+    }
+
+    @Bean
+    JsonUtils jsonUtils(JacksonMapper mapper) {
+        return new JsonUtils(mapper);
+    }
+
+    @Bean
+    RequestUtils requestUtils() {
+        return new RequestUtils();
+    }
+
+    @Bean
+    Module gVastHooksModule(
+            SettingsLoader settingsLoader,
+            JsonUtils jsonUtils,
+            RequestUtils requestUtils,
+            JsonMerger merger,
+            CurrencyConversionService currencyConversionService
+    ) {
+        return new GVastHooksModule(
+                settingsLoader,
+                jsonUtils,
+                requestUtils,
+                merger,
+                currencyConversionService);
     }
 
     @Bean
@@ -149,9 +182,9 @@ public class ExtensionConfig {
     @Bean
     ITrackerMacroResolver trackerMacroResolver(
             CurrencyConversionService currencyConversionService,
-            JacksonMapper mapper
+            JsonUtils jsonUtils
     ) {
-        return new TrackerMacroResolver(currencyConversionService, mapper);
+        return new TrackerMacroResolver(currencyConversionService, jsonUtils);
     }
 
     @Bean

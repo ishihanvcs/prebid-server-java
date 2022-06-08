@@ -1,14 +1,16 @@
 package com.improvedigital.prebid.server.customtrackers;
 
-import com.improvedigital.prebid.server.customtrackers.contracts.ITrackerMacroResolver;
-import com.improvedigital.prebid.server.settings.model.CustomTrackerSetting;
-import com.improvedigital.prebid.server.utils.MacroProcessor;
 import com.iab.openrtb.response.Bid;
+import com.improvedigital.prebid.server.customtrackers.contracts.ITrackerMacroResolver;
+import com.improvedigital.prebid.server.settings.model.CustomTracker;
+import com.improvedigital.prebid.server.utils.MacroProcessor;
+import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.bidder.model.BidderBid;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Stack;
 
@@ -16,23 +18,28 @@ public class BidderBidModifier {
 
     private static final Logger logger = LoggerFactory.getLogger(BidderBidModifier.class);
     private final MacroProcessor macroProcessor;
+    private final RequestUtils requestUtils;
 
     public BidderBidModifier(
-            MacroProcessor macroProcessor
+            MacroProcessor macroProcessor,
+            RequestUtils requestUtils
     ) {
         this.macroProcessor = macroProcessor;
+        this.requestUtils = requestUtils;
     }
 
     public BidderBid modifyBidAdm(
-            CustomTrackerSetting customTrackerSetting,
-            ModuleContext bidRequestContext,
+            AuctionRequestModuleContext moduleContext,
             BidderBid bidderBid,
             String bidder
     ) {
-        if (bidRequestContext == null
-                || customTrackerSetting == null
-                || !customTrackerSetting.isEnabled()
-        ) {
+        if (moduleContext == null) {
+            return bidderBid;
+        }
+
+        Collection<CustomTracker> customTrackers = moduleContext.getCustomTrackers();
+        if (customTrackers == null || customTrackers.isEmpty()) {
+            logger.warn("No custom trackers are configured & enabled!");
             return bidderBid;
         }
 
@@ -41,15 +48,32 @@ public class BidderBidModifier {
             logger.warn("Skipping bid as adm value is blank!");
             return bidderBid;
         }
+
+        String accountId = requestUtils.getAccountId(moduleContext.getBidRequest());
         final Stack<String> admStack = new Stack<>();
         admStack.push(bid.getAdm());
         TrackerContext commonTrackerContext = TrackerContext
-                .from(bidRequestContext)
+                .from(moduleContext)
                 .with(bidderBid, bidder);
-        customTrackerSetting.forEach(customTracker -> {
+        customTrackers.forEach(customTracker -> {
+            if (!customTracker.getEnabled()) {
+                logger.info(String.format(
+                        "Skipping Custom Tracker [id=%s] as it is disabled in configuration", customTracker.getId()
+                ));
+                return;
+            } else if (!customTracker.getExcludedAccounts().isEmpty()
+                    && StringUtils.isNotBlank(accountId)
+                    && customTracker.getExcludedAccounts().contains(accountId)
+            ) {
+                logger.info(String.format(
+                        "Skipping Custom Tracker [id=%s] as [account=%s] is excluded in configuration",
+                        customTracker.getId(), accountId
+                ));
+                return;
+            }
+            final TrackerContext trackerContext = commonTrackerContext
+                    .with(customTracker);
             try {
-                final TrackerContext trackerContext = commonTrackerContext
-                        .with(customTracker);
                 final ITrackerMacroResolver macroResolver = trackerContext.getMacroResolver();
                 final Map<String, String> macroValues = macroResolver.resolveValues(trackerContext);
                 String trackingUrl = macroProcessor.process(customTracker.getUrlTemplate(), macroValues);
@@ -60,14 +84,16 @@ public class BidderBidModifier {
                                     .inject(trackingUrl, admStack.pop(), bidder, bidderBid.getType())
                     );
                 } else {
-                    logger.warn("Could not generate tracking url for bidder: " + bidder + "!");
+                    logger.warn(trackerContext, new Exception(
+                            "Could not generate tracking url for bidder: " + bidder + "!")
+                    );
                 }
             } catch (Exception ex) {
                 logger.warn(
-                        String.format(
-                                "Could not inject impression tag for tagType = %s",
+                        trackerContext, new Exception(String.format(
+                                "Could not inject impression tag for tracker = %s",
                                 customTracker.getId()
-                        ), ex
+                        ), ex)
                 );
             }
         });

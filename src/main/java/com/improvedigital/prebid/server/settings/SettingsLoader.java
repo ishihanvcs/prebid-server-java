@@ -1,9 +1,12 @@
 package com.improvedigital.prebid.server.settings;
 
-import com.improvedigital.prebid.server.exception.SettingsLoaderException;
-import com.improvedigital.prebid.server.settings.model.CustomTrackerSetting;
 import com.iab.openrtb.request.Imp;
+import com.improvedigital.prebid.server.exception.SettingsLoaderException;
+import com.improvedigital.prebid.server.settings.model.CustomTracker;
 import io.vertx.core.Future;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.exception.InvalidRequestException;
 import org.prebid.server.execution.Timeout;
@@ -14,13 +17,17 @@ import org.prebid.server.settings.ApplicationSettings;
 import org.prebid.server.settings.model.Account;
 import org.prebid.server.settings.model.StoredDataResult;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 
 public class SettingsLoader {
 
     private static final long DEFAULT_SETTINGS_LOADING_TIMEOUT = 500L;
+    private static final Logger logger = LoggerFactory.getLogger(SettingsLoader.class);
 
     private final ApplicationSettings applicationSettings;
     private final CustomSettings customSettings;
@@ -85,12 +92,12 @@ public class SettingsLoader {
         return getSettingFuture(accountId, "account", applicationSettings::getAccountById, timeout);
     }
 
-    public Future<CustomTrackerSetting> getCustomTrackerSettingFuture(Timeout timeout) {
-        return customSettings.getCustomTrackerSetting(createTimeoutIfNull(timeout));
+    public Future<Collection<CustomTracker>> getCustomTrackersFuture(Timeout timeout) {
+        return customSettings.getCustomTrackers(createTimeoutIfNull(timeout));
     }
 
-    public Future<CustomTrackerSetting> getCustomTrackerSettingFuture() {
-        return getCustomTrackerSettingFuture(null);
+    public Future<Collection<CustomTracker>> getCustomTrackersFuture() {
+        return getCustomTrackersFuture(null);
     }
 
     public Future<Imp> getStoredImp(String impId, Timeout timeout) {
@@ -101,7 +108,7 @@ public class SettingsLoader {
                         if (StringUtils.isBlank(storedData) || storedData.equals("null")) {
                             return Future.failedFuture(new InvalidRequestException(
                                     String.format("Invalid impId '%s' provided.", impId)
-                                    ));
+                            ));
                         }
                         final Imp imp = mapper.mapper().readValue(storedData, Imp.class);
                         return Future.succeededFuture(imp);
@@ -109,6 +116,45 @@ public class SettingsLoader {
                         return Future.failedFuture(new InvalidRequestException(e.getMessage(), e));
                     }
                 });
+    }
+
+    public Future<Map<String, Imp>> getStoredImps(Set<String> impIds, Timeout timeout) {
+        return this.getStoredImps(impIds, timeout, false);
+    }
+
+    public Future<Map<String, Imp>> getStoredImps(Set<String> impIds, Timeout timeout, boolean suppressErrors) {
+        if (impIds.isEmpty()) {
+            return Future.succeededFuture(new HashMap<>());
+        }
+        return getStoredDataResultFuture(null, Collections.emptySet(), impIds, timeout)
+                .map(storedDataResult -> {
+                    final Map<String, String> storedDataToImp = storedDataResult.getStoredIdToImp();
+                    final Map<String, Imp> imps = new HashedMap<>();
+                    storedDataToImp.forEach((impId, storedData) -> {
+                        boolean error = true;
+                        if (StringUtils.isNotBlank(storedData) && !storedData.equals("null")) {
+                            try {
+                                final Imp imp = mapper.mapper().readValue(storedData, Imp.class);
+                                imps.putIfAbsent(impId, imp);
+                                error = false;
+                            } catch (Exception ignored) { }
+                        }
+
+                        if (error) {
+                            final String errorMessage = String.format("Invalid impId '%s' provided.", impId);
+                            if (!suppressErrors) {
+                                throw new InvalidRequestException(errorMessage);
+                            } else {
+                                logger.warn(errorMessage);
+                            }
+                        }
+                    });
+                    return imps;
+                });
+    }
+
+    public Future<Map<String, Imp>> getStoredImpsSafely(Set<String> impIds, Timeout timeout) {
+        return this.getStoredImps(impIds, timeout, true);
     }
 
     public Future<StoredDataResult> getStoredDataResultFuture(
@@ -135,3 +181,4 @@ public class SettingsLoader {
                 });
     }
 }
+

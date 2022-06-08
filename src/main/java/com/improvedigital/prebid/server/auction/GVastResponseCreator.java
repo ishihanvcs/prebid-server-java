@@ -3,10 +3,10 @@ package com.improvedigital.prebid.server.auction;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.iab.openrtb.request.Geo;
 import com.iab.openrtb.response.Bid;
 import com.iab.openrtb.response.BidResponse;
 import com.iab.openrtb.response.SeatBid;
-import com.improvedigital.prebid.server.auction.model.Floor;
 import com.improvedigital.prebid.server.auction.model.GVastParams;
 import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExtGam;
@@ -19,9 +19,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.prebid.server.geolocation.model.GeoInfo;
 import org.prebid.server.util.HttpUtil;
-import org.prebid.server.util.ObjectUtil;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -80,7 +78,9 @@ public class GVastResponseCreator {
 
         final ImprovedigitalPbsImpExt config = gVastContext.getImprovedigitalPbsImpExt();
 
-        final List<String> waterfall = config.getWaterfall(gVastContext.getAuctionContext().getGeoInfo());
+        final List<String> waterfall = config.getWaterfall(
+                gVastContext.getAuctionContext().getBidRequest().getDevice().getGeo()
+        );
         // Response without GAM
         if (!waterfall.isEmpty() && waterfall.contains("no_gam")) {
             return buildVastXmlResponseWithoutGam(gVastContext, prioritizeImprovedigitalDeals, waterfall, debugInfo);
@@ -221,31 +221,6 @@ public class GVastResponseCreator {
         return targeting.toString();
     }
 
-    private String resolveCountryCode(Map<String, ?> map, GeoInfo geoInfo) {
-        return ObjectUtil.getIfNotNullOrDefault(geoInfo,
-                gn -> map.containsKey(gn.getCountry())
-                        ? gn.getCountry()
-                        : ImprovedigitalPbsImpExt.DEFAULT_CONFIG_KEY,
-                () -> ImprovedigitalPbsImpExt.DEFAULT_CONFIG_KEY
-        );
-    }
-
-    private double getBidFloor(ImprovedigitalPbsImpExt config, GeoInfo geoInfo) {
-        final double defaultResult = 0.0;
-        final Map<String, Floor> floors = config.getFloors();
-        if (floors.isEmpty()) {
-            return defaultResult;
-        }
-        final String countryCode = resolveCountryCode(floors, geoInfo);
-        // logger.info("countryCode = " + countryCode);
-
-        if (floors.containsKey(countryCode)) {
-            return floors.get(countryCode).getBidFloor();
-        }
-
-        return defaultResult;
-    }
-
     private String resolveGamOutputFromOrtb(List<Integer> protocols) {
         if (protocols != null) {
             if (protocols.contains(7)) {
@@ -380,8 +355,7 @@ public class GVastResponseCreator {
         String expanded = "";
         try {
             expanded = macroProcessor.process(tag, macroValues, true);
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) { }
         return expanded;
     }
 
@@ -456,9 +430,9 @@ public class GVastResponseCreator {
         final String custParams = gVastParams.getCustParams().toString();
         final ImprovedigitalPbsImpExt config = gVastContext.getImprovedigitalPbsImpExt();
         final String adUnit = getGamAdUnit(gVastParams, config);
-        final GeoInfo geoInfo = gVastContext.getAuctionContext().getGeoInfo();
-        final double bidFloor = config.getBidFloor(geoInfo);
-        final List<String> waterfall = config.getWaterfall(geoInfo);
+        final Geo geo = gVastContext.getAuctionContext().getBidRequest().getDevice().getGeo();
+        final double bidFloor = config.getFloor(geo).getBidFloor().doubleValue();
+        final List<String> waterfall = config.getWaterfall(geo);
         final String categoryTargeting;
         final List<String> categories = gVastParams.getCat();
 

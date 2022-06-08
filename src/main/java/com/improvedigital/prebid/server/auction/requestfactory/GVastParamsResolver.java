@@ -109,7 +109,7 @@ public class GVastParamsResolver {
             case "0":
                 return 0;
             default:
-                throw new InvalidRequestException(String.format("Invalid value for 'coppa'"));
+                throw new InvalidRequestException("Invalid value for 'coppa'");
         }
     }
 

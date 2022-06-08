@@ -1,24 +1,29 @@
 package com.improvedigital.prebid.server.settings;
 
 import com.improvedigital.prebid.server.settings.model.CustomTracker;
-import com.improvedigital.prebid.server.settings.model.CustomTrackerSetting;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.vertx.core.Future;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.prebid.server.exception.PreBidException;
 import org.prebid.server.execution.Timeout;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class CachingCustomSettings implements CustomSettings {
 
-    // private static final Logger logger = LoggerFactory.getLogger(CachingCustomSettings.class);
+    private static final Logger logger = LoggerFactory.getLogger(CachingCustomSettings.class);
 
     private final Map<String, Object> objectCache;
     private final Map<String, String> objectToErrorCache;
+    private final Map<String, CustomTracker> customTrackerCache;
+    private final Map<String, String> customTrackerToErrorCache;
     private final CustomSettings delegate;
 
     public CachingCustomSettings(
@@ -29,6 +34,8 @@ public class CachingCustomSettings implements CustomSettings {
         this.delegate = Objects.requireNonNull(delegate);
         this.objectCache = createCache(ttl, size);
         this.objectToErrorCache = createCache(ttl, size);
+        this.customTrackerCache = createCache(ttl, size);
+        this.customTrackerToErrorCache = createCache(ttl, size);
     }
 
     static <T> Map<String, T> createCache(int ttl, int size) {
@@ -65,25 +72,28 @@ public class CachingCustomSettings implements CustomSettings {
     }
 
     private <T> Future<T> getFromObjectCacheOrDelegate(
-            String key,
             Timeout timeout,
-            Function<Timeout, Future<T>> retriever
+            Function<Timeout, Future<T>> retriever,
+            Consumer<T> consumer
     ) {
-        final T cachedValue = (T) objectCache.get(key);
+        final Object cachedValue = objectCache.get("customTrackers");
         if (cachedValue != null) {
-            return Future.succeededFuture(cachedValue);
+            return Future.succeededFuture((T) cachedValue);
         }
-        final String preBidExceptionMessage = objectToErrorCache.get(key);
+        final String preBidExceptionMessage = objectToErrorCache.get("customTrackers");
         if (preBidExceptionMessage != null) {
             return Future.failedFuture(new PreBidException(preBidExceptionMessage));
         }
 
         return retriever.apply(timeout)
                 .map(value -> {
-                    objectCache.put(key, value);
+                    objectCache.put("customTrackers", value);
+                    if (consumer != null) {
+                        consumer.accept(value);
+                    }
                     return value;
                 })
-                .recover(throwable -> cacheAndReturnFailedFuture(throwable, key, objectToErrorCache));
+                .recover(throwable -> cacheAndReturnFailedFuture(throwable, "customTrackers", objectToErrorCache));
     }
 
     private static <T> Future<T> cacheAndReturnFailedFuture(
@@ -91,7 +101,6 @@ public class CachingCustomSettings implements CustomSettings {
             String key,
             Map<String, String> cache
     ) {
-
         if (throwable instanceof PreBidException) {
             cache.put(key, throwable.getMessage());
         }
@@ -99,21 +108,25 @@ public class CachingCustomSettings implements CustomSettings {
         return Future.failedFuture(throwable);
     }
 
-    @Override
+    private void updateCustomTrackerCache(Map<String, CustomTracker> trackersMap) {
+        customTrackerCache.putAll(trackersMap);
+    }
+
     public Future<CustomTracker> getCustomTrackerById(String trackerId, Timeout timeout) {
-        return getCustomTrackerSetting(timeout)
-                .map(customTrackerSetting -> !Objects.isNull(customTrackerSetting)
-                    ? customTrackerSetting.getTrackersMap().get(trackerId)
-                    : null
-                );
+        return getFromCacheOrDelegate(customTrackerCache, customTrackerToErrorCache,
+                trackerId, timeout, delegate::getCustomTrackerById);
+    }
+
+    public Future<Map<String, CustomTracker>> getCustomTrackersMap(Timeout timeout) {
+        return getFromObjectCacheOrDelegate(
+                timeout,
+                delegate::getCustomTrackersMap,
+                this::updateCustomTrackerCache
+        );
     }
 
     @Override
-    public Future<CustomTrackerSetting> getCustomTrackerSetting(Timeout timeout) {
-        return getFromObjectCacheOrDelegate(
-                "customTrackers",
-                timeout,
-                delegate::getCustomTrackerSetting
-        );
+    public Future<Collection<CustomTracker>> getCustomTrackers(Timeout timeout) {
+        return getCustomTrackersMap(timeout).map(Map::values);
     }
 }

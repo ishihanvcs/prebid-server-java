@@ -1,6 +1,8 @@
 ---
-customTrackers:
-  enabled: true
-  trackers:
-    - id: 360yield # required and must be unique across all trackers
-      urlTemplate: https://it.pbs.com/ssp_bids?bidder={{bidder}}&cpm={{bid_price_usd}}&pid={{improve_digital_placement_id}} # required
+trackers:
+  360yield:
+    enabled: true # optional
+    urlTemplate: https://it.pbs.com/ssp_bids?bidder={{bidder}}&cpm={{bid_price_usd}}&pid={{improve_digital_placement_id}} # required
+    macroResolver: "trackerMacroResolver" # optional
+    injector: "trackerInjector" # optional
+    excludedAccounts: [ ] # optional, array of account ids for which the tracker should be disabled

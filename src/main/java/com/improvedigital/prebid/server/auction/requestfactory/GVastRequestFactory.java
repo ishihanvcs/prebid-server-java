@@ -8,7 +8,6 @@ import com.iab.openrtb.request.App;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Device;
 import com.iab.openrtb.request.Imp;
-import com.iab.openrtb.request.Publisher;
 import com.iab.openrtb.request.Regs;
 import com.iab.openrtb.request.Site;
 import com.iab.openrtb.request.Source;
@@ -26,8 +25,8 @@ import io.vertx.ext.web.RoutingContext;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.AuctionContext;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
+import org.prebid.server.currency.CurrencyConversionService;
 import org.prebid.server.execution.Timeout;
-import org.prebid.server.geolocation.GeoLocationService;
 import org.prebid.server.identity.IdGenerator;
 import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.log.ConditionalLogger;
@@ -43,13 +42,12 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCacheVastxml;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestTargeting;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
-import org.prebid.server.util.ObjectUtil;
 
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Clock;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -71,20 +69,20 @@ public class GVastRequestFactory {
     private final JacksonMapper mapper;
     private final IdGenerator idGenerator;
     private final GVastParamsResolver paramResolver;
-    private final GeoLocationService geoLocationService;
     private final Clock clock;
+    private final CurrencyConversionService currencyConversionService;
 
     public GVastRequestFactory(
             SettingsLoader settingsLoader,
             GVastParamsResolver gVastParamsResolver,
             AuctionRequestFactory auctionRequestFactory,
-            GeoLocationService geoLocationService,
+            CurrencyConversionService currencyConversionService,
             Clock clock,
             IdGenerator idGenerator,
             JacksonMapper mapper) {
         this.settingsLoader = Objects.requireNonNull(settingsLoader);
         this.clock = clock;
-        this.geoLocationService = geoLocationService;
+        this.currencyConversionService = Objects.requireNonNull(currencyConversionService);
         this.auctionRequestFactory = Objects.requireNonNull(auctionRequestFactory);
         this.mapper = Objects.requireNonNull(mapper);
         this.idGenerator = Objects.requireNonNull(idGenerator);
@@ -102,34 +100,18 @@ public class GVastRequestFactory {
     private Future<GVastContext> createContext(
             Imp imp,
             RoutingContext routingContext,
-            GVastParams gVastParams,
-            Timeout initialTimeout
+            GVastParams gVastParams
     ) {
         try {
-            return updateContextWithAccountAndBidRequest(
-                    GVastContext
-                    .from(gVastParams)
+            GVastContext gVastContext = GVastContext.from(gVastParams)
                     .with(routingContext)
-                    .with(imp, mapper),
-                    initialTimeout
-            );
+                    .with(imp, mapper);
+            BidRequest bidRequest = createBidRequest(gVastContext);
+
+            return Future.succeededFuture(gVastContext.with(bidRequest));
         } catch (JsonProcessingException e) {
             return Future.failedFuture(e);
         }
-    }
-
-    private Future<AuctionContext> resolveGeoInfoIfNull(AuctionContext auctionContext) {
-        if (auctionContext.getGeoInfo() == null && geoLocationService != null) {
-            final String ipAddress = ObjectUtil.getIfNotNull(
-                    auctionContext.getBidRequest().getDevice(),
-                    Device::getIp
-            );
-            if (StringUtils.isNotBlank(ipAddress)) {
-                return geoLocationService.lookup(ipAddress, auctionContext.getTimeout())
-                        .map(geoInfo -> auctionContext.toBuilder().geoInfo(geoInfo).build());
-            }
-        }
-        return Future.succeededFuture(auctionContext);
     }
 
     private Imp validateStoredImp(Imp imp) {
@@ -144,12 +126,12 @@ public class GVastRequestFactory {
             GVastParams gVastParams = paramResolver.resolve(getHttpRequestContext(routingContext));
             return settingsLoader.getStoredImp(gVastParams.getImpId(), initialTimeout)
                 .map(this::validateStoredImp)
-                .compose(imp -> this.createContext(imp, routingContext, gVastParams, initialTimeout))
+                .compose(imp -> this.createContext(imp, routingContext, gVastParams))
                 .map(this::updateRoutingContextBody)
                 .compose(gVastContext ->
                     auctionRequestFactory
                         .fromRequest(gVastContext.getRoutingContext(), clock.millis())
-                        .compose(this::resolveGeoInfoIfNull)
+                        // .compose(this::resolveGeoInfoIfNull)
                         .map(auctionContext -> updateAuctionTimeout(auctionContext, startTime))
                         .map(auctionContext -> setImproveDigitalParams(auctionContext, gVastParams))
                         .map(gVastContext::with)
@@ -191,13 +173,12 @@ public class GVastRequestFactory {
     /**
      * Constructs oRTB bid request from /gvast GET params, request header, and stored data
      */
-    private Future<GVastContext> updateContextWithAccountAndBidRequest(
-            GVastContext gVastContext,
-            Timeout initialTimeout
+    private BidRequest createBidRequest(
+            GVastContext gVastContext
     ) throws JsonProcessingException {
+        GVastParams gVastParams = gVastContext.getGVastParams();
+        RoutingContext routingContext = gVastContext.getRoutingContext();
         final String tid = idGenerator.generateId(); // UUID.randomUUID().toString();
-        final GVastParams gVastParams = gVastContext.getGVastParams();
-        final RoutingContext routingContext = gVastContext.getRoutingContext();
         final String language = routingContext.preferredLanguage() == null
                 ? null : routingContext.preferredLanguage().tag();
 
@@ -209,90 +190,83 @@ public class GVastRequestFactory {
 
         final String gdpr = gVastParams.getGdpr();
         final Integer gdprInt = StringUtils.isBlank(gdpr) ? null : Integer.parseInt(gdpr);
-        final String accountId = gVastContext.getImprovedigitalPbsImpExt().getAccountId();
         final BigDecimal bidfloor = gVastParams.getBidfloor() == null
                 ? null : BigDecimal.valueOf(gVastParams.getBidfloor());
         final JsonNode priceGranularity = mapper.mapper().readTree(DEFAULT_PRICE_GRANULARITY);
-        return settingsLoader.getAccountFuture(accountId, initialTimeout)
-            .map(account -> {
-                BidRequest commonBidRequest = BidRequest.builder()
-                        .id(tid)
-                        .cur(List.of("EUR"))
-                        .device(Device.builder()
-                                .carrier(gVastParams.getCarrier())
-                                .ifa(gVastParams.getIfa())
-                                .ip(gVastParams.getIp())
-                                .language(language)
-                                .lmt(gVastParams.getLmt())
-                                .model(gVastParams.getModel())
-                                .os(gVastParams.getOs())
-                                .osv(gVastParams.getOsv())
-                                .ua(gVastParams.getUa())
-                                .build())
-                        .imp(Collections.singletonList(Imp.builder()
-                                .id("1")
-                                .bidfloor(bidfloor)
-                                .bidfloorcur(gVastParams.getBidfloorcur())
-                                .video(Video.builder()
-                                        .minduration(gVastParams.getMinduration())
-                                        .maxduration(gVastParams.getMaxduration())
-                                        .w(gVastParams.getW())
-                                        .h(gVastParams.getH())
-                                        .protocols(gVastParams.getProtocols())
-                                        .api(gVastParams.getApi())
-                                        .placement(gVastParams.getPlacement())
-                                        .build())
-                                .ext(mapper.mapper().valueToTree(
-                                        ExtImp.of(ExtImpPrebid.builder()
-                                        .storedrequest(ExtStoredRequest.of(String.valueOf(gVastParams.getImpId())))
-                                        .build(), null)))
-                                .build()))
-                        .regs(Regs.of(gVastParams.getCoppa(), ExtRegs.of(gdprInt, null)))
-                        .user(User.builder()
-                                .ext(ExtUser.builder()
-                                        .consent(gVastParams.getGdprConsentString())
-                                        .build())
-                                .build())
-                        .source(Source.builder().tid(tid).build())
-                        .test(gVastParams.isDebug() ? 1 : 0)
-                        .tmax(gVastParams.getTmax())
-                        .ext(ExtRequest.of(ExtRequestPrebid.builder()
-                                .cache(ExtRequestPrebidCache.of(null,
-                                        ExtRequestPrebidCacheVastxml.of(300, true),
-                                        false))
-                                .targeting(ExtRequestTargeting.builder()
-                                        .includebidderkeys(true)
-                                        .includeformat(true)
-                                        .includewinners(true)
-                                        .pricegranularity(priceGranularity)
-                                        .build())
-                                .build()))
-                        .build();
 
-                final BidRequest bidRequest;
-                if (StringUtils.isBlank(gVastParams.getBundle())) {
-                    // web
-                    bidRequest = commonBidRequest.toBuilder()
-                            .site(Site.builder()
-                                    .cat(categories)
-                                    .domain(gVastParams.getDomain())
-                                    .page(gVastParams.getReferrer())
-                                    .publisher(Publisher.builder().id(account.getId()).build())
-                                    .build())
-                            .build();
-                } else {
-                    //  app
-                    bidRequest = commonBidRequest.toBuilder()
-                            .app(App.builder()
-                                    .bundle(gVastParams.getBundle())
-                                    .name(gVastParams.getAppName())
-                                    .storeurl(gVastParams.getStoreUrl())
-                                    .build())
-                            .build();
-                }
+        BidRequest bidRequest = BidRequest.builder()
+                .id(tid)
+                .cur(List.of("EUR"))
+                .device(Device.builder()
+                        .carrier(gVastParams.getCarrier())
+                        .ifa(gVastParams.getIfa())
+                        .ip(gVastParams.getIp())
+                        .language(language)
+                        .lmt(gVastParams.getLmt())
+                        .model(gVastParams.getModel())
+                        .os(gVastParams.getOs())
+                        .osv(gVastParams.getOsv())
+                        .ua(gVastParams.getUa())
+                        .build())
+                .imp(new ArrayList<>(List.of(Imp.builder()
+                    .id("1")
+                    .bidfloor(bidfloor)
+                    .bidfloorcur(gVastParams.getBidfloorcur())
+                    .video(Video.builder()
+                            .minduration(gVastParams.getMinduration())
+                            .maxduration(gVastParams.getMaxduration())
+                            .w(gVastParams.getW())
+                            .h(gVastParams.getH())
+                            .protocols(gVastParams.getProtocols())
+                            .api(gVastParams.getApi())
+                            .placement(gVastParams.getPlacement())
+                            .build())
+                    .ext(mapper.mapper().valueToTree(
+                            ExtImp.of(ExtImpPrebid.builder()
+                            .storedrequest(ExtStoredRequest.of(String.valueOf(gVastParams.getImpId())))
+                            .build(), null)))
+                    .build())))
+                .regs(Regs.of(gVastParams.getCoppa(), ExtRegs.of(gdprInt, null)))
+                .user(User.builder()
+                        .ext(ExtUser.builder()
+                                .consent(gVastParams.getGdprConsentString())
+                                .build())
+                        .build())
+                .source(Source.builder().tid(tid).build())
+                .test(gVastParams.isDebug() ? 1 : 0)
+                .tmax(gVastParams.getTmax())
+                .ext(ExtRequest.of(ExtRequestPrebid.builder()
+                        .cache(ExtRequestPrebidCache.of(null,
+                                ExtRequestPrebidCacheVastxml.of(300, true),
+                                false))
+                        .targeting(ExtRequestTargeting.builder()
+                                .includebidderkeys(true)
+                                .includeformat(true)
+                                .includewinners(true)
+                                .pricegranularity(priceGranularity)
+                                .build()
+                        ).build()
+                        )
+                ).build();
 
-                return gVastContext.with(account).with(bidRequest);
-            });
+        if (StringUtils.isBlank(gVastParams.getBundle())) {
+            // web
+            return bidRequest.toBuilder()
+                    .site(Site.builder()
+                            .cat(categories)
+                            .domain(gVastParams.getDomain())
+                            .page(gVastParams.getReferrer())
+                            .build())
+                    .build();
+        }
+        //  app
+        return bidRequest.toBuilder()
+                .app(App.builder()
+                        .bundle(gVastParams.getBundle())
+                        .name(gVastParams.getAppName())
+                        .storeurl(gVastParams.getStoreUrl())
+                        .build())
+                .build();
     }
 
     private static CaseInsensitiveMultiMap toCaseInsensitiveMultiMap(MultiMap originalMap) {

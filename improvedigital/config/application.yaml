@@ -59,6 +59,7 @@ default-request:
   file:
     path : improvedigital/stored-data/requests/default.json
 settings:
+  enforce-valid-account: true
 #  uncomment & edit following line, if default value needs to be changed from 500 ms
 #  default-loading-timeout: 500
 
@@ -159,11 +160,20 @@ hooks:
             "entrypoint": {
               "groups": [
                 {
-                  "timeout": 5,
+                  "timeout": 500,
                   "hook-sequence": [
                     {
-                      "module-code": "custom-tracker-module",
-                      "hook-impl-code": "custom-tracker-entrypoint"
+                      "module-code": "improvedigital-gvast-hooks-module",
+                      "hook-impl-code": "improvedigital-gvast-hooks-entrypoint"
+                    }
+                  ]
+                },
+                {
+                  "timeout": 50,
+                  "hook-sequence": [
+                    {
+                      "module-code": "improvedigital-custom-trackers-hooks-module",
+                      "hook-impl-code": "improvedigital-custom-trackers-hooks-entrypoint"
                     }
                   ]
                 }
@@ -175,8 +185,17 @@ hooks:
                   "timeout": 5,
                   "hook-sequence": [
                     {
-                      "module-code": "custom-tracker-module",
-                      "hook-impl-code": "custom-tracker-processed-auction-request"
+                      "module-code": "improvedigital-gvast-hooks-module",
+                      "hook-impl-code": "improvedigital-gvast-hooks-processed-auction-request"
+                    }
+                  ]
+                },
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "improvedigital-custom-trackers-hooks-module",
+                      "hook-impl-code": "improvedigital-custom-trackers-hooks-processed-auction-request"
                     }
                   ]
                 }
@@ -188,8 +207,8 @@ hooks:
                   "timeout": 5,
                   "hook-sequence": [
                     {
-                      "module-code": "custom-tracker-module",
-                      "hook-impl-code": "custom-tracker-processed-bidder-response"
+                      "module-code": "improvedigital-custom-trackers-hooks-module",
+                      "hook-impl-code": "improvedigital-custom-trackers-hooks-processed-bidder-response"
                     }
                   ]
                 }

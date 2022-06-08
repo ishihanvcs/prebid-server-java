@@ -3,11 +3,13 @@ package com.improvedigital.prebid.server.customtrackers;
 import com.iab.openrtb.request.BidRequest;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.springframework.context.ApplicationContext;
 
 @SuperBuilder(toBuilder = true)
 @Getter
+@ToString
 public class ModuleContext {
 
     @NonNull
@@ -21,12 +23,5 @@ public class ModuleContext {
                 .applicationContext(applicationContext)
                 .build();
     }
-
-    public ModuleContext with(
-            BidRequest bidRequest
-    ) {
-        return this.toBuilder()
-                .bidRequest(bidRequest)
-                .build();
-    }
 }
+

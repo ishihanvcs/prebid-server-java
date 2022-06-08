@@ -16,3 +16,4 @@ target/
 .allure/
 /improvedigital/dev-tools/node_modules/
 improvedigital/config/local/
+/.run/Application (Local).run.xml

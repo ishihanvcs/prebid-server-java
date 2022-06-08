@@ -4,6 +4,7 @@ import com.improvedigital.prebid.server.customtrackers.contracts.ITrackerInjecto
 import com.improvedigital.prebid.server.customtrackers.contracts.ITrackerMacroResolver;
 import com.improvedigital.prebid.server.settings.model.CustomTracker;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.bidder.model.BidderBid;
@@ -12,6 +13,7 @@ import java.util.function.Supplier;
 
 @SuperBuilder(toBuilder = true)
 @Getter
+@ToString
 public class TrackerContext extends ModuleContext {
 
     CustomTracker tracker;

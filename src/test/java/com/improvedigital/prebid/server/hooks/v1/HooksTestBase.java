@@ -1,5 +1,6 @@
 package com.improvedigital.prebid.server.hooks.v1;
 
+import ch.qos.logback.classic.Level;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iab.openrtb.request.BidRequest;
@@ -8,6 +9,7 @@ import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
+import nl.altindag.log.LogCaptor;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.prebid.server.execution.Timeout;
@@ -19,6 +21,7 @@ import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.InvocationStatus;
 import org.prebid.server.hooks.v1.PayloadUpdate;
 import org.prebid.server.json.JacksonMapper;
+import org.prebid.server.json.JsonMerger;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
@@ -36,7 +39,10 @@ public abstract class HooksTestBase {
     protected final JacksonMapper mapper = new JacksonMapper(objectMapper);
     protected final JsonUtils jsonUtils = new JsonUtils(mapper);
     protected final RequestUtils requestUtils = new RequestUtils(jsonUtils);
+    protected final JsonMerger merger = new JsonMerger(mapper);
+
     protected String resourceDir = null;
+    protected Timeout timeout = createTimeout(10000L);
 
     protected Timeout createTimeout(long timeout) {
         final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
@@ -231,7 +237,7 @@ public abstract class HooksTestBase {
         );
     }
 
-    protected <PAYLOAD, Context extends InvocationContext> void executeHookAndValidatePayload(
+    protected <PAYLOAD, Context extends InvocationContext> void executeHookAndValidatePayloadUpdate(
             Hook<PAYLOAD, Context> hook,
             PAYLOAD payload,
             Context context,
@@ -253,5 +259,49 @@ public abstract class HooksTestBase {
                     validator.accept(initialPayload, updatedPayload);
                 }
         );
+    }
+
+    protected <PAYLOAD, Context extends InvocationContext> void executeHookAndValidateRejectedInvocationResult(
+            Hook<PAYLOAD, Context> hook,
+            PAYLOAD payload,
+            Context context,
+            BiConsumer<
+                    PAYLOAD/*initialPayload*/,
+                    InvocationResult<PAYLOAD>/*invocationResult*/> validator
+    ) {
+        executeHookAndValidateInvocationResult(
+                hook,
+                payload,
+                context,
+                (initialPayload, invocationResult) -> {
+                    Assert.assertEquals(invocationResult.status(), InvocationStatus.success);
+                    Assert.assertEquals(invocationResult.action(), InvocationAction.reject);
+                    Assert.assertFalse(invocationResult.errors().isEmpty());
+                    validator.accept(initialPayload, invocationResult);
+                }
+        );
+    }
+
+    protected boolean hasLogEventWith(LogCaptor logCaptor, String message) {
+        return logCaptor.getLogEvents()
+                .stream()
+                .anyMatch(
+                        logEvent -> StringUtils.contains(
+                                logEvent.toString(),
+                                message
+                        )
+                );
+    }
+
+    protected boolean hasLogEventWith(LogCaptor logCaptor, String message, Level level) {
+        return logCaptor.getLogEvents()
+                .stream()
+                .anyMatch(
+                        logEvent -> logEvent.getLevel().equals(level.toString())
+                                && StringUtils.contains(
+                                logEvent.toString(),
+                                message
+                        )
+                );
     }
 }

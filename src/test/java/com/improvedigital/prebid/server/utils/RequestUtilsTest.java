@@ -150,53 +150,127 @@ public class RequestUtilsTest {
 
     @Test
     public void testGetStoredRequestId() {
+        final String storedRequestId = "stored-request-id";
+
         String result = requestUtils.getStoredRequestId(null);
         Assert.assertNull(result);
 
-        final ExtRequest extRequestWithoutStoredRequest = ExtRequest.of(
+        result = requestUtils.getStoredRequestIdFromExtRequest(null);
+        Assert.assertNull(result);
+
+        result = requestUtils.getStoredRequestIdFromExtRequestNode(null);
+        Assert.assertNull(result);
+
+        BidRequest bidRequest = BidRequest.builder().build();
+
+        result = requestUtils.getStoredRequestId(bidRequest);
+        Assert.assertNull(result);
+
+        ExtRequest extRequest = ExtRequest.of(
                 ExtRequestPrebid.builder()
                         .build()
         );
 
-        result = requestUtils.getStoredRequestId(extRequestWithoutStoredRequest);
+        ObjectNode extRequestNode =
+                (ObjectNode) jsonUtils.valueToTree(extRequest);
+
+        bidRequest = BidRequest.builder().ext(extRequest).build();
+
+        result = requestUtils.getStoredRequestId(bidRequest);
         Assert.assertNull(result);
 
-        final ExtRequest extRequestWithStoredRequest = ExtRequest.of(
+        result = requestUtils.getStoredRequestIdFromExtRequest(extRequest);
+        Assert.assertNull(result);
+
+        result = requestUtils.getStoredRequestIdFromExtRequestNode(extRequestNode);
+        Assert.assertNull(result);
+
+        extRequest = ExtRequest.of(
                 ExtRequestPrebid.builder()
                         .storedrequest(
-                                ExtStoredRequest.of("stored-request-id")
+                                ExtStoredRequest.of(storedRequestId)
                         )
                         .build()
         );
 
-        result = requestUtils.getStoredRequestId(extRequestWithStoredRequest);
+        extRequestNode =
+                (ObjectNode) jsonUtils.valueToTree(extRequest);
+
+        bidRequest = BidRequest.builder().ext(extRequest).build();
+
+        result = requestUtils.getStoredRequestId(bidRequest);
         Assert.assertNotNull(result);
-        Assert.assertEquals("stored-request-id", result);
+        Assert.assertEquals(storedRequestId, result);
+
+        result = requestUtils.getStoredRequestIdFromExtRequest(extRequest);
+        Assert.assertNotNull(result);
+        Assert.assertEquals(storedRequestId, result);
+
+        result = requestUtils.getStoredRequestIdFromExtRequestNode(extRequestNode);
+        Assert.assertNotNull(result);
+        Assert.assertEquals(storedRequestId, result);
     }
 
     @Test
     public void testGetStoredImpId() {
+        final String storedImpId = "stored-imp-id";
+
         String result = requestUtils.getStoredImpId(null);
         Assert.assertNull(result);
 
-        final ExtImp extImpWithoutStoredRequest = ExtImp.of(
+        result = requestUtils.getStoredImpIdFromExtImp(null);
+        Assert.assertNull(result);
+
+        result = requestUtils.getStoredImpIdFromExtImpNode(null);
+        Assert.assertNull(result);
+
+        Imp imp = Imp.builder().build();
+
+        result = requestUtils.getStoredImpId(imp);
+        Assert.assertNull(result);
+
+        ExtImp extImp = ExtImp.of(
                 ExtImpPrebid.builder().build(), null
         );
 
-        result = requestUtils.getStoredImpId(extImpWithoutStoredRequest);
+        ObjectNode extImpNode =
+                (ObjectNode) jsonUtils.valueToTree(extImp);
+
+        imp = Imp.builder().ext(extImpNode).build();
+
+        result = requestUtils.getStoredImpId(imp);
         Assert.assertNull(result);
 
-        final ExtImp extImpWithStoredRequest = ExtImp.of(
+        result = requestUtils.getStoredImpIdFromExtImp(extImp);
+        Assert.assertNull(result);
+
+        result = requestUtils.getStoredImpIdFromExtImpNode(extImpNode);
+        Assert.assertNull(result);
+
+        extImp = ExtImp.of(
                 ExtImpPrebid.builder()
                         .storedrequest(
-                                ExtStoredRequest.of("stored-imp-id")
+                                ExtStoredRequest.of(storedImpId)
                         )
                         .build(), null
         );
 
-        result = requestUtils.getStoredImpId(extImpWithStoredRequest);
+        extImpNode =
+                (ObjectNode) jsonUtils.valueToTree(extImp);
+
+        imp = Imp.builder().ext(extImpNode).build();
+
+        result = requestUtils.getStoredImpId(imp);
         Assert.assertNotNull(result);
-        Assert.assertEquals("stored-imp-id", result);
+        Assert.assertEquals(storedImpId, result);
+
+        result = requestUtils.getStoredImpIdFromExtImp(extImp);
+        Assert.assertNotNull(result);
+        Assert.assertEquals(storedImpId, result);
+
+        result = requestUtils.getStoredImpIdFromExtImpNode(extImpNode);
+        Assert.assertNotNull(result);
+        Assert.assertEquals(storedImpId, result);
     }
 
     @Test

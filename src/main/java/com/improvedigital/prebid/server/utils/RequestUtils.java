@@ -2,6 +2,7 @@ package com.improvedigital.prebid.server.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.MissingNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.App;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
@@ -76,7 +77,7 @@ public class RequestUtils {
                 .value();
     }
 
-    public String getStoredRequestId(ExtRequest extRequest) {
+    public String getStoredRequestIdFromExtRequest(ExtRequest extRequest) {
         return Nullable.of(extRequest)
                 .get(ExtRequest::getPrebid)
                 .get(ExtRequestPrebid::getStoredrequest)
@@ -84,11 +85,39 @@ public class RequestUtils {
                 .value();
     }
 
-    public String getStoredImpId(ExtImp extImp) {
+    public String getStoredRequestId(BidRequest bidRequest) {
+        return Nullable.of(bidRequest)
+                .get(BidRequest::getExt)
+                .get(this::getStoredRequestIdFromExtRequest)
+                .value();
+    }
+
+    public String getStoredRequestIdFromExtRequestNode(ObjectNode extRequest) {
+        return Nullable.of(extRequest)
+                .get(node -> node.at("/prebid/storedrequest/id"))
+                .get(node -> node.isMissingNode() ? null : node.asText())
+                .value();
+    }
+
+    public String getStoredImpIdFromExtImp(ExtImp extImp) {
         return Nullable.of(extImp)
                 .get(ExtImp::getPrebid)
                 .get(ExtImpPrebid::getStoredrequest)
                 .get(this::storedRequestIdFromExtStoredRequest)
+                .value();
+    }
+
+    public String getStoredImpId(Imp imp) {
+        return Nullable.of(imp)
+                .get(Imp::getExt)
+                .get(this::getStoredImpIdFromExtImpNode)
+                .value();
+    }
+
+    public String getStoredImpIdFromExtImpNode(ObjectNode extImp) {
+        return Nullable.of(extImp)
+                .get(node -> node.at("/prebid/storedrequest/id"))
+                .get(node -> node.isMissingNode() ? null : node.asText())
                 .value();
     }
 

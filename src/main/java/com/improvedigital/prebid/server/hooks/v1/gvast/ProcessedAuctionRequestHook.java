@@ -33,6 +33,7 @@ import javax.validation.ValidationException;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 
 public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.auction.ProcessedAuctionRequestHook {
@@ -50,15 +51,14 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
     private final ExtRequest prioritizedExtRequestForGVast;
 
     public ProcessedAuctionRequestHook(
-            JsonUtils jsonUtils,
-            JsonMerger merger,
             RequestUtils requestUtils,
+            JsonMerger merger,
             CurrencyConversionService currencyConversionService
     ) {
-        this.jsonUtils = jsonUtils;
-        this.requestUtils = requestUtils;
-        this.merger = merger;
-        this.currencyConversionService = currencyConversionService;
+        this.requestUtils = Objects.requireNonNull(requestUtils);
+        this.jsonUtils = Objects.requireNonNull(requestUtils.getJsonUtils());
+        this.merger = Objects.requireNonNull(merger);
+        this.currencyConversionService = Objects.requireNonNull(currencyConversionService);
 
         JsonNode priceGranularity;
         try {
@@ -118,7 +118,7 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         ));
     }
 
-    public void validateRequestWithBusinessLogic(BidRequest bidRequest) {
+    private void validateRequestWithBusinessLogic(BidRequest bidRequest) {
         if (!bidRequest.getImp().parallelStream().allMatch(
                 imp -> requestUtils.getImprovePlacementId(imp) != null
         )) {
@@ -169,7 +169,7 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         return bidRequest.toBuilder().ext(mergedExtRequest).build();
     }
 
-    public void updateImpsWithBidFloorInUsd(BidRequest bidRequest, Function<Imp, Floor> floorRetriever) {
+    private void updateImpsWithBidFloorInUsd(BidRequest bidRequest, Function<Imp, Floor> floorRetriever) {
         bidRequest.getImp().replaceAll(imp -> {
             Floor effectiveFloor = floorRetriever.apply(imp);
             if (effectiveFloor == null) {

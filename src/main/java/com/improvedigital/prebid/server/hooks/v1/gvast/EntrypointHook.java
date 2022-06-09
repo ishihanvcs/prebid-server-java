@@ -21,7 +21,6 @@ import org.prebid.server.hooks.v1.InvocationContext;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.entrypoint.EntrypointPayload;
 import org.prebid.server.json.JsonMerger;
-import org.prebid.server.proto.openrtb.ext.request.ExtImp;
 import org.prebid.server.proto.openrtb.ext.request.ExtPublisher;
 import org.prebid.server.proto.openrtb.ext.request.ExtPublisherPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
@@ -30,6 +29,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.EntrypointHook {
@@ -43,15 +43,14 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
 
     public EntrypointHook(
             SettingsLoader settingsLoader,
-            JsonUtils jsonUtils,
             RequestUtils requestUtils,
             JsonMerger merger
     ) {
-        this.settingsLoader = settingsLoader;
-        this.jsonUtils = jsonUtils;
-        this.mapper = jsonUtils.getObjectMapper();
-        this.requestUtils = requestUtils;
-        this.merger = merger;
+        this.settingsLoader = Objects.requireNonNull(settingsLoader);
+        this.requestUtils = Objects.requireNonNull(requestUtils);
+        this.jsonUtils = Objects.requireNonNull(requestUtils.getJsonUtils());
+        this.mapper = Objects.requireNonNull(jsonUtils.getObjectMapper());
+        this.merger = Objects.requireNonNull(merger);
     }
 
     @Override
@@ -65,12 +64,12 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
         );
 
         final boolean hasStoredRequest = StringUtils.isNotBlank(
-                requestUtils.getStoredRequestId(originalBidRequest.getExt())
+                requestUtils.getStoredRequestId(originalBidRequest)
         );
 
         if (!hasAccountId || !hasStoredRequest) {
             final Map<Imp, String> impToStoredRequestId = originalBidRequest.getImp().stream()
-                    .map(this::getImpToStoredRequestIdTuple)
+                    .map(imp -> Tuple2.of(imp, requestUtils.getStoredImpId(imp)))
                     .filter(t -> StringUtils.isNotBlank(t.getRight()))
                     .collect(Collectors.toMap(Tuple2::getLeft, Tuple2::getRight));
 
@@ -158,19 +157,6 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
         ImprovedigitalPbsImpExt ext2 = jsonUtils.getImprovedigitalPbsImpExt(storedImp);
 
         return merger.merge(ext1, ext2, ImprovedigitalPbsImpExt.class);
-    }
-
-    private Tuple2<Imp, String> getImpToStoredRequestIdTuple(Imp imp) {
-        String storedImpId = null;
-        if (imp != null && imp.getExt().isObject()) {
-            try {
-                ExtImp extImp = mapper.treeToValue(imp.getExt(), ExtImp.class);
-                storedImpId = requestUtils.getStoredImpId(extImp);
-            } catch (JsonProcessingException e) {
-                throw new InvalidRequestException(String.format("Error decoding imp.ext: %s", e.getMessage()));
-            }
-        }
-        return Tuple2.of(imp, storedImpId);
     }
 
     private BidRequest setParentAccountId(BidRequest bidRequest, String accountId) {

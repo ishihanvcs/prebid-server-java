@@ -75,6 +75,7 @@
         <aspectj.version>1.9.7</aspectj.version>
         <h2.version>1.4.200</h2.version>
         <bytebuddy.version>1.11.19</bytebuddy.version>
+        <logcaptor.version>2.7.10</logcaptor.version>
 
         <!-- plugin versions -->
         <checkstyle-plugin.version>3.1.0</checkstyle-plugin.version>
@@ -489,6 +490,12 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.hakky54</groupId>
+            <artifactId>logcaptor</artifactId>
+            <version>${logcaptor.version}</version>
             <scope>test</scope>
         </dependency>
         <!-- for Mockito to be able to mock Vert.x-specific classes -->

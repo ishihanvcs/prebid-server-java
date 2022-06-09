@@ -1,11 +1,13 @@
 package com.improvedigital.prebid.server.hooks.v1.gvast;
 
+import ch.qos.logback.classic.Level;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.improvedigital.prebid.server.hooks.v1.HooksTestBase;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
 import io.vertx.core.Future;
+import nl.altindag.log.LogCaptor;
 import org.apache.commons.collections4.map.HashedMap;
 import org.junit.Assert;
 import org.junit.Before;
@@ -17,7 +19,6 @@ import org.prebid.server.hooks.execution.v1.InvocationContextImpl;
 import org.prebid.server.hooks.execution.v1.entrypoint.EntrypointPayloadImpl;
 import org.prebid.server.hooks.v1.InvocationContext;
 import org.prebid.server.hooks.v1.entrypoint.EntrypointPayload;
-import org.prebid.server.json.JsonMerger;
 import org.prebid.server.model.CaseInsensitiveMultiMap;
 import org.prebid.server.model.Endpoint;
 import org.prebid.server.proto.openrtb.ext.request.ExtImp;
@@ -25,6 +26,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtImpPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -38,10 +40,7 @@ public class EntrypointHookTest extends HooksTestBase {
     @Mock
     SettingsLoader settingsLoader;
 
-    private final JsonMerger merger = new JsonMerger(mapper);
-
-    EntrypointHook entrypointHook;
-    Timeout timeout;
+    EntrypointHook hook;
 
     private final String defaultAccountId = "2018";
     private final String defaultStoredRequestId = "stored-request";
@@ -49,13 +48,87 @@ public class EntrypointHookTest extends HooksTestBase {
     @Before
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        entrypointHook = new EntrypointHook(
+        hook = new EntrypointHook(
                 settingsLoader,
-                jsonUtils,
                 requestUtils,
                 merger
         );
-        timeout = createTimeout(1000L);
+    }
+
+    @Test
+    public void shouldNotModifyBidRequestWhenAccountIdAndRequestIdMisMatchedInImps() throws Exception {
+        final String storedImpId = "video-basic";
+        final String bidRequestId = "minimal";
+        final Set<String> storedImpIds = Set.of();
+
+        final Imp imp1 = getStoredImp(storedImpId, imp -> setImpConfigProperties(imp, configNode -> {
+            configNode.put("accountId", "1");
+            configNode.put("requestId", "1");
+        }).toBuilder().id("1").build());
+
+        final Imp imp2 = getStoredImp(storedImpId, imp -> setImpConfigProperties(imp, configNode -> {
+            configNode.put("accountId", "2");
+            configNode.put("requestId", "2");
+        }).toBuilder().id("2").build());
+
+        when(settingsLoader.getStoredImpsSafely(storedImpIds, timeout)).thenReturn(
+                createSucceededFutureWithImps(
+                        storedImpIds
+                )
+        );
+
+        final LogCaptor logCaptor = LogCaptor.forClass(this.hook.getClass());
+
+        executeHookAndValidateBidRequest(
+                createEntrypointPayload(
+                        bidRequestId,
+                        bidRequest -> bidRequest.toBuilder().imp(List.of(imp1, imp2)).build()
+                ),
+                timeout,
+                (originalBidRequest, updatedBidRequest) -> {
+                    Assert.assertEquals("bidRequest modified", originalBidRequest, updatedBidRequest);
+                    Assert.assertEquals(logCaptor.getWarnLogs().size(), 2);
+                    Assert.assertTrue(
+                            hasLogEventWith(logCaptor,
+                                    "accountId mismatched in imp[].prebid.improvedigitalpbs",
+                                    Level.WARN
+                            )
+                    );
+                    Assert.assertTrue(
+                            hasLogEventWith(logCaptor,
+                                    "requestId mismatched in imp[].prebid.improvedigitalpbs",
+                                    Level.WARN
+                            )
+                    );
+                }
+        );
+    }
+
+    @Test
+    public void shouldNotModifyBidRequestWhenParentAccountAndRequestIdIsEmpty() throws Exception {
+        final String storedImpId = "video-basic";
+        final String bidRequestId = "minimal";
+        final Set<String> storedImpIds = Set.of(storedImpId);
+        final Map<String, String> impToStoredIdMap = new HashMap<>() {{
+                put("1", storedImpId);
+            }};
+
+        when(settingsLoader.getStoredImpsSafely(storedImpIds, timeout)).thenReturn(
+                createSucceededFutureWithImps(
+                        storedImpIds
+                )
+        );
+
+        executeHookAndValidateBidRequest(
+                createEntrypointPayload(
+                        bidRequestId,
+                        bidRequest -> setStoredImpIds(bidRequest, impToStoredIdMap)
+                ),
+                timeout,
+                (originalBidRequest, updatedBidRequest) -> {
+                    Assert.assertEquals("bidRequest modified", originalBidRequest, updatedBidRequest);
+                }
+        );
     }
 
     @Test
@@ -105,7 +178,7 @@ public class EntrypointHookTest extends HooksTestBase {
 
     @Test
     public void testCode() throws Exception {
-        String result = entrypointHook.code();
+        String result = hook.code();
         Assert.assertEquals("improvedigital-gvast-hooks-entrypoint", result);
     }
 
@@ -114,8 +187,8 @@ public class EntrypointHookTest extends HooksTestBase {
             Timeout timeout,
             BiConsumer<BidRequest/*originalBidRequest*/, BidRequest/*updatedBidRequest*/> validator
     ) {
-        executeHookAndValidatePayload(
-                entrypointHook,
+        executeHookAndValidatePayloadUpdate(
+                hook,
                 payload,
                 createInvocationContext(timeout),
                 (initialPayload, updatedPayload) -> {

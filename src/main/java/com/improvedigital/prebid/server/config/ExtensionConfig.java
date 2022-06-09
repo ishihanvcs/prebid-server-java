@@ -134,7 +134,6 @@ public class ExtensionConfig {
     @Bean
     Module gVastHooksModule(
             SettingsLoader settingsLoader,
-            JsonUtils jsonUtils,
             RequestUtils requestUtils,
             JsonMerger merger,
             CurrencyConversionService currencyConversionService,
@@ -145,7 +144,6 @@ public class ExtensionConfig {
     ) {
         return new GVastHooksModule(
                 settingsLoader,
-                jsonUtils,
                 requestUtils,
                 merger,
                 currencyConversionService,

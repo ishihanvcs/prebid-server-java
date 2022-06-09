@@ -35,15 +35,14 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
     private final RequestUtils requestUtils;
 
     public AuctionResponseHook(
-            JsonUtils jsonUtils,
             RequestUtils requestUtils,
             MacroProcessor macroProcessor,
             String externalUrl,
             String gamNetworkCode,
             String cacheHost) {
-        this.jsonUtils = jsonUtils;
-        this.requestUtils = requestUtils;
-        this.macroProcessor = macroProcessor;
+        this.requestUtils = Objects.requireNonNull(requestUtils);
+        this.jsonUtils = Objects.requireNonNull(requestUtils.getJsonUtils());
+        this.macroProcessor = Objects.requireNonNull(macroProcessor);
         this.externalUrl = externalUrl;
         this.gamNetworkCode = gamNetworkCode;
         this.cacheHost = cacheHost;

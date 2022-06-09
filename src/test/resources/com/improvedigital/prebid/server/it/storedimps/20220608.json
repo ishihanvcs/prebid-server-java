@@ -1,0 +1,25 @@
+{
+  "ext": {
+    "prebid": {
+      "bidder": {
+        "improvedigital": {
+          "placementId": 20220608
+        }
+      }
+    }
+  },
+  "video": {
+    "mimes": [
+      "video/mp4"
+    ],
+    "minduration": 1,
+    "maxduration": 60,
+    "linearity": 1,
+    "placement": 5,
+    "protocols": [
+      2
+    ],
+    "w": 640,
+    "h": 480
+  }
+}

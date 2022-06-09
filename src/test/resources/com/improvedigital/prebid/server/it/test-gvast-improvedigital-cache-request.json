@@ -1,0 +1,9 @@
+{
+  "puts": [
+    {
+      "type": "xml",
+      "value": "IT_TEST_CACHE_VALUE",
+      "aid": "request_id"
+    }
+  ]
+}

@@ -3,14 +3,21 @@ package com.improvedigital.prebid.server.it;
 import com.improvedigital.prebid.server.handler.GVastHandler;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.prebid.server.model.Endpoint;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.xml.sax.InputSource;
 
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -24,6 +31,12 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalToIgnoreCase;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @TestPropertySource(
@@ -253,6 +266,65 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         ).isTrue();
     }
 
+    @Test
+    public void auctionEndpointReturnsVastResponse() throws XPathExpressionException, IOException, JSONException {
+        Response response = getVastResponseFromAuction(
+                getVastXmlInline("20220608", true)
+        );
+        JSONObject responseJson = new JSONObject(response.asString());
+        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("video");
+        assertCurrency(responseJson, "USD");
+
+        String adm = getAdmOf1stBid(responseJson);
+
+        // 1st pixel is what we had on creative.
+        String mediaUrl = XPathFactory.newInstance().newXPath()
+                .compile("/VAST/Ad[@id='20220608']/InLine/Creatives" +
+                        "/Creative[@AdID='20220608']/Linear/MediaFiles/MediaFile[1]")
+                .evaluate(new InputSource(new StringReader(adm)));
+        assertThat(mediaUrl.trim()).isEqualTo("https://media.pbs.improvedigital.com/20220608.mp4");
+    }
+
+    @Test
+    public void auctionEndpointReturnsGVastResponse() throws XPathExpressionException, IOException, JSONException {
+        String vastXml = getVastXmlWrapper("20220608", true);
+        String vastXmlWillBeCached = vastXml.replace(
+                "</Wrapper>",
+                "<Impression>" +
+                        "<![CDATA[https://it.pbs.com/ssp_bids?bidder=improvedigital&cpm=1.25&pid=20220608]]>" +
+                        "</Impression>" +
+                        "</Wrapper>"
+        );
+        Response response = getGVastResponseFromAuction(
+                vastXml, "R3WOPUPAGZYVYLA02ONHOGPANWYVX2D", vastXmlWillBeCached
+        );
+        JSONObject responseJson = new JSONObject(response.asString());
+        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("video");
+        assertCurrency(responseJson, "USD");
+
+        String adm = getAdmOf1stBid(responseJson);
+
+        String vastAdTagUri = XPathFactory.newInstance().newXPath()
+                .compile("/VAST/Ad[@id='20220608']/Wrapper/VASTAdTagURI")
+                .evaluate(new InputSource(new StringReader(adm)));
+
+        assertThat(vastAdTagUri.trim()).isEqualTo("https://vast.pbs.improvedigital.com/20220608");
+
+        // Check we got correct cache url.
+        JSONObject vastXmlCache = getExtPrebidOfNthBid(responseJson, 0)
+                .getJSONObject("cache")
+                .getJSONObject("vastXml");
+        assertThat(vastXmlCache.getString("cacheId")).isEqualTo("R3WOPUPAGZYVYLA02ONHOGPANWYVX2D");
+        assertThat(vastXmlCache.getString("url")).endsWith("/cache?uuid=R3WOPUPAGZYVYLA02ONHOGPANWYVX2D");
+
+        // Hit the cache.
+        assertThat(IOUtils.toString(
+                HttpClientBuilder.create().build().execute(
+                        new HttpGet(vastXmlCache.getString("url"))
+                ).getEntity().getContent(), "UTF-8"
+        )).isEqualTo(vastXmlWillBeCached);
+    }
+
     private Map<String, List<String>> splitQuery(String queryParam) {
         return Arrays.stream(queryParam.split("&"))
                 .map(this::splitQueryParameter)
@@ -283,6 +355,92 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
             spec = modifier.apply(spec);
         }
         return spec.get(GVastHandler.END_POINT);
+    }
+
+    private Response getVastResponseFromAuction(String improveMockAdm) throws IOException {
+        return getVastResponseFromAuction(improveMockAdm, null);
+    }
+
+    private Response getVastResponseFromAuction(
+            String improveMockAdm,
+            Function<RequestSpecification, RequestSpecification> modifier
+    ) throws IOException {
+        WIRE_MOCK_RULE.stubFor(
+                post(urlPathEqualTo("/improvedigital-exchange"))
+                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/test-vast-improvedigital-bid-request.json",
+                                null
+                        )))
+                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/test-vast-improvedigital-bid-response.json",
+                                Map.of("IT_TEST_MACRO_ADM", improveMockAdm)
+                        )))
+        );
+
+        RequestSpecification spec = specWithPBSHeader(18080)
+                .body(jsonFromFileWithMacro(
+                        "/com/improvedigital/prebid/server/it/test-vast-auction-improvedigital-request.json",
+                        Map.of("IT_TEST_IMPROVE_PBS_RESPONSE_TYPE", "vast")
+                ));
+        if (modifier != null) {
+            spec = modifier.apply(spec);
+        }
+        return spec.post(Endpoint.openrtb2_auction.value());
+    }
+
+    private Response getGVastResponseFromAuction(
+            String improveMockAdm,
+            String cacheId,
+            String vastXmlWillBeCached
+    ) throws IOException {
+        return getGVastResponseFromAuction(improveMockAdm, cacheId, vastXmlWillBeCached, null);
+    }
+
+    private Response getGVastResponseFromAuction(
+            String improveMockAdm,
+            String cacheId,
+            String vastXmlWillBeCached,
+            Function<RequestSpecification, RequestSpecification> modifier) throws IOException {
+        WIRE_MOCK_RULE.stubFor(
+                post(urlPathEqualTo("/improvedigital-exchange"))
+                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/test-gvast-improvedigital-bid-request.json",
+                                null
+                        )))
+                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/test-vast-improvedigital-bid-response.json",
+                                Map.of("IT_TEST_MACRO_ADM", improveMockAdm)
+                        )))
+        );
+
+        WIRE_MOCK_RULE.stubFor(
+                post(urlPathEqualTo("/cache"))
+                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/test-gvast-improvedigital-cache-request.json",
+                                Map.of("IT_TEST_CACHE_VALUE", vastXmlWillBeCached)
+                        )))
+                        .willReturn(aResponse()
+                                .withBody(jsonFromFileWithMacro(
+                                        "/com/improvedigital/prebid/server/it/test-gvast-improvedigital-cache-response.json",
+                                        Map.of("IT_TEST_CACHE_UUID", cacheId)
+                                )))
+        );
+        WIRE_MOCK_RULE.stubFor(
+                get(urlPathEqualTo("/cache"))
+                        .withQueryParam("uuid", equalToIgnoreCase(cacheId))
+                        .willReturn(aResponse()
+                                .withBody(vastXmlWillBeCached))
+        );
+
+        RequestSpecification spec = specWithPBSHeader(18080)
+                .body(jsonFromFileWithMacro(
+                        "/com/improvedigital/prebid/server/it/test-vast-auction-improvedigital-request.json",
+                        Map.of("IT_TEST_IMPROVE_PBS_RESPONSE_TYPE", "gvast")
+                ));
+        if (modifier != null) {
+            spec = modifier.apply(spec);
+        }
+        return spec.post(Endpoint.openrtb2_auction.value());
     }
 
     private AbstractMap.SimpleImmutableEntry<String, String> splitQueryParameter(String it) {

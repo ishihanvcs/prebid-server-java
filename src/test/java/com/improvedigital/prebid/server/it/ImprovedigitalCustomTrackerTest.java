@@ -18,7 +18,6 @@ import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Map;
-import java.util.function.Function;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
@@ -120,8 +119,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldAddCustomTrackerOnVideoResponseWhenXmlHasImpression() throws Exception {
-        String vastXmlResponse = getVastXmlInline("20220406", true)
-                .replace("\"", "\\\"");
+        String vastXmlResponse = getVastXmlInline("20220406", true);
         final Response response = doVideoRequestAndGetResponse(Map.of(
                 "IT_TEST_MACRO_ADM", vastXmlResponse,
                 "IT_TEST_MACRO_CURRENCY", "USD"
@@ -148,8 +146,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldAddCustomTrackerOnVideoResponseWhenXmlHasImpressionAndMultipleAds() throws Exception {
-        String vastXmlResponse = getVastXmlInlineWithMultipleAds("20220406", true)
-                .replace("\"", "\\\"");
+        String vastXmlResponse = getVastXmlInlineWithMultipleAds("20220406", true);
         final Response response = doVideoRequestAndGetResponse(Map.of(
                 "IT_TEST_MACRO_ADM", vastXmlResponse,
                 "IT_TEST_MACRO_CURRENCY", "USD"
@@ -188,8 +185,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldAddCustomTrackerOnVideoResponseWhenXmlHasNoImpression() throws Exception {
-        String vastXmlResponse = getVastXmlInline("20220406", false)
-                .replace("\"", "\\\"");
+        String vastXmlResponse = getVastXmlInline("20220406", false);
         final Response response = doVideoRequestAndGetResponse(Map.of(
                 "IT_TEST_MACRO_ADM", vastXmlResponse,
                 "IT_TEST_MACRO_CURRENCY", "USD"
@@ -210,8 +206,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldAddCustomTrackerOnVideoResponseWhenXmlHasWrapperAndImpression() throws Exception {
-        String vastXmlResponse = getVastXmlWrapper("20220406", true)
-                .replace("\"", "\\\"");
+        String vastXmlResponse = getVastXmlWrapper("20220406", true);
         final Response response = doVideoRequestAndGetResponse(Map.of(
                 "IT_TEST_MACRO_ADM", vastXmlResponse,
                 "IT_TEST_MACRO_CURRENCY", "USD"
@@ -238,8 +233,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldAddCustomTrackerOnVideoResponseWhenXmlHasWrapperAndImpressionAndMultipleAds() throws Exception {
-        String vastXmlResponse = getVastXmlWrapperWithMultipleAds("20220406", true)
-                .replace("\"", "\\\"");
+        String vastXmlResponse = getVastXmlWrapperWithMultipleAds("20220406", true);
         final Response response = doVideoRequestAndGetResponse(Map.of(
                 "IT_TEST_MACRO_ADM", vastXmlResponse,
                 "IT_TEST_MACRO_CURRENCY", "USD"
@@ -278,8 +272,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldAddCustomTrackerOnVideoResponseWhenXmlHasWrapperAndNoImpression() throws Exception {
-        String vastXmlResponse = getVastXmlWrapper("20220406", false)
-                .replace("\"", "\\\"");
+        String vastXmlResponse = getVastXmlWrapper("20220406", false);
         final Response response = doVideoRequestAndGetResponse(Map.of(
                 "IT_TEST_MACRO_ADM", vastXmlResponse,
                 "IT_TEST_MACRO_CURRENCY", "USD"
@@ -300,10 +293,8 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldAddCorrectPlacementIdInCustomTrackerOnVideoResponse() throws Exception {
-        String vastXmlResponse1 = getVastXmlWrapper("20220601_1", false)
-                .replace("\"", "\\\"");
-        String vastXmlResponse2 = getVastXmlInline("20220601_2", false)
-                .replace("\"", "\\\"");
+        String vastXmlResponse1 = getVastXmlWrapper("20220601_1", false);
+        String vastXmlResponse2 = getVastXmlInline("20220601_2", false);
         final Response response = doVideoMultiImpRequestAndGetResponse(Map.of(
                 "IT_TEST_MACRO_ADM_1", vastXmlResponse1,
                 "IT_TEST_MACRO_ADM_2", vastXmlResponse2,
@@ -631,10 +622,6 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .isEqualTo(getCustomTrackerUrl(cpmInUsd, pid));
     }
 
-    private void assertCurrency(JSONObject responseJson, String expectedCurrency) throws JSONException {
-        assertThat(responseJson.getString("cur")).isEqualTo(expectedCurrency);
-    }
-
     @NotNull
     private String getCustomTrackerUrl(String cpmInUsd, String pid) {
         return "https://it.pbs.com/ssp_bids?bidder=improvedigital&cpm=" + cpmInUsd + "&pid=" + pid;
@@ -668,182 +655,5 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         }
 
         return null;
-    }
-
-    private String getAdmOf1stBid(JSONObject responseJson) throws JSONException {
-        return getAdmOfNthBid(responseJson, 0);
-    }
-
-    @NotNull
-    private String getAdmOfNthBid(JSONObject responseJson, int bidIndex) throws JSONException {
-        assertThat(responseJson.getJSONArray("seatbid").length())
-                .isGreaterThanOrEqualTo(1);
-
-        assertThat(responseJson.getJSONArray("seatbid").getJSONObject(0).getJSONArray("bid").length())
-                .isGreaterThanOrEqualTo(1);
-
-        return responseJson
-                .getJSONArray("seatbid").getJSONObject(0)
-                .getJSONArray("bid").getJSONObject(bidIndex)
-                .getString("adm");
-    }
-
-    private String getExtPrebidTypeOf1stBid(JSONObject responseJson) throws JSONException {
-        return getExtPrebidTypeOfNthBid(responseJson, 0);
-    }
-
-    private String getExtPrebidTypeOfNthBid(JSONObject responseJson, int bidIndex) throws JSONException {
-        return responseJson
-                .getJSONArray("seatbid").getJSONObject(0)
-                .getJSONArray("bid").getJSONObject(bidIndex)
-                .getJSONObject("ext")
-                .getJSONObject("prebid")
-                .getString("type");
-    }
-
-    private static String jsonFromFileWithMacro(String file, Map<String, String> macrosInFileContent)
-            throws IOException {
-        // workaround to clear formatting
-        String fileContent = mapper.writeValueAsString(
-                mapper.readTree(ImprovedigitalIntegrationTest.class.getResourceAsStream(file))
-        );
-
-        // Replace all occurrences of <key>s by it's <value> of map.
-        if (macrosInFileContent != null) {
-            return macrosInFileContent.entrySet().stream()
-                    .map(m -> (Function<String, String>) s -> s.replace(m.getKey(), m.getValue()))
-                    .reduce(Function.identity(), Function::andThen)
-                    .apply(fileContent);
-        }
-
-        return fileContent;
-    }
-
-    private String getVastXmlInline(String adId, boolean hasImpPixel) {
-        return "<VAST version=\"2.0\">"
-                + "  <Ad id=\"" + adId + "\">"
-                + "    <InLine>"
-                + "      <AdSystem>PBS IT Test Case</AdSystem>"
-                + "      <AdTitle>VAST 2.0</AdTitle>"
-                + "      <Description>PBS IT Test Case - VAST 2.0</Description>"
-                + "      <Error>https://error.pbs.improvedigital.com/" + adId + "</Error>"
-                + (hasImpPixel ? "<Impression>https://imp.pbs.improvedigital.com/" + adId + "</Impression>" : "")
-                + "      <Creatives>"
-                + "        <Creative AdID=\"20220406\">"
-                + "          <Linear>"
-                + "            <Duration>00:00:60</Duration>"
-                + "            <VideoClicks>"
-                + "              <ClickThrough>https://click.pbs.improvedigital.com/" + adId + "</ClickThrough>"
-                + "            </VideoClicks>"
-                + "            <MediaFiles>"
-                + "              <MediaFile type=\"video/mp4\" width=\"640\" height=\"480\">"
-                + "                https://media.pbs.improvedigital.com/" + adId + ".mp4"
-                + "              </MediaFile>"
-                + "            </MediaFiles>"
-                + "          </Linear>"
-                + "        </Creative>"
-                + "      </Creatives>"
-                + "    </InLine>"
-                + "  </Ad>"
-                + "</VAST>";
-    }
-
-    private String getVastXmlInlineWithMultipleAds(String adId, boolean hasImpPixel) {
-        return "<VAST version=\"2.0\">"
-                + "  <Ad id=\"" + adId + "-1" + "\">"
-                + "    <InLine>"
-                + "      <AdSystem>PBS IT Test Case</AdSystem>"
-                + "      <AdTitle>VAST 2.0 - Ad 1</AdTitle>"
-                + "      <Description>PBS IT Test Case - VAST 2.0</Description>"
-                + "      <Error>https://error.pbs.improvedigital.com/" + adId + "-1" + "</Error>"
-                + (hasImpPixel ? "<Impression>https://imp.pbs.improvedigital.com/" + adId + "-1" + "</Impression>" : "")
-                + "      <Creatives>"
-                + "        <Creative AdID=\"" + adId + "-1" + "\">"
-                + "          <Linear>"
-                + "            <Duration>00:00:60</Duration>"
-                + "            <VideoClicks>"
-                + "              <ClickThrough>https://click.pbs.improvedigital.com/" + adId + "-1" + "</ClickThrough>"
-                + "            </VideoClicks>"
-                + "            <MediaFiles>"
-                + "              <MediaFile type=\"video/mp4\" width=\"640\" height=\"480\">"
-                + "                https://media.pbs.improvedigital.com/" + adId + "-1" + ".mp4"
-                + "              </MediaFile>"
-                + "            </MediaFiles>"
-                + "          </Linear>"
-                + "        </Creative>"
-                + "      </Creatives>"
-                + "    </InLine>"
-                + "  </Ad>"
-                + "  <Ad id=\"" + adId + "-2" + "\">"
-                + "    <InLine>"
-                + "      <AdSystem>PBS IT Test Case</AdSystem>"
-                + "      <AdTitle>VAST 2.0 - Ad 2</AdTitle>"
-                + "      <Description>PBS IT Test Case - VAST 2.0</Description>"
-                + "      <Error>https://error.pbs.improvedigital.com/" + adId + "-2" + "</Error>"
-                + (hasImpPixel ? "<Impression>https://imp.pbs.improvedigital.com/" + adId + "-2" + "</Impression>" : "")
-                + "      <Creatives>"
-                + "        <Creative AdID=\"" + adId + "-2" + "\">"
-                + "          <Linear>"
-                + "            <Duration>00:00:30</Duration>"
-                + "            <VideoClicks>"
-                + "              <ClickThrough>https://click.pbs.improvedigital.com/" + adId + "-2" + "</ClickThrough>"
-                + "            </VideoClicks>"
-                + "            <MediaFiles>"
-                + "              <MediaFile type=\"video/mp4\" width=\"640\" height=\"480\">"
-                + "                https://media.pbs.improvedigital.com/" + adId + "-2" + ".mp4"
-                + "              </MediaFile>"
-                + "            </MediaFiles>"
-                + "          </Linear>"
-                + "        </Creative>"
-                + "      </Creatives>"
-                + "    </InLine>"
-                + "  </Ad>"
-                + "</VAST>";
-    }
-
-    private String getVastXmlWrapper(String adId, boolean hasImpPixel) {
-        return "<VAST version=\"2.0\">"
-                + "  <Ad id=\"" + adId + "\">"
-                + "    <Wrapper fallbackOnNoAd=\"true\">"
-                + "      <AdSystem>PBS IT Test Case</AdSystem>"
-                + "      <AdTitle>VAST 2.0</AdTitle>"
-                + "      <Description>PBS IT Test Case - VAST 2.0</Description>"
-                + "      <Error>https://error.pbs.improvedigital.com/" + adId + "</Error>"
-                + (hasImpPixel ? "<Impression>https://imp.pbs.improvedigital.com/" + adId + "</Impression>" : "")
-                + "      <VASTAdTagURI>"
-                + "        <![CDATA[https://vast.pbs.improvedigital.com/" + adId + "]]>"
-                + "      </VASTAdTagURI>"
-                + "    </Wrapper>"
-                + "  </Ad>"
-                + "</VAST>";
-    }
-
-    private String getVastXmlWrapperWithMultipleAds(String adId, boolean hasImpPixel) {
-        return "<VAST version=\"2.0\">"
-                + "  <Ad id=\"" + adId + "-1" + "\">"
-                + "    <Wrapper fallbackOnNoAd=\"true\">"
-                + "      <AdSystem>PBS IT Test Case</AdSystem>"
-                + "      <AdTitle>VAST 2.0 - Ad 1</AdTitle>"
-                + "      <Description>PBS IT Test Case - VAST 2.0</Description>"
-                + "      <Error>https://error.pbs.improvedigital.com/" + adId + "-1" + "</Error>"
-                + (hasImpPixel ? "<Impression>https://imp.pbs.improvedigital.com/" + adId + "-1" + "</Impression>" : "")
-                + "      <VASTAdTagURI>"
-                + "        <![CDATA[https://vast.pbs.improvedigital.com/" + adId + "-1" + "]]>"
-                + "      </VASTAdTagURI>"
-                + "    </Wrapper>"
-                + "  </Ad>"
-                + "  <Ad id=\"" + adId + "-2" + "\">"
-                + "    <Wrapper fallbackOnNoAd=\"true\">"
-                + "      <AdSystem>PBS IT Test Case</AdSystem>"
-                + "      <AdTitle>VAST 2.0 - Ad 1</AdTitle>"
-                + "      <Description>PBS IT Test Case - VAST 2.0</Description>"
-                + "      <Error>https://error.pbs.improvedigital.com/" + adId + "-2" + "</Error>"
-                + (hasImpPixel ? "<Impression>https://imp.pbs.improvedigital.com/" + adId + "-2" + "</Impression>" : "")
-                + "      <VASTAdTagURI>"
-                + "        <![CDATA[https://vast.pbs.improvedigital.com/" + adId + "-2" + "]]>"
-                + "      </VASTAdTagURI>"
-                + "    </Wrapper>"
-                + "  </Ad>"
-                + "</VAST>";
     }
 }

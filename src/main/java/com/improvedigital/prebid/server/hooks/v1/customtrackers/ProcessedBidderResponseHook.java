@@ -4,6 +4,8 @@ import com.improvedigital.prebid.server.customtrackers.AuctionRequestModuleConte
 import com.improvedigital.prebid.server.customtrackers.BidderBidModifier;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import io.vertx.core.Future;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.prebid.server.bidder.model.BidderBid;
 import org.prebid.server.hooks.execution.v1.bidder.BidderResponsePayloadImpl;
 import org.prebid.server.hooks.v1.InvocationResult;
@@ -15,7 +17,7 @@ import java.util.stream.Collectors;
 
 public class ProcessedBidderResponseHook implements org.prebid.server.hooks.v1.bidder.ProcessedBidderResponseHook {
 
-    // private static final Logger logger = LoggerFactory.getLogger(ProcessedBidderResponseHook.class);
+    private static final Logger logger = LoggerFactory.getLogger(ProcessedBidderResponseHook.class);
     private final BidderBidModifier bidderBidModifier;
 
     public ProcessedBidderResponseHook(
@@ -50,11 +52,16 @@ public class ProcessedBidderResponseHook implements org.prebid.server.hooks.v1.b
             return originalBids;
         }
 
-        return originalBids.stream()
-                .map(bidderBid -> bidderBidModifier.modifyBidAdm(
-                        (AuctionRequestModuleContext) moduleContext, bidderBid, bidder
-                ))
-                .collect(Collectors.toList());
+        try {
+            return originalBids.stream()
+                    .map(bidderBid -> bidderBidModifier.modifyBidAdm(
+                            (AuctionRequestModuleContext) moduleContext, bidderBid, bidder
+                    ))
+                    .collect(Collectors.toList());
+        } catch (Throwable t) {
+            logger.warn(((AuctionRequestModuleContext) moduleContext).getBidRequest(), t);
+        }
+        return originalBids;
     }
 
     @Override

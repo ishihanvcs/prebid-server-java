@@ -106,17 +106,15 @@ public class GVastBidCreator {
     }
 
     private void initGVastParams() {
-        final Nullable<BidRequest> nullableBidRequest = Nullable.of(bidRequest);
-        final Nullable<Site> nullableSite = nullableBidRequest.get(BidRequest::getSite);
-        final Nullable<App> nullableApp = nullableBidRequest.get(BidRequest::getApp);
-        final Nullable<Regs> nullableRegs = nullableBidRequest.get(BidRequest::getRegs);
-        final Nullable<User> nullableUser = nullableBidRequest.get(BidRequest::getUser);
-        final Nullable<Device> nullableDevice = nullableBidRequest.get(BidRequest::getDevice);
+        final Nullable<Site> nullableSite = Nullable.of(bidRequest.getSite());
+        final Nullable<App> nullableApp = Nullable.of(bidRequest.getApp());
+        final Nullable<Regs> nullableRegs = Nullable.of(bidRequest.getRegs());
+        final Nullable<User> nullableUser = Nullable.of(bidRequest.getUser());
+        final Nullable<Device> nullableDevice = Nullable.of(bidRequest.getDevice());
         final Nullable<ObjectNode> nullableImpExt = Nullable.of(imp.getExt());
         final Nullable<ImprovedigitalPbsImpExt> nullableConfig = Nullable.of(jsonUtils.getImprovedigitalPbsImpExt(imp));
 
-        this.isDebug = nullableBidRequest
-                .get(BidRequest::getTest)
+        this.isDebug = Nullable.of(bidRequest.getTest())
                 .get(test -> test == 1)
                 .value(false);
 

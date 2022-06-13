@@ -11,6 +11,8 @@ import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.Future;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.lang3.ObjectUtils;
 import org.prebid.server.hooks.execution.v1.auction.AuctionResponsePayloadImpl;
@@ -26,6 +28,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.AuctionResponseHook {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuctionResponseHook.class);
 
     private final JsonUtils jsonUtils;
     private final MacroProcessor macroProcessor;
@@ -79,45 +83,50 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
                 gamNetworkCode,
                 cacheHost
         );
-        final Map<String, SeatBid> resultSeatBids = new HashedMap<>();
-        SeatBid improveSeatBid = null;
-        for (final Imp imp : bidRequest.getImp()) {
-            final List<SeatBid> seatBidsForImp = bidResponse.getSeatbid().stream()
-                    .filter(seatBid -> seatBid.getBid().stream()
-                            .anyMatch(bid -> Objects.equals(bid.getImpid(), imp.getId()))
-                    ).collect(Collectors.toList());
-            if (!requestUtils.isNonVastVideo(imp)) {
-                for (final SeatBid seatBid : seatBidsForImp) {
-                    final SeatBid resultSeatBid = copyEmptySeatBidIntoResultMapIfNotExist(resultSeatBids, seatBid);
-                    resultSeatBid.getBid().addAll(
-                            getBidsForImpId(seatBid, imp)
-                    );
+        try {
+            final Map<String, SeatBid> resultSeatBids = new HashedMap<>();
+            SeatBid improveSeatBid = null;
+            for (final Imp imp : bidRequest.getImp()) {
+                final List<SeatBid> seatBidsForImp = bidResponse.getSeatbid().stream()
+                        .filter(seatBid -> seatBid.getBid().stream()
+                                .anyMatch(bid -> Objects.equals(bid.getImpid(), imp.getId()))
+                        ).collect(Collectors.toList());
+                if (!requestUtils.isNonVastVideo(imp)) {
+                    for (final SeatBid seatBid : seatBidsForImp) {
+                        final SeatBid resultSeatBid = copyEmptySeatBidIntoResultMapIfNotExist(resultSeatBids, seatBid);
+                        resultSeatBid.getBid().addAll(
+                                getBidsForImpId(seatBid, imp)
+                        );
+                    }
+                } else {
+                    improveSeatBid = ObjectUtils.defaultIfNull(improveSeatBid, seatBidsForImp.stream()
+                            .filter(seatBid ->
+                                    RequestUtils.IMPROVE_BIDDER_NAME.equals(seatBid.getSeat())
+                            ).findFirst().orElse(
+                                    SeatBid.builder()
+                                            .seat(RequestUtils.IMPROVE_BIDDER_NAME)
+                                            .bid(new ArrayList<>())
+                                            .build()
+                            ));
+
+                    final SeatBid tempSeatBid = improveSeatBid.toBuilder()
+                            .bid(
+                                    getBidsForImpId(seatBidsForImp, imp)
+                            ).build();
+
+                    final Bid gVastBid = bidCreator.create(imp, tempSeatBid, true);
+
+                    copyEmptySeatBidIntoResultMapIfNotExist(resultSeatBids, improveSeatBid)
+                            .getBid().add(gVastBid);
                 }
-            } else {
-                improveSeatBid = ObjectUtils.defaultIfNull(improveSeatBid, seatBidsForImp.stream()
-                        .filter(seatBid ->
-                                RequestUtils.IMPROVE_BIDDER_NAME.equals(seatBid.getSeat())
-                        ).findFirst().orElse(
-                                SeatBid.builder()
-                                        .seat(RequestUtils.IMPROVE_BIDDER_NAME)
-                                        .bid(new ArrayList<>())
-                                        .build()
-                        ));
-
-                final SeatBid tempSeatBid = improveSeatBid.toBuilder()
-                        .bid(
-                                getBidsForImpId(seatBidsForImp, imp)
-                        ).build();
-
-                final Bid gVastBid = bidCreator.create(imp, tempSeatBid, true);
-
-                copyEmptySeatBidIntoResultMapIfNotExist(resultSeatBids, improveSeatBid)
-                        .getBid().add(gVastBid);
             }
+            return bidResponse.toBuilder().seatbid(
+                    new ArrayList<>(resultSeatBids.values())
+            ).build();
+        } catch (Throwable t) {
+            logger.error(context, t);
         }
-        return bidResponse.toBuilder().seatbid(
-                new ArrayList<>(resultSeatBids.values())
-        ).build();
+        return bidResponse;
     }
 
     private SeatBid copyEmptySeatBidIntoResultMapIfNotExist(Map<String, SeatBid> resultMap, SeatBid srcSeatBid) {

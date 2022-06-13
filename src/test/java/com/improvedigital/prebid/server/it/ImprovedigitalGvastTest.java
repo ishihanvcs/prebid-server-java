@@ -11,6 +11,7 @@ import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.prebid.server.model.Endpoint;
+import org.prebid.server.util.HttpUtil;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.xml.sax.InputSource;
@@ -24,7 +25,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -336,6 +339,62 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 + "?uuid=" + custParams.get("hb_uuid").get(0)
         );
         assertCachedContent(cacheUrl, vastXmlWillBeCached);
+
+        // Assert the SSP sync pixels.
+        List<String> syncPixels = new ArrayList<>();
+        for (int i = 1; i <= 4; i++) {
+            syncPixels.add(XPathFactory.newInstance().newXPath()
+                    .compile("/VAST/Ad[@id='0']/Wrapper/Impression[" + i + "]")
+                    .evaluate(new InputSource(new StringReader(adm))));
+        }
+        Collections.sort(syncPixels);
+        assertThat(syncPixels.get(0)).isEqualTo("https://ad.360yield.com/server_match"
+                + "?gdpr=0"
+                + "&gdpr_consent=null"
+                + "&us_privacy="
+                + "&r=" +
+                HttpUtil.encodeUrl("http://localhost:8080/setuid"
+                        + "?bidder=improvedigital"
+                        + "&gdpr=0"
+                        + "&gdpr_consent=null"
+                        + "&us_privacy"
+                        + "=&uid={PUB_USER_ID}")
+        );
+        assertThat(syncPixels.get(1)).isEqualTo("https://ib.adnxs.com/getuid"
+                + "?" +
+                HttpUtil.encodeUrl("http://localhost:8080/setuid"
+                        + "?bidder=adnxs"
+                        + "&gdpr=0"
+                        + "&gdpr_consent=null"
+                        + "&us_privacy="
+                        + "&uid=$UID")
+        );
+        assertThat(syncPixels.get(2)).isEqualTo("https://image8.pubmatic.com/AdServer/ImgSync"
+                + "?p=159706"
+                + "&gdpr=0"
+                + "&gdpr_consent=null"
+                + "&us_privacy="
+                + "&pu=" +
+                HttpUtil.encodeUrl("http://localhost:8080/setuid"
+                        + "?bidder=pubmatic"
+                        + "&gdpr=0"
+                        + "&gdpr_consent=null"
+                        + "&us_privacy="
+                        + "&uid=#PMUID")
+        );
+        assertThat(syncPixels.get(3)).isEqualTo("https://ssbsync-global.smartadserver.com/api/sync"
+                + "?callerId=5"
+                + "&gdpr=0"
+                + "&gdpr_consent=null"
+                + "&us_privacy="
+                + "&redirectUri=" +
+                HttpUtil.encodeUrl("http://localhost:8080/setuid"
+                        + "?bidder=smartadserver"
+                        + "&gdpr=0"
+                        + "&gdpr_consent=null"
+                        + "&us_privacy="
+                        + "&uid=[ssb_sync_pid]")
+        );
     }
 
     @Test

@@ -213,13 +213,15 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     }
 
     @NotNull
-    protected String getExtPrebidTypeOfBid(JSONObject responseJson, int seatBidIndex, int bidIndex) throws JSONException {
+    protected String getExtPrebidTypeOfBid(
+            JSONObject responseJson, int seatBidIndex, int bidIndex) throws JSONException {
         return getExtPrebidOfBid(responseJson, seatBidIndex, bidIndex)
                 .getString("type");
     }
 
     @NotNull
-    protected JSONObject getExtPrebidOfBid(JSONObject responseJson, int seatBidIndex, int bidIndex) throws JSONException {
+    protected JSONObject getExtPrebidOfBid(
+            JSONObject responseJson, int seatBidIndex, int bidIndex) throws JSONException {
         return getBid(responseJson, seatBidIndex, bidIndex)
                 .getJSONObject("ext")
                 .getJSONObject("prebid");

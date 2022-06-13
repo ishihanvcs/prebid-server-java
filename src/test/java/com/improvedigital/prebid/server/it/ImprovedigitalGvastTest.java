@@ -282,8 +282,8 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         // 1st pixel is what we had on creative.
         String mediaUrl = XPathFactory.newInstance().newXPath()
-                .compile("/VAST/Ad[@id='20220608']/InLine/Creatives" +
-                        "/Creative[@AdID='20220608']/Linear/MediaFiles/MediaFile[1]")
+                .compile("/VAST/Ad[@id='20220608']/InLine/Creatives"
+                        + "/Creative[@AdID='20220608']/Linear/MediaFiles/MediaFile[1]")
                 .evaluate(new InputSource(new StringReader(adm)));
         assertThat(mediaUrl.trim()).isEqualTo("https://media.pbs.improvedigital.com/20220608.mp4");
     }
@@ -293,10 +293,10 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String vastXml = getVastXmlWrapper("20220608", true);
         String vastXmlWillBeCached = vastXml.replace(
                 "</Wrapper>",
-                "<Impression>" +
-                        "<![CDATA[https://it.pbs.com/ssp_bids?bidder=improvedigital&cpm=1.08&pid=20220608]]>" +
-                        "</Impression>" +
-                        "</Wrapper>"
+                "<Impression>"
+                        + "<![CDATA[https://it.pbs.com/ssp_bids?bidder=improvedigital&cpm=1.08&pid=20220608]]>"
+                        + "</Impression>"
+                        + "</Wrapper>"
         );
         String uniqueId = "R3WOPUPAGZYVYLA02ONHOGPANWYVX2D";
 
@@ -333,11 +333,10 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertQuerySingleValue(custParams.get("hb_pb_improvedigital"), "1.08");
 
         // Make sure we cached the content.
-        String cacheUrl = ("http://"
+        String cacheUrl = "http://"
                 + custParams.get("hb_cache_host").get(0)
                 + custParams.get("hb_cache_path").get(0)
-                + "?uuid=" + custParams.get("hb_uuid").get(0)
-        );
+                + "?uuid=" + custParams.get("hb_uuid").get(0);
         assertCachedContent(cacheUrl, vastXmlWillBeCached);
 
         // Assert the SSP sync pixels.
@@ -352,48 +351,48 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 + "?gdpr=0"
                 + "&gdpr_consent=null"
                 + "&us_privacy="
-                + "&r=" +
-                HttpUtil.encodeUrl("http://localhost:8080/setuid"
-                        + "?bidder=improvedigital"
-                        + "&gdpr=0"
-                        + "&gdpr_consent=null"
-                        + "&us_privacy"
-                        + "=&uid={PUB_USER_ID}")
+                + "&r="
+                + HttpUtil.encodeUrl("http://localhost:8080/setuid"
+                + "?bidder=improvedigital"
+                + "&gdpr=0"
+                + "&gdpr_consent=null"
+                + "&us_privacy"
+                + "=&uid={PUB_USER_ID}")
         );
         assertThat(syncPixels.get(1)).isEqualTo("https://ib.adnxs.com/getuid"
-                + "?" +
-                HttpUtil.encodeUrl("http://localhost:8080/setuid"
-                        + "?bidder=adnxs"
-                        + "&gdpr=0"
-                        + "&gdpr_consent=null"
-                        + "&us_privacy="
-                        + "&uid=$UID")
+                + "?"
+                + HttpUtil.encodeUrl("http://localhost:8080/setuid"
+                + "?bidder=adnxs"
+                + "&gdpr=0"
+                + "&gdpr_consent=null"
+                + "&us_privacy="
+                + "&uid=$UID")
         );
         assertThat(syncPixels.get(2)).isEqualTo("https://image8.pubmatic.com/AdServer/ImgSync"
                 + "?p=159706"
                 + "&gdpr=0"
                 + "&gdpr_consent=null"
                 + "&us_privacy="
-                + "&pu=" +
-                HttpUtil.encodeUrl("http://localhost:8080/setuid"
-                        + "?bidder=pubmatic"
-                        + "&gdpr=0"
-                        + "&gdpr_consent=null"
-                        + "&us_privacy="
-                        + "&uid=#PMUID")
+                + "&pu="
+                + HttpUtil.encodeUrl("http://localhost:8080/setuid"
+                + "?bidder=pubmatic"
+                + "&gdpr=0"
+                + "&gdpr_consent=null"
+                + "&us_privacy="
+                + "&uid=#PMUID")
         );
         assertThat(syncPixels.get(3)).isEqualTo("https://ssbsync-global.smartadserver.com/api/sync"
                 + "?callerId=5"
                 + "&gdpr=0"
                 + "&gdpr_consent=null"
                 + "&us_privacy="
-                + "&redirectUri=" +
-                HttpUtil.encodeUrl("http://localhost:8080/setuid"
-                        + "?bidder=smartadserver"
-                        + "&gdpr=0"
-                        + "&gdpr_consent=null"
-                        + "&us_privacy="
-                        + "&uid=[ssb_sync_pid]")
+                + "&redirectUri="
+                + HttpUtil.encodeUrl("http://localhost:8080/setuid"
+                + "?bidder=smartadserver"
+                + "&gdpr=0"
+                + "&gdpr_consent=null"
+                + "&us_privacy="
+                + "&uid=[ssb_sync_pid]")
         );
     }
 
@@ -402,10 +401,10 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String vastXml = getVastXmlWrapper("20220608", true);
         String vastXmlWillBeCached = vastXml.replace(
                 "</Wrapper>",
-                "<Impression>" +
-                        "<![CDATA[https://it.pbs.com/ssp_bids?bidder=improvedigital&cpm=1.13&pid=20220608]]>" +
-                        "</Impression>" +
-                        "</Wrapper>"
+                "<Impression>"
+                        + "<![CDATA[https://it.pbs.com/ssp_bids?bidder=improvedigital&cpm=1.13&pid=20220608]]>"
+                        + "</Impression>"
+                        + "</Wrapper>"
         );
         String uniqueId = "KCZEL1JSW8BT296EE1FYXTCKWNGWLVBJ";
 
@@ -500,11 +499,10 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                 "/com/improvedigital/prebid/server/it/test-gvast-improvedigital-cache-request.json",
                                 Map.of("IT_TEST_CACHE_VALUE", vastXmlWillBeCached)
                         )))
-                        .willReturn(aResponse()
-                                .withBody(jsonFromFileWithMacro(
-                                        "/com/improvedigital/prebid/server/it/test-gvast-improvedigital-cache-response.json",
-                                        Map.of("IT_TEST_CACHE_UUID", cacheId)
-                                )))
+                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/test-gvast-improvedigital-cache-response.json",
+                                Map.of("IT_TEST_CACHE_UUID", cacheId)
+                        )))
         );
         WIRE_MOCK_RULE.stubFor(
                 get(urlPathEqualTo("/cache"))
@@ -540,14 +538,15 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/cache"))
                         .withRequestBody(equalToJson(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/test-waterfall-improvedigital-cache-request.json",
+                                "/com/improvedigital/prebid/server/it/"
+                                        + "test-waterfall-improvedigital-cache-request.json",
                                 Map.of("IT_TEST_CACHE_VALUE", vastXmlWillBeCached)
                         )))
-                        .willReturn(aResponse()
-                                .withBody(jsonFromFileWithMacro(
-                                        "/com/improvedigital/prebid/server/it/test-waterfall-improvedigital-cache-response.json",
-                                        Map.of("IT_TEST_CACHE_UUID", cacheId)
-                                )))
+                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/"
+                                        + "test-waterfall-improvedigital-cache-response.json",
+                                Map.of("IT_TEST_CACHE_UUID", cacheId)
+                        )))
         );
         WIRE_MOCK_RULE.stubFor(
                 get(urlPathEqualTo("/cache"))

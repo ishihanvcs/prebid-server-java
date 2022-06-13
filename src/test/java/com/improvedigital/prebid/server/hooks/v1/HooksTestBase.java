@@ -2,7 +2,7 @@ package com.improvedigital.prebid.server.hooks.v1;
 
 import ch.qos.logback.classic.Level;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.improvedigital.prebid.server.utils.JsonUtils;
@@ -11,7 +11,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import nl.altindag.log.LogCaptor;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Assert;
+import org.assertj.core.api.Assertions;
+import org.prebid.server.VertxTest;
 import org.prebid.server.execution.Timeout;
 import org.prebid.server.execution.TimeoutFactory;
 import org.prebid.server.hooks.v1.Hook;
@@ -20,8 +21,10 @@ import org.prebid.server.hooks.v1.InvocationContext;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.InvocationStatus;
 import org.prebid.server.hooks.v1.PayloadUpdate;
-import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.json.JsonMerger;
+import org.prebid.server.proto.openrtb.ext.request.ExtImp;
+import org.prebid.server.proto.openrtb.ext.request.ExtImpPrebid;
+import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
@@ -30,16 +33,22 @@ import java.nio.file.Files;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
-public abstract class HooksTestBase {
+public abstract class HooksTestBase extends VertxTest {
 
-    protected final ObjectMapper objectMapper = new ObjectMapper();
-    protected final JacksonMapper mapper = new JacksonMapper(objectMapper);
-    protected final JsonUtils jsonUtils = new JsonUtils(mapper);
-    protected final RequestUtils requestUtils = new RequestUtils(jsonUtils);
-    protected final JsonMerger merger = new JsonMerger(mapper);
+    protected static JsonMerger merger;
+    protected static JsonUtils jsonUtils;
+    protected static RequestUtils requestUtils;
+
+    static {
+        merger = new JsonMerger(jacksonMapper);
+        jsonUtils = new JsonUtils(jacksonMapper);
+        requestUtils = new RequestUtils(jsonUtils);
+    }
 
     protected String resourceDir = null;
     protected Timeout timeout = createTimeout(10000L);
@@ -148,14 +157,14 @@ public abstract class HooksTestBase {
 
     protected BidRequest bidRequestFromString(String content) {
         if (content != null) {
-            return mapper.decodeValue(content, BidRequest.class);
+            return jacksonMapper.decodeValue(content, BidRequest.class);
         }
         return null;
     }
 
     protected Imp impFromString(String content) {
         if (content != null) {
-            return mapper.decodeValue(content, Imp.class);
+            return jacksonMapper.decodeValue(content, Imp.class);
         }
         return null;
     }
@@ -191,7 +200,7 @@ public abstract class HooksTestBase {
         T storedObject = getStoredObject(objectId, contentRetriever, typeConverter, modifier);
 
         try {
-            return objectMapper.writeValueAsString(storedObject);
+            return mapper.writeValueAsString(storedObject);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -210,10 +219,12 @@ public abstract class HooksTestBase {
                         initialPayload,
                         context
                 );
-        Assert.assertNotNull(result);
-        result.onComplete(asyncResult -> {
-            validator.accept(initialPayload, asyncResult);
-        });
+        Assertions.assertThat(result).isNotNull();
+        result.onComplete(asyncResult -> validator.accept(
+                initialPayload,
+                asyncResult
+            )
+        );
     }
 
     protected <PAYLOAD, Context extends InvocationContext> void executeHookAndValidateInvocationResult(
@@ -229,9 +240,9 @@ public abstract class HooksTestBase {
                 payload,
                 context,
                 (initialPayload, asyncResult) -> {
-                    Assert.assertTrue(asyncResult.succeeded());
+                    Assertions.assertThat(asyncResult.succeeded()).isTrue();
                     InvocationResult<PAYLOAD> invocationResult = asyncResult.result();
-                    Assert.assertNotNull(invocationResult);
+                    Assertions.assertThat(invocationResult).isNotNull();
                     validator.accept(initialPayload, invocationResult);
                 }
         );
@@ -250,12 +261,16 @@ public abstract class HooksTestBase {
                 payload,
                 context,
                 (initialPayload, invocationResult) -> {
-                    Assert.assertEquals(invocationResult.status(), InvocationStatus.success);
-                    Assert.assertEquals(invocationResult.action(), InvocationAction.update);
+                    Assertions.assertThat(invocationResult.status())
+                            .isEqualTo(InvocationStatus.success);
+                    Assertions.assertThat(invocationResult.action())
+                            .isEqualTo(InvocationAction.update);
                     PayloadUpdate<PAYLOAD> payloadUpdate = invocationResult.payloadUpdate();
-                    Assert.assertNotNull(payloadUpdate);
+                    Assertions.assertThat(payloadUpdate)
+                            .isNotNull();
                     PAYLOAD updatedPayload = payloadUpdate.apply(initialPayload);
-                    Assert.assertNotNull(updatedPayload);
+                    Assertions.assertThat(updatedPayload)
+                            .isNotNull();
                     validator.accept(initialPayload, updatedPayload);
                 }
         );
@@ -274,9 +289,12 @@ public abstract class HooksTestBase {
                 payload,
                 context,
                 (initialPayload, invocationResult) -> {
-                    Assert.assertEquals(invocationResult.status(), InvocationStatus.success);
-                    Assert.assertEquals(invocationResult.action(), InvocationAction.reject);
-                    Assert.assertFalse(invocationResult.errors().isEmpty());
+                    Assertions.assertThat(invocationResult.status())
+                            .isEqualTo(InvocationStatus.success);
+                    Assertions.assertThat(invocationResult.action())
+                            .isEqualTo(InvocationAction.reject);
+                    Assertions.assertThat(invocationResult.errors())
+                            .isNotEmpty();
                     validator.accept(initialPayload, invocationResult);
                 }
         );
@@ -303,5 +321,54 @@ public abstract class HooksTestBase {
                                 message
                         )
                 );
+    }
+
+    protected BidRequest setStoredImpIds(
+            BidRequest request, Map<String /*impId*/, String /*storedImpId*/> impIdToStoredIdMap
+    ) {
+        request.getImp().replaceAll(imp -> {
+            if (impIdToStoredIdMap.containsKey(imp.getId())) {
+                final String storedImpId = impIdToStoredIdMap.get(imp.getId());
+                ExtImp extImp = ExtImp.of(ExtImpPrebid.builder()
+                        .storedrequest(ExtStoredRequest.of(storedImpId))
+                        .build(), null);
+                ObjectNode extNode = mapper.valueToTree(extImp);
+                return imp.toBuilder().ext(
+                        jsonUtils.nonDestructiveMerge(imp.getExt(), extNode)
+                ).build();
+            }
+            return imp;
+        });
+        return request;
+    }
+
+    protected Imp setImpConfigProperties(Imp imp, Consumer<ObjectNode> configSetter) {
+        final ObjectNode impExt = jacksonMapper.mapper().valueToTree(
+                ExtImp.of(ExtImpPrebid.builder().build(), null)
+        );
+
+        ObjectNode configNode = ((ObjectNode) impExt.at("/prebid"))
+                .putObject("improvedigitalpbs");
+
+        configSetter.accept(configNode);
+
+        return imp.toBuilder()
+                .ext(jsonUtils.nonDestructiveMerge(imp.getExt(), impExt))
+                .build();
+    }
+
+    protected Imp setImpBidderProperties(Imp imp, String bidderName, Consumer<ObjectNode> setter) {
+        final ObjectNode impExt = jacksonMapper.mapper().valueToTree(
+                ExtImp.of(ExtImpPrebid.builder().build(), null)
+        );
+        ObjectNode bidderNode = ((ObjectNode) impExt.at("/prebid"))
+                .putObject("bidder")
+                .putObject(bidderName);
+
+        setter.accept(bidderNode);
+
+        return imp.toBuilder().ext(
+                jsonUtils.nonDestructiveMerge(imp.getExt(), impExt)
+        ).build();
     }
 }

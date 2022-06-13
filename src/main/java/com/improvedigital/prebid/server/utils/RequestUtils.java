@@ -178,24 +178,8 @@ public class RequestUtils {
     public JsonNode extractBidderInfo(Imp imp, String bidderName, String path) {
         return Nullable.of(imp)
                 .get(Imp::getExt)
-                .get(this::normalizeImpExt)
-                .get(ExtImp::getPrebid)
-                .get(ExtImpPrebid::getBidder)
-                .get(node -> node.get(bidderName))
-                .get(node -> node.at(path))
+                .get(node -> node.at("/prebid/bidder/" + bidderName + path))
                 .value(MissingNode.getInstance());
-    }
-
-    private ExtImp normalizeImpExt(Object impExt) {
-        if (impExt == null) {
-            return null;
-        }
-
-        if (impExt instanceof ExtImp) {
-            return (ExtImp) impExt;
-        }
-
-        return jsonUtils.getObjectMapper().convertValue(impExt, ExtImp.class);
     }
 
     private boolean isOfResponseType(ImprovedigitalPbsImpExt impExt, VastResponseType responseType) {

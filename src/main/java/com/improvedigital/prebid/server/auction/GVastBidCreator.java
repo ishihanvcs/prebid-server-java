@@ -115,8 +115,7 @@ public class GVastBidCreator {
         final Nullable<ImprovedigitalPbsImpExt> nullableConfig = Nullable.of(jsonUtils.getImprovedigitalPbsImpExt(imp));
 
         this.isDebug = Nullable.of(bidRequest.getTest())
-                .get(test -> test == 1)
-                .value(false);
+                .isEqualsTo(1);
 
         this.gdpr = nullableRegs.get(Regs::getExt)
                 .get(ExtRegs::getGdpr)
@@ -153,7 +152,7 @@ public class GVastBidCreator {
         this.categories = nullableSite.get(Site::getCat).value();
 
         this.bundleId = nullableApp.get(App::getBundle).value("");
-        this.isApp = !nullableApp.isNull() && !StringUtils.isBlank(bundleId);
+        this.isApp = nullableApp.isNotNull() && StringUtils.isNotBlank(bundleId);
 
         if (this.isApp) {
             this.referrer = nullableApp.get(App::getStoreurl)

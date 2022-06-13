@@ -344,12 +344,14 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String vastXmlWillBeCached = vastXml.replace(
                 "</Wrapper>",
                 "<Impression>" +
-                        "<![CDATA[https://it.pbs.com/ssp_bids?bidder=improvedigital&cpm=1.25&pid=20220608]]>" +
+                        "<![CDATA[https://it.pbs.com/ssp_bids?bidder=improvedigital&cpm=1.13&pid=20220608]]>" +
                         "</Impression>" +
                         "</Wrapper>"
         );
+        String uniqueId = "KCZEL1JSW8BT296EE1FYXTCKWNGWLVBJ";
+
         Response response = getWaterfallResponseFromAuction(
-                vastXml, "KCZEL1JSW8BT296EE1FYXTCKWNGWLVBJ", vastXmlWillBeCached
+                vastXml, uniqueId, vastXmlWillBeCached
         );
         JSONObject responseJson = new JSONObject(response.asString());
         assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("video");
@@ -367,8 +369,8 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         JSONObject vastXmlCache = getExtPrebidOfBid(responseJson, 0, 0)
                 .getJSONObject("cache")
                 .getJSONObject("vastXml");
-        assertThat(vastXmlCache.getString("cacheId")).isEqualTo("R3WOPUPAGZYVYLA02ONHOGPANWYVX2D");
-        assertThat(vastXmlCache.getString("url")).endsWith("/cache?uuid=R3WOPUPAGZYVYLA02ONHOGPANWYVX2D");
+        assertThat(vastXmlCache.getString("cacheId")).isEqualTo(uniqueId);
+        assertThat(vastXmlCache.getString("url")).endsWith("/cache?uuid=" + uniqueId);
 
         // Hit the cache.
         assertCachedContent(vastXmlCache.getString("url"), vastXmlWillBeCached);
@@ -471,7 +473,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                 null
                         )))
                         .willReturn(aResponse().withBody(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/test-vast-improvedigital-bid-response.json",
+                                "/com/improvedigital/prebid/server/it/test-waterfall-improvedigital-bid-response.json",
                                 Map.of("IT_TEST_MACRO_ADM", improveMockAdm)
                         )))
         );
@@ -479,12 +481,12 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/cache"))
                         .withRequestBody(equalToJson(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/test-gvast-improvedigital-cache-request.json",
+                                "/com/improvedigital/prebid/server/it/test-waterfall-improvedigital-cache-request.json",
                                 Map.of("IT_TEST_CACHE_VALUE", vastXmlWillBeCached)
                         )))
                         .willReturn(aResponse()
                                 .withBody(jsonFromFileWithMacro(
-                                        "/com/improvedigital/prebid/server/it/test-gvast-improvedigital-cache-response.json",
+                                        "/com/improvedigital/prebid/server/it/test-waterfall-improvedigital-cache-response.json",
                                         Map.of("IT_TEST_CACHE_UUID", cacheId)
                                 )))
         );

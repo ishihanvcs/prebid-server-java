@@ -1,23 +1,28 @@
 {
-  "id": "request_id",
+  "id": "request_id_it_gvast_20220608",
   "source": {
-    "tid": "source_tid"
+    "tid": "source_tid_it_gvast_20220608"
   },
   "imp": [
     {
-      "id": "imp_id",
+      "id": "imp_id_it_gvast_20220608",
       "ext": {
         "prebid": {
           "storedrequest": {
             "id": "20220608"
           },
           "improvedigitalpbs": {
-            "responseType": "vast"
+            "responseType": "gvast"
           }
         }
       }
     }
   ],
+  "site": {
+    "publisher": {
+    }
+  },
+  "test": 0,
   "tmax": 5000,
   "regs": {
     "ext": {

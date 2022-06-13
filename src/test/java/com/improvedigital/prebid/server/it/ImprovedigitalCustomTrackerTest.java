@@ -45,10 +45,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("banner");
+        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("banner");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         assertThat(adm).isEqualTo("<img src='banner.png'/>"
                 + "<img src=\"" + getCustomTrackerUrl("1.25", "13245") + "\">"
@@ -63,10 +63,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("banner");
+        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("banner");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         assertThat(adm).isEqualTo("<body>"
                 + "<img src='banner.png'/>"
@@ -83,10 +83,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("banner");
+        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("banner");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         assertThat(adm).isEqualTo("<   body   >"
                 + "<img src='banner.png'/>"
@@ -103,10 +103,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("banner");
+        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("banner");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         assertThat(adm).isEqualTo("<html>"
                 + "< body >"
@@ -126,10 +126,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("video");
+        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         // 1st pixel is what we had on creative.
         String existingImpPixel = XPathFactory.newInstance().newXPath()
@@ -153,10 +153,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("video");
+        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         // Ad-1: 1st pixel is what we had on creative.
         String existingImpPixel = XPathFactory.newInstance().newXPath()
@@ -192,10 +192,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("video");
+        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         // 1st pixel is the custom tracker we added.
         String trackingImpPixel = XPathFactory.newInstance().newXPath()
@@ -213,10 +213,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("video");
+        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         // 1st pixel is what we had on creative.
         String existingImpPixel = XPathFactory.newInstance().newXPath()
@@ -240,10 +240,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("video");
+        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         // Ad-1: 1st pixel is what we had on creative.
         String existingImpPixel = XPathFactory.newInstance().newXPath()
@@ -279,10 +279,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("video");
+        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         // 1st pixel is the custom tracker we added.
         String trackingImpPixel = XPathFactory.newInstance().newXPath()
@@ -302,12 +302,12 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfNthBid(responseJson, 0)).isEqualTo("video");
-        assertThat(getExtPrebidTypeOfNthBid(responseJson, 1)).isEqualTo("video");
+        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("video");
+        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 1)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
-        String adm1 = getAdmOfNthBid(responseJson, 0);
-        String adm2 = getAdmOfNthBid(responseJson, 1);
+        String adm1 = getAdm(responseJson, 0, 0);
+        String adm2 = getAdm(responseJson, 0, 1);
 
         // Swapping the multi responses so that adm1 contains the imp_1's and adm2 contains imp_2's response.
         if (adm2.contains("20220601_1")) {
@@ -338,10 +338,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("native");
+        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("native");
         assertCurrency(responseJson, "USD");
 
-        JSONObject adm = new JSONObject(getAdmOf1stBid(responseJson));
+        JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
 
         // Check we didn't place the tracker in "eventtrackers"/"imptrackers".
         assertThat(adm.has("eventtrackers")).isFalse();
@@ -357,10 +357,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("native");
+        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("native");
         assertCurrency(responseJson, "USD");
 
-        JSONObject adm = new JSONObject(getAdmOf1stBid(responseJson));
+        JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
 
         // Check we didn't place the tracker in "eventtrackers"/"imptrackers".
         assertThat(adm.has("eventtrackers")).isTrue();
@@ -378,10 +378,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("native");
+        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("native");
         assertCurrency(responseJson, "USD");
 
-        JSONObject adm = new JSONObject(getAdmOf1stBid(responseJson));
+        JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
 
         // Check we placed the tracker in "eventtrackers" properly.
         JSONObject customTrackerEvent = findATrackerInEventTrackers(adm, "/ssp_bid");
@@ -403,10 +403,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("native");
+        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("native");
         assertCurrency(responseJson, "USD");
 
-        JSONObject adm = new JSONObject(getAdmOf1stBid(responseJson));
+        JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
 
         // Check we didn't place the tracker in "eventtrackers".
         assertThat(adm.has("eventtrackers")).isFalse();
@@ -428,10 +428,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("native");
+        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("native");
         assertCurrency(responseJson, "USD");
 
-        JSONObject adm = new JSONObject(getAdmOf1stBid(responseJson));
+        JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
 
         // Check we placed the tracker in "eventtrackers" properly.
         JSONObject customTrackerEvent = findATrackerInEventTrackers(adm, "/ssp_bid");
@@ -455,10 +455,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("native");
+        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("native");
         assertCurrency(responseJson, "USD"); /* PBS responds in request currency */
 
-        JSONObject adm = new JSONObject(getAdmOf1stBid(responseJson));
+        JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
 
         // Bid request was made with USD and bidder returned 1.25 EUR. Hence, we will get ~1.424 USD finally.
         // The exchange rate is hard coded (src/test/resources/org/prebid/server/it/currency/latest.json).

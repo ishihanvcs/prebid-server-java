@@ -198,42 +198,49 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         ).replace("\"", "\\\"");
     }
 
-    @NotNull
-    protected String getAdmOf1stBid(JSONObject responseJson) throws JSONException {
-        return getAdmOfNthBid(responseJson, 0);
-    }
-
-    @NotNull
-    protected String getAdmOfNthBid(JSONObject responseJson, int bidIndex) throws JSONException {
+    protected void assertBidCountSingle(JSONObject responseJson) throws JSONException {
         assertThat(responseJson.getJSONArray("seatbid").length())
                 .isGreaterThanOrEqualTo(1);
 
         assertThat(responseJson.getJSONArray("seatbid").getJSONObject(0).getJSONArray("bid").length())
                 .isGreaterThanOrEqualTo(1);
+    }
 
-        return responseJson
-                .getJSONArray("seatbid").getJSONObject(0)
-                .getJSONArray("bid").getJSONObject(bidIndex)
+    @NotNull
+    protected String getAdm(JSONObject responseJson, int seatBidIndex, int bidIndex) throws JSONException {
+        return getBid(responseJson, seatBidIndex, bidIndex)
                 .getString("adm");
     }
 
     @NotNull
-    protected String getExtPrebidTypeOf1stBid(JSONObject responseJson) throws JSONException {
-        return getExtPrebidTypeOfNthBid(responseJson, 0);
-    }
-
-    protected String getExtPrebidTypeOfNthBid(JSONObject responseJson, int bidIndex) throws JSONException {
-        return getExtPrebidOfNthBid(responseJson, bidIndex)
+    protected String getExtPrebidTypeOfBid(JSONObject responseJson, int seatBidIndex, int bidIndex) throws JSONException {
+        return getExtPrebidOfBid(responseJson, seatBidIndex, bidIndex)
                 .getString("type");
     }
 
     @NotNull
-    protected JSONObject getExtPrebidOfNthBid(JSONObject responseJson, int bidIndex) throws JSONException {
-        return responseJson
-                .getJSONArray("seatbid").getJSONObject(0)
-                .getJSONArray("bid").getJSONObject(bidIndex)
+    protected JSONObject getExtPrebidOfBid(JSONObject responseJson, int seatBidIndex, int bidIndex) throws JSONException {
+        return getBid(responseJson, seatBidIndex, bidIndex)
                 .getJSONObject("ext")
                 .getJSONObject("prebid");
+    }
+
+    @NotNull
+    private JSONObject getBid(JSONObject responseJson, int seatBidIndex, int bidIndex) throws JSONException {
+        return getSeatbid(responseJson, seatBidIndex)
+                .getJSONArray("bid").getJSONObject(bidIndex);
+    }
+
+    @NotNull
+    protected String getSeat(JSONObject responseJson, int seatBidIndex) throws JSONException {
+        return getSeatbid(responseJson, seatBidIndex)
+                .getString("seat");
+    }
+
+    @NotNull
+    private JSONObject getSeatbid(JSONObject responseJson, int seatBidIndex) throws JSONException {
+        return responseJson
+                .getJSONArray("seatbid").getJSONObject(seatBidIndex);
     }
 
     protected void assertCurrency(JSONObject responseJson, String expectedCurrency) throws JSONException {

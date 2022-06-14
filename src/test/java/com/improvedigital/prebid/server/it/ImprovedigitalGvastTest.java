@@ -357,13 +357,13 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         Collections.sort(syncPixels);
         assertThat(syncPixels.get(0)).isEqualTo("https://ad.360yield.com/server_match"
                 + "?gdpr=0"
-                + "&gdpr_consent=null"
+                + "&gdpr_consent="
                 + "&us_privacy="
                 + "&r="
                 + HttpUtil.encodeUrl("http://localhost:8080/setuid"
                 + "?bidder=improvedigital"
                 + "&gdpr=0"
-                + "&gdpr_consent=null"
+                + "&gdpr_consent="
                 + "&us_privacy"
                 + "=&uid={PUB_USER_ID}")
         );
@@ -372,33 +372,33 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 + HttpUtil.encodeUrl("http://localhost:8080/setuid"
                 + "?bidder=adnxs"
                 + "&gdpr=0"
-                + "&gdpr_consent=null"
+                + "&gdpr_consent="
                 + "&us_privacy="
                 + "&uid=$UID")
         );
         assertThat(syncPixels.get(2)).isEqualTo("https://image8.pubmatic.com/AdServer/ImgSync"
                 + "?p=159706"
                 + "&gdpr=0"
-                + "&gdpr_consent=null"
+                + "&gdpr_consent="
                 + "&us_privacy="
                 + "&pu="
                 + HttpUtil.encodeUrl("http://localhost:8080/setuid"
                 + "?bidder=pubmatic"
                 + "&gdpr=0"
-                + "&gdpr_consent=null"
+                + "&gdpr_consent="
                 + "&us_privacy="
                 + "&uid=#PMUID")
         );
         assertThat(syncPixels.get(3)).isEqualTo("https://ssbsync-global.smartadserver.com/api/sync"
                 + "?callerId=5"
                 + "&gdpr=0"
-                + "&gdpr_consent=null"
+                + "&gdpr_consent="
                 + "&us_privacy="
                 + "&redirectUri="
                 + HttpUtil.encodeUrl("http://localhost:8080/setuid"
                 + "?bidder=smartadserver"
                 + "&gdpr=0"
-                + "&gdpr_consent=null"
+                + "&gdpr_consent="
                 + "&us_privacy="
                 + "&uid=[ssb_sync_pid]")
         );
@@ -445,6 +445,19 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         // Hit the cache.
         assertCachedContent(vastXmlCache.getString("url"), vastXmlWillBeCached);
+    }
+
+    @Test
+    public void moreTests() {
+        // Combination of waterfall: gam, gam_first_look etc
+        // Using /prebid/bidder/improvedigital/keyValues.
+        // On test=1, we get debug lines.
+        // Using "hb_deal_improvedigit" and /prebid/cache/vastXml/url
+        // Resolving of "output".
+        // Resolving of "iu".
+        // Use gdpr_consent=BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA
+        // Macro replacement of: {{gdpr}}, ...
+        // <Extension>
     }
 
     private Response getGvastResponse() {

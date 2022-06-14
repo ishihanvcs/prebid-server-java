@@ -17,6 +17,7 @@ import com.iab.openrtb.response.Bid;
 import com.iab.openrtb.response.BidResponse;
 import com.iab.openrtb.response.SeatBid;
 import com.improvedigital.prebid.server.auction.model.CustParams;
+import com.improvedigital.prebid.server.auction.model.Floor;
 import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExtGam;
 import com.improvedigital.prebid.server.utils.FluentMap;
@@ -66,7 +67,6 @@ public class GVastBidCreator {
 
     private Imp imp;
     private SeatBid seatBid;
-    private ImprovedigitalPbsImpExt config;
     private String referrer;
     private String encodedReferrer;
     private String gdprConsent;
@@ -83,6 +83,7 @@ public class GVastBidCreator {
     private String os;
     private boolean isApp;
     private boolean prioritizeImprovedigitalDeals;
+    private boolean hasWaterfallResponseType;
 
     public GVastBidCreator(
             MacroProcessor macroProcessor,
@@ -111,9 +112,10 @@ public class GVastBidCreator {
         final Nullable<User> nullableUser = Nullable.of(bidRequest.getUser());
         final Nullable<Device> nullableDevice = Nullable.of(bidRequest.getDevice());
         final Nullable<ObjectNode> nullableImpExt = Nullable.of(imp.getExt());
+        final Nullable<ImprovedigitalPbsImpExt> nullableConfig = Nullable.of(jsonUtils.getImprovedigitalPbsImpExt(imp));
 
-        this.config = jsonUtils.getImprovedigitalPbsImpExt(imp);
-        this.isDebug = bidRequest.getTest() == 1;
+        this.isDebug = Nullable.of(bidRequest.getTest())
+                .isEqualsTo(1);
 
         this.gdpr = nullableRegs.get(Regs::getExt)
                 .get(ExtRegs::getGdpr)
@@ -125,8 +127,17 @@ public class GVastBidCreator {
                 .value();
 
         final Geo geo = nullableDevice.get(Device::getGeo).value();
-        this.bidFloor = config.getFloor(geo).getBidFloor().doubleValue();
-        this.waterfall = config.getWaterfall(geo);
+
+        this.bidFloor = nullableConfig
+                .get(config -> config.getFloor(geo))
+                .get(Floor::getBidFloor)
+                .get(BigDecimal::doubleValue)
+                .value(0.0);
+
+        this.waterfall = nullableConfig
+                .get(config -> config.getWaterfall(geo))
+                .value(List.of());
+
         this.ifa = nullableDevice.get(Device::getIfa).value();
         this.lmt = nullableDevice.get(Device::getLmt).value();
         this.os = nullableDevice.get(Device::getOs).value();
@@ -141,7 +152,7 @@ public class GVastBidCreator {
         this.categories = nullableSite.get(Site::getCat).value();
 
         this.bundleId = nullableApp.get(App::getBundle).value("");
-        this.isApp = !nullableApp.isNull() && !StringUtils.isBlank(bundleId);
+        this.isApp = nullableApp.isNotNull() && StringUtils.isNotBlank(bundleId);
 
         if (this.isApp) {
             this.referrer = nullableApp.get(App::getStoreurl)
@@ -150,7 +161,8 @@ public class GVastBidCreator {
             this.referrer = nullableSite.get(Site::getPage).value();
         }
         this.encodedReferrer = Nullable.of(this.referrer).get(HttpUtil::encodeUrl).value();
-        this.adUnit = resolveGamAdUnit();
+        this.adUnit = resolveGamAdUnit(nullableConfig);
+        this.hasWaterfallResponseType = requestUtils.hasWaterfallResponseType(nullableConfig.value());
     }
 
     public Bid create(Imp imp, SeatBid seatBid, boolean prioritizeImprovedigitalDeals) {
@@ -167,13 +179,9 @@ public class GVastBidCreator {
             }
         }
 
-        final String adm;
-        // Response without GAM
-        if (requestUtils.hasWaterfallResponseType(config)) {
-            adm = buildVastXmlResponseWithoutGam(debugInfo);
-        } else { // Response with GAM
-            adm = buildVastXmlResponseWithGam(debugInfo);
-        }
+        final String adm = hasWaterfallResponseType
+                ? buildVastXmlResponseWithoutGam(debugInfo)
+                : buildVastXmlResponseWithGam(debugInfo);
 
         return Bid.builder()
                 .id(UUID.randomUUID().toString())
@@ -316,9 +324,10 @@ public class GVastBidCreator {
         return "vast";
     }
 
-    private String resolveGamAdUnit() {
-        ImprovedigitalPbsImpExtGam gamConfig = ObjectUtils.defaultIfNull(config.getImprovedigitalPbsImpExtGam(),
-                ImprovedigitalPbsImpExtGam.of(null, null, null));
+    private String resolveGamAdUnit(Nullable<ImprovedigitalPbsImpExt> nullableConfig) {
+        ImprovedigitalPbsImpExtGam gamConfig = nullableConfig
+                .get(ImprovedigitalPbsImpExt::getImprovedigitalPbsImpExtGam)
+                .value(ImprovedigitalPbsImpExtGam.of(null, null, null));
         String adUnit = gamConfig.getAdUnit();
         String networkCode = ObjectUtils.defaultIfNull(gamConfig.getNetworkCode(), gamNetworkCode);
         if (!StringUtils.isBlank(gamConfig.getChildNetworkCode())) {

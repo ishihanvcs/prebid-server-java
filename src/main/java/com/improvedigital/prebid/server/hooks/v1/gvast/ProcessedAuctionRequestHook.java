@@ -29,7 +29,6 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCacheVastxml;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestTargeting;
 import org.prebid.server.util.ObjectUtil;
 
-import javax.validation.ValidationException;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -98,31 +97,37 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         BidRequest bidRequest = auctionRequestPayload.bidRequest();
         try {
             validateRequestWithBusinessLogic(bidRequest);
+            Object moduleContext = invocationContext.moduleContext();
+            if (moduleContext == null) {
+                GVastHooksModuleContext context = createModuleContext(bidRequest);
+                updateImpsWithBidFloorInUsd(bidRequest, context::getEffectiveFloor);
+                bidRequest = context.getBidRequest();
+                moduleContext = context;
+            }
+            BidRequest finalBidRequest = bidRequest;
+            return Future.succeededFuture(InvocationResultImpl.succeeded(
+                    payload -> AuctionRequestPayloadImpl.of(finalBidRequest), moduleContext
+            ));
         } catch (Throwable t) {
             logger.error(bidRequest, t);
-            return Future.succeededFuture(
-                    InvocationResultImpl.rejected(t.getMessage())
-            );
+            if (t instanceof GVastHookException) {
+                return Future.succeededFuture(
+                        InvocationResultImpl.rejected(t.getMessage())
+                );
+            }
         }
-
-        Object moduleContext = invocationContext.moduleContext();
-        if (moduleContext == null) {
-            GVastHooksModuleContext context = createModuleContext(bidRequest);
-            updateImpsWithBidFloorInUsd(bidRequest, context::getEffectiveFloor);
-            bidRequest = context.getBidRequest();
-            moduleContext = context;
-        }
-        BidRequest finalBidRequest = bidRequest;
-        return Future.succeededFuture(InvocationResultImpl.succeeded(
-                payload -> AuctionRequestPayloadImpl.of(finalBidRequest), moduleContext
-        ));
+        return Future.succeededFuture(
+                InvocationResultImpl.succeeded(
+                        payload -> auctionRequestPayload
+                )
+        );
     }
 
-    public void validateRequestWithBusinessLogic(BidRequest bidRequest) {
+    public void validateRequestWithBusinessLogic(BidRequest bidRequest) throws GVastHookException {
         if (!bidRequest.getImp().parallelStream().allMatch(
                 imp -> requestUtils.getImprovePlacementId(imp) != null
         )) {
-            throw new ValidationException(
+            throw new GVastHookException(
                     "improvedigital placementId is not defined for one or more imp(s)"
             );
         }

@@ -456,21 +456,21 @@ public class GVastBidCreator {
             // TODO
             // Move list of SSPs to a config
             // Use logic from CookieSyncHandler to generate sync urls
-            String gdprConsentValue = Nullable.of(this.gdprConsent).value("");
+            String gdprConsent = Nullable.of(this.gdprConsent).value("");
             final String[] userSyncs = {
                     "https://ib.adnxs.com/getuid?"
-                            + HttpUtil.encodeUrl(getRedirect(externalUrl, "adnxs", gdpr, gdprConsentValue, "$UID")),
-                    "https://ad.360yield.com/server_match?gdpr=" + gdpr + "&gdpr_consent=" + gdprConsentValue + "&us_privacy=&r="
-                            + HttpUtil.encodeUrl(getRedirect(externalUrl, "improvedigital", gdpr, gdprConsentValue,
+                            + HttpUtil.encodeUrl(getRedirect(externalUrl, "adnxs", gdpr, gdprConsent, "$UID")),
+                    "https://ad.360yield.com/server_match?gdpr=" + gdpr + "&gdpr_consent=" + gdprConsent + "&us_privacy=&r="
+                            + HttpUtil.encodeUrl(getRedirect(externalUrl, "improvedigital", gdpr, gdprConsent,
                             "{PUB_USER_ID}")),
-                    "https://image8.pubmatic.com/AdServer/ImgSync?p=159706&gdpr=" + gdpr + "&gdpr_consent=" + gdprConsentValue
+                    "https://image8.pubmatic.com/AdServer/ImgSync?p=159706&gdpr=" + gdpr + "&gdpr_consent=" + gdprConsent
                             + "&us_privacy=&pu="
                             + HttpUtil.encodeUrl(
-                                    getRedirect(externalUrl, "pubmatic", gdpr, gdprConsentValue, "#PMUID")
+                                    getRedirect(externalUrl, "pubmatic", gdpr, gdprConsent, "#PMUID")
                     ),
-                    "https://ssbsync-global.smartadserver.com/api/sync?callerId=5&gdpr=" + gdpr + "&gdpr_consent=" + gdprConsentValue
+                    "https://ssbsync-global.smartadserver.com/api/sync?callerId=5&gdpr=" + gdpr + "&gdpr_consent=" + gdprConsent
                             + "&us_privacy=&redirectUri="
-                            + HttpUtil.encodeUrl(getRedirect(externalUrl, "smartadserver", gdpr, gdprConsentValue,
+                            + HttpUtil.encodeUrl(getRedirect(externalUrl, "smartadserver", gdpr, gdprConsent,
                             "[ssb_sync_pid]"))
             };
             for (String userSync : userSyncs) {

@@ -9,6 +9,7 @@ import org.prebid.server.currency.CurrencyConversionService;
 import org.prebid.server.hooks.v1.Hook;
 import org.prebid.server.hooks.v1.InvocationContext;
 import org.prebid.server.hooks.v1.Module;
+import org.prebid.server.json.JsonMerger;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -23,10 +24,12 @@ public class GVastHooksModule implements Module {
     private final String gamNetworkCode;
     private final String cacheHost;
     private final RequestUtils requestUtils;
+    private final JsonMerger merger;
 
     public GVastHooksModule(
             SettingsLoader settingsLoader,
             RequestUtils requestUtils,
+            JsonMerger merger,
             CurrencyConversionService currencyConversionService,
             MacroProcessor macroProcessor,
             String externalUrl,
@@ -35,6 +38,7 @@ public class GVastHooksModule implements Module {
     ) {
         this.settingsLoader = settingsLoader;
         this.requestUtils = requestUtils;
+        this.merger = merger;
         this.currencyConversionService = currencyConversionService;
         this.macroProcessor = macroProcessor;
         this.externalUrl = externalUrl;
@@ -50,8 +54,8 @@ public class GVastHooksModule implements Module {
     @Override
     public Collection<? extends Hook<?, ? extends InvocationContext>> hooks() {
         return Arrays.asList(
-                new EntrypointHook(settingsLoader, requestUtils),
-                new ProcessedAuctionRequestHook(requestUtils, currencyConversionService),
+                new EntrypointHook(settingsLoader, requestUtils, merger),
+                new ProcessedAuctionRequestHook(merger, requestUtils, currencyConversionService),
                 new AuctionResponseHook(requestUtils, macroProcessor,
                         externalUrl, gamNetworkCode, cacheHost)
         );

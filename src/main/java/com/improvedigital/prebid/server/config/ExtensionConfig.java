@@ -24,6 +24,7 @@ import org.prebid.server.currency.CurrencyConversionService;
 import org.prebid.server.hooks.v1.Module;
 import org.prebid.server.identity.IdGenerator;
 import org.prebid.server.json.JacksonMapper;
+import org.prebid.server.json.JsonMerger;
 import org.prebid.server.log.HttpInteractionLogger;
 import org.prebid.server.metric.Metrics;
 import org.prebid.server.settings.model.GdprConfig;
@@ -134,6 +135,7 @@ public class ExtensionConfig {
     Module gVastHooksModule(
             SettingsLoader settingsLoader,
             RequestUtils requestUtils,
+            JsonMerger merger,
             CurrencyConversionService currencyConversionService,
             MacroProcessor macroProcessor,
             @Value("${external-url}") String externalUrl,
@@ -143,6 +145,7 @@ public class ExtensionConfig {
         return new GVastHooksModule(
                 settingsLoader,
                 requestUtils,
+                merger,
                 currencyConversionService,
                 macroProcessor,
                 externalUrl,

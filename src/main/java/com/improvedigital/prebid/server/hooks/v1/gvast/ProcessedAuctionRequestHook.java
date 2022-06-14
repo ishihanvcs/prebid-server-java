@@ -21,6 +21,7 @@ import org.prebid.server.hooks.execution.v1.auction.AuctionRequestPayloadImpl;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.auction.AuctionInvocationContext;
 import org.prebid.server.hooks.v1.auction.AuctionRequestPayload;
+import org.prebid.server.json.JsonMerger;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCache;
@@ -46,13 +47,16 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
     private final JsonUtils jsonUtils;
     private final ExtRequest defaultExtRequest;
     private final RequestUtils requestUtils;
+    private final JsonMerger merger;
     private final ExtRequest prioritizedExtRequestForGVast;
 
     public ProcessedAuctionRequestHook(
+            JsonMerger merger,
             RequestUtils requestUtils,
             CurrencyConversionService currencyConversionService
     ) {
         this.requestUtils = Objects.requireNonNull(requestUtils);
+        this.merger = Objects.requireNonNull(merger);
         this.jsonUtils = Objects.requireNonNull(requestUtils.getJsonUtils());
         this.currencyConversionService = Objects.requireNonNull(currencyConversionService);
 
@@ -152,13 +156,17 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
     }
 
     private BidRequest updateExtWithCacheSettings(BidRequest bidRequest, boolean hasGVastImp) {
-        ExtRequest mergedExtRequest = jsonUtils.nonDestructiveMerge(
-                defaultExtRequest, bidRequest.getExt(), ExtRequest.class
+        ExtRequest mergedExtRequest = merger.merge(
+                bidRequest.getExt(),
+                defaultExtRequest,
+                ExtRequest.class
         );
 
         if (hasGVastImp) {
-            mergedExtRequest = jsonUtils.nonDestructiveMerge(
-                    mergedExtRequest, prioritizedExtRequestForGVast, ExtRequest.class
+            mergedExtRequest = merger.merge(
+                    prioritizedExtRequestForGVast,
+                    mergedExtRequest,
+                    ExtRequest.class
             );
         }
         return bidRequest.toBuilder().ext(mergedExtRequest).build();

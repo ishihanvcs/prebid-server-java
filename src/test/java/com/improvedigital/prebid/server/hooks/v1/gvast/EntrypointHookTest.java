@@ -3,12 +3,11 @@ package com.improvedigital.prebid.server.hooks.v1.gvast;
 import ch.qos.logback.classic.Level;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
-import com.improvedigital.prebid.server.hooks.v1.HooksTestBase;
+import com.improvedigital.prebid.server.UnitTestBase;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
 import io.vertx.core.Future;
 import nl.altindag.log.LogCaptor;
 import org.apache.commons.collections4.map.HashedMap;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -29,8 +28,9 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class EntrypointHookTest extends HooksTestBase {
+public class EntrypointHookTest extends UnitTestBase {
 
     @Mock
     SettingsLoader settingsLoader;
@@ -45,7 +45,8 @@ public class EntrypointHookTest extends HooksTestBase {
         MockitoAnnotations.openMocks(this);
         hook = new EntrypointHook(
                 settingsLoader,
-                requestUtils
+                requestUtils,
+                merger
         );
     }
 
@@ -80,23 +81,23 @@ public class EntrypointHookTest extends HooksTestBase {
                 ),
                 timeout,
                 (originalBidRequest, updatedBidRequest) -> {
-                    Assertions.assertThat(originalBidRequest)
+                    assertThat(originalBidRequest)
                             .describedAs("bidRequest should not be modified")
                             .isEqualTo(updatedBidRequest);
-                    Assertions.assertThat(logCaptor.getWarnLogs())
+                    assertThat(logCaptor.getWarnLogs())
                             .isNotEmpty();
 
-                    Assertions.assertThat(logCaptor.getWarnLogs().size())
+                    assertThat(logCaptor.getWarnLogs().size())
                             .isEqualTo(2);
 
-                    Assertions.assertThat(
+                    assertThat(
                             hasLogEventWith(logCaptor,
                                     "accountId mismatched in imp[].prebid.improvedigitalpbs",
                                     Level.WARN
                             )
                     ).isTrue();
 
-                    Assertions.assertThat(
+                    assertThat(
                             hasLogEventWith(logCaptor,
                                     "requestId mismatched in imp[].prebid.improvedigitalpbs",
                                     Level.WARN
@@ -127,7 +128,7 @@ public class EntrypointHookTest extends HooksTestBase {
                         bidRequest -> setStoredImpIds(bidRequest, impToStoredIdMap)
                 ),
                 timeout,
-                (originalBidRequest, updatedBidRequest) -> Assertions.assertThat(originalBidRequest)
+                (originalBidRequest, updatedBidRequest) -> assertThat(originalBidRequest)
                         .describedAs("bidRequest should not be modified")
                         .isEqualTo(updatedBidRequest)
         );
@@ -159,25 +160,25 @@ public class EntrypointHookTest extends HooksTestBase {
                 ),
                 timeout,
                 (originalBidRequest, updatedBidRequest) -> {
-                    Assertions.assertThat(updatedBidRequest)
+                    assertThat(updatedBidRequest)
                             .isNotNull();
-                    Assertions.assertThat(updatedBidRequest.getImp())
+                    assertThat(updatedBidRequest.getImp())
                             .isNotNull();
-                    Assertions.assertThat(updatedBidRequest.getImp())
+                    assertThat(updatedBidRequest.getImp())
                             .isNotEmpty();
-                    Assertions.assertThat(updatedBidRequest.getImp().size())
+                    assertThat(updatedBidRequest.getImp().size())
                             .isEqualTo(1);
                     final String parentAccountId = updatedBidRequest.getSite()
                             .getPublisher().getExt().getPrebid().getParentAccount();
-                    Assertions.assertThat(parentAccountId)
+                    assertThat(parentAccountId)
                             .isNotNull();
-                    Assertions.assertThat(parentAccountId)
+                    assertThat(parentAccountId)
                             .isEqualTo(defaultAccountId);
                     final String storedRequestId = updatedBidRequest.getExt()
                             .getPrebid().getStoredrequest().getId();
-                    Assertions.assertThat(storedRequestId)
+                    assertThat(storedRequestId)
                             .isNotNull();
-                    Assertions.assertThat(storedRequestId)
+                    assertThat(storedRequestId)
                             .isEqualTo(defaultStoredRequestId);
                 }
         );
@@ -186,7 +187,7 @@ public class EntrypointHookTest extends HooksTestBase {
     @Test
     public void testCode() throws Exception {
         String result = hook.code();
-        Assertions.assertThat(result)
+        assertThat(result)
                 .isEqualTo("improvedigital-gvast-hooks-entrypoint");
     }
 
@@ -201,7 +202,7 @@ public class EntrypointHookTest extends HooksTestBase {
                 createInvocationContext(timeout),
                 (initialPayload, updatedPayload) -> {
                 String updatedBody = updatedPayload.body();
-                Assertions.assertThat(updatedBody)
+                assertThat(updatedBody)
                         .isNotNull();
                 BidRequest originalBidRequest = bidRequestFromString(initialPayload.body());
                 BidRequest updatedBidRequest = bidRequestFromString(updatedBody);

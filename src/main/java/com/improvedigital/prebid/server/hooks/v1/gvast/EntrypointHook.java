@@ -20,6 +20,7 @@ import org.prebid.server.hooks.execution.v1.entrypoint.EntrypointPayloadImpl;
 import org.prebid.server.hooks.v1.InvocationContext;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.entrypoint.EntrypointPayload;
+import org.prebid.server.json.JsonMerger;
 import org.prebid.server.proto.openrtb.ext.request.ExtPublisher;
 import org.prebid.server.proto.openrtb.ext.request.ExtPublisherPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
@@ -38,13 +39,16 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
     private final JsonUtils jsonUtils;
     private final ObjectMapper mapper;
     private final RequestUtils requestUtils;
+    private final JsonMerger merger;
 
     public EntrypointHook(
             SettingsLoader settingsLoader,
-            RequestUtils requestUtils
+            RequestUtils requestUtils,
+            JsonMerger merger
     ) {
         this.settingsLoader = Objects.requireNonNull(settingsLoader);
         this.requestUtils = Objects.requireNonNull(requestUtils);
+        this.merger = Objects.requireNonNull(merger);
         this.jsonUtils = Objects.requireNonNull(requestUtils.getJsonUtils());
         this.mapper = Objects.requireNonNull(jsonUtils.getObjectMapper());
     }
@@ -151,8 +155,7 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
     private ImprovedigitalPbsImpExt mergeImprovedigitalPbsImpExt(Imp imp, Imp storedImp) {
         ImprovedigitalPbsImpExt ext1 = jsonUtils.getImprovedigitalPbsImpExt(imp);
         ImprovedigitalPbsImpExt ext2 = jsonUtils.getImprovedigitalPbsImpExt(storedImp);
-
-        return jsonUtils.nonDestructiveMerge(ext2, ext1, ImprovedigitalPbsImpExt.class);
+        return merger.merge(ext1, ext2, ImprovedigitalPbsImpExt.class);
     }
 
     private BidRequest setParentAccountId(BidRequest bidRequest, String accountId) {
@@ -168,9 +171,9 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
         if (bidRequest.getSite() != null) {
             requestBuilder.site(
                     bidRequest.getSite().toBuilder().publisher(
-                            jsonUtils.nonDestructiveMerge(
-                                    publisherWithParentAccount,
+                            merger.merge(
                                     bidRequest.getSite().getPublisher(),
+                                    publisherWithParentAccount,
                                     Publisher.class
                             )
                     ).build()
@@ -178,9 +181,9 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
         } else {
             requestBuilder.app(
                     bidRequest.getApp().toBuilder().publisher(
-                            jsonUtils.nonDestructiveMerge(
-                                    publisherWithParentAccount,
+                            merger.merge(
                                     bidRequest.getApp().getPublisher(),
+                                    publisherWithParentAccount,
                                     Publisher.class
                             )
                     ).build()
@@ -202,10 +205,11 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
 
         return bidRequest.toBuilder()
                 .ext(
-                        jsonUtils.nonDestructiveMerge(
-                                bidRequest.getExt(),
+                        merger.merge(
                                 extRequest,
-                                ExtRequest.class)
+                                bidRequest.getExt(),
+                                ExtRequest.class
+                        )
                 )
         .build();
     }

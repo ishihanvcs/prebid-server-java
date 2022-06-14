@@ -1,10 +1,11 @@
-package com.improvedigital.prebid.server.hooks.v1;
+package com.improvedigital.prebid.server;
 
 import ch.qos.logback.classic.Level;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
+import com.iab.openrtb.response.BidResponse;
 import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.AsyncResult;
@@ -38,7 +39,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public abstract class HooksTestBase extends VertxTest {
+public abstract class UnitTestBase extends VertxTest {
 
     protected static JsonMerger merger;
     protected static JsonUtils jsonUtils;
@@ -51,6 +52,10 @@ public abstract class HooksTestBase extends VertxTest {
     }
 
     protected String resourceDir = null;
+    protected String impsDir = "imps";
+    protected String requestsDir = "requests";
+    protected String responsesDir = "responses";
+
     protected Timeout timeout = createTimeout(10000L);
 
     protected Timeout createTimeout(long timeout) {
@@ -76,11 +81,13 @@ public abstract class HooksTestBase extends VertxTest {
     }
 
     protected String readResourceContentByRelativePath(String relativePath) {
-        String resourceDir = StringUtils.defaultIfBlank(
-                this.resourceDir,
-                this.getClass().getPackageName().replaceAll("\\.", "/")
+        String resourceDir = normalizeDir(
+                StringUtils.defaultIfBlank(
+                    this.resourceDir,
+                    this.getClass().getPackageName().replaceAll("\\.", "/")
+                )
         );
-        final String resourcePath = resourceDir + "/" + relativePath;
+        final String resourcePath = resourceDir + StringUtils.removeStart(relativePath, "/");
         return readResourceContent(resourcePath);
     }
 
@@ -92,8 +99,15 @@ public abstract class HooksTestBase extends VertxTest {
         return readResourceContentByRelativePath(relativePath + ".json");
     }
 
+    private String normalizeDir(String dirPath) {
+        final String separator = "/";
+        return StringUtils.stripToEmpty(
+                StringUtils.removeEnd(dirPath, separator)
+        ) + separator;
+    }
+
     protected String readStoredImpContent(String storedImpId) {
-        return readJsonResourceByRelativePath("imps/" + storedImpId);
+        return readJsonResourceByRelativePath(normalizeDir(impsDir) + storedImpId);
     }
 
     protected Imp getStoredImp(String storedImpId) {
@@ -122,8 +136,15 @@ public abstract class HooksTestBase extends VertxTest {
         );
     }
 
+    protected Imp impFromString(String content) {
+        if (content != null) {
+            return jacksonMapper.decodeValue(content, Imp.class);
+        }
+        return null;
+    }
+
     protected String readStoredRequestContent(String storedRequestId) {
-        return readJsonResourceByRelativePath("requests/" + storedRequestId);
+        return readJsonResourceByRelativePath(normalizeDir(requestsDir) + storedRequestId);
     }
 
     protected BidRequest getStoredRequest(String storedRequestId) {
@@ -162,9 +183,42 @@ public abstract class HooksTestBase extends VertxTest {
         return null;
     }
 
-    protected Imp impFromString(String content) {
+    protected String readStoredResponseContent(String storedResponseId) {
+        return readJsonResourceByRelativePath(normalizeDir(responsesDir) + storedResponseId);
+    }
+
+    protected BidResponse getStoredResponse(String storedResponseId) {
+        return getStoredResponse(storedResponseId, null);
+    }
+
+    protected BidResponse getStoredResponse(String storedResponseId, Function<BidResponse, BidResponse> modifier) {
+        return getStoredObject(
+                storedResponseId,
+                this::readStoredResponseContent,
+                this::bidResponseFromString,
+                modifier
+        );
+    }
+
+    protected String getStoredResponseAsString(String storedResponseId) {
+        return getStoredResponseAsString(
+                storedResponseId,
+                null
+        );
+    }
+
+    protected String getStoredResponseAsString(String storedResponseId, Function<BidResponse, BidResponse> modifier) {
+        return getStoredObjectAsString(
+                storedResponseId,
+                this::readStoredResponseContent,
+                this::bidResponseFromString,
+                modifier
+        );
+    }
+
+    protected BidResponse bidResponseFromString(String content) {
         if (content != null) {
-            return jacksonMapper.decodeValue(content, Imp.class);
+            return jacksonMapper.decodeValue(content, BidResponse.class);
         }
         return null;
     }
@@ -370,5 +424,11 @@ public abstract class HooksTestBase extends VertxTest {
         return imp.toBuilder().ext(
                 jsonUtils.nonDestructiveMerge(imp.getExt(), impExt)
         ).build();
+    }
+
+    protected <T> T deepCopy(T source, Class<T> clazz) {
+        return jacksonMapper.decodeValue(
+            jacksonMapper.encodeToBytes(source), clazz
+        );
     }
 }

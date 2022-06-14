@@ -4,9 +4,9 @@ import ch.qos.logback.classic.Level;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.improvedigital.prebid.server.auction.model.VastResponseType;
-import com.improvedigital.prebid.server.hooks.v1.HooksTestBase;
+import com.improvedigital.prebid.server.UnitTestBase;
+import com.improvedigital.prebid.server.utils.RequestUtils;
 import nl.altindag.log.LogCaptor;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -29,8 +29,9 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class ProcessedAuctionRequestHookTest extends HooksTestBase {
+public class ProcessedAuctionRequestHookTest extends UnitTestBase {
 
     @Mock
     CurrencyConversionService currencyConversionService;
@@ -48,6 +49,7 @@ public class ProcessedAuctionRequestHookTest extends HooksTestBase {
     public void setUp() {
         MockitoAnnotations.openMocks(this);
         hook = new ProcessedAuctionRequestHook(
+                merger,
                 requestUtils,
                 currencyConversionService
         );
@@ -63,11 +65,11 @@ public class ProcessedAuctionRequestHookTest extends HooksTestBase {
                 AuctionInvocationContextImpl.of(null, false, null, null),
                 (initialPayload, invocationResult) -> {
                     final String message = "improvedigital placementId is not defined for one or more imp(s)";
-                    Assertions.assertThat(invocationResult)
+                    assertThat(invocationResult)
                             .isNotNull();
-                    Assertions.assertThat(invocationResult.message())
+                    assertThat(invocationResult.message())
                             .isEqualTo(message);
-                    Assertions.assertThat(hasLogEventWith(logCaptor, message, Level.ERROR))
+                    assertThat(hasLogEventWith(logCaptor, message, Level.ERROR))
                             .isTrue();
                 }
         );
@@ -79,7 +81,7 @@ public class ProcessedAuctionRequestHookTest extends HooksTestBase {
         executeHookAndValidateBidRequest(
                 bidRequest,
                 timeout,
-                (originalBidRequest, updatedBidRequest) -> Assertions.assertThat(updatedBidRequest.getExt())
+                (originalBidRequest, updatedBidRequest) -> assertThat(updatedBidRequest.getExt())
                         .isNull()
         );
     }
@@ -99,25 +101,92 @@ public class ProcessedAuctionRequestHookTest extends HooksTestBase {
             ).build();
         });
 
+        BiConsumer<BidRequest, BidRequest> commonValidator = (originalBidRequest, updatedBidRequest) -> {
+            assertThat(updatedBidRequest.getExt())
+                    .isNotNull();
+            assertThat(updatedBidRequest.getExt().getPrebid())
+                    .isNotNull();
+            assertThat(updatedBidRequest.getExt().getPrebid().getCache())
+                    .isNotNull();
+            assertThat(updatedBidRequest.getExt().getPrebid().getCache().getVastxml())
+                    .isNotNull();
+            assertThat(updatedBidRequest.getExt().getPrebid().getCache().getVastxml().getReturnCreative())
+                    .isNotNull();
+            assertThat(updatedBidRequest.getExt().getPrebid().getCache().getVastxml().getReturnCreative())
+                    .isTrue();
+            assertThat(updatedBidRequest.getExt().getPrebid().getTargeting())
+                    .isNotNull();
+            assertThat(updatedBidRequest.getExt().getPrebid().getTargeting().getPricegranularity())
+                    .isNotNull();
+            assertThat(updatedBidRequest.getExt().getPrebid().getTargeting().getPricegranularity()
+                            .at("/precision").isInt()
+                    ).isTrue();
+            assertThat(updatedBidRequest.getExt().getPrebid().getTargeting().getPricegranularity()
+                    .at("/precision").asInt()
+            ).isEqualTo(2);
+            assertThat(updatedBidRequest.getExt().getPrebid().getTargeting().getPricegranularity()
+                    .at("/ranges").isArray()
+            ).isTrue();
+            assertThat(updatedBidRequest.getExt().getPrebid().getTargeting().getPricegranularity()
+                    .at("/ranges").size()
+            ).isEqualTo(5);
+            assertThat(updatedBidRequest.getExt().getPrebid().getTargeting().getIncludeformat())
+                    .isNotNull();
+            assertThat(updatedBidRequest.getExt().getPrebid().getTargeting().getIncludeformat())
+                    .isTrue();
+            assertThat(updatedBidRequest.getExt().getPrebid().getTargeting().getIncludewinners())
+                    .isNotNull();
+            assertThat(updatedBidRequest.getExt().getPrebid().getTargeting().getIncludebidderkeys())
+                    .isNotNull();
+        };
+
         BiConsumer<BidRequest, BidRequest> defaultExtValidator = (originalBidRequest, updatedBidRequest) -> {
-            Assertions.assertThat(updatedBidRequest.getExt())
-                    .isNotNull();
-            Assertions.assertThat(updatedBidRequest.getExt().getPrebid())
-                    .isNotNull();
-            Assertions.assertThat(updatedBidRequest.getExt().getPrebid().getCache())
-                    .isNotNull();
-            Assertions.assertThat(updatedBidRequest.getExt().getPrebid().getCache().getVastxml())
-                    .isNotNull();
-            Assertions.assertThat(updatedBidRequest.getExt().getPrebid().getTargeting())
-                    .isNotNull();
-            Assertions.assertThat(updatedBidRequest.getExt().getPrebid().getTargeting().getPricegranularity())
-                    .isNotNull();
+            commonValidator.accept(originalBidRequest, updatedBidRequest);
+            assertThat(updatedBidRequest.getExt().getPrebid().getTargeting().getIncludewinners())
+                    .isTrue();
+            assertThat(updatedBidRequest.getExt().getPrebid().getTargeting().getIncludebidderkeys())
+                    .isTrue();
+        };
+
+        BiConsumer<BidRequest, BidRequest> mergedExtValidator = (originalBidRequest, updatedBidRequest) -> {
+            commonValidator.accept(originalBidRequest, updatedBidRequest);
+            assertThat(updatedBidRequest.getExt().getPrebid().getTargeting().getIncludewinners())
+                    .isFalse();
+            assertThat(updatedBidRequest.getExt().getPrebid().getTargeting().getIncludebidderkeys())
+                    .isFalse();
+        };
+
+        BiConsumer<BidRequest, BidRequest> mergedExtValidatorGVast = (originalBidRequest, updatedBidRequest) -> {
+            commonValidator.accept(originalBidRequest, updatedBidRequest);
+            assertThat(updatedBidRequest.getExt().getPrebid().getTargeting().getIncludewinners())
+                    .isFalse();
+            assertThat(updatedBidRequest.getExt().getPrebid().getTargeting().getIncludebidderkeys())
+                    .isTrue();
         };
 
         executeHookAndValidateBidRequest(
                 waterfallBidRequest,
                 timeout,
                 defaultExtValidator
+        );
+
+        // set ext.prebid.targeting.includebidderkeys=false
+        ExtRequest extRequest = ExtRequest.of(ExtRequestPrebid.builder()
+                .targeting(ExtRequestTargeting.builder()
+                        .includewinners(false)
+                        .includebidderkeys(false)
+                        .build()
+                ).build());
+
+        BidRequest waterfallBidRequestWithExtRequest = waterfallBidRequest
+                .toBuilder()
+                .ext(extRequest)
+                .build();
+
+        executeHookAndValidateBidRequest(
+                waterfallBidRequestWithExtRequest,
+                timeout,
+                mergedExtValidator
         );
 
         BidRequest gVastBidRequest = waterfallBidRequest.toBuilder().build();
@@ -131,39 +200,25 @@ public class ProcessedAuctionRequestHookTest extends HooksTestBase {
                 )
         );
 
-        BiConsumer<BidRequest, BidRequest> extValidatorForGVast = (originalBidRequest, updatedBidRequest) -> {
-            defaultExtValidator.accept(originalBidRequest, updatedBidRequest);
-            Assertions.assertThat(updatedBidRequest.getExt().getPrebid().getTargeting().getIncludebidderkeys())
-                    .describedAs("ext.prebid.targeting.includebidderkeys should be true")
-                    .isTrue();
-        };
-
         executeHookAndValidateBidRequest(
                 gVastBidRequest,
                 timeout,
-                extValidatorForGVast
+                defaultExtValidator
         );
-
-        // set ext.prebid.targeting.includebidderkeys=false in gVastBidRequest
-        ExtRequest extRequest = ExtRequest.of(ExtRequestPrebid.builder()
-                .targeting(ExtRequestTargeting.builder()
-                        .includebidderkeys(false)
-                        .build()
-                ).build());
 
         gVastBidRequest = gVastBidRequest.toBuilder().ext(extRequest).build();
 
         executeHookAndValidateBidRequest(
                 gVastBidRequest,
                 timeout,
-                extValidatorForGVast
+                mergedExtValidatorGVast
         );
     }
 
     @Test
     public void testCode() throws Exception {
         String result = hook.code();
-        Assertions.assertThat(result)
+        assertThat(result)
                 .isEqualTo("improvedigital-gvast-hooks-processed-auction-request");
     }
 
@@ -195,7 +250,7 @@ public class ProcessedAuctionRequestHookTest extends HooksTestBase {
             }
             bidRequest.getImp().replaceAll(imp -> setImpBidderProperties(
                     imp,
-                    "improvedigital",
+                    RequestUtils.IMPROVE_BIDDER_NAME,
                     bidderNode -> bidderNode.put(
                             "placementId",
                             improvePlacementId
@@ -219,7 +274,7 @@ public class ProcessedAuctionRequestHookTest extends HooksTestBase {
                 ),
                 (initialPayload, updatedPayload) -> {
                     BidRequest updatedBidRequest = updatedPayload.bidRequest();
-                    Assertions.assertThat(updatedBidRequest)
+                    assertThat(updatedBidRequest)
                             .isNotNull();
                     validator.accept(originalBidRequest, updatedBidRequest);
                 }

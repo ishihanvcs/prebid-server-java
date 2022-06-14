@@ -12,7 +12,6 @@ import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.Tuple2;
-import org.prebid.server.exception.InvalidRequestException;
 import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.util.ObjectUtil;
 
@@ -260,11 +259,6 @@ public class JsonUtils {
     }
 
     public BidRequest parseBidRequest(String body) {
-        try {
-            JsonNode bidRequestNode = objectMapper.readTree(body);
-            return objectMapper.treeToValue(bidRequestNode, BidRequest.class);
-        } catch (JsonProcessingException e) {
-            throw new InvalidRequestException(String.format("Error decoding bidRequest: %s", e.getMessage()));
-        }
+        return mapper.decodeValue(body, BidRequest.class);
     }
 }

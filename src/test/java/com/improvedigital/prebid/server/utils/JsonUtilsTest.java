@@ -3,31 +3,67 @@ package com.improvedigital.prebid.server.utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.request.Pmp;
 import com.iab.openrtb.request.Video;
+import com.improvedigital.prebid.server.UnitTestBase;
 import org.junit.Test;
-import org.prebid.server.VertxTest;
+import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
+import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
+import org.prebid.server.proto.openrtb.ext.request.ExtRequestTargeting;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class JsonUtilsTest extends VertxTest {
+public class JsonUtilsTest extends UnitTestBase {
 
-    protected static JsonUtils jsonUtils;
+    public JsonUtilsTest() {
+        impsDir = "";
+        requestsDir = "";
+    }
 
-    static {
-        jsonUtils = new JsonUtils(jacksonMapper);
+    @Test
+    public void testJsonMergerMergeWithRespectToNonDestructiveMerge() {
+        BidRequest defaultRequest = getStoredRequest("request-with-stored-imp-and-overrides");
+        assertThat(defaultRequest).isNotNull();
+        BidRequest requestWithDefaultExt = getStoredRequest("request-with-default-ext");
+        assertThat(requestWithDefaultExt).isNotNull();
+        ExtRequest extRequest = defaultRequest.getExt();
+        assertThat(extRequest).isNotNull();
+        ExtRequest extDefaultRequest = requestWithDefaultExt.getExt();
+        assertThat(extDefaultRequest).isNotNull();
+        ExtRequest prioritizedExtRequestForGVast = ExtRequest.of(ExtRequestPrebid.builder()
+                .targeting(ExtRequestTargeting.builder()
+                        .includebidderkeys(true)
+                        .build()
+                ).build()
+        );
+        ExtRequest expectedMergedExtRequest = jsonUtils.nonDestructiveMerge(
+                extDefaultRequest, extRequest, ExtRequest.class
+        );
+        ExtRequest actualMergedExtRequest = merger.merge(
+                extRequest, extDefaultRequest, ExtRequest.class);
+        assertThat(actualMergedExtRequest)
+                .usingRecursiveComparison()
+                .isEqualTo(expectedMergedExtRequest);
+
+        ExtRequest expectedPrioritizedExtRequest = jsonUtils.nonDestructiveMerge(
+                prioritizedExtRequestForGVast, expectedMergedExtRequest, ExtRequest.class
+        );
+        ExtRequest actualPrioritizedExtRequest = merger.merge(
+                expectedMergedExtRequest, prioritizedExtRequestForGVast, ExtRequest.class
+        );
+        assertThat(actualPrioritizedExtRequest)
+                .usingRecursiveComparison()
+                .isEqualTo(expectedPrioritizedExtRequest);
     }
 
     @Test
     public void testNonDestructiveMerge() {
-        ObjectNode nullResult = jsonUtils.nonDestructiveMerge(null, null);
-        assertThat(nullResult).isNull();
-
-        Imp imp1 = Imp.builder()
+        final Imp imp1 = Imp.builder()
                 .id("1")
                 .video(Video.builder()
                         .w(240)
@@ -35,7 +71,7 @@ public class JsonUtilsTest extends VertxTest {
                         .build())
                 .build();
 
-        Imp imp2 = Imp.builder()
+        final Imp imp2 = Imp.builder()
                 .id("2")
                 .video(Video.builder()
                         .h(340)
@@ -46,7 +82,7 @@ public class JsonUtilsTest extends VertxTest {
                         .build())
                 .build();
 
-        Imp mergedImp = Imp.builder()
+        final Imp mergedImp = Imp.builder()
                 .id("2")
                 .video(Video.builder()
                         .w(240)
@@ -57,6 +93,13 @@ public class JsonUtilsTest extends VertxTest {
                         .privateAuction(1)
                         .build())
                 .build();
+
+        final ObjectNode imp1Node = mapper.valueToTree(imp1);
+        final ObjectNode imp2Node = mapper.valueToTree(imp2);
+        final ObjectNode mergedImpNode = mapper.valueToTree(mergedImp);
+
+        ObjectNode nullResult = jsonUtils.nonDestructiveMerge(null, null);
+        assertThat(nullResult).isNull();
 
         Imp resultImp = jsonUtils.nonDestructiveMerge(imp1, null, Imp.class);
         assertThat(resultImp).isNotNull();
@@ -69,10 +112,6 @@ public class JsonUtilsTest extends VertxTest {
         resultImp = jsonUtils.nonDestructiveMerge(imp1, imp2, Imp.class);
         assertThat(resultImp).isNotNull();
         assertThat(resultImp).isEqualTo(mergedImp);
-
-        ObjectNode imp1Node = mapper.valueToTree(imp1);
-        ObjectNode imp2Node = mapper.valueToTree(imp2);
-        ObjectNode mergedImpNode = mapper.valueToTree(mergedImp);
 
         ObjectNode resultNode = jsonUtils.nonDestructiveMerge(imp1Node, null);
         assertThat(resultNode).isNotNull();

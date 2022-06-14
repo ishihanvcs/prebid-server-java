@@ -275,7 +275,12 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 getVastXmlInline("20220608", true)
         );
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("video");
+        assertBidCountSingle(responseJson);
+        assertBidIdExists(responseJson, 0, 0);
+        assertBidImpId(responseJson, 0, 0, "imp_id");
+        assertBidPrice(responseJson, 0, 0, 1.25);
+        assertSeat(responseJson, 0, "improvedigital");
+        assertBidExtPrebidType(responseJson, 0, 0, "video");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -289,7 +294,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
-    public void auctionEndpointReturnsGVastResponse() throws XPathExpressionException, IOException, JSONException {
+    public void auctionEndpointReturnsGvastResponse() throws XPathExpressionException, IOException, JSONException {
         String vastXml = getVastXmlWrapper("20220608", true);
         String vastXmlWillBeCached = vastXml.replace(
                 "</Wrapper>",
@@ -304,7 +309,10 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 vastXml, uniqueId, vastXmlWillBeCached
         );
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getSeat(responseJson, 0)).isEqualTo("improvedigital");
+        assertBidIdExists(responseJson, 0, 0);
+        assertBidImpId(responseJson, 0, 0, "imp_id_it_gvast_20220608");
+        assertBidPrice(responseJson, 0, 0, 0.0);
+        assertSeat(responseJson, 0, "improvedigital");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -412,7 +420,12 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 vastXml, uniqueId, vastXmlWillBeCached
         );
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("video");
+        assertBidCountSingle(responseJson);
+        assertBidIdExists(responseJson, 0, 0);
+        assertBidImpId(responseJson, 0, 0, "imp_id_it_waterfall_20220608");
+        assertBidPrice(responseJson, 0, 0, 1.13);
+        assertSeat(responseJson, 0, "improvedigital");
+        assertBidExtPrebidType(responseJson, 0, 0, "video");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -424,7 +437,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertThat(vastAdTagUri.trim()).isEqualTo("https://vast.pbs.improvedigital.com/20220608");
 
         // Check we got correct cache url.
-        JSONObject vastXmlCache = getExtPrebidOfBid(responseJson, 0, 0)
+        JSONObject vastXmlCache = getBidExtPrebid(responseJson, 0, 0)
                 .getJSONObject("cache")
                 .getJSONObject("vastXml");
         assertThat(vastXmlCache.getString("cacheId")).isEqualTo(uniqueId);

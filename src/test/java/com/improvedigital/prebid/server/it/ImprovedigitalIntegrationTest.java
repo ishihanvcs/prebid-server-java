@@ -212,25 +212,67 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 .getString("adm");
     }
 
+    protected void assertBidExtPrebidType(
+            JSONObject responseJson, int seatBidIndex, int bidIndex, String expectedExtPrebidType
+    ) throws JSONException {
+        assertThat(getBidExtPrebidType(responseJson, seatBidIndex, bidIndex)).isEqualTo(expectedExtPrebidType);
+    }
+
     @NotNull
-    protected String getExtPrebidTypeOfBid(
+    protected String getBidExtPrebidType(
             JSONObject responseJson, int seatBidIndex, int bidIndex) throws JSONException {
-        return getExtPrebidOfBid(responseJson, seatBidIndex, bidIndex)
+        return getBidExtPrebid(responseJson, seatBidIndex, bidIndex)
                 .getString("type");
     }
 
     @NotNull
-    protected JSONObject getExtPrebidOfBid(
+    protected JSONObject getBidExtPrebid(
             JSONObject responseJson, int seatBidIndex, int bidIndex) throws JSONException {
         return getBid(responseJson, seatBidIndex, bidIndex)
                 .getJSONObject("ext")
                 .getJSONObject("prebid");
     }
 
+    protected void assertBidIdExists(JSONObject responseJson, int seatBidIndex, int bidIndex) throws JSONException {
+        assertThat(getBidId(responseJson, seatBidIndex, bidIndex)).isNotEmpty();
+    }
+
     @NotNull
-    private JSONObject getBid(JSONObject responseJson, int seatBidIndex, int bidIndex) throws JSONException {
+    protected String getBidId(JSONObject responseJson, int seatBidIndex, int bidIndex) throws JSONException {
+        return getBid(responseJson, seatBidIndex, bidIndex)
+                .getString("id");
+    }
+
+    protected void assertBidImpId(
+            JSONObject responseJson, int seatBidIndex, int bidIndex, String expectedImpId) throws JSONException {
+        assertThat(getBidImpId(responseJson, seatBidIndex, bidIndex)).isEqualTo(expectedImpId);
+    }
+
+    @NotNull
+    protected String getBidImpId(JSONObject responseJson, int seatBidIndex, int bidIndex) throws JSONException {
+        return getBid(responseJson, seatBidIndex, bidIndex)
+                .getString("impid");
+    }
+
+    protected void assertBidPrice(
+            JSONObject responseJson, int seatBidIndex, int bidIndex, double expectedBidPrice) throws JSONException {
+        assertThat(getBidPrice(responseJson, seatBidIndex, bidIndex)).isEqualTo(expectedBidPrice);
+    }
+
+    @NotNull
+    protected Double getBidPrice(JSONObject responseJson, int seatBidIndex, int bidIndex) throws JSONException {
+        return getBid(responseJson, seatBidIndex, bidIndex)
+                .getDouble("price");
+    }
+
+    @NotNull
+    protected JSONObject getBid(JSONObject responseJson, int seatBidIndex, int bidIndex) throws JSONException {
         return getSeatbid(responseJson, seatBidIndex)
                 .getJSONArray("bid").getJSONObject(bidIndex);
+    }
+
+    protected void assertSeat(JSONObject responseJson, int seatBidIndex, String expectedSeat) throws JSONException {
+        assertThat(getSeat(responseJson, seatBidIndex)).isEqualTo(expectedSeat);
     }
 
     @NotNull
@@ -240,7 +282,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     }
 
     @NotNull
-    private JSONObject getSeatbid(JSONObject responseJson, int seatBidIndex) throws JSONException {
+    protected JSONObject getSeatbid(JSONObject responseJson, int seatBidIndex) throws JSONException {
         return responseJson
                 .getJSONArray("seatbid").getJSONObject(seatBidIndex);
     }

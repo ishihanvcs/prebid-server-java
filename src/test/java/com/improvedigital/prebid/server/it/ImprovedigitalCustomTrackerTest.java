@@ -45,7 +45,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("banner");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("banner");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -63,7 +63,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("banner");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("banner");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -83,7 +83,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("banner");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("banner");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -103,7 +103,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("banner");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("banner");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -126,7 +126,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("video");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -153,7 +153,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("video");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -192,7 +192,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("video");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -213,7 +213,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("video");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -240,7 +240,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("video");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -279,7 +279,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("video");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -302,8 +302,8 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("video");
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 1)).isEqualTo("video");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
+        assertThat(getBidExtPrebidType(responseJson, 0, 1)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
         String adm1 = getAdm(responseJson, 0, 0);
@@ -338,7 +338,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("native");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("native");
         assertCurrency(responseJson, "USD");
 
         JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
@@ -357,7 +357,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("native");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("native");
         assertCurrency(responseJson, "USD");
 
         JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
@@ -378,7 +378,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("native");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("native");
         assertCurrency(responseJson, "USD");
 
         JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
@@ -403,7 +403,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("native");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("native");
         assertCurrency(responseJson, "USD");
 
         JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
@@ -428,7 +428,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("native");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("native");
         assertCurrency(responseJson, "USD");
 
         JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
@@ -455,7 +455,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfBid(responseJson, 0, 0)).isEqualTo("native");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("native");
         assertCurrency(responseJson, "USD"); /* PBS responds in request currency */
 
         JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));

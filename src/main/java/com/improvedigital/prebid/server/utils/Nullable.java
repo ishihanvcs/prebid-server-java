@@ -33,4 +33,11 @@ public class Nullable<V> {
     public boolean isNotNull() {
         return !this.isNull();
     }
+
+    public boolean isEqualsTo(V otherValue) {
+        if (this.isNull()) {
+            return otherValue == null;
+        }
+        return value.equals(otherValue);
+    }
 }

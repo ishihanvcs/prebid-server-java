@@ -123,7 +123,11 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         );
     }
 
+<<<<<<< HEAD
+    private void validateRequestWithBusinessLogic(BidRequest bidRequest) {
+=======
     public void validateRequestWithBusinessLogic(BidRequest bidRequest) throws GVastHookException {
+>>>>>>> develop
         if (!bidRequest.getImp().parallelStream().allMatch(
                 imp -> requestUtils.getImprovePlacementId(imp) != null
         )) {

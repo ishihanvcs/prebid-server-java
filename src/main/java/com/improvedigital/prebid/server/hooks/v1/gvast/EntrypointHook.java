@@ -20,7 +20,6 @@ import org.prebid.server.hooks.execution.v1.entrypoint.EntrypointPayloadImpl;
 import org.prebid.server.hooks.v1.InvocationContext;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.entrypoint.EntrypointPayload;
-import org.prebid.server.json.EncodeException;
 import org.prebid.server.json.JsonMerger;
 import org.prebid.server.proto.openrtb.ext.request.ExtImp;
 import org.prebid.server.proto.openrtb.ext.request.ExtPublisher;
@@ -59,80 +58,91 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
     public Future<InvocationResult<EntrypointPayload>> call(
             EntrypointPayload entrypointPayload, InvocationContext invocationContext) {
 
-        final BidRequest originalBidRequest = jsonUtils.parseBidRequest(entrypointPayload.body());
+        try {
+            final BidRequest originalBidRequest = jsonUtils.parseBidRequest(entrypointPayload.body());
 
-        final boolean hasAccountId = StringUtils.isNotBlank(
-                requestUtils.getParentAccountId(originalBidRequest)
-        );
+            final boolean hasAccountId = StringUtils.isNotBlank(
+                    requestUtils.getParentAccountId(originalBidRequest)
+            );
 
-        final boolean hasStoredRequest = StringUtils.isNotBlank(
-                requestUtils.getStoredRequestId(originalBidRequest.getExt())
-        );
+            final boolean hasStoredRequest = StringUtils.isNotBlank(
+                    requestUtils.getStoredRequestId(originalBidRequest.getExt())
+            );
 
-        if (!hasAccountId || !hasStoredRequest) {
-            final Map<Imp, String> impToStoredRequestId = originalBidRequest.getImp().stream()
-                    .map(this::getImpToStoredRequestIdTuple)
-                    .filter(t -> StringUtils.isNotBlank(t.getRight()))
-                    .collect(Collectors.toMap(Tuple2::getLeft, Tuple2::getRight));
+            if (!hasAccountId || !hasStoredRequest) {
+                final Map<Imp, String> impToStoredRequestId = originalBidRequest.getImp().stream()
+                        .map(this::getImpToStoredRequestIdTuple)
+                        .filter(t -> StringUtils.isNotBlank(t.getRight()))
+                        .collect(Collectors.toMap(Tuple2::getLeft, Tuple2::getRight));
 
-            // let core logic for auction handle errors in later phase of hook execution
-            return settingsLoader.getStoredImpsSafely(
-                    new HashSet<>(impToStoredRequestId.values()), invocationContext.timeout())
-                    .compose(storedImps -> {
-                        BidRequest updatedBidRequest = originalBidRequest;
-                        String accountId = null;
-                        String requestId = null;
-                        for (final Imp imp : originalBidRequest.getImp()) {
-                            final String storedRequestId = impToStoredRequestId.get(imp);
-                            final Imp storedImp = storedRequestId != null ? storedImps.get(storedRequestId) : null;
-                            final ImprovedigitalPbsImpExt pbsImpExt = mergeImprovedigitalPbsImpExt(imp, storedImp);
-                            if (pbsImpExt != null) {
-                                if (pbsImpExt.getAccountId() != null) {
-                                    if (accountId == null) {
-                                        accountId = pbsImpExt.getAccountId();
-                                    } else if (!accountId.equals(pbsImpExt.getAccountId())) {
-                                        return Future.succeededFuture(
-                                                InvocationResultImpl.rejected(
-                                                        "accountId mismatched in imp[].prebid.improvedigitalpbs"
-                                                )
-                                        );
+                // let core logic for auction handle errors in later phase of hook execution
+                return settingsLoader.getStoredImpsSafely(
+                                new HashSet<>(impToStoredRequestId.values()), invocationContext.timeout())
+                        .compose(storedImps -> {
+                            try {
+                                BidRequest updatedBidRequest = originalBidRequest;
+                                String accountId = null;
+                                String requestId = null;
+                                for (final Imp imp : originalBidRequest.getImp()) {
+                                    final String storedRequestId = impToStoredRequestId.get(imp);
+                                    final Imp storedImp = storedRequestId != null
+                                            ? storedImps.get(storedRequestId)
+                                            : null;
+                                    final ImprovedigitalPbsImpExt pbsImpExt
+                                            = mergeImprovedigitalPbsImpExt(imp, storedImp);
+                                    if (pbsImpExt != null) {
+                                        if (pbsImpExt.getAccountId() != null) {
+                                            if (accountId == null) {
+                                                accountId = pbsImpExt.getAccountId();
+                                            } else if (!accountId.equals(pbsImpExt.getAccountId())) {
+                                                return Future.succeededFuture(
+                                                        InvocationResultImpl.rejected(
+                                                                "accountId mismatched in imp[].prebid.improvedigitalpbs"
+                                                        )
+                                                );
+                                            }
+                                        }
+
+                                        if (pbsImpExt.getRequestId() != null) {
+                                            if (requestId == null) {
+                                                requestId = pbsImpExt.getRequestId();
+                                            } else if (!requestId.equals(pbsImpExt.getRequestId())) {
+                                                return Future.succeededFuture(
+                                                        InvocationResultImpl.rejected(
+                                                                "requestId mismatched in imp[].prebid.improvedigitalpbs"
+                                                        )
+                                                );
+                                            }
+                                        }
                                     }
                                 }
 
-                                if (pbsImpExt.getRequestId() != null) {
-                                    if (requestId == null) {
-                                        requestId = pbsImpExt.getRequestId();
-                                    } else if (!requestId.equals(pbsImpExt.getRequestId())) {
-                                        return Future.succeededFuture(
-                                                InvocationResultImpl.rejected(
-                                                        "requestId mismatched in imp[].prebid.improvedigitalpbs"
-                                                )
-                                        );
-                                    }
+                                if (!hasAccountId) {
+                                    updatedBidRequest = setParentAccountId(updatedBidRequest, accountId);
                                 }
+
+                                if (!hasStoredRequest) {
+                                    updatedBidRequest = setRequestId(updatedBidRequest, requestId);
+                                }
+                                final String updatedBody = mapper.writeValueAsString(updatedBidRequest);
+                                return Future.succeededFuture(InvocationResultImpl.succeeded(
+                                        payload -> EntrypointPayloadImpl.of(
+                                                entrypointPayload.queryParams(),
+                                                entrypointPayload.headers(),
+                                                updatedBody
+                                        )));
+                            } catch (Throwable t) {
+                                logger.error(entrypointPayload, t);
+                                return Future.succeededFuture(
+                                        InvocationResultImpl.succeeded(
+                                                payload -> entrypointPayload
+                                        )
+                                );
                             }
-                        }
-
-                        if (!hasAccountId) {
-                            updatedBidRequest = setParentAccountId(updatedBidRequest, accountId);
-                        }
-
-                        if (!hasStoredRequest) {
-                            updatedBidRequest = setRequestId(updatedBidRequest, requestId);
-                        }
-
-                        try {
-                            final String updatedBody = mapper.writeValueAsString(updatedBidRequest);
-                            return Future.succeededFuture(InvocationResultImpl.succeeded(
-                                    payload -> EntrypointPayloadImpl.of(
-                                            entrypointPayload.queryParams(),
-                                            entrypointPayload.headers(),
-                                            updatedBody
-                                    )));
-                        } catch (JsonProcessingException e) {
-                            throw new EncodeException("Failed to encode as JSON: " + e.getMessage());
-                        }
-                    }, t -> Future.succeededFuture(InvocationResultImpl.rejected(t.getMessage())));
+                        }, t -> Future.succeededFuture(InvocationResultImpl.rejected(t.getMessage())));
+            }
+        } catch (Throwable t) {
+            logger.error(entrypointPayload, t);
         }
 
         return Future.succeededFuture(

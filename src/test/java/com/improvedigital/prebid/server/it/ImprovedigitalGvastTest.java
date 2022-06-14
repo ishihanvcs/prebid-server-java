@@ -340,7 +340,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertQuerySingleValue(custParams.get("hb_pb"), "1.08");
         assertQuerySingleValue(custParams.get("hb_pb_improvedigital"), "1.08");
 
-        // Make sure we cached the content.
+        // Hit the cache to make sure we cached the content.
         String cacheUrl = "http://"
                 + custParams.get("hb_cache_host").get(0)
                 + custParams.get("hb_cache_path").get(0)
@@ -348,6 +348,60 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertCachedContent(cacheUrl, vastXmlWillBeCached);
 
         // Assert the SSP sync pixels.
+        assertSSPSyncPixels(adm);
+    }
+
+    @Test
+    public void auctionEndpointReturnsWaterfallResponse() throws XPathExpressionException, IOException, JSONException {
+        String vastXml = getVastXmlWrapper("20220608", true);
+        String vastXmlWillBeCached = vastXml.replace(
+                "</Wrapper>",
+                "<Impression>"
+                        + "<![CDATA[https://it.pbs.com/ssp_bids?bidder=improvedigital&cpm=1.13&pid=20220608]]>"
+                        + "</Impression>"
+                        + "</Wrapper>"
+        );
+        String uniqueId = "KCZEL1JSW8BT296EE1FYXTCKWNGWLVBJ";
+
+        Response response = getWaterfallResponseFromAuction(
+                vastXml, uniqueId, vastXmlWillBeCached
+        );
+        JSONObject responseJson = new JSONObject(response.asString());
+        assertBidCountSingle(responseJson);
+        assertBidIdExists(responseJson, 0, 0);
+        assertBidImpId(responseJson, 0, 0, "imp_id_it_waterfall_20220608");
+        assertBidPrice(responseJson, 0, 0, 0);
+        assertSeat(responseJson, 0, "improvedigital");
+        assertCurrency(responseJson, "USD");
+
+        String adm = getAdm(responseJson, 0, 0);
+
+        String expectedCachedVastUrl = "http://localhost:8090/cache?uuid=" + uniqueId;
+        String vastAdTagUri = XPathFactory.newInstance().newXPath()
+                .compile("/VAST/Ad[@id='0']/Wrapper/VASTAdTagURI")
+                .evaluate(new InputSource(new StringReader(adm)));
+        assertThat(vastAdTagUri.trim()).isEqualTo(expectedCachedVastUrl);
+
+        // Hit the cache.
+        assertCachedContent(expectedCachedVastUrl, vastXmlWillBeCached);
+
+        assertSSPSyncPixels(adm);
+    }
+
+    @Test
+    public void moreTests() {
+        // Combination of waterfall: gam, gam_first_look etc
+        // Using /prebid/bidder/improvedigital/keyValues.
+        // On test=1, we get debug lines.
+        // Using "hb_deal_improvedigit" and /prebid/cache/vastXml/url
+        // Resolving of "output".
+        // Resolving of "iu".
+        // Use gdpr_consent=BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA
+        // Macro replacement of: {{gdpr}}, ...
+        // <Extension>
+    }
+
+    private void assertSSPSyncPixels(String adm) throws XPathExpressionException {
         List<String> syncPixels = new ArrayList<>();
         for (int i = 1; i <= 4; i++) {
             syncPixels.add(XPathFactory.newInstance().newXPath()
@@ -402,62 +456,6 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 + "&us_privacy="
                 + "&uid=[ssb_sync_pid]")
         );
-    }
-
-    @Test
-    public void auctionEndpointReturnsWaterfallResponse() throws XPathExpressionException, IOException, JSONException {
-        String vastXml = getVastXmlWrapper("20220608", true);
-        String vastXmlWillBeCached = vastXml.replace(
-                "</Wrapper>",
-                "<Impression>"
-                        + "<![CDATA[https://it.pbs.com/ssp_bids?bidder=improvedigital&cpm=1.13&pid=20220608]]>"
-                        + "</Impression>"
-                        + "</Wrapper>"
-        );
-        String uniqueId = "KCZEL1JSW8BT296EE1FYXTCKWNGWLVBJ";
-
-        Response response = getWaterfallResponseFromAuction(
-                vastXml, uniqueId, vastXmlWillBeCached
-        );
-        JSONObject responseJson = new JSONObject(response.asString());
-        assertBidCountSingle(responseJson);
-        assertBidIdExists(responseJson, 0, 0);
-        assertBidImpId(responseJson, 0, 0, "imp_id_it_waterfall_20220608");
-        assertBidPrice(responseJson, 0, 0, 1.13);
-        assertSeat(responseJson, 0, "improvedigital");
-        assertBidExtPrebidType(responseJson, 0, 0, "video");
-        assertCurrency(responseJson, "USD");
-
-        String adm = getAdm(responseJson, 0, 0);
-
-        String vastAdTagUri = XPathFactory.newInstance().newXPath()
-                .compile("/VAST/Ad[@id='20220608']/Wrapper/VASTAdTagURI")
-                .evaluate(new InputSource(new StringReader(adm)));
-
-        assertThat(vastAdTagUri.trim()).isEqualTo("https://vast.pbs.improvedigital.com/20220608");
-
-        // Check we got correct cache url.
-        JSONObject vastXmlCache = getBidExtPrebid(responseJson, 0, 0)
-                .getJSONObject("cache")
-                .getJSONObject("vastXml");
-        assertThat(vastXmlCache.getString("cacheId")).isEqualTo(uniqueId);
-        assertThat(vastXmlCache.getString("url")).endsWith("/cache?uuid=" + uniqueId);
-
-        // Hit the cache.
-        assertCachedContent(vastXmlCache.getString("url"), vastXmlWillBeCached);
-    }
-
-    @Test
-    public void moreTests() {
-        // Combination of waterfall: gam, gam_first_look etc
-        // Using /prebid/bidder/improvedigital/keyValues.
-        // On test=1, we get debug lines.
-        // Using "hb_deal_improvedigit" and /prebid/cache/vastXml/url
-        // Resolving of "output".
-        // Resolving of "iu".
-        // Use gdpr_consent=BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA
-        // Macro replacement of: {{gdpr}}, ...
-        // <Extension>
     }
 
     private Response getGvastResponse() {

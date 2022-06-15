@@ -124,7 +124,7 @@ public class GVastBidCreator {
 
         this.gdprConsent = nullableUser.get(User::getExt)
                 .get(ExtUser::getConsent)
-                .value();
+                .value("");
 
         final Geo geo = nullableDevice.get(Device::getGeo).value();
 
@@ -456,7 +456,6 @@ public class GVastBidCreator {
             // TODO
             // Move list of SSPs to a config
             // Use logic from CookieSyncHandler to generate sync urls
-            String gdprConsent = Nullable.of(this.gdprConsent).value("");
             final String[] userSyncs = {
                     "https://ib.adnxs.com/getuid?"
                             + HttpUtil.encodeUrl(getRedirect(externalUrl, "adnxs", gdpr, gdprConsent, "$UID")),

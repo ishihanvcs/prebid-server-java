@@ -25,19 +25,14 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLDecoder;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToIgnoreCase;
@@ -351,11 +346,48 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         // 4th tag.
         String vastAdTagUri4 = getVastTagUri(adm, "3");
-
         assertThat(vastAdTagUri4.trim()).isEqualTo("https://my.customvast.xml");
         assertNoSSPSyncPixels(adm, "3");
         assertNoCreative(adm, "3");
         assertExtensions(adm, "3", 3);
+    }
+
+    @Test
+    public void auctionEndpointReturnsGvastResponseWithMacroReplacement()
+            throws XPathExpressionException, IOException, JSONException {
+        String vastXml = getVastXmlInline("20220608", true);
+        String vastXmlWillBeCached = getVastXmlToCache(vastXml, "improvedigital", "1.08", "20220608");
+        String uniqueId = "OLJLUADDQM7Y4T8IF8YU6ZWDU1FSESZC";
+
+        Response response = getGVastResponseFromAuctionWithWaterfallConfig(
+                Arrays.asList("gam", "https://my.customvast.xml"
+                        + "?gdpr={{gdpr}}"
+                        + "&gdpr_consent={{gdpr_consent}}"
+                        + "&referrer={{referrer}}"
+                        + "&t={{timestamp}}"),
+                vastXml, uniqueId, vastXmlWillBeCached
+        );
+        JSONObject responseJson = new JSONObject(response.asString());
+        assertBidIdExists(responseJson, 0, 0);
+        assertBidImpId(responseJson, 0, 0, "imp_id_it_gvast_20220608");
+        assertBidPrice(responseJson, 0, 0, 0.0);
+        assertSeat(responseJson, 0, "improvedigital");
+        assertCurrency(responseJson, "USD");
+
+        String adm = getAdm(responseJson, 0, 0);
+
+        // 1st tag.
+        String vastAdTagUri1 = getVastTagUri(adm, "0");
+        assertGamUrl(uniqueId, vastAdTagUri1);
+
+        // 2nd tag.
+        String vastAdTagUri2 = getVastTagUri(adm, "1");
+        Map<String, List<String>> customUrlParams = splitQuery(new URL(vastAdTagUri2).getQuery());
+        assertQuerySingleValue(customUrlParams.get("gdpr"), "0");
+        assertQuerySingleValue(customUrlParams.get("gdpr_consent"), "");
+        assertQuerySingleValue(customUrlParams.get("referrer"), "http://pbs.improvedigital.com");
+        /* Checking timestamp is tricky but we can check leading digits which will change after 100 years :) */
+        assertThat(customUrlParams.get("t").get(0).startsWith("165536")).isTrue();
     }
 
     @Test
@@ -445,7 +477,6 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         // Resolving of "output".
         // Resolving of "iu".
         // Use gdpr_consent=BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA
-        // Macro replacement of: {{gdpr}}, ...
         // For last ad, <Wrapper fallbackOnNoAd="true">
         // iab_cat
         // pbct
@@ -870,32 +901,5 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         + "</Impression>"
                         + "</InLine>"
         );
-    }
-
-    private Map<String, List<String>> splitQuery(String queryParam) {
-        return Arrays.stream(queryParam.split("&"))
-                .map(this::splitQueryParameter)
-                .collect(Collectors.groupingBy(
-                        AbstractMap.SimpleImmutableEntry::getKey,
-                        LinkedHashMap::new,
-                        Collectors.mapping(Map.Entry::getValue, Collectors.toList()))
-                );
-    }
-
-    private AbstractMap.SimpleImmutableEntry<String, String> splitQueryParameter(String it) {
-        try {
-            final String[] idx = it.split("=");
-            return new AbstractMap.SimpleImmutableEntry<>(
-                    URLDecoder.decode(idx[0], "UTF-8"),
-                    URLDecoder.decode(idx[1], "UTF-8")
-            );
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalArgumentException(e);
-        }
-    }
-
-    private void assertQuerySingleValue(List<String> paramValues, String expectedValue) {
-        assertThat(paramValues.size()).isEqualTo(1);
-        assertThat(paramValues.get(0)).isEqualTo(expectedValue);
     }
 }

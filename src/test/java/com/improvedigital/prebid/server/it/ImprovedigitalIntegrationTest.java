@@ -13,12 +13,19 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.test.context.TestPropertySource;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.AbstractMap;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -78,6 +85,33 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         Files.writeString(cacheResponseFile, fileContent, StandardOpenOption.WRITE);
 
         return "/" + resourceFile;
+    }
+
+    protected Map<String, List<String>> splitQuery(String queryParam) {
+        return Arrays.stream(queryParam.split("&"))
+                .map(this::splitQueryParameter)
+                .collect(Collectors.groupingBy(
+                        AbstractMap.SimpleImmutableEntry::getKey,
+                        LinkedHashMap::new,
+                        Collectors.mapping(Map.Entry::getValue, Collectors.toList()))
+                );
+    }
+
+    protected AbstractMap.SimpleImmutableEntry<String, String> splitQueryParameter(String it) {
+        try {
+            final String[] idx = it.split("=");
+            return new AbstractMap.SimpleImmutableEntry<>(
+                    URLDecoder.decode(idx[0], "UTF-8"),
+                    URLDecoder.decode(idx.length > 1 ? idx[1] : "", "UTF-8")
+            );
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    protected void assertQuerySingleValue(List<String> paramValues, String expectedValue) {
+        assertThat(paramValues.size()).isEqualTo(1);
+        assertThat(paramValues.get(0)).isEqualTo(expectedValue);
     }
 
     protected static String getVastXmlInline(String adId, boolean hasImpPixel) {

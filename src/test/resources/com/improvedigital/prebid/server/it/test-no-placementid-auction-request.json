@@ -8,8 +8,8 @@
         "h": 250
       },
       "ext": {
-        "improvedigital": {
-          "exampleProperty": "exampleProperty"
+        "generic": {
+          "exampleProperty": "examplePropertyValue"
         }
       }
     }

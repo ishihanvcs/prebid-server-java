@@ -1,5 +1,6 @@
 package com.improvedigital.prebid.server.it;
 
+import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import com.improvedigital.prebid.server.handler.GVastHandler;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
@@ -10,6 +11,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.prebid.server.it.util.BidCacheRequestPattern;
 import org.prebid.server.model.Endpoint;
 import org.prebid.server.util.HttpUtil;
 import org.springframework.test.context.TestPropertySource;
@@ -281,14 +283,8 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
     @Test
     public void auctionEndpointReturnsGvastResponse() throws XPathExpressionException, IOException, JSONException {
-        String vastXml = getVastXmlWrapper("20220608", true);
-        String vastXmlWillBeCached = vastXml.replace(
-                "</Wrapper>",
-                "<Impression>"
-                        + "<![CDATA[https://it.pbs.com/ssp_bids?bidder=improvedigital&cpm=1.08&pid=20220608]]>"
-                        + "</Impression>"
-                        + "</Wrapper>"
-        );
+        String vastXml = getVastXmlInline("20220608", true);
+        String vastXmlWillBeCached = getVastXmlToCache(vastXml, "improvedigital", "1.08", "20220608");
         String uniqueId = "R3WOPUPAGZYVYLA02ONHOGPANWYVX2D";
 
         Response response = getGVastResponseFromAuction(
@@ -314,14 +310,8 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     @Test
     public void auctionEndpointReturnsGvastResponseWithMultipleWaterfallConfig()
             throws XPathExpressionException, IOException, JSONException {
-        String vastXml = getVastXmlWrapper("20220608", true);
-        String vastXmlWillBeCached = vastXml.replace(
-                "</Wrapper>",
-                "<Impression>"
-                        + "<![CDATA[https://it.pbs.com/ssp_bids?bidder=improvedigital&cpm=1.08&pid=20220608]]>"
-                        + "</Impression>"
-                        + "</Wrapper>"
-        );
+        String vastXml = getVastXmlInline("20220608", true);
+        String vastXmlWillBeCached = getVastXmlToCache(vastXml, "improvedigital", "1.08", "20220608");
         String uniqueId = "R3WOPUPAGZYVYLA02ONHOGPANWYVX2D";
 
         Response response = getGVastResponseFromAuctionWithWaterfallConfig(
@@ -370,14 +360,8 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
     @Test
     public void auctionEndpointReturnsWaterfallResponse() throws XPathExpressionException, IOException, JSONException {
-        String vastXml = getVastXmlWrapper("20220608", true);
-        String vastXmlWillBeCached = vastXml.replace(
-                "</Wrapper>",
-                "<Impression>"
-                        + "<![CDATA[https://it.pbs.com/ssp_bids?bidder=improvedigital&cpm=1.13&pid=20220608]]>"
-                        + "</Impression>"
-                        + "</Wrapper>"
-        );
+        String vastXml = getVastXmlInline("20220608", true);
+        String vastXmlWillBeCached = getVastXmlToCache(vastXml, "improvedigital", "1.13", "20220608");
         String uniqueId = "KCZEL1JSW8BT296EE1FYXTCKWNGWLVBJ";
 
         Response response = getWaterfallResponseFromAuction(
@@ -403,11 +387,61 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
+    public void auctionEndpointReturnsWaterfallResponseWithMultipleBidder()
+            throws XPathExpressionException, IOException, JSONException {
+        String improveVastXml1 = getVastXmlInline("improve_ad_1", true);
+        String improveVastXml2 = getVastXmlInline("improve_ad_2", true);
+
+        String genericVastXml1 = getVastXmlInline("generic_ad_1", false);
+        String genericVastXml2 = getVastXmlInline("generic_ad_2", false);
+
+        // Prebid core will select 1 bid, having the highest price, from each bidder.
+        // Hence, we will cache improvedigital's 1st bid and generic's 2nd bid.
+        String improveVastXmlToCache = getVastXmlToCache(improveVastXml1, "improvedigital", "1.17", "20220615");
+        String genericVastXmlToCache = getVastXmlToCache(genericVastXml2, "generic", "1.05", "20220615");
+        String improveCacheId = "IHBWUJGAWHNKZMDAJYAKSVTGYSNV839Q";
+        String genericCacheId = "AL3HQONPPWDWI57ZLRKBTMDJYFLRPSM8";
+
+        Response response = getWaterfallResponseFromAuctionOfMultipleBidder(
+                improveVastXml1, improveVastXml2, improveCacheId, improveVastXmlToCache,
+                genericVastXml1, genericVastXml2, genericCacheId, genericVastXmlToCache
+        );
+
+        JSONObject responseJson = new JSONObject(response.asString());
+        assertBidCountSingle(responseJson);
+        assertBidIdExists(responseJson, 0, 0);
+        assertBidImpId(responseJson, 0, 0, "imp_id_it_waterfall_multiple_bidder");
+        assertBidPrice(responseJson, 0, 0, 0);
+        assertSeat(responseJson, 0, "improvedigital");
+        assertCurrency(responseJson, "USD");
+
+        String adm = getAdm(responseJson, 0, 0);
+
+        // 1st tag.
+        String vastAdTagUri1 = getVastTagUri(adm, "0");
+        assertThat(vastAdTagUri1.trim()).isEqualTo(IT_TEST_CACHE_URL + "?uuid=" + improveCacheId);
+        assertSSPSyncPixels(adm, "0");
+        assertNoCreative(adm, "0");
+        assertExtensions(adm, "0", 0);
+
+        // 2nd tag.
+        String vastAdTagUri2 = getVastTagUri(adm, "1");
+        assertThat(vastAdTagUri2.trim()).isEqualTo(IT_TEST_CACHE_URL + "?uuid=" + genericCacheId);
+        assertSSPSyncPixels(adm, "1");
+        assertNoCreative(adm, "1");
+        assertExtensions(adm, "1", 1);
+
+        // 1st tag should be improvedigital's because of hb_deal_improvedigital.
+        // Note: Because of WireMock's scenario implementation, we must call /cache in this order.
+        assertCachedContent(vastAdTagUri1.trim(), improveVastXmlToCache);
+        assertCachedContent(vastAdTagUri2.trim(), genericVastXmlToCache);
+    }
+
+    @Test
     public void moreTests() {
-        // Multiple bidder
+        // gam + deal: In that case, auto-add: gam_no_hb
         // Using /prebid/bidder/improvedigital/keyValues.
         // On test=1, we get debug lines.
-        // Using "hb_deal_improvedigit" and /prebid/cache/vastXml/url
         // Resolving of "output".
         // Resolving of "iu".
         // Use gdpr_consent=BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA
@@ -415,9 +449,12 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         // For last ad, <Wrapper fallbackOnNoAd="true">
         // iab_cat
         // pbct
+        // Bidder sends Wrapper.
+        // Bid discarded when vastxml is not cached.
     }
 
     private String getVastTagUri(String adm, String adId) throws XPathExpressionException {
+        // Looking only for Wrapper (not InLine) because vast tag uri will only appear in Wrapper.
         return XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='" + adId + "']/Wrapper/VASTAdTagURI")
                 .evaluate(new InputSource(new StringReader(adm)));
@@ -475,7 +512,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
     private void assertNoSSPSyncPixels(String vastXml, String adId) throws XPathExpressionException {
         NodeList syncPixels = (NodeList) XPathFactory.newInstance().newXPath()
-                .compile("/VAST/Ad[@id='" + adId + "']/Wrapper/Impression")
+                .compile("/VAST/Ad[@id='" + adId + "']//Impression")
                 .evaluate(new InputSource(new StringReader(vastXml)), XPathConstants.NODESET);
         assertThat(syncPixels.getLength()).isEqualTo(0);
     }
@@ -483,6 +520,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     private void assertSSPSyncPixels(String vastXml, String adId) throws XPathExpressionException {
         List<String> syncPixels = new ArrayList<>();
         for (int i = 1; i <= 4; i++) {
+            // Looking only for Wrapper (not InLine) because sync pixel will only be added in Wrapper.
             syncPixels.add(XPathFactory.newInstance().newXPath()
                     .compile("/VAST/Ad[@id='" + adId + "']/Wrapper/Impression[" + i + "]")
                     .evaluate(new InputSource(new StringReader(vastXml))));
@@ -538,6 +576,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     private void assertExtensions(String vastXml, String adId, int fallbackIndex) throws XPathExpressionException {
+        // Looking only for Wrapper (not InLine) because extension will only be added in Wrapper.
         NodeList extensions = (NodeList) XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='" + adId + "']/Wrapper/Extensions/Extension")
                 .evaluate(new InputSource(new StringReader(vastXml)), XPathConstants.NODESET);
@@ -570,7 +609,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         return spec.get(GVastHandler.END_POINT);
     }
 
-    private Response getVastResponseFromAuction(String improveMockAdm) throws IOException {
+    private Response getVastResponseFromAuction(String improveAdm) throws IOException {
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
                         .withRequestBody(equalToJson(jsonFromFileWithMacro(
@@ -579,7 +618,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         )))
                         .willReturn(aResponse().withBody(jsonFromFileWithMacro(
                                 "/com/improvedigital/prebid/server/it/test-vast-improvedigital-bid-response.json",
-                                Map.of("IT_TEST_MACRO_ADM", improveMockAdm)
+                                Map.of("IT_TEST_MACRO_ADM", improveAdm)
                         )))
         );
 
@@ -592,7 +631,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     private Response getGVastResponseFromAuction(
-            String improveMockAdm,
+            String improveAdm,
             String cacheId,
             String vastXmlWillBeCached) throws IOException {
         WIRE_MOCK_RULE.stubFor(
@@ -603,7 +642,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         )))
                         .willReturn(aResponse().withBody(jsonFromFileWithMacro(
                                 "/com/improvedigital/prebid/server/it/test-gvast-improvedigital-bid-response.json",
-                                Map.of("IT_TEST_MACRO_ADM", improveMockAdm)
+                                Map.of("IT_TEST_MACRO_ADM", improveAdm)
                         )))
         );
 
@@ -635,7 +674,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
     private Response getGVastResponseFromAuctionWithWaterfallConfig(
             List<String> defaultWaterfalls,
-            String improveMockAdm,
+            String improveAdm,
             String cacheId,
             String vastXmlWillBeCached) throws IOException {
         WIRE_MOCK_RULE.stubFor(
@@ -646,7 +685,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         )))
                         .willReturn(aResponse().withBody(jsonFromFileWithMacro(
                                 "/com/improvedigital/prebid/server/it/test-gvast-improvedigital-bid-response.json",
-                                Map.of("IT_TEST_MACRO_ADM", improveMockAdm)
+                                Map.of("IT_TEST_MACRO_ADM", improveAdm)
                         )))
         );
 
@@ -677,7 +716,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     private Response getWaterfallResponseFromAuction(
-            String improveMockAdm,
+            String improveAdm,
             String cacheId,
             String vastXmlWillBeCached) throws IOException {
         WIRE_MOCK_RULE.stubFor(
@@ -688,7 +727,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         )))
                         .willReturn(aResponse().withBody(jsonFromFileWithMacro(
                                 "/com/improvedigital/prebid/server/it/test-waterfall-improvedigital-bid-response.json",
-                                Map.of("IT_TEST_MACRO_ADM", improveMockAdm)
+                                Map.of("IT_TEST_MACRO_ADM", improveAdm)
                         )))
         );
 
@@ -720,6 +759,97 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .post(Endpoint.openrtb2_auction.value());
     }
 
+    private Response getWaterfallResponseFromAuctionOfMultipleBidder(
+            String improveAdm1,
+            String improveAdm2,
+            String improveCacheId,
+            String improveVastXmlToCache,
+            String genericAdm1,
+            String genericAdm2,
+            String genericCacheId,
+            String genericVastXmlToCache) throws IOException {
+        WIRE_MOCK_RULE.stubFor(
+                post(urlPathEqualTo("/improvedigital-exchange"))
+                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/"
+                                        + "test-waterfall-multiple-bidder-improvedigital-bid-request.json",
+                                null
+                        )))
+                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/"
+                                        + "test-waterfall-multiple-bidder-improvedigital-bid-response.json",
+                                Map.of("IT_TEST_MACRO_ADM_1", improveAdm1, "IT_TEST_MACRO_ADM_2", improveAdm2)
+                        )))
+        );
+
+        WIRE_MOCK_RULE.stubFor(
+                post(urlPathEqualTo("/generic-exchange"))
+                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/"
+                                        + "test-waterfall-multiple-bidder-generic-bid-request.json",
+                                null
+                        )))
+                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/"
+                                        + "test-waterfall-multiple-bidder-generic-bid-response.json",
+                                Map.of("IT_TEST_MACRO_ADM_1", genericAdm1, "IT_TEST_MACRO_ADM_2", genericAdm2)
+                        )))
+        );
+
+        WIRE_MOCK_RULE.stubFor(
+                post(urlPathEqualTo("/cache"))
+                        .withRequestBody(new BidCacheRequestPattern(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/"
+                                        + "test-waterfall-multiple-bidder-cache-request.json",
+                                Map.of(
+                                        "IT_TEST_CACHE_VALUE_1", improveVastXmlToCache,
+                                        "IT_TEST_CACHE_VALUE_2", genericVastXmlToCache
+                                )
+                        )))
+                        .willReturn(aResponse()
+                                .withTransformers("cache-response-transformer")
+                                .withTransformerParameter("matcherName", createResourceFile(
+                                        "com/improvedigital/prebid/server/it/"
+                                                + "test-waterfall-multiple-bidder-cache-response.json",
+                                        "{"
+                                                + "\"" + improveVastXmlToCache + "\":\"" + improveCacheId + "\","
+                                                + "\"" + genericVastXmlToCache + "\":\"" + genericCacheId + "\""
+                                                + "}"
+                                ))
+                        )
+        );
+
+        // This mocked API should be called in the following order.
+        String cacheStubScenario = "caching::get";
+        String cacheStubNext = "next cache";
+        WIRE_MOCK_RULE.stubFor(
+                get(urlPathEqualTo("/cache"))
+                        .inScenario(cacheStubScenario)
+                        .whenScenarioStateIs(Scenario.STARTED)
+                        .withQueryParam("uuid", equalToIgnoreCase(improveCacheId))
+                        .willReturn(aResponse()
+                                .withBody(improveVastXmlToCache))
+                        .willSetStateTo(cacheStubNext)
+        );
+        WIRE_MOCK_RULE.stubFor(
+                get(urlPathEqualTo("/cache"))
+                        .inScenario(cacheStubScenario)
+                        .whenScenarioStateIs(cacheStubNext)
+                        .withQueryParam("uuid", equalToIgnoreCase(genericCacheId))
+                        .willReturn(aResponse()
+                                .withBody(genericVastXmlToCache))
+                        .willSetStateTo(Scenario.STARTED)
+        );
+
+        return specWithPBSHeader(18080)
+                .body(jsonFromFileWithMacro(
+                        "/com/improvedigital/prebid/server/it/"
+                                + "test-waterfall-multiple-bidder-auction-request.json",
+                        null
+                ))
+                .post(Endpoint.openrtb2_auction.value());
+    }
+
     private void assertGamCachedContent(String uniqueId, String expectedCachedContent) throws IOException {
         assertCachedContent(IT_TEST_CACHE_URL + "?uuid=" + uniqueId, expectedCachedContent);
     }
@@ -730,6 +860,16 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         new HttpGet(cacheUrl)
                 ).getEntity().getContent(), "UTF-8"
         )).isEqualTo(expectedCachedContent);
+    }
+
+    private String getVastXmlToCache(String vastXml, String bidder, String cpm, String placementId) {
+        return vastXml.replace(
+                "</InLine>",
+                "<Impression>"
+                        + "<![CDATA[https://it.pbs.com/ssp_bids?bidder=" + bidder + "&cpm=" + cpm + "&pid=" + placementId + "]]>"
+                        + "</Impression>"
+                        + "</InLine>"
+        );
     }
 
     private Map<String, List<String>> splitQuery(String queryParam) {

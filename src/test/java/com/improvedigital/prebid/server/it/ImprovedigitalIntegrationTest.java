@@ -13,6 +13,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.test.context.TestPropertySource;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -64,6 +68,16 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 .setConfig(RestAssuredConfig.config()
                         .objectMapperConfig(new ObjectMapperConfig(new Jackson2Mapper((aClass, s) -> mapper))))
                 .build();
+    }
+
+    protected String createResourceFile(String resourceFile, String fileContent) throws IOException {
+        Path cacheResponseFile = Paths.get(this.getClass().getResource("/").getPath() + resourceFile);
+        if (!Files.exists(cacheResponseFile)) {
+            Files.createFile(cacheResponseFile);
+        }
+        Files.writeString(cacheResponseFile, fileContent, StandardOpenOption.WRITE);
+
+        return "/" + resourceFile;
     }
 
     protected static String getVastXmlInline(String adId, boolean hasImpPixel) {

@@ -214,7 +214,7 @@ public class GVastBidCreator {
             if (prioritizeImprovedigitalDeals && vastUrls.size() > 0) {
                 for (Iterator<String> it = targetingKvs.fieldNames(); it.hasNext(); ) {
                     String key = it.next();
-                    if (key.equals("hb_deal_improvedigit")) {
+                    if (key.equals("hb_deal_improvedigital")) {
                         isImproveDeal = true;
                         break;
                     }
@@ -254,7 +254,7 @@ public class GVastBidCreator {
                 String key = it.next();
                 bidderKeyValues.append(key).append("=").append(targetingKvs.get(key).asText()).append("&");
 
-                if (key.equals("hb_deal_improvedigit")) {
+                if (key.equals("hb_deal_improvedigital")) {
                     isDeal = true;
                     continue;
                 }
@@ -435,7 +435,8 @@ public class GVastBidCreator {
         String expanded = "";
         try {
             expanded = macroProcessor.process(tag, macroValues, true);
-        } catch (Exception ignored) { }
+        } catch (Exception ignored) {
+        }
         return expanded;
     }
 
@@ -465,7 +466,7 @@ public class GVastBidCreator {
                     "https://image8.pubmatic.com/AdServer/ImgSync?p=159706&gdpr=" + gdpr + "&gdpr_consent=" + gdprConsent
                             + "&us_privacy=&pu="
                             + HttpUtil.encodeUrl(
-                                    getRedirect(externalUrl, "pubmatic", gdpr, gdprConsent, "#PMUID")
+                            getRedirect(externalUrl, "pubmatic", gdpr, gdprConsent, "#PMUID")
                     ),
                     "https://ssbsync-global.smartadserver.com/api/sync?callerId=5&gdpr=" + gdpr + "&gdpr_consent=" + gdprConsent
                             + "&us_privacy=&redirectUri="
@@ -500,7 +501,7 @@ public class GVastBidCreator {
     private String buildVastXmlResponseWithGam(String hbAuctionDebugInfo) {
         final String gamPrebidTargeting = formatPrebidGamKeyValueString();
         final boolean isImprovedigitalDeal = prioritizeImprovedigitalDeals
-                && gamPrebidTargeting.contains("hb_deal_improvedigit");
+                && gamPrebidTargeting.contains("hb_deal_improvedigital");
         final String custParams = this.custParams.toString();
         final String categoryTargeting;
 
@@ -520,7 +521,7 @@ public class GVastBidCreator {
                 this.waterfall.isEmpty()
                         ? List.of("gam")
                         : this.waterfall
-                );
+        );
 
         if (isImprovedigitalDeal) {
             waterfall.add(0, "gam_improve_deal");

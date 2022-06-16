@@ -1,0 +1,14 @@
+{
+  "puts": [
+    {
+      "type": "xml",
+      "value": "IT_TEST_CACHE_VALUE_1",
+      "aid": "request_id_it_waterfall_multiple_bidder"
+    },
+    {
+      "type": "xml",
+      "value": "IT_TEST_CACHE_VALUE_2",
+      "aid": "request_id_it_waterfall_multiple_bidder"
+    }
+  ]
+}

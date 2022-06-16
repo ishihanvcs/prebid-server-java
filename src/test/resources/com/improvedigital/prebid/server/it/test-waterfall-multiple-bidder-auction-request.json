@@ -1,0 +1,44 @@
+{
+  "id": "request_id_it_waterfall_multiple_bidder",
+  "source": {
+    "tid": "source_tid_it_waterfall_multiple_bidder"
+  },
+  "imp": [
+    {
+      "id": "imp_id_it_waterfall_multiple_bidder",
+      "ext": {
+        "prebid": {
+          "improvedigitalpbs": {
+            "responseType": "waterfall"
+          }
+        },
+        "generic": {
+          "exampleProperty": "examplePropertyValue"
+        },
+        "improvedigital": {
+          "placementId": 20220615
+        }
+      },
+      "video": {
+        "mimes": [
+          "video/mp4"
+        ],
+        "minduration": 1,
+        "maxduration": 60,
+        "linearity": 1,
+        "placement": 5,
+        "protocols": [
+          2
+        ],
+        "w": 640,
+        "h": 480
+      }
+    }
+  ],
+  "tmax": 5000,
+  "regs": {
+    "ext": {
+      "gdpr": 0
+    }
+  }
+}

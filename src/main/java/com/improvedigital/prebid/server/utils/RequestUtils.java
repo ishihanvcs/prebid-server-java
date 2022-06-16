@@ -133,14 +133,14 @@ public class RequestUtils {
         return impNullable.get(Imp::getVideo).isNotNull()
                 && impNullable
                     .get(jsonUtils::getImprovedigitalPbsImpExt)
-                    .get(pbsImpExt -> pbsImpExt.getResponseTypeOrDefault() != VastResponseType.vast)
+                    .get(pbsImpExt -> pbsImpExt.responseTypeOrDefault() != VastResponseType.vast)
                     .value(false);
     }
 
     public boolean isNonVastVideo(Imp imp, ImprovedigitalPbsImpExt impExt) {
         return Nullable.of(imp).get(Imp::getVideo).isNotNull()
                 && Nullable.of(impExt)
-                    .get(pbsImpExt -> pbsImpExt.getResponseTypeOrDefault() != VastResponseType.vast)
+                    .get(pbsImpExt -> pbsImpExt.responseTypeOrDefault() != VastResponseType.vast)
                     .value(false);
     }
 
@@ -185,7 +185,7 @@ public class RequestUtils {
 
     private boolean isOfResponseType(ImprovedigitalPbsImpExt impExt, VastResponseType responseType) {
         return Nullable.of(impExt)
-                .get(pbsImpExt -> pbsImpExt.getResponseTypeOrDefault() == responseType)
+                .get(pbsImpExt -> pbsImpExt.responseTypeOrDefault() == responseType)
                 .value(false);
     }
 }

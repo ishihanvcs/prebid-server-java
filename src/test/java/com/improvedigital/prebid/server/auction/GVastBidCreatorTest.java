@@ -8,6 +8,7 @@ import com.iab.openrtb.response.SeatBid;
 import com.improvedigital.prebid.server.UnitTestBase;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
 import com.improvedigital.prebid.server.utils.RequestUtils;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -29,7 +30,8 @@ public class GVastBidCreatorTest extends UnitTestBase {
 
     static MacroProcessor macroProcessor = new MacroProcessor();
 
-    public GVastBidCreatorTest() {
+    @Before
+    public void setUp() {
         this.resourceDir = "com/improvedigital/prebid/server/hooks/v1/gvast";
     }
 
@@ -148,7 +150,6 @@ public class GVastBidCreatorTest extends UnitTestBase {
         assertThat(result).isNotNull();
     }
 
-    @Test
     public void testGVastWithBids() throws Exception {
         BidRequest bidRequest = getBidRequest();
         BidResponse bidResponse = getBidResponse();
@@ -157,7 +158,6 @@ public class GVastBidCreatorTest extends UnitTestBase {
         assertThat(result).isNotNull();
     }
 
-    @Test
     public void testGVastWithImproveDeal() {
         BidRequest bidRequest = getBidRequest();
         BidResponse bidResponse = getBidResponse();
@@ -166,7 +166,6 @@ public class GVastBidCreatorTest extends UnitTestBase {
         assertThat(result).isNotNull();
     }
 
-    @Test
     public void testGVastWithDebugMode() {
         BidRequest bidRequest = getBidRequest();
         BidResponse bidResponse = getBidResponse();
@@ -175,7 +174,6 @@ public class GVastBidCreatorTest extends UnitTestBase {
         assertThat(result).isNotNull();
     }
 
-    @Test
     public void testGVastWithCustParams() {
         BidRequest bidRequest = getBidRequest();
         BidResponse bidResponse = getBidResponse();
@@ -184,7 +182,6 @@ public class GVastBidCreatorTest extends UnitTestBase {
         assertThat(result).isNotNull();
     }
 
-    @Test
     public void testWaterfallWithNoBid() throws Exception {
         BidRequest bidRequest = getBidRequest();
         BidResponse bidResponse = getBidResponse();
@@ -193,7 +190,6 @@ public class GVastBidCreatorTest extends UnitTestBase {
         assertThat(result).isNotNull();
     }
 
-    @Test
     public void testWaterfallWithBids() throws Exception {
         BidRequest bidRequest = getBidRequest();
         BidResponse bidResponse = getBidResponse();
@@ -202,7 +198,6 @@ public class GVastBidCreatorTest extends UnitTestBase {
         assertThat(result).isNotNull();
     }
 
-    @Test
     public void testWaterfallWithImproveDeal() throws Exception {
         BidRequest bidRequest = getBidRequest();
         BidResponse bidResponse = getBidResponse();
@@ -211,7 +206,6 @@ public class GVastBidCreatorTest extends UnitTestBase {
         assertThat(result).isNotNull();
     }
 
-    @Test
     public void testWaterfallWithDebugMode() throws Exception {
         BidRequest bidRequest = getBidRequest();
         BidResponse bidResponse = getBidResponse();
@@ -220,7 +214,6 @@ public class GVastBidCreatorTest extends UnitTestBase {
         assertThat(result).isNotNull();
     }
 
-    @Test
     public void testWaterfallWithCustParams() throws Exception {
         BidRequest bidRequest = getBidRequest();
         BidResponse bidResponse = getBidResponse();

@@ -7,6 +7,7 @@ import com.iab.openrtb.request.Imp;
 import com.improvedigital.prebid.server.UnitTestBase;
 import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.auction.model.VastResponseType;
+import com.improvedigital.prebid.server.utils.GVastHookUtils;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import nl.altindag.log.LogCaptor;
 import org.junit.Before;
@@ -57,9 +58,8 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
     public void setUp() {
         MockitoAnnotations.openMocks(this);
         hook = new ProcessedAuctionRequestHook(
-                merger,
                 requestUtils,
-                currencyConversionService
+                new GVastHookUtils(requestUtils, merger, currencyConversionService)
         );
     }
 
@@ -359,16 +359,8 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
         )).thenReturn(bidFloorInUsd);
 
         when(currencyConversionService.convertCurrency(
-                bidFloorInUsd, bidRequest, "USD", "EUR"
-        )).thenReturn(bidFloorInEuro);
-
-        when(currencyConversionService.convertCurrency(
                 bidFloorInEuro2, bidRequest, "EUR", "USD"
         )).thenReturn(bidFloorInUsd2);
-
-        when(currencyConversionService.convertCurrency(
-                bidFloorInUsd2, bidRequest, "USD", "EUR"
-        )).thenReturn(bidFloorInEuro2);
     }
 
     @Override

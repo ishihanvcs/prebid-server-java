@@ -47,7 +47,7 @@ public class ImprovedigitalPbsImpExt {
         );
     }
 
-    public VastResponseType getResponseTypeOrDefault() {
+    public VastResponseType responseTypeOrDefault() {
         return responseType == null ? VastResponseType.vast : responseType;
     }
 

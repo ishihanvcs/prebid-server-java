@@ -185,8 +185,8 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
             }
             final BigDecimal bidFloorInUsd;
             if (StringUtils.compareIgnoreCase("USD", effectiveFloor.getBidFloorCur()) == 0) {
-                bidFloorInUsd = effectiveFloor.getBidFloor().doubleValue() <= 0.0
-                        ? BigDecimal.valueOf(0.0)
+                bidFloorInUsd = effectiveFloor.getBidFloor().doubleValue() < 0.0
+                        ? BigDecimal.ZERO
                         : effectiveFloor.getBidFloor();
             } else {
                 bidFloorInUsd = currencyConversionService.convertCurrency(
@@ -220,6 +220,11 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         if (imp.getBidfloorcur() != null) {
             return imp.getBidfloorcur();
         }
+
+        if (imp.getBidfloor() != null) {
+            return "USD"; // default in ortb spec
+        }
+
         return ObjectUtils.defaultIfNull(
                 ObjectUtil.getIfNotNull(
                         floor, Floor::getBidFloorCur

@@ -1,14 +1,17 @@
 package com.improvedigital.prebid.server.hooks.v1.gvast;
 
 import ch.qos.logback.classic.Level;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
-import com.improvedigital.prebid.server.auction.model.VastResponseType;
 import com.improvedigital.prebid.server.UnitTestBase;
+import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
+import com.improvedigital.prebid.server.auction.model.VastResponseType;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import nl.altindag.log.LogCaptor;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.platform.commons.util.StringUtils;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.prebid.server.currency.CurrencyConversionService;
@@ -28,8 +31,8 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 public class ProcessedAuctionRequestHookTest extends UnitTestBase {
 
@@ -39,10 +42,15 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
     ProcessedAuctionRequestHook hook;
 
     private final BigDecimal bidFloorInEuro = BigDecimal.valueOf(1.5);
+    private final BigDecimal bidFloorInEuro2 = BigDecimal.valueOf(3.5);
     private final BigDecimal usdToEuroConversionRate = BigDecimal.valueOf(1.07);
     private final BigDecimal bidFloorInUsd = bidFloorInEuro
             .multiply(usdToEuroConversionRate)
             .setScale(3, RoundingMode.HALF_EVEN);
+    private final BigDecimal bidFloorInUsd2 = bidFloorInEuro2
+            .multiply(usdToEuroConversionRate)
+            .setScale(3, RoundingMode.HALF_EVEN);
+
     private final Integer improvePlacementId = 12345;
 
     @Before
@@ -216,6 +224,129 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
     }
 
     @Test
+    public void shouldUpdateImpsWithBidFloorInUsdIfNeeded() {
+        // imp does not have bidfloor defined, neither in request, nor in config
+        BidRequest bidRequest = getBidRequestForBidFloorTest(null, null, null, null);
+
+        executeHookAndValidateBidRequest(bidRequest, timeout,
+                (originalBidRequest, updatedBidRequest) -> bidFloorValidator(updatedBidRequest, BigDecimal.ZERO)
+        );
+
+        // bidfloor defined in imp, but not in config
+        bidRequest = getBidRequestForBidFloorTest(bidFloorInUsd, null, null, null);
+
+        executeHookAndValidateBidRequest(bidRequest, timeout,
+                (originalBidRequest, updatedBidRequest) -> bidFloorValidator(updatedBidRequest, bidFloorInUsd)
+        );
+
+        // bidfloor & bidfloorcur defined in imp, but not in config (EUR)
+        bidRequest = getBidRequestForBidFloorTest(bidFloorInEuro, "EUR", null, null);
+
+        executeHookAndValidateBidRequest(bidRequest, timeout,
+                (originalBidRequest, updatedBidRequest) -> bidFloorValidator(updatedBidRequest, bidFloorInUsd)
+        );
+
+        // bidfloor not defined in imp, but defined in config (USD)
+        bidRequest = getBidRequestForBidFloorTest(null, null, bidFloorInUsd, null);
+
+        executeHookAndValidateBidRequest(bidRequest, timeout,
+                (originalBidRequest, updatedBidRequest) -> bidFloorValidator(updatedBidRequest, bidFloorInUsd)
+        );
+
+        // bidfloor not defined in imp, but defined in config (EUR)
+        bidRequest = getBidRequestForBidFloorTest(null, null, bidFloorInEuro, "EUR");
+
+        executeHookAndValidateBidRequest(bidRequest, timeout,
+                (originalBidRequest, updatedBidRequest) -> bidFloorValidator(updatedBidRequest, bidFloorInUsd)
+        );
+
+        // bidfloor defined in both imp and config (no currency set anywhere)
+        bidRequest = getBidRequestForBidFloorTest(bidFloorInUsd, null, bidFloorInEuro, null);
+
+        executeHookAndValidateBidRequest(
+                bidRequest,
+                timeout,
+                (originalBidRequest, updatedBidRequest) -> bidFloorValidator(updatedBidRequest, bidFloorInUsd)
+        );
+
+        // bidfloor defined in both imp and config (currency set in imp: USD)
+        bidRequest = getBidRequestForBidFloorTest(bidFloorInUsd, "USD", bidFloorInEuro2, null);
+
+        executeHookAndValidateBidRequest(
+                bidRequest,
+                timeout,
+                (originalBidRequest, updatedBidRequest) -> bidFloorValidator(updatedBidRequest, bidFloorInUsd)
+        );
+
+        // bidfloor defined in both imp and config (currency set in imp: EUR)
+        bidRequest = getBidRequestForBidFloorTest(bidFloorInEuro, "EUR", bidFloorInEuro2, null);
+
+        executeHookAndValidateBidRequest(
+                bidRequest,
+                timeout,
+                (originalBidRequest, updatedBidRequest) -> bidFloorValidator(updatedBidRequest, bidFloorInUsd)
+        );
+
+        // bidfloor defined in both imp and config (currency set in config should be ignored)
+        bidRequest = getBidRequestForBidFloorTest(bidFloorInUsd, null, bidFloorInEuro2, "EUR");
+
+        executeHookAndValidateBidRequest(
+                bidRequest,
+                timeout,
+                (originalBidRequest, updatedBidRequest) -> bidFloorValidator(updatedBidRequest, bidFloorInUsd)
+        );
+    }
+
+    private void bidFloorValidator(BidRequest updatedBidRequest, BigDecimal floorInUsd) {
+        Imp imp = updatedBidRequest.getImp().get(0);
+        assertThat(imp.getBidfloor())
+                .isNotNull();
+        assertThat(imp.getBidfloor())
+                .isEqualTo(floorInUsd);
+        assertThat(imp.getBidfloorcur())
+                .isNotNull();
+        assertThat(imp.getBidfloorcur())
+                .isEqualTo("USD");
+    }
+
+    private BidRequest getBidRequestForBidFloorTest(
+            BigDecimal impBidFloor, String impBidFloorCur, BigDecimal configBidFloor, String configBidFloorCur
+    ) {
+        return getDefaultBidRequest(bidRequest1 -> {
+            Imp.ImpBuilder impBuilder = getStoredImp("video-basic")
+                    .toBuilder()
+                    .id("1");
+            if (impBidFloor != null) {
+                impBuilder.bidfloor(impBidFloor);
+            }
+
+            if (StringUtils.isNotBlank(impBidFloorCur)) {
+                impBuilder.bidfloorcur(impBidFloorCur);
+            }
+
+            Imp imp = impBuilder.build();
+
+            if (configBidFloor != null || StringUtils.isNotBlank(configBidFloorCur)) {
+                imp = setImpConfigProperties(imp, configNode -> {
+                    ObjectNode floor = mapper.createObjectNode();
+                    if (configBidFloor != null) {
+                        floor.put("bidFloor", configBidFloor);
+                    }
+
+                    if (StringUtils.isNotBlank(configBidFloorCur)) {
+                        floor.put("bidFloorCur", configBidFloorCur);
+                    }
+                    ObjectNode floors = configNode.putObject("floors");
+                    floors.set(ImprovedigitalPbsImpExt.DEFAULT_CONFIG_KEY, floor);
+                });
+            }
+            return bidRequest1.toBuilder().imp(
+                    new ArrayList<>(List.of(imp))
+            ).build();
+        });
+    }
+
+    @Test
     public void testCode() throws Exception {
         String result = hook.code();
         assertThat(result)
@@ -230,6 +361,14 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
         when(currencyConversionService.convertCurrency(
                 bidFloorInUsd, bidRequest, "USD", "EUR"
         )).thenReturn(bidFloorInEuro);
+
+        when(currencyConversionService.convertCurrency(
+                bidFloorInEuro2, bidRequest, "EUR", "USD"
+        )).thenReturn(bidFloorInUsd2);
+
+        when(currencyConversionService.convertCurrency(
+                bidFloorInUsd2, bidRequest, "USD", "EUR"
+        )).thenReturn(bidFloorInEuro2);
     }
 
     @Override

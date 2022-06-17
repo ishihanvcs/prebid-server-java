@@ -1,0 +1,28 @@
+{
+  "id": "request_id_it_gvast_multiple_bidder",
+  "seatbid": [
+    {
+      "bid": [
+        {
+          "id": "bid_id_it_gvast_multiple_bidder_generic_1",
+          "impid": "imp_id_it_gvast_multiple_bidder",
+          "price": 1.95,
+          "crid": "crid101",
+          "adm": "IT_TEST_MACRO_ADM_1",
+          "adid": "adid101",
+          "cid": "cid101"
+        },
+        {
+          "id": "bid_id_it_gvast_multiple_bidder_generic_2",
+          "impid": "imp_id_it_gvast_multiple_bidder",
+          "price": 1.85,
+          "crid": "crid102",
+          "adm": "IT_TEST_MACRO_ADM_2",
+          "adid": "adid102",
+          "cid": "cid102"
+        }
+      ]
+    }
+  ],
+  "cur": "USD"
+}

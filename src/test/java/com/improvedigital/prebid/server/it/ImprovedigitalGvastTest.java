@@ -386,8 +386,8 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertQuerySingleValue(customUrlParams.get("gdpr"), "0");
         assertQuerySingleValue(customUrlParams.get("gdpr_consent"), "");
         assertQuerySingleValue(customUrlParams.get("referrer"), "http://pbs.improvedigital.com");
-        /* Checking timestamp is tricky but we can check leading digits which will change after 100 years :) */
-        assertThat(customUrlParams.get("t").get(0).startsWith("165536")).isTrue();
+        assertThat(Long.parseLong(customUrlParams.get("t").get(0)) > (System.currentTimeMillis() - 5 * 60 * 1000L));
+        assertThat(Long.parseLong(customUrlParams.get("t").get(0)) < System.currentTimeMillis());
     }
 
     @Test

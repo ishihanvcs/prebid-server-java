@@ -1026,13 +1026,11 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/cache"))
-                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/test-gvast-improvedigital-cache-request.json",
-                                Map.of("IT_TEST_CACHE_VALUE", vastXmlWillBeCached)
+                        .withRequestBody(equalToJson(createCacheRequest(
+                                "request_id_it_gvast_20220608", vastXmlWillBeCached
                         )))
-                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/test-gvast-improvedigital-cache-response.json",
-                                Map.of("IT_TEST_CACHE_UUID", cacheId)
+                        .willReturn(aResponse().withBody(createCacheResponse(
+                                cacheId
                         )))
         );
         WIRE_MOCK_RULE.stubFor(
@@ -1104,13 +1102,10 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/cache"))
-                        .withRequestBody(new BidCacheRequestPattern(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/"
-                                        + "test-gvast-multiple-bidder-cache-request.json",
-                                Map.of(
-                                        "IT_TEST_CACHE_VALUE_1", improveVastXmlToCache,
-                                        "IT_TEST_CACHE_VALUE_2", genericVastXmlToCache
-                                )
+                        .withRequestBody(new BidCacheRequestPattern(createCacheRequest(
+                                "request_id_it_gvast_multiple_bidder",
+                                improveVastXmlToCache,
+                                genericVastXmlToCache
                         )))
                         .willReturn(aResponse()
                                 .withTransformers("cache-response-transformer")
@@ -1174,15 +1169,11 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/cache"))
-                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/"
-                                        + "test-waterfall-improvedigital-cache-request.json",
-                                Map.of("IT_TEST_CACHE_VALUE", vastXmlWillBeCached)
+                        .withRequestBody(equalToJson(createCacheRequest(
+                                "request_id_it_waterfall_20220608", vastXmlWillBeCached
                         )))
-                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/"
-                                        + "test-waterfall-improvedigital-cache-response.json",
-                                Map.of("IT_TEST_CACHE_UUID", cacheId)
+                        .willReturn(aResponse().withBody(createCacheResponse(
+                                cacheId
                         )))
         );
         WIRE_MOCK_RULE.stubFor(
@@ -1239,13 +1230,10 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/cache"))
-                        .withRequestBody(new BidCacheRequestPattern(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/"
-                                        + "test-waterfall-multiple-bidder-cache-request.json",
-                                Map.of(
-                                        "IT_TEST_CACHE_VALUE_1", improveVastXmlToCache,
-                                        "IT_TEST_CACHE_VALUE_2", genericVastXmlToCache
-                                )
+                        .withRequestBody(new BidCacheRequestPattern(createCacheRequest(
+                                "request_id_it_waterfall_multiple_bidder",
+                                improveVastXmlToCache,
+                                genericVastXmlToCache
                         )))
                         .willReturn(aResponse()
                                 .withTransformers("cache-response-transformer")

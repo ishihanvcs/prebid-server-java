@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -59,6 +60,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     /* This placement's stored imp contains ext.prebid.improvedigitalpbs.waterfall.default=gam */
     private static final String VALID_PLACEMENT_ID = "20220325";
     public static final String IT_TEST_CACHE_URL = "http://localhost:8090/cache";
+    public static final String GAM_NETWORK_CODE = "1015413";
 
     @Test
     public void gvastHasProperQueryParamsInVastTagUri() throws XPathExpressionException, MalformedURLException {
@@ -68,35 +70,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertThat(vastAdTagUri.startsWith("https://pubads.g.doubleclick.net/gampad/ads")).isTrue();
 
         Map<String, List<String>> vastQueryParams = splitQuery(new URL(vastAdTagUri).getQuery());
-
-        assertThat(vastQueryParams.get("gdfp_req").size()).isEqualTo(1);
-        assertThat(vastQueryParams.get("gdfp_req").get(0)).isEqualTo("1");
-
-        assertThat(vastQueryParams.get("env").size()).isEqualTo(1);
-        assertThat(vastQueryParams.get("env").get(0)).isEqualTo("vp");
-
-        assertThat(vastQueryParams.get("unviewed_position_start").size()).isEqualTo(1);
-        assertThat(vastQueryParams.get("unviewed_position_start").get(0)).isEqualTo("1");
-
-        assertThat(vastQueryParams.get("correlator").size()).isEqualTo(1);
-        assertThat(Long.parseLong(vastQueryParams.get("correlator").get(0)))
-                .isGreaterThan(System.currentTimeMillis() - 2000);
-
-        assertThat(vastQueryParams.get("iu").size()).isEqualTo(1);
-        assertThat(vastQueryParams.get("iu").get(0)).isEqualTo("/1015413/pbs/20220325");
-
-        assertThat(vastQueryParams.get("output").size()).isEqualTo(1);
-        assertThat(vastQueryParams.get("output").get(0)).isEqualTo("xml_vast2");
-
-        assertThat(vastQueryParams.get("sz").size()).isEqualTo(1);
-        assertThat(vastQueryParams.get("sz").get(0)).isEqualTo("640x480|640x360");
-
-        assertThat(vastQueryParams.get("description_url").size()).isEqualTo(1);
-        assertThat(vastQueryParams.get("description_url").get(0)).isEqualTo("http://pbs.improvedigital.com");
-
-        assertThat(vastQueryParams.get("url").size()).isEqualTo(1);
-        assertThat(vastQueryParams.get("url").get(0)).isEqualTo("http://pbs.improvedigital.com");
-
+        assertGamGeneralParameters(vastQueryParams, "20220325");
         assertThat(vastQueryParams.get("cust_params").size()).isEqualTo(1);
         assertThat(vastQueryParams.get("cust_params").get(0)).isEqualTo("tnl_asset_id=prebidserver");
     }
@@ -119,33 +93,11 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         Map<String, List<String>> vastQueryParams = splitQuery(new URL(vastAdTagUri).getQuery());
 
-        assertThat(vastQueryParams.get("gdfp_req").size()).isEqualTo(1);
-        assertThat(vastQueryParams.get("gdfp_req").get(0)).isEqualTo("1");
-
-        assertThat(vastQueryParams.get("env").size()).isEqualTo(1);
-        assertThat(vastQueryParams.get("env").get(0)).isEqualTo("vp");
-
-        assertThat(vastQueryParams.get("unviewed_position_start").size()).isEqualTo(1);
-        assertThat(vastQueryParams.get("unviewed_position_start").get(0)).isEqualTo("1");
-
-        assertThat(vastQueryParams.get("correlator").size()).isEqualTo(1);
-        assertThat(Long.parseLong(vastQueryParams.get("correlator").get(0)))
-                .isGreaterThan(System.currentTimeMillis() - 2000);
-
-        assertThat(vastQueryParams.get("iu").size()).isEqualTo(1);
-        assertThat(vastQueryParams.get("iu").get(0)).isEqualTo("/1015413/pbs/20220325");
-
-        assertThat(vastQueryParams.get("output").size()).isEqualTo(1);
-        assertThat(vastQueryParams.get("output").get(0)).isEqualTo("xml_vast2");
-
-        assertThat(vastQueryParams.get("sz").size()).isEqualTo(1);
-        assertThat(vastQueryParams.get("sz").get(0)).isEqualTo("640x480|640x360");
-
-        assertThat(vastQueryParams.get("description_url").size()).isEqualTo(1);
-        assertThat(vastQueryParams.get("description_url").get(0)).isEqualTo("http://pbs.improvedigital.com");
-
-        assertThat(vastQueryParams.get("url").size()).isEqualTo(1);
-        assertThat(vastQueryParams.get("url").get(0)).isEqualTo("com.improvedigital.ittests.adsenseformobileapps.com/");
+        assertGamGeneralParameters(
+                vastQueryParams,
+                "20220325",
+                "com.improvedigital.ittests.adsenseformobileapps.com/"
+        );
 
         assertThat(vastQueryParams.get("cust_params").size()).isEqualTo(1);
         assertThat(vastQueryParams.get("cust_params").get(0)).isEqualTo("tnl_asset_id=prebidserver");
@@ -170,6 +122,24 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         assertThat(vastQueryParams.get("idtype").size()).isEqualTo(1);
         assertThat(vastQueryParams.get("idtype").get(0)).isEqualTo("adid");
+    }
+
+    @Test
+    public void gvastHasProperPbctInVastTagUri()
+            throws XPathExpressionException, MalformedURLException {
+        // Case 1: pbct=2 will be replace by pbct=1
+        Response response = getGvastResponse(spec -> spec
+                .queryParam("cust_params", "pbct=2")
+        );
+        String vastAdTagUri = getVastTagUri(response.asString(), "0");
+        assertQuerySingleValue(getNonEmptyCustomParams(vastAdTagUri).get("pbct"), "1");
+
+        // Case 2: pbct=3 will be as is.
+        Response response2 = getGvastResponse(spec -> spec
+                .queryParam("cust_params", "pbct=3")
+        );
+        String vastAdTagUri2 = getVastTagUri(response2.asString(), "0");
+        assertQuerySingleValue(getNonEmptyCustomParams(vastAdTagUri2).get("pbct"), "3");
     }
 
     @Test
@@ -297,7 +267,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         String vastAdTagUri = getVastTagUri(adm, "0");
 
-        assertGamUrlWithImprovedigitalAsSingleBidder(uniqueId, vastAdTagUri, "1.08");
+        assertGamUrlWithImprovedigitalAsSingleBidder(vastAdTagUri, uniqueId, "20220608", "1.08");
         assertCachedContentFromCacheId(uniqueId, vastXmlWillBeCached);
         assertSSPSyncPixels(adm, "0");
         assertNoCreative(adm, "0");
@@ -333,14 +303,14 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         // 1st tag = gam_first_look
         String vastAdTagUri1 = getVastTagUri(adm, "0");
-        assertGamFirstLookUrl(vastAdTagUri1);
+        assertGamFirstLookUrl(vastAdTagUri1, "20220608");
         assertSSPSyncPixels(adm, "0");
         assertNoCreative(adm, "0");
         assertExtensions(adm, "0", 0);
 
         // 2nd tag = gam
         String vastAdTagUri2 = getVastTagUri(adm, "1");
-        assertGamUrlWithImprovedigitalAsSingleBidder(uniqueId, vastAdTagUri2, "1.08");
+        assertGamUrlWithImprovedigitalAsSingleBidder(vastAdTagUri2, uniqueId, "20220608", "1.08");
         assertCachedContentFromCacheId(uniqueId, vastXmlWillBeCached);
         assertSSPSyncPixels(adm, "1");
         assertNoCreative(adm, "1");
@@ -348,7 +318,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         // 3rd tag = gam_first_look again
         String vastAdTagUri3 = getVastTagUri(adm, "2");
-        assertGamFirstLookUrl(vastAdTagUri3);
+        assertGamFirstLookUrl(vastAdTagUri3, "20220608");
         assertSSPSyncPixels(adm, "2");
         assertNoCreative(adm, "2");
         assertExtensions(adm, "2", 2);
@@ -362,14 +332,14 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         // 5th tag = gam_no_hb
         String vastAdTagUri5 = getVastTagUri(adm, "4");
-        assertGamNoHbUrl(vastAdTagUri5);
+        assertGamNoHbUrl(vastAdTagUri5, "20220608");
         assertSSPSyncPixels(adm, "4");
         assertNoCreative(adm, "4");
         assertExtensions(adm, "4", 4);
 
         // 6th tag = gam_improve_deal
         String vastAdTagUri6 = getVastTagUri(adm, "5");
-        assertGamUrlWithImprovedigitalAsSingleBidder(uniqueId, vastAdTagUri6, "1.08");
+        assertGamUrlWithImprovedigitalAsSingleBidder(vastAdTagUri6, uniqueId, "20220608", "1.08");
         assertSSPSyncPixels(adm, "5");
         assertNoCreative(adm, "5");
         assertExtensions(adm, "5", 5);
@@ -394,7 +364,8 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         Response response = getGVastResponseFromAuctionOfMultipleBidder(
                 Arrays.asList("gam_first_look", "gam"),
                 improveVastXml1, improveVastXml2, improveCacheId, improveVastXmlToCache,
-                genericVastXml1, genericVastXml2, genericCacheId, genericVastXmlToCache
+                genericVastXml1, genericVastXml2, genericCacheId, genericVastXmlToCache,
+                false
         );
         JSONObject responseJson = new JSONObject(response.asString());
         assertBidIdExists(responseJson, 0, 0);
@@ -407,53 +378,82 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         // 1st tag = gam_first_look
         String vastAdTagUri1 = getVastTagUri(adm, "0");
-        assertGamFirstLookUrl(vastAdTagUri1);
+        assertGamFirstLookUrl(vastAdTagUri1, "20220617");
         assertSSPSyncPixels(adm, "0");
         assertNoCreative(adm, "0");
         assertExtensions(adm, "0", 0);
 
         // 2nd tag = gam. Improve lost here.
         String vastAdTagUri2 = getVastTagUri(adm, "1");
+        assertGamUrlWithImprovedigitalLostToGenericBidder(
+                vastAdTagUri2,
+                "20220617",
+                improveCacheId,
+                genericCacheId,
+                "1.75",
+                "1.95"
+        );
         assertSSPSyncPixels(adm, "1");
         assertNoCreative(adm, "1");
         assertExtensions(adm, "1", 1);
 
-        assertThat(vastAdTagUri2.startsWith("https://pubads.g.doubleclick.net/gampad/ads")).isTrue();
-
-        Map<String, List<String>> vastQueryParams = splitQuery(new URL(vastAdTagUri2).getQuery());
-        assertThat(vastQueryParams.get("cust_params")).isNotNull();
-        assertThat(vastQueryParams.get("cust_params").size()).isEqualTo(1);
-
-        Map<String, List<String>> custParams = splitQuery(vastQueryParams.get("cust_params").get(0));
-        assertQuerySingleValue(custParams.get("hb_bidder"), "generic");
-        assertQuerySingleValue(custParams.get("hb_bidder_generic"), "generic");
-        assertQuerySingleValue(custParams.get("hb_bidder_improvedigital"), "improvedigital");
-
-        assertQuerySingleValue(custParams.get("hb_uuid"), genericCacheId);
-        assertQuerySingleValue(custParams.get("hb_uuid_generic"), genericCacheId);
-        assertQuerySingleValue(custParams.get("hb_uuid_improvedigital"), improveCacheId);
-
-        assertQuerySingleValue(custParams.get("hb_format"), "video");
-        assertQuerySingleValue(custParams.get("hb_format_generic"), "video");
-        assertQuerySingleValue(custParams.get("hb_format_improvedigital"), "video");
-
-        assertQuerySingleValue(custParams.get("hb_pb"), "1.95");
-        assertQuerySingleValue(custParams.get("hb_pb_generic"), "1.95");
-        assertQuerySingleValue(custParams.get("hb_pb_improvedigital"), "1.75");
-
-        assertThat(getCustomParamCacheUrl(custParams, null))
-                .isEqualTo(IT_TEST_CACHE_URL + "?uuid=" + genericCacheId);
-        assertThat(getCustomParamCacheUrl(custParams, "generic"))
-                .isEqualTo(IT_TEST_CACHE_URL + "?uuid=" + genericCacheId);
-        assertThat(getCustomParamCacheUrl(custParams, "improvedigital"))
-                .isEqualTo(IT_TEST_CACHE_URL + "?uuid=" + improveCacheId);
-
-        assertThat(custParams.get("fl")).isNull();
-        assertThat(custParams.get("tnl_wog")).isNull();
-
         // Note: Because of WireMock's scenario implementation, we must call /cache in this order.
         assertCachedContentFromCacheId(improveCacheId, improveVastXmlToCache);
         assertCachedContentFromCacheId(genericCacheId, genericVastXmlToCache);
+    }
+
+    @Test
+    public void auctionEndpointReturnsGvastResponseWithMultipleBidderAndDeal()
+            throws XPathExpressionException, IOException, JSONException {
+        String improveVastXml1 = getVastXmlInline("improve_ad_1", true);
+        String improveVastXml2 = getVastXmlInline("improve_ad_2", true);
+
+        String genericVastXml1 = getVastXmlInline("generic_ad_1", false);
+        String genericVastXml2 = getVastXmlInline("generic_ad_2", false);
+
+        // Prebid core will select 1 bid, having the highest price, from each bidder.
+        // Hence, improvedigital's 2nd bid and generic's 1st bid will be picked and cached.
+        String improveVastXmlToCache = getVastXmlToCache(improveVastXml2, "improvedigital", "1.75", "20220617");
+        String genericVastXmlToCache = getVastXmlToCache(genericVastXml1, "generic", "1.95", "20220617");
+        String improveCacheId = "SIKOI8GL6PHU5LEV01ZLBGNZPPDX6ZZF";
+        String genericCacheId = "YXUZCNMFFG0GYSAYSMTLXNI1BMSS3J5Y";
+
+        Response response = getGVastResponseFromAuctionOfMultipleBidder(
+                Arrays.asList("gam_first_look", "gam"),
+                improveVastXml1, improveVastXml2, improveCacheId, improveVastXmlToCache,
+                genericVastXml1, genericVastXml2, genericCacheId, genericVastXmlToCache,
+                true
+        );
+        JSONObject responseJson = new JSONObject(response.asString());
+        assertBidIdExists(responseJson, 0, 0);
+        assertBidImpId(responseJson, 0, 0, "imp_id_it_gvast_multiple_bidder");
+        assertBidPrice(responseJson, 0, 0, 0.0);
+        assertSeat(responseJson, 0, "improvedigital");
+        assertCurrency(responseJson, "USD");
+
+        String adm = getAdm(responseJson, 0, 0);
+
+        // 1st tag = whatever was in the request, gam_improve_deal will be the first.
+        // gam_improve_deal and gam are equal in behavior.
+        String vastAdTagUri1 = getVastTagUri(adm, "0");
+        assertGamUrlWithImprovedigitalAsSingleBidder(vastAdTagUri1, improveCacheId, "20220617", "1.75", true);
+        assertSSPSyncPixels(adm, "0");
+        assertNoCreative(adm, "0");
+        assertExtensions(adm, "0", 0);
+
+        // 2nd tag = gam_first_look
+        String vastAdTagUri2 = getVastTagUri(adm, "1");
+        assertGamFirstLookUrl(vastAdTagUri2, "20220617");
+        assertSSPSyncPixels(adm, "1");
+        assertNoCreative(adm, "1");
+        assertExtensions(adm, "1", 1);
+
+        // 3rd tag = gam will be gam_no_hb
+        String vastAdTagUri3 = getVastTagUri(adm, "2");
+        assertGamNoHbUrl(vastAdTagUri3, "20220617");
+        assertSSPSyncPixels(adm, "2");
+        assertNoCreative(adm, "2");
+        assertExtensions(adm, "2", 2);
     }
 
     @Test
@@ -482,7 +482,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         // 1st tag.
         String vastAdTagUri1 = getVastTagUri(adm, "0");
-        assertGamUrlWithImprovedigitalAsSingleBidder(uniqueId, vastAdTagUri1, "1.08");
+        assertGamUrlWithImprovedigitalAsSingleBidder(vastAdTagUri1, uniqueId, "20220608", "1.08");
 
         // 2nd tag.
         String vastAdTagUri2 = getVastTagUri(adm, "1");
@@ -573,15 +573,111 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
+    public void auctionEndpointReturnsGvastResponseWithProperAdUnit() throws XPathExpressionException, IOException, JSONException {
+        assertThat(doGvastRequestAndGetAdUnitCustParam(
+                getVastXmlInline("20220618", true), "1.12", "20220618",
+                "", "", ""
+        )).isEqualTo("/" + GAM_NETWORK_CODE + "/pbs/20220618");
+
+        assertThat(doGvastRequestAndGetAdUnitCustParam(
+                getVastXmlInline("20220618", true), "1.12", "20220618",
+                "", "", "DEF"
+        )).isEqualTo("/" + GAM_NETWORK_CODE + ",DEF/pbs/20220618");
+
+        assertThat(doGvastRequestAndGetAdUnitCustParam(
+                getVastXmlInline("20220618", true), "1.12", "20220618",
+                "", "ABC", ""
+        )).isEqualTo("/ABC/pbs/20220618");
+
+        assertThat(doGvastRequestAndGetAdUnitCustParam(
+                getVastXmlInline("20220618", true), "1.12", "20220618",
+                "", "ABC", "DEF"
+        )).isEqualTo("/ABC,DEF/pbs/20220618");
+
+        assertThat(doGvastRequestAndGetAdUnitCustParam(
+                getVastXmlInline("20220618", true), "1.12", "20220618",
+                "/XYZ", "", ""
+        )).isEqualTo("/XYZ");
+
+        assertThat(doGvastRequestAndGetAdUnitCustParam(
+                getVastXmlInline("20220618", true), "1.12", "20220618",
+                "/XYZ", "ABC", "DEF"
+        )).isEqualTo("/XYZ");
+
+        assertThat(doGvastRequestAndGetAdUnitCustParam(
+                getVastXmlInline("20220618", true), "1.12", "20220618",
+                "XYZ", "", ""
+        )).isEqualTo("/" + GAM_NETWORK_CODE + "/XYZ");
+
+        assertThat(doGvastRequestAndGetAdUnitCustParam(
+                getVastXmlInline("20220618", true), "1.12", "20220618",
+                "XYZ", "", "DEF"
+        )).isEqualTo("/" + GAM_NETWORK_CODE + ",DEF/XYZ");
+
+        assertThat(doGvastRequestAndGetAdUnitCustParam(
+                getVastXmlInline("20220618", true), "1.12", "20220618",
+                "XYZ", "ABC", ""
+        )).isEqualTo("/ABC/XYZ");
+
+        assertThat(doGvastRequestAndGetAdUnitCustParam(
+                getVastXmlInline("20220618", true), "1.12", "20220618",
+                "XYZ", "ABC", "DEF"
+        )).isEqualTo("/ABC,DEF/XYZ");
+    }
+
+    private String doGvastRequestAndGetAdUnitCustParam(
+            String improveAdm, String price, String placementId,
+            String adUnit, String networkCode, String childNetworkCode
+    ) throws IOException, JSONException, XPathExpressionException {
+        WIRE_MOCK_RULE.stubFor(
+                post(urlPathEqualTo("/improvedigital-exchange"))
+                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/test-gvast-adunit-improvedigital-bid-request.json",
+                                null
+                        )))
+                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/test-gvast-adunit-improvedigital-bid-response.json",
+                                Map.of("IT_TEST_MACRO_ADM", improveAdm)
+                        )))
+        );
+
+        WIRE_MOCK_RULE.stubFor(
+                post(urlPathEqualTo("/cache"))
+                        .withRequestBody(equalToJson(createCacheRequest(
+                                "request_id_it_gvast_with_adunit",
+                                getVastXmlToCache(improveAdm, "improvedigital", price, placementId)
+                        )))
+                        .willReturn(aResponse().withBody(createCacheResponse(
+                                UUID.randomUUID().toString()
+                        )))
+        );
+
+        Response response = specWithPBSHeader(18080)
+                .body(jsonFromFileWithMacro(
+                        "/com/improvedigital/prebid/server/it/test-gvast-adunit-auction-request.json",
+                        Map.of(
+                                "IT_TEST_AD_UNIT", adUnit,
+                                "IT_TEST_NETWORK_CODE", networkCode,
+                                "IT_TEST_CHILD_NETWORK_CODE", childNetworkCode
+                        )
+                ))
+                .post(Endpoint.openrtb2_auction.value());
+
+        String adm = getAdm(new JSONObject(response.asString()), 0, 0);
+
+        Map<String, List<String>> vastQueryParams = splitQuery(getVastTagUri(adm, "0"));
+        assertThat(vastQueryParams.get("iu").size()).isEqualTo(1);
+        return vastQueryParams.get("iu").get(0);
+    }
+
+    @Test
     public void moreTests() {
         // Using /prebid/bidder/improvedigital/keyValues.
         // On test=1, we get debug lines.
         // Resolving of "output".
-        // Resolving of "iu".
         // Use gdpr_consent=BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA
         // For last ad, <Wrapper fallbackOnNoAd="true">
         // iab_cat
-        // pbct
         // Bidder sends Wrapper.
         // Bid discarded when vastxml is not cached.
     }
@@ -593,10 +689,21 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .evaluate(new InputSource(new StringReader(adm)));
     }
 
-    private void assertGamUrlWithImprovedigitalAsSingleBidder(String uniqueId, String vastAdTagUri, String price) throws MalformedURLException {
+    private void assertGamUrlWithImprovedigitalAsSingleBidder(
+            String vastAdTagUri, String uniqueId, String placementId, String price
+    ) throws MalformedURLException {
+        assertGamUrlWithImprovedigitalAsSingleBidder(vastAdTagUri, uniqueId, placementId, price, false);
+    }
+
+    private void assertGamUrlWithImprovedigitalAsSingleBidder(
+            String vastAdTagUri, String uniqueId, String placementId, String price, boolean isDeal
+    ) throws MalformedURLException {
         assertThat(vastAdTagUri.startsWith("https://pubads.g.doubleclick.net/gampad/ads")).isTrue();
 
         Map<String, List<String>> vastQueryParams = splitQuery(new URL(vastAdTagUri).getQuery());
+
+        assertGamGeneralParameters(vastQueryParams, placementId);
+
         assertThat(vastQueryParams.get("cust_params")).isNotNull();
         assertThat(vastQueryParams.get("cust_params").size()).isEqualTo(1);
 
@@ -618,32 +725,103 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertThat(getCustomParamCacheUrl(custParams, "improvedigital"))
                 .isEqualTo(IT_TEST_CACHE_URL + "?uuid=" + uniqueId);
 
-        assertThat(custParams.get("fl")).isNull();
-        assertThat(custParams.get("tnl_wog")).isNull();
+        assertQuerySingleValue(custParams.get("pbct"), "1");
+        assertThat(custParams.get("fl")).isNull(); /* No first look */
+
+        if (isDeal) {
+            assertQuerySingleValue(custParams.get("nf"), "1");
+            assertQuerySingleValue(custParams.get("tnl_wog"), "1");
+        } else {
+            assertThat(custParams.get("nf")).isNull();
+            assertThat(custParams.get("tnl_wog")).isNull(); /* No disabling of other SSP */
+        }
+
+        assertQuerySingleValue(custParams.get("tnl_asset_id"), "prebidserver");
     }
 
-    private void assertGamFirstLookUrl(String vastAdTagUri) throws MalformedURLException {
+    private void assertGamUrlWithImprovedigitalLostToGenericBidder(
+            String vastAdTagUri,
+            String placementId,
+            String improveCacheId,
+            String genericCacheId,
+            String improvePrice,
+            String genericPrice
+    ) throws MalformedURLException {
         assertThat(vastAdTagUri.startsWith("https://pubads.g.doubleclick.net/gampad/ads")).isTrue();
 
         Map<String, List<String>> vastQueryParams = splitQuery(new URL(vastAdTagUri).getQuery());
+        assertGamGeneralParameters(vastQueryParams, placementId);
         assertThat(vastQueryParams.get("cust_params")).isNotNull();
         assertThat(vastQueryParams.get("cust_params").size()).isEqualTo(1);
 
         Map<String, List<String>> custParams = splitQuery(vastQueryParams.get("cust_params").get(0));
+        assertQuerySingleValue(custParams.get("hb_bidder"), "generic");
+        assertQuerySingleValue(custParams.get("hb_bidder_generic"), "generic");
+        assertQuerySingleValue(custParams.get("hb_bidder_improvedigital"), "improvedigital");
+
+        assertQuerySingleValue(custParams.get("hb_uuid"), genericCacheId);
+        assertQuerySingleValue(custParams.get("hb_uuid_generic"), genericCacheId);
+        assertQuerySingleValue(custParams.get("hb_uuid_improvedigital"), improveCacheId);
+
+        assertQuerySingleValue(custParams.get("hb_format"), "video");
+        assertQuerySingleValue(custParams.get("hb_format_generic"), "video");
+        assertQuerySingleValue(custParams.get("hb_format_improvedigital"), "video");
+
+        assertQuerySingleValue(custParams.get("hb_pb"), genericPrice);
+        assertQuerySingleValue(custParams.get("hb_pb_generic"), genericPrice);
+        assertQuerySingleValue(custParams.get("hb_pb_improvedigital"), improvePrice);
+
+        assertThat(getCustomParamCacheUrl(custParams, null))
+                .isEqualTo(IT_TEST_CACHE_URL + "?uuid=" + genericCacheId);
+        assertThat(getCustomParamCacheUrl(custParams, "generic"))
+                .isEqualTo(IT_TEST_CACHE_URL + "?uuid=" + genericCacheId);
+        assertThat(getCustomParamCacheUrl(custParams, "improvedigital"))
+                .isEqualTo(IT_TEST_CACHE_URL + "?uuid=" + improveCacheId);
+
+        assertQuerySingleValue(custParams.get("pbct"), "1");
+        assertThat(custParams.get("fl")).isNull();
+        assertThat(custParams.get("tnl_wog")).isNull();
+        assertThat(custParams.get("nf")).isNull();
+
+        assertQuerySingleValue(custParams.get("tnl_asset_id"), "prebidserver");
+    }
+
+    private void assertGamFirstLookUrl(String vastAdTagUri, String placementId) throws MalformedURLException {
+        assertThat(vastAdTagUri.startsWith("https://pubads.g.doubleclick.net/gampad/ads")).isTrue();
+
+        Map<String, List<String>> vastQueryParams = splitQuery(new URL(vastAdTagUri).getQuery());
+
+        assertGamGeneralParameters(vastQueryParams, placementId);
+
+        assertThat(vastQueryParams.get("cust_params")).isNotNull();
+        assertThat(vastQueryParams.get("cust_params").size()).isEqualTo(1);
+
+        Map<String, List<String>> custParams = splitQuery(vastQueryParams.get("cust_params").get(0));
+        assertThat(custParams.get("pbct")).isNull();
         assertQuerySingleValue(custParams.get("fl"), "1");
         assertQuerySingleValue(custParams.get("tnl_wog"), "1");
+        assertThat(custParams.get("nf")).isNull();
+
+        assertQuerySingleValue(custParams.get("tnl_asset_id"), "prebidserver");
     }
 
-    private void assertGamNoHbUrl(String vastAdTagUri) throws MalformedURLException {
+    private void assertGamNoHbUrl(String vastAdTagUri, String placementId) throws MalformedURLException {
         assertThat(vastAdTagUri.startsWith("https://pubads.g.doubleclick.net/gampad/ads")).isTrue();
 
         Map<String, List<String>> vastQueryParams = splitQuery(new URL(vastAdTagUri).getQuery());
+
+        assertGamGeneralParameters(vastQueryParams, placementId);
+
         assertThat(vastQueryParams.get("cust_params")).isNotNull();
         assertThat(vastQueryParams.get("cust_params").size()).isEqualTo(1);
 
         Map<String, List<String>> custParams = splitQuery(vastQueryParams.get("cust_params").get(0));
-        assertThat(custParams.get("fl")).isNull();
+        assertThat(custParams.get("pbct")).isNull();
+        assertThat(custParams.get("fl")).isNull(); /* No first look */
         assertThat(custParams.get("tnl_wog")).isNull();
+        assertThat(custParams.get("nf")).isNull();
+
+        assertQuerySingleValue(custParams.get("tnl_asset_id"), "prebidserver");
     }
 
     private void assertNoCreative(String vastXml, String adId) throws XPathExpressionException {
@@ -735,6 +913,48 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         NamedNodeMap extensionAttr = extensions.item(0).getAttributes();
         assertThat(extensionAttr.getNamedItem("type").getNodeValue()).isEqualTo("waterfall");
         assertThat(extensionAttr.getNamedItem("fallback_index").getNodeValue()).isEqualTo("" + fallbackIndex);
+    }
+
+    private void assertGamGeneralParameters(Map<String, List<String>> vastQueryParams, String placementId) {
+        assertGamGeneralParameters(vastQueryParams, placementId, "http://pbs.improvedigital.com" /* Web request */);
+    }
+
+    private void assertGamGeneralParameters(Map<String, List<String>> vastQueryParams, String placementId, String url) {
+        assertThat(vastQueryParams.get("gdfp_req").size()).isEqualTo(1);
+        assertThat(vastQueryParams.get("gdfp_req").get(0)).isEqualTo("1");
+
+        assertThat(vastQueryParams.get("env").size()).isEqualTo(1);
+        assertThat(vastQueryParams.get("env").get(0)).isEqualTo("vp");
+
+        assertThat(vastQueryParams.get("unviewed_position_start").size()).isEqualTo(1);
+        assertThat(vastQueryParams.get("unviewed_position_start").get(0)).isEqualTo("1");
+
+        assertThat(vastQueryParams.get("correlator").size()).isEqualTo(1);
+        assertThat(Long.parseLong(vastQueryParams.get("correlator").get(0)))
+                .isGreaterThan(System.currentTimeMillis() - 5 * 60 * 1000);
+
+        assertThat(vastQueryParams.get("iu").size()).isEqualTo(1);
+        assertThat(vastQueryParams.get("iu").get(0)).isEqualTo("/" + GAM_NETWORK_CODE + "/pbs/" + placementId);
+
+        assertThat(vastQueryParams.get("output").size()).isEqualTo(1);
+        assertThat(vastQueryParams.get("output").get(0)).isEqualTo("xml_vast2");
+
+        assertThat(vastQueryParams.get("sz").size()).isEqualTo(1);
+        assertThat(vastQueryParams.get("sz").get(0)).isEqualTo("640x480|640x360");
+
+        assertThat(vastQueryParams.get("description_url").size()).isEqualTo(1);
+        assertThat(vastQueryParams.get("description_url").get(0)).isEqualTo("http://pbs.improvedigital.com");
+
+        assertThat(vastQueryParams.get("url").size()).isEqualTo(1);
+        assertThat(vastQueryParams.get("url").get(0)).isEqualTo(url);
+    }
+
+    private Map<String, List<String>> getNonEmptyCustomParams(String vastAdTagUri) throws MalformedURLException {
+        Map<String, List<String>> vastQueryParams = splitQuery(new URL(vastAdTagUri).getQuery());
+        assertThat(vastQueryParams.get("cust_params")).isNotNull();
+        assertThat(vastQueryParams.get("cust_params").size()).isEqualTo(1);
+
+        return splitQuery(vastQueryParams.get("cust_params").get(0));
     }
 
     private Response getGvastResponse() {
@@ -848,7 +1068,13 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
             String genericAdm1,
             String genericAdm2,
             String genericCacheId,
-            String genericVastXmlToCache) throws IOException {
+            String genericVastXmlToCache,
+            boolean improveReturnsDeal) throws IOException {
+
+        String improveBidResponseFile = improveReturnsDeal
+                ? "test-gvast-multiple-bidder-improvedigital-bid-response-deal.json"
+                : "test-gvast-multiple-bidder-improvedigital-bid-response.json";
+
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
                         .withRequestBody(equalToJson(jsonFromFileWithMacro(
@@ -857,8 +1083,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                 null
                         )))
                         .willReturn(aResponse().withBody(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/"
-                                        + "test-gvast-multiple-bidder-improvedigital-bid-response.json",
+                                "/com/improvedigital/prebid/server/it/" + improveBidResponseFile,
                                 Map.of("IT_TEST_MACRO_ADM_1", improveAdm1, "IT_TEST_MACRO_ADM_2", improveAdm2)
                         )))
         );

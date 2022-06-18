@@ -1,0 +1,19 @@
+{
+  "id": "request_id_it_gvast_with_adunit",
+  "seatbid": [
+    {
+      "bid": [
+        {
+          "id": "bid_id_it_gvast_with_adunit",
+          "impid": "imp_id_it_gvast_with_adunit",
+          "price": 1.12,
+          "crid": "crid001",
+          "adm": "IT_TEST_MACRO_ADM",
+          "adid": "adid001",
+          "cid": "cid001"
+        }
+      ]
+    }
+  ],
+  "cur": "USD"
+}

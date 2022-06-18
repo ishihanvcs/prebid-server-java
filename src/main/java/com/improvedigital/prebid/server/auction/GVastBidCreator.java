@@ -329,7 +329,7 @@ public class GVastBidCreator {
                 .get(ImprovedigitalPbsImpExt::getImprovedigitalPbsImpExtGam)
                 .value(ImprovedigitalPbsImpExtGam.of(null, null, null));
         String adUnit = gamConfig.getAdUnit();
-        String networkCode = ObjectUtils.defaultIfNull(gamConfig.getNetworkCode(), gamNetworkCode);
+        String networkCode = StringUtils.defaultIfEmpty(gamConfig.getNetworkCode(), gamNetworkCode);
         if (!StringUtils.isBlank(gamConfig.getChildNetworkCode())) {
             networkCode += "," + gamConfig.getChildNetworkCode();
         }

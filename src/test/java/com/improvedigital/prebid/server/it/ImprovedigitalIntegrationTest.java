@@ -77,14 +77,45 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 .build();
     }
 
-    protected String createResourceFile(String resourceFile, String fileContent) throws IOException {
-        Path cacheResponseFile = Paths.get(this.getClass().getResource("/").getPath() + resourceFile);
+    protected String createCacheRequest(
+            String requestId,
+            String... cacheContents
+    ) throws IOException {
+        List<String> cachePutObjects = Arrays.stream(cacheContents).map(content -> "{"
+                + "  \"aid\": \"" + requestId + "\","
+                + "  \"type\": \"xml\","
+                + "  \"value\": \"" + content + "\""
+                + "}"
+        ).collect(Collectors.toList());
+
+        return "{"
+                + "\"puts\": ["
+                + String.join(",", cachePutObjects)
+                + "]"
+                + "}";
+    }
+
+    protected String createCacheResponse(String... cacheIds) {
+        List<String> cachePutObjects = Arrays.stream(cacheIds).map(cacheId -> "{"
+                + "  \"uuid\": \"" + cacheId + "\""
+                + "}"
+        ).collect(Collectors.toList());
+
+        return "{"
+                + "\"responses\": ["
+                + String.join(",", cachePutObjects)
+                + "]"
+                + "}";
+    }
+
+    protected String createResourceFile(String resourceFilePathFromSlash, String fileContent) throws IOException {
+        Path cacheResponseFile = Paths.get(this.getClass().getResource("/").getPath() + resourceFilePathFromSlash);
         if (!Files.exists(cacheResponseFile)) {
             Files.createFile(cacheResponseFile);
         }
         Files.writeString(cacheResponseFile, fileContent, StandardOpenOption.WRITE);
 
-        return "/" + resourceFile;
+        return "/" + resourceFilePathFromSlash;
     }
 
     protected Map<String, List<String>> splitQuery(String queryParam) {

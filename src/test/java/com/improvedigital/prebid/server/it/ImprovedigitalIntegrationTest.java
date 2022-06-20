@@ -1,5 +1,17 @@
 package com.improvedigital.prebid.server.it;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.iab.openrtb.request.BidRequest;
+import com.iab.openrtb.request.Imp;
+import com.iab.openrtb.request.Regs;
+import com.iab.openrtb.request.Source;
+import com.iab.openrtb.response.Bid;
+import com.iab.openrtb.response.BidResponse;
+import com.iab.openrtb.response.SeatBid;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.config.ObjectMapperConfig;
 import io.restassured.config.RestAssuredConfig;
@@ -9,11 +21,16 @@ import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.prebid.server.it.IntegrationTest;
+import org.prebid.server.proto.openrtb.ext.request.ExtImp;
+import org.prebid.server.proto.openrtb.ext.request.ExtImpPrebid;
+import org.prebid.server.proto.openrtb.ext.request.ExtRegs;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.test.context.TestPropertySource;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,6 +46,7 @@ import java.util.stream.Collectors;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 @SuppressWarnings("checkstyle:hideutilityclassconstructor")
 @SpringBootApplication(
@@ -41,6 +59,20 @@ import static org.assertj.core.api.Assertions.assertThat;
         "settings.filesystem.stored-imps-dir=src/test/resources/com/improvedigital/prebid/server/it/storedimps",
 })
 public class ImprovedigitalIntegrationTest extends IntegrationTest {
+
+    protected static final String IT_TEST_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            + "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.60 Safari/537.36";
+    protected static final String IT_TEST_IP = "193.168.244.1";
+    protected static final String IT_TEST_DOMAIN = "pbs.improvedigital.com";
+    protected static final String IT_TEST_MAIN_DOMAIN = "improvedigital.com";
+
+    protected static final ObjectMapper BID_REQUEST_MAPPER = new ObjectMapper()
+            .setNodeFactory(JsonNodeFactory.withExactBigDecimals(true))
+            .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+    protected static final ObjectMapper BID_RESPONSE_MAPPER = new ObjectMapper()
+            .setNodeFactory(JsonNodeFactory.withExactBigDecimals(true))
+            .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
     protected String jsonFromFileWithMacro(String file, Map<String, String> macrosInFileContent)
             throws IOException {
@@ -61,11 +93,10 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
 
     protected static RequestSpecification specWithPBSHeader(int port) {
         return given(spec(port))
-                .header("Referer", "http://pbs.improvedigital.com")
-                .header("X-Forwarded-For", "193.168.244.1")
-                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                        + "(KHTML, like Gecko) Chrome/100.0.4896.60 Safari/537.36")
-                .header("Origin", "http://pbs.improvedigital.com");
+                .header("Referer", "http://" + IT_TEST_DOMAIN)
+                .header("X-Forwarded-For", IT_TEST_IP)
+                .header("User-Agent", IT_TEST_USER_AGENT)
+                .header("Origin", "http://" + IT_TEST_DOMAIN);
     }
 
     private static RequestSpecification spec(int port) {
@@ -75,6 +106,216 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 .setConfig(RestAssuredConfig.config()
                         .objectMapperConfig(new ObjectMapperConfig(new Jackson2Mapper((aClass, s) -> mapper))))
                 .build();
+    }
+
+    protected String getBidRequestWeb(
+            String uniqueId, Function<Imp, Imp> impModifier, Function<BidRequest, BidRequest> bidModifier
+    ) {
+        Imp imp = Imp.builder()
+                .id("imp_id_" + uniqueId)
+                .build();
+
+        if (impModifier != null) {
+            imp = impModifier.apply(imp);
+        }
+
+        BidRequest bidRequest = BidRequest.builder()
+                .id("request_id_" + uniqueId)
+                .source(Source.builder()
+                        .tid("source_tid_" + uniqueId)
+                        .build())
+                .tmax(5000L)
+                .regs(Regs.of(null, ExtRegs.of(0, null)))
+                .imp(Arrays.asList(imp))
+                .build();
+
+        if (bidModifier != null) {
+            bidRequest = bidModifier.apply(bidRequest);
+        }
+
+        try {
+            return BID_REQUEST_MAPPER.writeValueAsString(bidRequest);
+        } catch (JsonProcessingException e) {
+            fail("Not expecting any exception while building bid request but got: " + e.getMessage());
+            return null;
+        }
+    }
+
+    protected String getBidResponse(String uniqueId, String currency, double price, String adm) {
+        BidResponse bidResponse = BidResponse.builder()
+                .id("request_id_" + uniqueId)
+                .cur(currency)
+                .seatbid(Arrays.asList(
+                        SeatBid.builder()
+                                .bid(Arrays.asList(
+                                        Bid.builder()
+                                                .id("bid_id_" + uniqueId)
+                                                .impid("imp_id_" + uniqueId)
+                                                .price(new BigDecimal(price).setScale(2, RoundingMode.HALF_EVEN))
+                                                .adm(adm)
+                                                .cid("campaign_id_" + uniqueId)
+                                                .adid("ad_id_" + uniqueId)
+                                                .crid("creative_id_" + uniqueId)
+                                                .build()
+                                ))
+                                .build()
+                ))
+                .build();
+        try {
+            return BID_RESPONSE_MAPPER.writeValueAsString(bidResponse);
+        } catch (JsonProcessingException e) {
+            fail("Not expecting any exception while building bid response but got: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Java implementation for the json:
+     * <pre>
+     *     "ext": {
+     *         "prebid": {
+     *             "storedrequest": {
+     *                 "id": "...."
+     *             }
+     *         },
+     *         "bidder": {
+     *           "placementId": ....
+     *         }
+     *       }
+     * </pre>
+     */
+    public static class SSPBidRequestImpExt {
+        private ObjectNode impExt;
+
+        public SSPBidRequestImpExt() {
+            this.impExt = BID_REQUEST_MAPPER.valueToTree(
+                    ExtImp.of(ExtImpPrebid.builder().build(), null)
+            );
+        }
+
+        public ObjectNode getImpExt() {
+            return impExt;
+        }
+
+        public SSPBidRequestImpExt putStoredRequest(String storedRequestId) {
+            ((ObjectNode) impExt.at("/prebid"))
+                    .putObject("storedrequest")
+                    .put("id", storedRequestId);
+            return this;
+        }
+
+        public SSPBidRequestImpExt putBidder() {
+            impExt.putObject("bidder");
+            return this;
+        }
+
+        public SSPBidRequestImpExt putBidderKeyValue(String key, String value) {
+            if (value != null) {
+                ((ObjectNode) impExt.at("/bidder")).put(key, value);
+            }
+            return this;
+        }
+
+        public SSPBidRequestImpExt putBidderKeyValue(String key, Integer value) {
+            if (value != null) {
+                ((ObjectNode) impExt.at("/bidder")).put(key, value);
+            }
+            return this;
+        }
+
+        public SSPBidRequestImpExt putBidderKeyValue(String key, Map<String, String> values) {
+            if (values != null) {
+                ((ObjectNode) impExt.at("/bidder")).putIfAbsent(key, BID_REQUEST_MAPPER.valueToTree(values));
+            }
+            return this;
+        }
+    }
+
+    /**
+     * Java implementation for the json:
+     * <pre>
+     *     "ext": {
+     *         "prebid": {
+     *            "storedrequest": {
+     *                "id": "...."
+     *            }
+     *           "improvedigitalpbs": {
+     *             "....": "...."
+     *           }
+     *         },
+     *         "generic": {
+     *           "exampleProperty": "examplePropertyValue"
+     *         },
+     *         "improvedigital": {
+     *           "placementId": ...
+     *         }
+     *       }
+     * </pre>
+     */
+    public static class AuctionBidRequestImpExt {
+        private ObjectNode impExt;
+
+        public AuctionBidRequestImpExt() {
+            this.impExt = BID_REQUEST_MAPPER.valueToTree(
+                    ExtImp.of(ExtImpPrebid.builder().build(), null)
+            );
+        }
+
+        public ObjectNode getImpExt() {
+            return impExt;
+        }
+
+        public AuctionBidRequestImpExt putStoredRequest(String storedRequestId) {
+            ((ObjectNode) impExt.at("/prebid"))
+                    .putObject("storedrequest")
+                    .put("id", storedRequestId);
+            return this;
+        }
+
+        public AuctionBidRequestImpExt putImprovedigitalPbs() {
+            ((ObjectNode) impExt.at("/prebid")).putObject("improvedigitalpbs");
+            return this;
+        }
+
+        public AuctionBidRequestImpExt putImprovedigitalPbsKeyValue(String key, String value) {
+            if (value != null) {
+                ((ObjectNode) impExt.at("/prebid/improvedigitalpbs")).put(key, value);
+            }
+            return this;
+        }
+
+        public AuctionBidRequestImpExt putImprovedigitalPbsKeyValue(String key, Map<String, String> values) {
+            if (values != null) {
+                ((ObjectNode) impExt.at("/prebid/improvedigitalpbs")).putIfAbsent(key, BID_REQUEST_MAPPER.valueToTree(values));
+            }
+            return this;
+        }
+
+        public AuctionBidRequestImpExt putBidder(String bidderName) {
+            impExt.putObject(bidderName);
+            return this;
+        }
+
+        public AuctionBidRequestImpExt putBidderKeyValue(String bidderName, String key, String value) {
+            if (value != null) {
+                ((ObjectNode) impExt.at("/" + bidderName)).put(key, value);
+            }
+            return this;
+        }
+
+        public AuctionBidRequestImpExt putBidderKeyValue(String bidderName, String key, Integer value) {
+            if (value != null) {
+                ((ObjectNode) impExt.at("/" + bidderName)).put(key, value);
+            }
+            return this;
+        }
+
+        public AuctionBidRequestImpExt putBidderKeyValue(String bidderName, String key, Map<String, String> values) {
+            if (values != null) {
+                ((ObjectNode) impExt.at("/" + bidderName)).putIfAbsent(key, BID_REQUEST_MAPPER.valueToTree(values));
+            }
+            return this;
+        }
     }
 
     protected String createCacheRequest(
@@ -146,7 +387,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     }
 
     protected static String getVastXmlInline(String adId, boolean hasImpPixel) {
-        return ("<VAST version=\"2.0\">"
+        return "<VAST version=\"2.0\">"
                 + "  <Ad id=\"" + adId + "\">"
                 + "    <InLine>"
                 + "      <AdSystem>PBS IT Test Case</AdSystem>"
@@ -172,7 +413,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 + "    </InLine>"
                 + "  </Ad>"
                 + "</VAST>"
-        ).replace("\"", "\\\"");
+                ;
     }
 
     protected String getVastXmlInlineWithMultipleAds(String adId, boolean hasImpPixel) {
@@ -226,7 +467,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 + "    </InLine>"
                 + "  </Ad>"
                 + "</VAST>"
-        ).replace("\"", "\\\"");
+        );
     }
 
     protected String getVastXmlWrapper(String adId, boolean hasImpPixel) {

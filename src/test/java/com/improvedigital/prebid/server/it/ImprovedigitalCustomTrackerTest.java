@@ -146,7 +146,8 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldAddCustomTrackerOnVideoResponseWhenXmlHasImpressionAndMultipleAds() throws Exception {
-        String vastXmlResponse = getVastXmlInlineWithMultipleAds("20220406", true);
+        String vastXmlResponse = getVastXmlInlineWithMultipleAds("20220406", true)
+                .replace("\"", "\\\"");
         final Response response = doVideoRequestAndGetResponse(Map.of(
                 "IT_TEST_MACRO_ADM", vastXmlResponse,
                 "IT_TEST_MACRO_CURRENCY", "USD"

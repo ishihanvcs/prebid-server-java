@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import com.improvedigital.prebid.server.handler.GVastHandler;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.methods.HttpGet;
@@ -674,27 +675,27 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     @Test
     public void auctionEndpointReturnsGvastResponseWithProtocol() throws XPathExpressionException, IOException, JSONException {
         assertThat(doGvastRequestWithProtocolAndGetOutputParam(
-                getVastXmlInline("20220618", true), "0.97", "20220620",
+                getVastXmlInline("20220620", true), "0.97", "20220620",
                 Arrays.asList(2, 3, 7)
         )).isEqualTo("xml_vast4");
 
         assertThat(doGvastRequestWithProtocolAndGetOutputParam(
-                getVastXmlInline("20220618", true), "0.97", "20220620",
+                getVastXmlInline("20220620", true), "0.97", "20220620",
                 Arrays.asList(2, 3)
         )).isEqualTo("xml_vast3");
 
         assertThat(doGvastRequestWithProtocolAndGetOutputParam(
-                getVastXmlInline("20220618", true), "0.97", "20220620",
+                getVastXmlInline("20220620", true), "0.97", "20220620",
                 Arrays.asList(2)
         )).isEqualTo("xml_vast2");
 
         assertThat(doGvastRequestWithProtocolAndGetOutputParam(
-                getVastXmlInline("20220618", true), "0.97", "20220620",
+                getVastXmlInline("20220620", true), "0.97", "20220620",
                 Arrays.asList(1)
         )).isEqualTo("vast");
 
         assertThat(doGvastRequestWithProtocolAndGetOutputParam(
-                getVastXmlInline("20220618", true), "0.97", "20220620",
+                getVastXmlInline("20220620", true), "0.97", "20220620",
                 Arrays.asList(1, 4, 5, 6, 8, 9, 10)
         )).isEqualTo("vast");
     }
@@ -744,11 +745,82 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
+    public void auctionEndpointReturnsGvastResponseWithSiteCategory() throws XPathExpressionException, IOException, JSONException {
+        assertThat(doGvastRequestWithSiteCategoryAndGetCategoryOfCustParam(
+                getVastXmlInline("20220620", true), "0.85", "20220620",
+                Arrays.asList()
+        )).isNull();
+
+        assertThat(doGvastRequestWithSiteCategoryAndGetCategoryOfCustParam(
+                getVastXmlInline("20220620", true), "0.85", "20220620",
+                Arrays.asList("IAB1")
+        )).isEqualTo("IAB1");
+
+        assertThat(doGvastRequestWithSiteCategoryAndGetCategoryOfCustParam(
+                getVastXmlInline("20220620", true), "0.85", "20220620",
+                Arrays.asList("IAB1", "IAB2")
+        )).isEqualTo("IAB1,IAB2");
+    }
+
+    private String doGvastRequestWithSiteCategoryAndGetCategoryOfCustParam(
+            String improveAdm, String price, String placementId, List<String> siteIabCategories
+    ) throws IOException, JSONException, XPathExpressionException {
+        String siteCategoriesCSV = CollectionUtils.isEmpty(siteIabCategories) ? "" : (
+                "\""
+                        + siteIabCategories.stream().collect(Collectors.joining("\",\""))
+                        + "\""
+        );
+
+        WIRE_MOCK_RULE.stubFor(
+                post(urlPathEqualTo("/improvedigital-exchange"))
+                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/test-gvast-sitecategory-improvedigital-bid-request.json",
+                                Map.of("\"cat\":[]", "\"cat\":[" + siteCategoriesCSV + "]")
+                        )))
+                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/test-gvast-sitecategory-improvedigital-bid-response.json",
+                                Map.of("IT_TEST_MACRO_ADM", improveAdm)
+                        )))
+        );
+
+        WIRE_MOCK_RULE.stubFor(
+                post(urlPathEqualTo("/cache"))
+                        .withRequestBody(equalToJson(createCacheRequest(
+                                "request_id_it_gvast_with_site_category",
+                                getVastXmlToCache(improveAdm, "improvedigital", price, placementId)
+                        )))
+                        .willReturn(aResponse().withBody(createCacheResponse(
+                                UUID.randomUUID().toString()
+                        )))
+        );
+
+        Response response = specWithPBSHeader(18080)
+                .body(jsonFromFileWithMacro(
+                        "/com/improvedigital/prebid/server/it/test-gvast-sitecategory-auction-request.json",
+                        Map.of("\"cat\":[]", "\"cat\":[" + siteCategoriesCSV + "]")
+                ))
+                .post(Endpoint.openrtb2_auction.value());
+
+        String adm = getAdm(new JSONObject(response.asString()), 0, 0);
+
+        Map<String, List<String>> vastQueryParams = splitQuery(getVastTagUri(adm, "0"));
+        assertThat(vastQueryParams.get("cust_params").size()).isEqualTo(1);
+        Map<String, List<String>> custParams = splitQuery(vastQueryParams.get("cust_params").get(0));
+
+        if (CollectionUtils.isEmpty(siteIabCategories)) {
+            assertThat(custParams.get("iab_cat")).isNull();
+            return null;
+        }
+
+        assertThat(custParams.get("iab_cat").size()).isEqualTo(1);
+        return custParams.get("iab_cat").get(0);
+    }
+
+    @Test
     public void moreTests() {
         // Using /prebid/bidder/improvedigital/keyValues.
         // Use gdpr_consent=BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA
         // For last ad, <Wrapper fallbackOnNoAd="true">
-        // iab_cat
         // Bidder sends Wrapper.
         // Bid discarded when vastxml is not cached.
     }

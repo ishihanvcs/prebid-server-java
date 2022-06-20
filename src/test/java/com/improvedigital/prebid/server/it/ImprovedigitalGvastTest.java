@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToIgnoreCase;
@@ -574,58 +575,58 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
     @Test
     public void auctionEndpointReturnsGvastResponseWithProperAdUnit() throws XPathExpressionException, IOException, JSONException {
-        assertThat(doGvastRequestAndGetAdUnitCustParam(
+        assertThat(doGvastRequestAndGetAdUnitParam(
                 getVastXmlInline("20220618", true), "1.12", "20220618",
                 "", "", ""
         )).isEqualTo("/" + GAM_NETWORK_CODE + "/pbs/20220618");
 
-        assertThat(doGvastRequestAndGetAdUnitCustParam(
+        assertThat(doGvastRequestAndGetAdUnitParam(
                 getVastXmlInline("20220618", true), "1.12", "20220618",
                 "", "", "DEF"
         )).isEqualTo("/" + GAM_NETWORK_CODE + ",DEF/pbs/20220618");
 
-        assertThat(doGvastRequestAndGetAdUnitCustParam(
+        assertThat(doGvastRequestAndGetAdUnitParam(
                 getVastXmlInline("20220618", true), "1.12", "20220618",
                 "", "ABC", ""
         )).isEqualTo("/ABC/pbs/20220618");
 
-        assertThat(doGvastRequestAndGetAdUnitCustParam(
+        assertThat(doGvastRequestAndGetAdUnitParam(
                 getVastXmlInline("20220618", true), "1.12", "20220618",
                 "", "ABC", "DEF"
         )).isEqualTo("/ABC,DEF/pbs/20220618");
 
-        assertThat(doGvastRequestAndGetAdUnitCustParam(
+        assertThat(doGvastRequestAndGetAdUnitParam(
                 getVastXmlInline("20220618", true), "1.12", "20220618",
                 "/XYZ", "", ""
         )).isEqualTo("/XYZ");
 
-        assertThat(doGvastRequestAndGetAdUnitCustParam(
+        assertThat(doGvastRequestAndGetAdUnitParam(
                 getVastXmlInline("20220618", true), "1.12", "20220618",
                 "/XYZ", "ABC", "DEF"
         )).isEqualTo("/XYZ");
 
-        assertThat(doGvastRequestAndGetAdUnitCustParam(
+        assertThat(doGvastRequestAndGetAdUnitParam(
                 getVastXmlInline("20220618", true), "1.12", "20220618",
                 "XYZ", "", ""
         )).isEqualTo("/" + GAM_NETWORK_CODE + "/XYZ");
 
-        assertThat(doGvastRequestAndGetAdUnitCustParam(
+        assertThat(doGvastRequestAndGetAdUnitParam(
                 getVastXmlInline("20220618", true), "1.12", "20220618",
                 "XYZ", "", "DEF"
         )).isEqualTo("/" + GAM_NETWORK_CODE + ",DEF/XYZ");
 
-        assertThat(doGvastRequestAndGetAdUnitCustParam(
+        assertThat(doGvastRequestAndGetAdUnitParam(
                 getVastXmlInline("20220618", true), "1.12", "20220618",
                 "XYZ", "ABC", ""
         )).isEqualTo("/ABC/XYZ");
 
-        assertThat(doGvastRequestAndGetAdUnitCustParam(
+        assertThat(doGvastRequestAndGetAdUnitParam(
                 getVastXmlInline("20220618", true), "1.12", "20220618",
                 "XYZ", "ABC", "DEF"
         )).isEqualTo("/ABC,DEF/XYZ");
     }
 
-    private String doGvastRequestAndGetAdUnitCustParam(
+    private String doGvastRequestAndGetAdUnitParam(
             String improveAdm, String price, String placementId,
             String adUnit, String networkCode, String childNetworkCode
     ) throws IOException, JSONException, XPathExpressionException {
@@ -671,10 +672,80 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
+    public void auctionEndpointReturnsGvastResponseWithProtocol() throws XPathExpressionException, IOException, JSONException {
+        assertThat(doGvastRequestWithProtocolAndGetOutputParam(
+                getVastXmlInline("20220618", true), "0.97", "20220620",
+                Arrays.asList(2, 3, 7)
+        )).isEqualTo("xml_vast4");
+
+        assertThat(doGvastRequestWithProtocolAndGetOutputParam(
+                getVastXmlInline("20220618", true), "0.97", "20220620",
+                Arrays.asList(2, 3)
+        )).isEqualTo("xml_vast3");
+
+        assertThat(doGvastRequestWithProtocolAndGetOutputParam(
+                getVastXmlInline("20220618", true), "0.97", "20220620",
+                Arrays.asList(2)
+        )).isEqualTo("xml_vast2");
+
+        assertThat(doGvastRequestWithProtocolAndGetOutputParam(
+                getVastXmlInline("20220618", true), "0.97", "20220620",
+                Arrays.asList(1)
+        )).isEqualTo("vast");
+
+        assertThat(doGvastRequestWithProtocolAndGetOutputParam(
+                getVastXmlInline("20220618", true), "0.97", "20220620",
+                Arrays.asList(1, 4, 5, 6, 8, 9, 10)
+        )).isEqualTo("vast");
+    }
+
+    private String doGvastRequestWithProtocolAndGetOutputParam(
+            String improveAdm, String price, String placementId, List<Integer> protocolIds
+    ) throws IOException, JSONException, XPathExpressionException {
+        String protocolsCsv = protocolIds.stream()
+                .map(p -> p.toString())
+                .collect(Collectors.joining(","));
+
+        WIRE_MOCK_RULE.stubFor(
+                post(urlPathEqualTo("/improvedigital-exchange"))
+                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/test-gvast-protocol-improvedigital-bid-request.json",
+                                Map.of("\"protocols\":[],", "\"protocols\":[" + protocolsCsv + "],")
+                        )))
+                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
+                                "/com/improvedigital/prebid/server/it/test-gvast-protocol-improvedigital-bid-response.json",
+                                Map.of("IT_TEST_MACRO_ADM", improveAdm)
+                        )))
+        );
+
+        WIRE_MOCK_RULE.stubFor(
+                post(urlPathEqualTo("/cache"))
+                        .withRequestBody(equalToJson(createCacheRequest(
+                                "request_id_it_gvast_with_protocol",
+                                getVastXmlToCache(improveAdm, "improvedigital", price, placementId)
+                        )))
+                        .willReturn(aResponse().withBody(createCacheResponse(
+                                UUID.randomUUID().toString()
+                        )))
+        );
+
+        Response response = specWithPBSHeader(18080)
+                .body(jsonFromFileWithMacro(
+                        "/com/improvedigital/prebid/server/it/test-gvast-protocol-auction-request.json",
+                        Map.of("\"protocols\":[],", "\"protocols\":[" + protocolsCsv + "],")
+                ))
+                .post(Endpoint.openrtb2_auction.value());
+
+        String adm = getAdm(new JSONObject(response.asString()), 0, 0);
+
+        Map<String, List<String>> vastQueryParams = splitQuery(getVastTagUri(adm, "0"));
+        assertThat(vastQueryParams.get("output").size()).isEqualTo(1);
+        return vastQueryParams.get("output").get(0);
+    }
+
+    @Test
     public void moreTests() {
         // Using /prebid/bidder/improvedigital/keyValues.
-        // On test=1, we get debug lines.
-        // Resolving of "output".
         // Use gdpr_consent=BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA
         // For last ad, <Wrapper fallbackOnNoAd="true">
         // iab_cat

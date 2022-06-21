@@ -66,31 +66,24 @@ settings:
 # Stored data doc: https://github.com/prebid/prebid-server-java/blob/master/docs/developers/stored-requests.md
 # PBS prod instance uses api.headerlift.com/pbs/getconfig service to access stored data. In order to access the prod config
 # service from localhost, your external IP address needs to be whitelisted by the HeaderLift backend team.
-# Alternatives: older stored data is available in improvedigital/stored-data folder and PBS can be told to use the locally
-# stored data in 2 ways:
-# Option 1) via "filesystem": uncomment all items in filesystem section and fully comment out http & in-memory-cache sections
-# Option 2) use local HTTP service which serves data from improvedigital/stored-data:
-#  1. unless they aren't already, comment out all items in filesystem section except custom-settings-filename
-#  2. comment out all items within the http section that use api.headerlift.com/pbs/getconfig
-#  4  uncomment http items that use localhost:8989
-#  3. Run `npm i` followed by `./run-mock-server.sh [debug]` command in a separate terminal/console from within
+# Alternatively use local HTTP service which serves data from improvedigital/stored-data:
+#  1. comment out all items in filesystem section except custom-settings-filename
+#  2. uncomment http items that use localhost:8989
+#  3. run `npm i` followed by `./run-mock-server.sh [debug]` command in a separate terminal/console from within
 #     the improvedigital/dev-tools folder
-# Restart PBS
+#  4. restart PBS
   filesystem:
     custom-settings-filename: improvedigital/config/custom-settings.yaml
-#    settings-filename: improvedigital/config/settings.yaml
-#    stored-requests-dir: improvedigital/stored-data/requests
-#    stored-imps-dir: improvedigital/stored-data/imps
-#    stored-responses-dir: improvedigital/stored-data/responses
-#    categories-dir: improvedigital/stored-data/categories
-  http:
-    endpoint: https://api.headerlift.com/pbs/getconfig
-    amp-endpoint: https://api.headerlift.com/pbs/getconfig?amp=true
-    video-endpoint: https://api.headerlift.com/pbs/getconfig?video=true
-    category-endpoint: http://localhost:8989/categories
+    settings-filename: improvedigital/config/settings.yaml
+    stored-requests-dir: improvedigital/stored-data/requests
+    stored-imps-dir: improvedigital/stored-data/imps
+    stored-responses-dir: improvedigital/stored-data/responses
+    categories-dir: improvedigital/stored-data/categories
+#  http:
 #    endpoint: http://localhost:8989/config
 #    amp-endpoint: http://localhost:8989/config?amp=true
 #    video-endpoint: http://localhost:8989/config?video=true
+#    category-endpoint: http://localhost:8989/categories
   in-memory-cache:
     cache-size: 10000
     ttl-seconds: 31536000 # 365 days in seconds

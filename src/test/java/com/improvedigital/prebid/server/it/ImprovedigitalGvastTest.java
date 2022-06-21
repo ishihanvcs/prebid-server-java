@@ -550,27 +550,21 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     @Test
     public void auctionEndpointReturnsWaterfallResponse() throws XPathExpressionException, IOException, JSONException {
         String vastXml = getVastXmlInline("20220608", true);
-        String vastXmlWillBeCached = getVastXmlToCache(vastXml, "improvedigital", "1.13", 20220608);
-        String uniqueId = "KCZEL1JSW8BT296EE1FYXTCKWNGWLVBJ";
+        String uniqueId = UUID.randomUUID().toString();
 
-        Response response = getWaterfallResponseFromAuction(
-                vastXml.replace("\"", "\\\""), uniqueId, vastXmlWillBeCached
+        JSONObject responseJson = getWaterfallResponseFromAuction(
+                uniqueId, "20220608", 20220608, "1.13", vastXml
         );
-        JSONObject responseJson = new JSONObject(response.asString());
-        assertBidCountSingle(responseJson);
-        assertBidIdExists(responseJson, 0, 0);
-        assertBidImpId(responseJson, 0, 0, "imp_id_it_waterfall_20220608");
-        assertBidPrice(responseJson, 0, 0, 0);
-        assertSeat(responseJson, 0, "improvedigital");
-        assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
 
         String vastAdTagUri = getVastTagUri(adm, "0");
-        assertThat(vastAdTagUri.trim()).isEqualTo(IT_TEST_CACHE_URL + "?uuid=" + uniqueId);
+        assertThat(vastAdTagUri.trim()).isEqualTo(IT_TEST_CACHE_URL + "?uuid=cache_id_" + uniqueId);
 
         // Hit the cache.
-        assertCachedContent(IT_TEST_CACHE_URL + "?uuid=" + uniqueId, vastXmlWillBeCached);
+        assertCachedContent(IT_TEST_CACHE_URL + "?uuid=cache_id_" + uniqueId, getVastXmlToCache(
+                vastXml, "improvedigital", "1.13", 20220608
+        ));
 
         assertSSPSyncPixels(adm, "0");
     }
@@ -1358,44 +1352,57 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .post(Endpoint.openrtb2_auction.value());
     }
 
-    private Response getWaterfallResponseFromAuction(
-            String improveAdm,
-            String cacheId,
-            String vastXmlWillBeCached) throws IOException {
+    private JSONObject getWaterfallResponseFromAuction(
+            String uniqueId,
+            String storedImpId,
+            int placementIdOfStoredImp,
+            String price,
+            String improveAdm) throws IOException, JSONException {
+
+        String cachedContent = getVastXmlToCache(improveAdm, "improvedigital", price, placementIdOfStoredImp);
+
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/test-waterfall-improvedigital-bid-request.json",
-                                null
+                        .withRequestBody(equalToJson(getBidRequestVideoForSSPImprovedigital(
+                                uniqueId, "USD", placementIdOfStoredImp, storedImpId, true, null, null, null
                         )))
-                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/test-waterfall-improvedigital-bid-response.json",
-                                Map.of("IT_TEST_MACRO_ADM", improveAdm)
+                        .willReturn(aResponse().withBody(getBidResponse(
+                                uniqueId, "USD", Double.parseDouble(price), improveAdm
                         )))
         );
 
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/cache"))
                         .withRequestBody(equalToJson(createCacheRequest(
-                                "request_id_it_waterfall_20220608", vastXmlWillBeCached
+                                "request_id_" + uniqueId,
+                                cachedContent
                         )))
                         .willReturn(aResponse().withBody(createCacheResponse(
-                                cacheId
+                                "cache_id_" + uniqueId
                         )))
         );
+
         WIRE_MOCK_RULE.stubFor(
                 get(urlPathEqualTo("/cache"))
-                        .withQueryParam("uuid", equalToIgnoreCase(cacheId))
+                        .withQueryParam("uuid", equalToIgnoreCase("cache_id_" + uniqueId))
                         .willReturn(aResponse()
-                                .withBody(vastXmlWillBeCached))
+                                .withBody(cachedContent))
         );
 
-        return specWithPBSHeader(18080)
-                .body(jsonFromFileWithMacro(
-                        "/com/improvedigital/prebid/server/it/test-waterfall-auction-improvedigital-request.json",
-                        null
+        Response response = specWithPBSHeader(18080)
+                .body(getBidRequestVideoWithStoredImp(
+                        uniqueId, "waterfall", storedImpId, null, null
                 ))
                 .post(Endpoint.openrtb2_auction.value());
+
+        JSONObject responseJson = new JSONObject(response.asString());
+        assertBidCountSingle(responseJson);
+        assertBidIdExists(responseJson, 0, 0);
+        assertBidImpId(responseJson, 0, 0, "imp_id_" + uniqueId);
+        assertBidPrice(responseJson, 0, 0, 0);
+        assertSeat(responseJson, 0, "improvedigital");
+        assertCurrency(responseJson, "USD");
+        return responseJson;
     }
 
     private Response getWaterfallResponseFromAuctionOfMultipleBidder(

@@ -198,9 +198,11 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         }
 
         public SSPBidRequestImpExt putStoredRequest(String storedRequestId) {
-            ((ObjectNode) impExt.at("/prebid"))
-                    .putObject("storedrequest")
-                    .put("id", storedRequestId);
+            if (storedRequestId != null) {
+                ((ObjectNode) impExt.at("/prebid"))
+                        .putObject("storedrequest")
+                        .put("id", storedRequestId);
+            }
             return this;
         }
 
@@ -223,7 +225,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
             return this;
         }
 
-        public SSPBidRequestImpExt putBidderKeyValue(String key, Map<String, String> values) {
+        public SSPBidRequestImpExt putBidderKeyValue(String key, Map<String, ?> values) {
             if (values != null) {
                 ((ObjectNode) impExt.at("/bidder")).putIfAbsent(key, BID_REQUEST_MAPPER.valueToTree(values));
             }
@@ -266,9 +268,11 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         }
 
         public AuctionBidRequestImpExt putStoredRequest(String storedRequestId) {
-            ((ObjectNode) impExt.at("/prebid"))
-                    .putObject("storedrequest")
-                    .put("id", storedRequestId);
+            if (storedRequestId != null) {
+                ((ObjectNode) impExt.at("/prebid"))
+                        .putObject("storedrequest")
+                        .put("id", storedRequestId);
+            }
             return this;
         }
 
@@ -284,9 +288,16 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
             return this;
         }
 
-        public AuctionBidRequestImpExt putImprovedigitalPbsKeyValue(String key, Map<String, String> values) {
+        public AuctionBidRequestImpExt putImprovedigitalPbsKeyValue(String key, Map<String, ?> values) {
             if (values != null) {
                 ((ObjectNode) impExt.at("/prebid/improvedigitalpbs")).putIfAbsent(key, BID_REQUEST_MAPPER.valueToTree(values));
+            }
+            return this;
+        }
+
+        public AuctionBidRequestImpExt putImprovedigitalPbsAt(String pathAt, String key, Map<String, ?> values) {
+            if (values != null) {
+                ((ObjectNode) impExt.at("/prebid/improvedigitalpbs/" + pathAt)).putIfAbsent(key, BID_REQUEST_MAPPER.valueToTree(values));
             }
             return this;
         }
@@ -310,7 +321,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
             return this;
         }
 
-        public AuctionBidRequestImpExt putBidderKeyValue(String bidderName, String key, Map<String, String> values) {
+        public AuctionBidRequestImpExt putBidderKeyValue(String bidderName, String key, Map<String, ?> values) {
             if (values != null) {
                 ((ObjectNode) impExt.at("/" + bidderName)).putIfAbsent(key, BID_REQUEST_MAPPER.valueToTree(values));
             }

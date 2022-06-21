@@ -245,18 +245,9 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
     @Test
     public void auctionEndpointReturnsVastResponse() throws XPathExpressionException, IOException, JSONException {
-        Response response = getVastResponseFromAuction(
-                getVastXmlInline("20220608", true).replace("\"", "\\\"")
+        JSONObject responseJson = getVastResponseFromAuction(
+                getVastXmlInline("20220608", true), "1.25", "20220608", 20220608
         );
-        JSONObject responseJson = new JSONObject(response.asString());
-        assertBidCountSingle(responseJson);
-        assertBidIdExists(responseJson, 0, 0);
-        assertBidImpId(responseJson, 0, 0, "imp_id");
-        assertBidPrice(responseJson, 0, 0, 1.25);
-        assertSeat(responseJson, 0, "improvedigital");
-        assertBidExtPrebidType(responseJson, 0, 0, "video");
-        assertCurrency(responseJson, "USD");
-
         String adm = getAdm(responseJson, 0, 0);
 
         // 1st pixel is what we had on creative.
@@ -265,6 +256,48 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         + "/Creative[@AdID='20220608']/Linear/MediaFiles/MediaFile[1]")
                 .evaluate(new InputSource(new StringReader(adm)));
         assertThat(mediaUrl.trim()).isEqualTo("https://media.pbs.improvedigital.com/20220608.mp4");
+    }
+
+    private JSONObject getVastResponseFromAuction(
+            String improveAdm, String price, String storedImpId, int placementIdOfStoredImp
+    ) throws IOException, JSONException {
+        String uniqueId = UUID.randomUUID().toString();
+        WIRE_MOCK_RULE.stubFor(
+                post(urlPathEqualTo("/improvedigital-exchange"))
+                        .withRequestBody(equalToJson(getBidRequestVideoForSSPImprovedigital(
+                                uniqueId, "USD", placementIdOfStoredImp, storedImpId, false, null, null, null
+                        )))
+                        .willReturn(aResponse().withBody(getBidResponse(
+                                uniqueId, "USD", Double.parseDouble(price), improveAdm
+                        )))
+        );
+
+        WIRE_MOCK_RULE.stubFor(
+                post(urlPathEqualTo("/cache"))
+                        .withRequestBody(equalToJson(createCacheRequest(
+                                "request_id_" + uniqueId,
+                                getVastXmlToCache(improveAdm, "improvedigital", price, placementIdOfStoredImp)
+                        )))
+                        .willReturn(aResponse().withBody(createCacheResponse(
+                                "cache_id_" + uniqueId
+                        )))
+        );
+
+        Response response = specWithPBSHeader(18080)
+                .body(getBidRequestVideoWithStoredImp(
+                        uniqueId, storedImpId, "vast"
+                ))
+                .post(Endpoint.openrtb2_auction.value());
+
+        JSONObject responseJson = new JSONObject(response.asString());
+        assertBidCountSingle(responseJson);
+        assertBidIdExists(responseJson, 0, 0);
+        assertBidImpId(responseJson, 0, 0, "imp_id_" + uniqueId);
+        assertBidPrice(responseJson, 0, 0, Double.parseDouble(price));
+        assertSeat(responseJson, 0, "improvedigital");
+        assertBidExtPrebidType(responseJson, 0, 0, "video");
+        assertCurrency(responseJson, "USD");
+        return responseJson;
     }
 
     @Test
@@ -653,7 +686,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
                         .withRequestBody(equalToJson(getBidRequestVideoForSSPImprovedigital(
-                                uniqueId, 20220618, "USD", null, null, null
+                                uniqueId, "USD", placementId, null, true, null, null, null
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(
                                 uniqueId, "USD", Double.parseDouble(price), improveAdm
@@ -673,7 +706,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         Response response = specWithPBSHeader(18080)
                 .body(getBidRequestVideo(
-                        uniqueId, "gvast", gamParams, 20220618, null, null, null)
+                        uniqueId, "gvast", gamParams, placementId, null, null, null)
                 )
                 .post(Endpoint.openrtb2_auction.value());
 
@@ -719,7 +752,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
                         .withRequestBody(equalToJson(getBidRequestVideoForSSPImprovedigital(
-                                uniqueId, 20220620, "USD", protocols, null, null
+                                uniqueId, "USD", placementId, null, true, protocols, null, null
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(
                                 uniqueId, "USD", Double.parseDouble(price), improveAdm
@@ -739,7 +772,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         Response response = specWithPBSHeader(18080)
                 .body(getBidRequestVideo(
-                        uniqueId, "gvast", null, 20220620, protocols, null, null)
+                        uniqueId, "gvast", null, placementId, protocols, null, null)
                 )
                 .post(Endpoint.openrtb2_auction.value());
 
@@ -775,7 +808,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
                         .withRequestBody(equalToJson(getBidRequestVideoForSSPImprovedigital(
-                                uniqueId, 20220620, "USD", null, siteIabCategories, null
+                                uniqueId, "USD", placementId, null, true, null, siteIabCategories, null
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(
                                 uniqueId, "USD", Double.parseDouble(price), improveAdm
@@ -795,7 +828,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         Response response = specWithPBSHeader(18080)
                 .body(getBidRequestVideo(
-                        uniqueId, "gvast", null, 20220620, null, siteIabCategories, null
+                        uniqueId, "gvast", null, placementId, null, siteIabCategories, null
                 ))
                 .post(Endpoint.openrtb2_auction.value());
 
@@ -836,7 +869,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
                         .withRequestBody(equalToJson(getBidRequestVideoForSSPImprovedigital(
-                                uniqueId, 20220620, "USD", null, null, customKeyValues
+                                uniqueId, "USD", placementId, null, true, null, null, customKeyValues
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(
                                 uniqueId, "USD", Double.parseDouble(price), improveAdm
@@ -856,7 +889,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         Response response = specWithPBSHeader(18080)
                 .body(getBidRequestVideo(
-                        uniqueId, "gvast", null, 20220620, null, null, customKeyValues
+                        uniqueId, "gvast", null, placementId, null, null, customKeyValues
                 ))
                 .post(Endpoint.openrtb2_auction.value());
 
@@ -1174,27 +1207,6 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
             spec = modifier.apply(spec);
         }
         return spec.get(GVastHandler.END_POINT);
-    }
-
-    private Response getVastResponseFromAuction(String improveAdm) throws IOException {
-        WIRE_MOCK_RULE.stubFor(
-                post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/test-vast-improvedigital-bid-request.json",
-                                null
-                        )))
-                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/test-vast-improvedigital-bid-response.json",
-                                Map.of("IT_TEST_MACRO_ADM", improveAdm)
-                        )))
-        );
-
-        return specWithPBSHeader(18080)
-                .body(jsonFromFileWithMacro(
-                        "/com/improvedigital/prebid/server/it/test-vast-auction-improvedigital-request.json",
-                        null
-                ))
-                .post(Endpoint.openrtb2_auction.value());
     }
 
     private Response getGVastResponseFromAuction(
@@ -1529,15 +1541,30 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
     protected String getBidRequestVideoForSSPImprovedigital(
             String uniqueId,
-            int placementId,
             String currency,
+            int placementId,
+            String storedImpId,
+            boolean isGvast,
             List<Integer> protocols,
             List<String> siteIabCategories,
             Map<String, String> customKeyValues
     ) {
+        ExtRequestPrebid.ExtRequestPrebidBuilder extPrebidBuilder = ExtRequestPrebid.builder()
+                .pbs(ExtRequestPrebidPbs.of("/openrtb2/auction"))
+                .server(ExtRequestPrebidServer.of(
+                        "http://localhost:8080", 1, "local"
+                ));
+
+        if (isGvast) {
+            extPrebidBuilder.targeting(getExtPrebidTargetingForGvast())
+                    .cache(getExtPrebidCacheForGvast())
+                    .channel(ExtRequestPrebidChannel.of("web"));
+        }
+
         return getBidRequestWeb(uniqueId,
                 imp -> imp.toBuilder()
                         .ext(new SSPBidRequestImpExt()
+                                .putStoredRequest(storedImpId)
                                 .putBidder()
                                 .putBidderKeyValue("placementId", placementId)
                                 .putBidderKeyValue("keyValues", customKeyValues /* nullable */)
@@ -1573,34 +1600,34 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         .tmax(5000L)
                         .cur(Arrays.asList(currency))
                         .regs(Regs.of(null, ExtRegs.of(0, null)))
-                        .ext(ExtRequest.of(ExtRequestPrebid.builder()
-                                .targeting(ExtRequestTargeting.builder()
-                                        .includewinners(true)
-                                        .includebidderkeys(true)
-                                        .includeformat(true)
-                                        .pricegranularity(BID_REQUEST_MAPPER.valueToTree(
-                                                ExtPriceGranularity.of(2, Arrays.asList(
-                                                        ExtGranularityRange.of(new BigDecimal(2), new BigDecimal(0.01)),
-                                                        ExtGranularityRange.of(new BigDecimal(5), new BigDecimal(0.05)),
-                                                        ExtGranularityRange.of(new BigDecimal(10), new BigDecimal(0.1)),
-                                                        ExtGranularityRange.of(new BigDecimal(40), new BigDecimal(0.5)),
-                                                        ExtGranularityRange.of(new BigDecimal(100), new BigDecimal(1))
-                                                ))
-                                        ))
-                                        .build())
-                                .cache(ExtRequestPrebidCache.of(
-                                        null,
-                                        ExtRequestPrebidCacheVastxml.of(null, true),
-                                        false
-                                ))
-                                .channel(ExtRequestPrebidChannel.of("web"))
-                                .pbs(ExtRequestPrebidPbs.of("/openrtb2/auction"))
-                                .server(ExtRequestPrebidServer.of(
-                                        "http://localhost:8080", 1, "local"
-                                ))
-                                .build()))
+                        .ext(ExtRequest.of(extPrebidBuilder.build()))
                         .build()
         );
+    }
+
+    private ExtRequestPrebidCache getExtPrebidCacheForGvast() {
+        return ExtRequestPrebidCache.of(
+                null,
+                ExtRequestPrebidCacheVastxml.of(null, true),
+                false
+        );
+    }
+
+    private ExtRequestTargeting getExtPrebidTargetingForGvast() {
+        return ExtRequestTargeting.builder()
+                .includewinners(true)
+                .includebidderkeys(true)
+                .includeformat(true)
+                .pricegranularity(BID_REQUEST_MAPPER.valueToTree(
+                        ExtPriceGranularity.of(2, Arrays.asList(
+                                ExtGranularityRange.of(new BigDecimal(2), new BigDecimal(0.01)),
+                                ExtGranularityRange.of(new BigDecimal(5), new BigDecimal(0.05)),
+                                ExtGranularityRange.of(new BigDecimal(10), new BigDecimal(0.1)),
+                                ExtGranularityRange.of(new BigDecimal(40), new BigDecimal(0.5)),
+                                ExtGranularityRange.of(new BigDecimal(100), new BigDecimal(1))
+                        ))
+                ))
+                .build();
     }
 
     private String getCustomParamCacheUrl(Map<String, List<String>> custParams, String bidderName) {

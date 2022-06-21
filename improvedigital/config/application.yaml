@@ -93,7 +93,7 @@ settings:
 #    video-endpoint: http://localhost:8989/config?video=true
   in-memory-cache:
     cache-size: 10000
-    ttl-seconds: 600
+    ttl-seconds: 31536000 # 365 days in seconds
     notification-endpoints-enabled: false
     http-update:
       endpoint: https://api.headerlift.com/pbs/getconfig

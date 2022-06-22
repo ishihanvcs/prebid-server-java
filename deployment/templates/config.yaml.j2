@@ -40,12 +40,12 @@ admin-endpoints:
     protected: true
 auction:
   ad-server-currency: USD
-  default-timeout-ms: 1500
+  default-timeout-ms: 1000
   max-timeout-ms: 5000
   timeout-adjustment-ms: 30
   stored-requests-timeout-ms: 200
   cache:
-    expected-request-time-ms: 50
+    expected-request-time-ms: 25
     only-winning-bids: false
 currency-converter:
   external-rates:
@@ -59,11 +59,6 @@ metrics:
     detailed-verbosity:
       - 545-dailymotion.com
       - 2018
-      - 777745e9-52c7-4961-9493-c1256b1eb096
-      - f581e297-04f7-4cbc-a5bb-45aadff70adc
-      - 506614d0-1293-419d-920f-8ee3d7f2affa
-      - 1c18ec6f-e568-4672-949b-b1be7d92952c
-      - 1c13fe55-df1a-40c4-82fc-703493b50eda
   prometheus:
     enabled: true
     port: 9112
@@ -89,20 +84,15 @@ settings:
   enforce-valid-account: true
 #  default-loading-timeout: 500 # optional long value in milliseconds, default value is 500 ms
   filesystem:
-#    settings-filename: config/settings.yaml
+    settings-filename: config/settings.yaml
     custom-settings-filename: config/custom-settings.yaml
-#    stored-requests-dir: stored-data/requests
-#    stored-imps-dir: stored-data/imps
-#    stored-responses-dir: stored-data/responses
-#    categories-dir: stored-data/categories
-  http:
-    endpoint: https://api.headerlift.com/pbs/getconfig
-    amp-endpoint: https://api.headerlift.com/pbs/getconfig?amp=true
-    video-endpoint: https://api.headerlift.com/pbs/getconfig?video=true
-    category-endpoint: http://localhost:8989/categories
+    stored-requests-dir: stored-data/requests
+    stored-imps-dir: stored-data/imps
+    stored-responses-dir: stored-data/responses
+    categories-dir: stored-data/categories
   in-memory-cache:
     cache-size: 10000
-    ttl-seconds: 43200 # 12 hours in seconds
+    ttl-seconds: 31536000 # 365 days in seconds
     notification-endpoints-enabled: false
     http-update:
       endpoint: https://api.headerlift.com/pbs/getconfig

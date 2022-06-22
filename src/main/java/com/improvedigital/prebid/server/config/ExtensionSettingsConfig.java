@@ -5,6 +5,7 @@ import com.improvedigital.prebid.server.settings.CachingCustomSettings;
 import com.improvedigital.prebid.server.settings.CustomSettings;
 import com.improvedigital.prebid.server.settings.FileCustomSettings;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
+import com.improvedigital.prebid.server.utils.ReflectionUtils;
 import io.vertx.core.Vertx;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.logging.Logger;
@@ -126,7 +127,10 @@ public class ExtensionSettingsConfig {
                 CachingApplicationSettings cachingApplicationSettings
         ) {
             return new AccountHttpPeriodicRefreshService(
-                    cachingApplicationSettings,
+                    ReflectionUtils.resolveActualInstanceWrappedInBean(
+                            cachingApplicationSettings,
+                            CachingApplicationSettings.class
+                    ),
                     endPoint,
                     refreshPeriod,
                     timeout,

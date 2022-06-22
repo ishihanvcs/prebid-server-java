@@ -1651,9 +1651,9 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     private String getCustomParamCacheUrl(Map<String, List<String>> custParams, String bidderName) {
         if (StringUtils.isNotEmpty(bidderName)) {
             return "http://"
-                    + custParams.get(("hb_cache_host_" + bidderName).substring(0, 20)).get(0)
-                    + custParams.get(("hb_cache_path_" + bidderName).substring(0, 20)).get(0)
-                    + "?uuid=" + custParams.get(("hb_uuid_" + bidderName).substring(0, 20)).get(0);
+                    + custParams.get(StringUtils.truncate("hb_cache_host_" + bidderName, 20)).get(0)
+                    + custParams.get(StringUtils.truncate("hb_cache_path_" + bidderName, 20)).get(0)
+                    + "?uuid=" + custParams.get(StringUtils.truncate("hb_uuid_" + bidderName, 20)).get(0);
         }
         return "http://"
                 + custParams.get("hb_cache_host").get(0)

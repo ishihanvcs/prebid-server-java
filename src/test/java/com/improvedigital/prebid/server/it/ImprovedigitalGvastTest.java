@@ -463,7 +463,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertNoCreative(adm, "1");
         assertExtensions(adm, "1", 1);
 
-        // 1st tag should be improvedigital's because of hb_deal_improvedigital.
+        // 1st tag should be improvedigital's because of hb_deal_improvedigit.
         // Note: Because of WireMock's scenario implementation, we must call /cache in this order.
         assertCachedContent(vastAdTagUri1.trim(), improveVastXmlToCache);
         assertCachedContent(vastAdTagUri2.trim(), genericVastXmlToCache);
@@ -500,13 +500,13 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         Map<String, List<String>> custParams = splitQuery(vastQueryParams.get("cust_params").get(0));
         assertQuerySingleValue(custParams.get("hb_bidder"), "improvedigital");
-        assertQuerySingleValue(custParams.get("hb_bidder_improvedigital"), "improvedigital");
+        assertQuerySingleValue(custParams.get("hb_bidder_improvedig"), "improvedigital");
 
         assertQuerySingleValue(custParams.get("hb_uuid"), uniqueId);
-        assertQuerySingleValue(custParams.get("hb_uuid_improvedigital"), uniqueId);
+        assertQuerySingleValue(custParams.get("hb_uuid_improvedigit"), uniqueId);
 
         assertQuerySingleValue(custParams.get("hb_format"), "video");
-        assertQuerySingleValue(custParams.get("hb_format_improvedigital"), "video");
+        assertQuerySingleValue(custParams.get("hb_format_improvedig"), "video");
 
         assertQuerySingleValue(custParams.get("hb_pb"), "1.08");
         assertQuerySingleValue(custParams.get("hb_pb_improvedigital"), "1.08");
@@ -517,9 +517,9 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 + "?uuid=" + custParams.get("hb_uuid").get(0)).isEqualTo(IT_TEST_CACHE_URL + "?uuid=" + uniqueId);
 
         assertThat(custParams.get("hb_cache_host").get(0))
-                .isEqualTo(custParams.get("hb_cache_host_improvedigital").get(0));
+                .isEqualTo(custParams.get("hb_cache_host_improv").get(0));
         assertThat(custParams.get("hb_cache_path").get(0))
-                .isEqualTo(custParams.get("hb_cache_path_improvedigital").get(0));
+                .isEqualTo(custParams.get("hb_cache_path_improv").get(0));
     }
 
     private void assertGamFirstLookUrl(String vastAdTagUri) throws MalformedURLException {

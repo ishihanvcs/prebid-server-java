@@ -39,6 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 )
 @TestPropertySource(properties = {
         "settings.filesystem.stored-imps-dir=src/test/resources/com/improvedigital/prebid/server/it/storedimps",
+        "settings.targeting.truncate-attr-chars=20"
 })
 public class ImprovedigitalIntegrationTest extends IntegrationTest {
 

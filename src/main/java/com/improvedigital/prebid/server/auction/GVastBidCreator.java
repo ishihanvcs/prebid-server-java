@@ -214,7 +214,7 @@ public class GVastBidCreator {
             if (prioritizeImprovedigitalDeals && vastUrls.size() > 0) {
                 for (Iterator<String> it = targetingKvs.fieldNames(); it.hasNext(); ) {
                     String key = it.next();
-                    if (key.equals("hb_deal_improvedigital")) {
+                    if (key.equals("hb_deal_improvedigit")) {
                         isImproveDeal = true;
                         break;
                     }
@@ -254,7 +254,7 @@ public class GVastBidCreator {
                 String key = it.next();
                 bidderKeyValues.append(key).append("=").append(targetingKvs.get(key).asText()).append("&");
 
-                if (key.equals("hb_deal_improvedigital")) {
+                if (key.equals("hb_deal_improvedigit")) {
                     isDeal = true;
                     continue;
                 }
@@ -501,7 +501,7 @@ public class GVastBidCreator {
     private String buildVastXmlResponseWithGam(String hbAuctionDebugInfo) {
         final String gamPrebidTargeting = formatPrebidGamKeyValueString();
         final boolean isImprovedigitalDeal = prioritizeImprovedigitalDeals
-                && gamPrebidTargeting.contains("hb_deal_improvedigital");
+                && gamPrebidTargeting.contains("hb_deal_improvedigit");
         final String custParams = this.custParams.toString();
         final String categoryTargeting;
 

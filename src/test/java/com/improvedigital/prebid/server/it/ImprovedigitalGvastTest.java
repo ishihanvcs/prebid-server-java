@@ -601,7 +601,9 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
-    public void auctionEndpointReturnsGvastResponseWithProperAdUnit() throws XPathExpressionException, IOException, JSONException {
+    public void auctionEndpointReturnsGvastResponseWithProperAdUnit()
+            throws XPathExpressionException, IOException, JSONException {
+
         assertThat(doGvastRequestAndGetAdUnitParam(
                 getVastXmlInline("ad_1", true), "1.12", 20220618,
                 Map.of("adUnit", "", "networkCode", "", "childNetworkCode", "")
@@ -675,7 +677,9 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
-    public void auctionEndpointReturnsGvastResponseWithProtocol() throws XPathExpressionException, IOException, JSONException {
+    public void auctionEndpointReturnsGvastResponseWithProtocol()
+            throws XPathExpressionException, IOException, JSONException {
+
         assertThat(doGvastRequestWithProtocolAndGetOutputParam(
                 getVastXmlInline("ad_1", true), "0.97", 20220620,
                 Arrays.asList(2, 3, 7)
@@ -807,7 +811,9 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
-    public void testGvastResponseWhenBidDiscardedForNotCaching() throws IOException, JSONException, XPathExpressionException {
+    public void testGvastResponseWhenBidDiscardedForNotCaching()
+            throws IOException, JSONException, XPathExpressionException {
+
         String improveVastXml1 = getVastXmlInline("improve_ad_1", true);
         String improveVastXml2 = getVastXmlInline("improve_ad_2", true);
 
@@ -1128,7 +1134,9 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertThat(extensionAttr.getNamedItem("fallback_index").getNodeValue()).isEqualTo("" + fallbackIndex);
     }
 
-    private void assertFallbackOnNoAd(String vastXml, boolean hasFallbackOnNoAd, String adId) throws XPathExpressionException {
+    private void assertFallbackOnNoAd(String vastXml, boolean hasFallbackOnNoAd, String adId)
+            throws XPathExpressionException {
+
         String wrapperLookupAttr = hasFallbackOnNoAd ? "@fallbackOnNoAd='true'" : "not(@fallbackOnNoAd)";
 
         NodeList wrappers = (NodeList) XPathFactory.newInstance().newXPath()

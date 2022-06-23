@@ -250,21 +250,26 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         }
     }
 
-    protected String getBidResponse(String bidderName, String uniqueId, String currency, BidResponseTestData... responseData) {
+    protected String getBidResponse(
+            String bidderName,
+            String uniqueId,
+            String currency,
+            BidResponseTestData... data
+    ) {
         BidResponse bidResponse = BidResponse.builder()
                 .id("request_id_" + uniqueId) /* request id is tied to the bid request. */
                 .cur(currency)
                 .seatbid(Arrays.asList(SeatBid.builder()
-                        .bid(IntStream.range(0, responseData.length).mapToObj(i ->
+                        .bid(IntStream.range(0, data.length).mapToObj(i ->
                                 Bid.builder()
                                         .id("bid_id_" + bidderName + "_" + i + "_" + uniqueId)
                                         .impid("imp_id_" + uniqueId) /* imp id is tied to the bid request. */
-                                        .price(new BigDecimal(responseData[i].price).setScale(2, RoundingMode.HALF_EVEN))
-                                        .adm(responseData[i].adm)
+                                        .price(new BigDecimal(data[i].price).setScale(2, RoundingMode.HALF_EVEN))
+                                        .adm(data[i].adm)
                                         .cid("campaign_id_" + i + "_" + uniqueId)
                                         .adid("ad_id_" + i + "_" + uniqueId)
                                         .crid("creative_id_" + i + "_" + uniqueId)
-                                        .ext(responseData[i].bidExt == null ? null : responseData[i].bidExt.get())
+                                        .ext(data[i].bidExt == null ? null : data[i].bidExt.get())
                                         .build()
                         ).collect(Collectors.toList()))
                         .build()
@@ -460,14 +465,18 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
 
         public AuctionBidRequestImpExt putImprovedigitalPbsKeyValue(String key, Map<String, ?> values) {
             if (values != null) {
-                ((ObjectNode) impExt.at("/prebid/improvedigitalpbs")).putIfAbsent(key, BID_REQUEST_MAPPER.valueToTree(values));
+                ((ObjectNode) impExt.at("/prebid/improvedigitalpbs")).putIfAbsent(
+                        key, BID_REQUEST_MAPPER.valueToTree(values)
+                );
             }
             return this;
         }
 
         public AuctionBidRequestImpExt putImprovedigitalPbsAt(String pathAt, String key, Map<String, ?> values) {
             if (values != null) {
-                ((ObjectNode) impExt.at("/prebid/improvedigitalpbs/" + pathAt)).putIfAbsent(key, BID_REQUEST_MAPPER.valueToTree(values));
+                ((ObjectNode) impExt.at("/prebid/improvedigitalpbs/" + pathAt)).putIfAbsent(
+                        key, BID_REQUEST_MAPPER.valueToTree(values)
+                );
             }
             return this;
         }
@@ -648,12 +657,11 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 + "      </Creatives>"
                 + "    </InLine>"
                 + "  </Ad>"
-                + "</VAST>"
-                ;
+                + "</VAST>";
     }
 
     protected String getVastXmlInlineWithMultipleAds(String adId, boolean hasImpPixel) {
-        return ("<VAST version=\"2.0\">"
+        return "<VAST version=\"2.0\">"
                 + "  <Ad id=\"" + adId + "-1" + "\">"
                 + "    <InLine>"
                 + "      <AdSystem>PBS IT Test Case</AdSystem>"
@@ -702,8 +710,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 + "      </Creatives>"
                 + "    </InLine>"
                 + "  </Ad>"
-                + "</VAST>"
-        );
+                + "</VAST>";
     }
 
     protected String getVastXmlWrapper(String adId, boolean hasImpPixel) {

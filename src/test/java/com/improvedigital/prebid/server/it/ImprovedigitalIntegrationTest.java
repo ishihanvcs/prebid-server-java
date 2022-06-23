@@ -714,7 +714,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     }
 
     protected String getVastXmlWrapper(String adId, boolean hasImpPixel) {
-        return ("<VAST version=\"2.0\">"
+        return "<VAST version=\"2.0\">"
                 + "  <Ad id=\"" + adId + "\">"
                 + "    <Wrapper fallbackOnNoAd=\"true\">"
                 + "      <AdSystem>PBS IT Test Case</AdSystem>"
@@ -727,12 +727,11 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 + "      </VASTAdTagURI>"
                 + "    </Wrapper>"
                 + "  </Ad>"
-                + "</VAST>"
-        ).replace("\"", "\\\"");
+                + "</VAST>";
     }
 
     protected String getVastXmlWrapperWithMultipleAds(String adId, boolean hasImpPixel) {
-        return ("<VAST version=\"2.0\">"
+        return "<VAST version=\"2.0\">"
                 + "  <Ad id=\"" + adId + "-1" + "\">"
                 + "    <Wrapper fallbackOnNoAd=\"true\">"
                 + "      <AdSystem>PBS IT Test Case</AdSystem>"
@@ -757,8 +756,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 + "      </VASTAdTagURI>"
                 + "    </Wrapper>"
                 + "  </Ad>"
-                + "</VAST>"
-        ).replace("\"", "\\\"");
+                + "</VAST>";
     }
 
     protected void assertBidCountSingle(JSONObject responseJson) throws JSONException {

@@ -119,7 +119,8 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldAddCustomTrackerOnVideoResponseWhenXmlHasImpression() throws Exception {
-        String vastXmlResponse = getVastXmlInline("20220406", true);
+        String vastXmlResponse = getVastXmlInline("20220406", true)
+                .replace("\"", "\\\"");
         final Response response = doVideoRequestAndGetResponse(Map.of(
                 "IT_TEST_MACRO_ADM", vastXmlResponse,
                 "IT_TEST_MACRO_CURRENCY", "USD"
@@ -186,7 +187,8 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldAddCustomTrackerOnVideoResponseWhenXmlHasNoImpression() throws Exception {
-        String vastXmlResponse = getVastXmlInline("20220406", false);
+        String vastXmlResponse = getVastXmlInline("20220406", false)
+                .replace("\"", "\\\"");
         final Response response = doVideoRequestAndGetResponse(Map.of(
                 "IT_TEST_MACRO_ADM", vastXmlResponse,
                 "IT_TEST_MACRO_CURRENCY", "USD"
@@ -207,7 +209,8 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldAddCustomTrackerOnVideoResponseWhenXmlHasWrapperAndImpression() throws Exception {
-        String vastXmlResponse = getVastXmlWrapper("20220406", true);
+        String vastXmlResponse = getVastXmlWrapper("20220406", true)
+                .replace("\"", "\\\"");
         final Response response = doVideoRequestAndGetResponse(Map.of(
                 "IT_TEST_MACRO_ADM", vastXmlResponse,
                 "IT_TEST_MACRO_CURRENCY", "USD"
@@ -234,7 +237,8 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldAddCustomTrackerOnVideoResponseWhenXmlHasWrapperAndImpressionAndMultipleAds() throws Exception {
-        String vastXmlResponse = getVastXmlWrapperWithMultipleAds("20220406", true);
+        String vastXmlResponse = getVastXmlWrapperWithMultipleAds("20220406", true)
+                .replace("\"", "\\\"");
         final Response response = doVideoRequestAndGetResponse(Map.of(
                 "IT_TEST_MACRO_ADM", vastXmlResponse,
                 "IT_TEST_MACRO_CURRENCY", "USD"
@@ -273,7 +277,8 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldAddCustomTrackerOnVideoResponseWhenXmlHasWrapperAndNoImpression() throws Exception {
-        String vastXmlResponse = getVastXmlWrapper("20220406", false);
+        String vastXmlResponse = getVastXmlWrapper("20220406", false)
+                .replace("\"", "\\\"");
         final Response response = doVideoRequestAndGetResponse(Map.of(
                 "IT_TEST_MACRO_ADM", vastXmlResponse,
                 "IT_TEST_MACRO_CURRENCY", "USD"
@@ -294,8 +299,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldAddCorrectPlacementIdInCustomTrackerOnVideoResponse() throws Exception {
-        String vastXmlResponse1 = getVastXmlWrapper("20220601_1", false);
-        String vastXmlResponse2 = getVastXmlInline("20220601_2", false);
+        String vastXmlResponse1 = getVastXmlWrapper("20220601_1", false)
+                .replace("\"", "\\\"");
+        String vastXmlResponse2 = getVastXmlInline("20220601_2", false)
+                .replace("\"", "\\\"");
         final Response response = doVideoMultiImpRequestAndGetResponse(Map.of(
                 "IT_TEST_MACRO_ADM_1", vastXmlResponse1,
                 "IT_TEST_MACRO_ADM_2", vastXmlResponse2,

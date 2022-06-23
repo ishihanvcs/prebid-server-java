@@ -24,6 +24,9 @@ import io.restassured.internal.mapping.Jackson2Mapper;
 import io.restassured.specification.RequestSpecification;
 import lombok.Builder;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -85,6 +88,9 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     protected static final String IT_TEST_IP = "193.168.244.1";
     protected static final String IT_TEST_DOMAIN = "pbs.improvedigital.com";
     protected static final String IT_TEST_MAIN_DOMAIN = "improvedigital.com";
+    protected static final String IT_TEST_CACHE_URL = "http://localhost:8090/cache";
+
+    protected static final String GAM_NETWORK_CODE = "1015413";
 
     protected static final ObjectMapper BID_REQUEST_MAPPER = new ObjectMapper()
             .setNodeFactory(JsonNodeFactory.withExactBigDecimals(true))
@@ -489,25 +495,29 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
      * </pre>
      */
     public static class BidResponseBidExt {
-        private ImprovedigitalBidExtImprovedigital.ImprovedigitalBidExtImprovedigitalBuilder builder;
+        private ObjectNode bidExt;
 
         public BidResponseBidExt() {
-            this.builder = ImprovedigitalBidExtImprovedigital.builder();
-        }
-
-        public ObjectNode get() {
-            return BID_REQUEST_MAPPER.valueToTree(
-                    ImprovedigitalBidExt.of(this.builder.build())
+            this.bidExt = BID_REQUEST_MAPPER.valueToTree(
+                    ImprovedigitalBidExt.of(ImprovedigitalBidExtImprovedigital.builder().build())
             );
         }
 
+        public ObjectNode get() {
+            return bidExt;
+        }
+
         public BidResponseBidExt putBuyingType(String buyingType) {
-            builder.buyingType(buyingType);
+            if (buyingType != null) {
+                ((ObjectNode) bidExt.at("/improvedigital")).put("buying_type", buyingType);
+            }
             return this;
         }
 
-        public BidResponseBidExt putLineItemId(int lineItemId) {
-            builder.lineItemId(lineItemId);
+        public BidResponseBidExt putLineItemId(Integer lineItemId) {
+            if (lineItemId != null) {
+                ((ObjectNode) bidExt.at("/improvedigital")).put("line_item_id", lineItemId);
+            }
             return this;
         }
     }
@@ -545,6 +555,18 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 + String.join(",", cachePutObjects)
                 + "]"
                 + "}";
+    }
+
+    protected void assertCachedContentFromCacheId(String uniqueId, String expectedCachedContent) throws IOException {
+        assertCachedContent(IT_TEST_CACHE_URL + "?uuid=" + uniqueId, expectedCachedContent);
+    }
+
+    protected void assertCachedContent(String cacheUrl, String expectedCachedContent) throws IOException {
+        assertThat(IOUtils.toString(
+                HttpClientBuilder.create().build().execute(
+                        new HttpGet(cacheUrl)
+                ).getEntity().getContent(), "UTF-8"
+        )).isEqualTo(expectedCachedContent);
     }
 
     protected String createResourceFile(String resourceFilePathFromSlash, String fileContent) throws IOException {

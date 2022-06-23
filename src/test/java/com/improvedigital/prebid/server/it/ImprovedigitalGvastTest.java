@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import com.improvedigital.prebid.server.handler.GVastHandler;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import lombok.Builder;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
@@ -245,9 +246,14 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String vastXml = getVastXmlInline("ad_1", true);
         String cacheId = getCacheIdRandom();
 
-        JSONObject responseJson = doGvastAuctionRequest(
-                "gvast", null, null, null, null, "20220608",
-                20220608, null, vastXml, "1.08", cacheId
+        JSONObject responseJson = doGvastAuctionRequest(GvastAuctionTestParam.builder()
+                .responseType("gvast")
+                .storedImpId("20220608")
+                .improvePlacementId(20220608)
+                .improveAdm(vastXml)
+                .improvePrice("1.08")
+                .improveCacheId(cacheId)
+                .build()
         );
 
         String adm = getAdm(responseJson, 0, 0);
@@ -272,16 +278,22 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String vastXml = getVastXmlInline("ad_1", true);
         String cacheId = getCacheIdRandom();
 
-        JSONObject responseJson = doGvastAuctionRequest(
-                "gvast", Arrays.asList(
+        JSONObject responseJson = doGvastAuctionRequest(GvastAuctionTestParam.builder()
+                .responseType("gvast")
+                .storedImpId("20220608")
+                .improvePlacementId(20220608)
+                .improveAdm(vastXml)
+                .improvePrice("1.09")
+                .improveCacheId(cacheId)
+                .defaultWaterfalls(Arrays.asList(
                         "gam_first_look",
                         "gam",
                         "gam_first_look",
                         "https://my.customvast.xml",
                         "gam_no_hb",
                         "gam_improve_deal"
-                ), null, null, null, "20220608",
-                20220608, null, vastXml, "1.09", cacheId
+                ))
+                .build()
         );
 
         String adm = getAdm(responseJson, 0, 0);
@@ -343,14 +355,21 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String vastXml = getVastXmlInline("ad_1", true);
         String cacheId = getCacheIdRandom();
 
-        JSONObject responseJson = doGvastAuctionRequest(
-                "gvast", Arrays.asList("gam", "https://my.customvast.xml"
-                        + "?gdpr={{gdpr}}"
-                        + "&gdpr_consent={{gdpr_consent}}"
-                        + "&referrer={{referrer}}"
-                        + "&t={{timestamp}}"
-                ), null, null, null, "20220608",
-                20220608, null, vastXml, "1.11", cacheId
+        JSONObject responseJson = doGvastAuctionRequest(GvastAuctionTestParam.builder()
+                .responseType("gvast")
+                .storedImpId("20220608")
+                .improvePlacementId(20220608)
+                .improveAdm(vastXml)
+                .improvePrice("1.11")
+                .improveCacheId(cacheId)
+                .defaultWaterfalls(Arrays.asList(
+                        "gam", "https://my.customvast.xml"
+                                + "?gdpr={{gdpr}}"
+                                + "&gdpr_consent={{gdpr_consent}}"
+                                + "&referrer={{referrer}}"
+                                + "&t={{timestamp}}"
+                ))
+                .build()
         );
 
         String adm = getAdm(responseJson, 0, 0);
@@ -387,10 +406,22 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String improveCacheId = getCacheIdRandom();
         String genericCacheId = getCacheIdRandom();
 
-        JSONObject responseJson = doGvastAuctionRequestToMultipleBidder(
-                "gvast", Arrays.asList("gam_first_look", "gam"), 20220617,
-                improveVastXml1, "1.65", improveVastXml2, "1.75", improveCacheId, false,
-                genericVastXml1, "1.95", genericVastXml2, "1.85", genericCacheId
+        JSONObject responseJson = doGvastAuctionRequestToMultipleBidder(GvastMultipleBidderAuctionTestParam.builder()
+                .responseType("gvast")
+                .defaultWaterfalls(Arrays.asList("gam_first_look", "gam"))
+                .improvePlacementId(20220617)
+                .improveAdm1(improveVastXml1)
+                .improvePrice1("1.65")
+                .improveAdm2(improveVastXml2)
+                .improvePrice2("1.75")
+                .improveCacheId(improveCacheId)
+                .improveReturnsDeal(false)
+                .genericAdm1(genericVastXml1)
+                .genericPrice1("1.95")
+                .genericAdm2(genericVastXml2)
+                .genericPrice2("1.85")
+                .genericCacheId(genericCacheId)
+                .build()
         );
 
         String adm = getAdm(responseJson, 0, 0);
@@ -435,10 +466,22 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String improveCacheId = getCacheIdRandom();
         String genericCacheId = getCacheIdRandom();
 
-        JSONObject responseJson = doGvastAuctionRequestToMultipleBidder(
-                "gvast", Arrays.asList("gam_first_look", "gam"), 20220617,
-                improveVastXml1, "1.65", improveVastXml2, "1.75", improveCacheId, true,
-                genericVastXml1, "1.95", genericVastXml2, "1.85", genericCacheId
+        JSONObject responseJson = doGvastAuctionRequestToMultipleBidder(GvastMultipleBidderAuctionTestParam.builder()
+                .responseType("gvast")
+                .defaultWaterfalls(Arrays.asList("gam_first_look", "gam"))
+                .improvePlacementId(20220617)
+                .improveAdm1(improveVastXml1)
+                .improvePrice1("1.65")
+                .improveAdm2(improveVastXml2)
+                .improvePrice2("1.75")
+                .improveCacheId(improveCacheId)
+                .improveReturnsDeal(true)
+                .genericAdm1(genericVastXml1)
+                .genericPrice1("1.95")
+                .genericAdm2(genericVastXml2)
+                .genericPrice2("1.85")
+                .genericCacheId(genericCacheId)
+                .build()
         );
 
         String adm = getAdm(responseJson, 0, 0);
@@ -471,9 +514,14 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String vastXml = getVastXmlInline("ad_1", true);
         String cacheId = getCacheIdRandom();
 
-        JSONObject responseJson = doGvastAuctionRequest(
-                "waterfall", null, null, null, null, "20220608",
-                20220608, null, vastXml, "1.13", cacheId
+        JSONObject responseJson = doGvastAuctionRequest(GvastAuctionTestParam.builder()
+                .responseType("waterfall")
+                .storedImpId("20220608")
+                .improvePlacementId(20220608)
+                .improveAdm(vastXml)
+                .improvePrice("1.13")
+                .improveCacheId(cacheId)
+                .build()
         );
 
         String adm = getAdm(responseJson, 0, 0);
@@ -505,10 +553,21 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String improveCacheId = getCacheIdRandom();
         String genericCacheId = getCacheIdRandom();
 
-        JSONObject responseJson = doGvastAuctionRequestToMultipleBidder(
-                "waterfall", null, 20220615,
-                improveVastXml1, "1.17", improveVastXml2, "1.11", improveCacheId, true,
-                genericVastXml1, "1.01", genericVastXml2, "1.05", genericCacheId
+        JSONObject responseJson = doGvastAuctionRequestToMultipleBidder(GvastMultipleBidderAuctionTestParam.builder()
+                .responseType("waterfall")
+                .improvePlacementId(20220615)
+                .improveAdm1(improveVastXml1)
+                .improvePrice1("1.17")
+                .improveAdm2(improveVastXml2)
+                .improvePrice2("1.11")
+                .improveCacheId(improveCacheId)
+                .improveReturnsDeal(true)
+                .genericAdm1(genericVastXml1)
+                .genericPrice1("1.01")
+                .genericAdm2(genericVastXml2)
+                .genericPrice2("1.05")
+                .genericCacheId(genericCacheId)
+                .build()
         );
 
         String adm = getAdm(responseJson, 0, 0);
@@ -589,9 +648,14 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
             String improveAdm, String improvePrice, int placementId, Map<String, String> gamParams
     ) throws IOException, JSONException, XPathExpressionException {
 
-        JSONObject responseJson = doGvastAuctionRequest(
-                "gvast", null, null, gamParams, null, null,
-                placementId, null, improveAdm, improvePrice, getCacheIdRandom()
+        JSONObject responseJson = doGvastAuctionRequest(GvastAuctionTestParam.builder()
+                .responseType("gvast")
+                .gamParams(gamParams)
+                .improvePlacementId(placementId)
+                .improveAdm(improveAdm)
+                .improvePrice(improvePrice)
+                .improveCacheId(getCacheIdRandom())
+                .build()
         );
 
         String adm = getAdm(responseJson, 0, 0);
@@ -633,9 +697,14 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
             String improveAdm, String improvePrice, int placementId, List<Integer> protocols
     ) throws IOException, JSONException, XPathExpressionException {
 
-        JSONObject responseJson = doGvastAuctionRequest(
-                "gvast", null, protocols, null, null, null,
-                placementId, null, improveAdm, improvePrice, getCacheIdRandom()
+        JSONObject responseJson = doGvastAuctionRequest(GvastAuctionTestParam.builder()
+                .responseType("gvast")
+                .videoProtocols(protocols)
+                .improvePlacementId(placementId)
+                .improveAdm(improveAdm)
+                .improvePrice(improvePrice)
+                .improveCacheId(getCacheIdRandom())
+                .build()
         );
 
         String adm = getAdm(responseJson, 0, 0);
@@ -667,9 +736,14 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
             String improveAdm, String improvePrice, int placementId, List<String> siteIabCategories
     ) throws IOException, JSONException, XPathExpressionException {
 
-        JSONObject responseJson = doGvastAuctionRequest(
-                "gvast", null, null, null, siteIabCategories, null,
-                placementId, null, improveAdm, improvePrice, getCacheIdRandom()
+        JSONObject responseJson = doGvastAuctionRequest(GvastAuctionTestParam.builder()
+                .responseType("gvast")
+                .siteIabCategories(siteIabCategories)
+                .improvePlacementId(placementId)
+                .improveAdm(improveAdm)
+                .improvePrice(improvePrice)
+                .improveCacheId(getCacheIdRandom())
+                .build()
         );
 
         String adm = getAdm(responseJson, 0, 0);
@@ -706,9 +780,14 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
             String improveAdm, String improvePrice, int placementId, Map<String, String> customKeyValues
     ) throws IOException, JSONException, XPathExpressionException {
 
-        JSONObject responseJson = doGvastAuctionRequest(
-                "gvast", null, null, null, null, null,
-                placementId, customKeyValues, improveAdm, improvePrice, getCacheIdRandom()
+        JSONObject responseJson = doGvastAuctionRequest(GvastAuctionTestParam.builder()
+                .responseType("gvast")
+                .improvePlacementId(placementId)
+                .improveCustomKeyValues(customKeyValues)
+                .improveAdm(improveAdm)
+                .improvePrice(improvePrice)
+                .improveCacheId(getCacheIdRandom())
+                .build()
         );
 
         String adm = getAdm(responseJson, 0, 0);
@@ -1086,21 +1165,14 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         return responseJson;
     }
 
-    private JSONObject doGvastAuctionRequest(
-            String responseType,
-            List<String> defaultWaterfalls,
-            List<Integer> videoProtocols,
-            Map<String, ?> gamParams,
-            List<String> siteIabCategories,
-            String storedImpId,
-            int improvePlacementId,
-            Map<String, String> improveCustomKeyValues,
-            String improveAdm, String improvePrice,
-            String improveCacheId
-    ) throws IOException, JSONException {
+    private JSONObject doGvastAuctionRequest(GvastAuctionTestParam param) throws IOException, JSONException {
+        String cachedContent = getVastXmlToCache(
+                param.improveAdm, "improvedigital", param.improvePrice, param.improvePlacementId
+        );
 
-        String cachedContent = getVastXmlToCache(improveAdm, "improvedigital", improvePrice, improvePlacementId);
-        Map<String, List<String>> waterfalls = defaultWaterfalls == null ? null : Map.of("default", defaultWaterfalls);
+        Map<String, List<String>> waterfalls = param.defaultWaterfalls == null
+                ? null : Map.of("default", param.defaultWaterfalls);
+
         String uniqueId = UUID.randomUUID().toString();
 
         WIRE_MOCK_RULE.stubFor(
@@ -1109,18 +1181,18 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                 SSPBidRequestTestData.builder()
                                         .currency("USD")
                                         .impExt(new SSPBidRequestImpExt()
-                                                .putStoredRequest(storedImpId)
+                                                .putStoredRequest(param.storedImpId)
                                                 .putBidder()
-                                                .putBidderKeyValue("placementId", improvePlacementId)
-                                                .putBidderKeyValue("keyValues", improveCustomKeyValues))
+                                                .putBidderKeyValue("placementId", param.improvePlacementId)
+                                                .putBidderKeyValue("keyValues", param.improveCustomKeyValues))
                                         .extRequestTargeting(getExtPrebidTargetingForGvast())
                                         .extRequestPrebidCache(getExtPrebidCacheForGvast())
                                         .build()
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(
                                 uniqueId, "USD", BidResponseTestData.builder()
-                                        .price(Double.parseDouble(improvePrice))
-                                        .adm(improveAdm)
+                                        .price(Double.parseDouble(param.improvePrice))
+                                        .adm(param.improveAdm)
                                         .build()
                         )))
         );
@@ -1132,38 +1204,38 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                 cachedContent
                         )))
                         .willReturn(aResponse().withBody(createCacheResponse(
-                                improveCacheId
+                                param.improveCacheId
                         )))
         );
 
         WIRE_MOCK_RULE.stubFor(
                 get(urlPathEqualTo("/cache"))
-                        .withQueryParam("uuid", equalToIgnoreCase(improveCacheId))
+                        .withQueryParam("uuid", equalToIgnoreCase(param.improveCacheId))
                         .willReturn(aResponse()
                                 .withBody(cachedContent))
         );
 
         AuctionBidRequestImpExt auctionImpExt = new AuctionBidRequestImpExt()
                 .putImprovedigitalPbs()
-                .putImprovedigitalPbsKeyValue("responseType", responseType)
-                .putImprovedigitalPbsKeyValue("gam", gamParams)
+                .putImprovedigitalPbsKeyValue("responseType", param.responseType)
+                .putImprovedigitalPbsKeyValue("gam", param.gamParams)
                 .putImprovedigitalPbsKeyValue("waterfall", waterfalls);
 
-        if (storedImpId != null) {
-            auctionImpExt.putStoredRequest(storedImpId);
+        if (param.storedImpId != null) {
+            auctionImpExt.putStoredRequest(param.storedImpId);
         } else {
             auctionImpExt
                     .putBidder("improvedigital")
-                    .putBidderKeyValue("improvedigital", "placementId", improvePlacementId)
-                    .putBidderKeyValue("improvedigital", "keyValues", improveCustomKeyValues);
+                    .putBidderKeyValue("improvedigital", "placementId", param.improvePlacementId)
+                    .putBidderKeyValue("improvedigital", "keyValues", param.improveCustomKeyValues);
         }
 
         Response response = specWithPBSHeader(18080)
                 .body(getAuctionBidRequestVideo(uniqueId, AuctionBidRequestTestData.builder()
                         .currency("USD")
                         .impExt(auctionImpExt)
-                        .videoProtocols(videoProtocols)
-                        .siteIABCategories(siteIabCategories)
+                        .videoProtocols(param.videoProtocols)
+                        .siteIABCategories(param.siteIabCategories)
                         .build()
                 ))
                 .post(Endpoint.openrtb2_auction.value());
@@ -1177,37 +1249,28 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         return responseJson;
     }
 
-    private JSONObject doGvastAuctionRequestToMultipleBidder(
-            String responseType,
-            List<String> defaultWaterfalls,
-            int improvePlacementId,
-            String improveAdm1,
-            String improvePrice1,
-            String improveAdm2,
-            String improvePrice2,
-            String improveCacheId,
-            boolean improveReturnsDeal,
-            String genericAdm1,
-            String genericPrice1,
-            String genericAdm2,
-            String genericPrice2,
-            String genericCacheId) throws IOException, JSONException {
+    private JSONObject doGvastAuctionRequestToMultipleBidder(GvastMultipleBidderAuctionTestParam param)
+            throws IOException, JSONException {
 
-        double improvePrice1Value = Double.parseDouble(improvePrice1);
-        double improvePrice2Value = Double.parseDouble(improvePrice2);
+        double improvePrice1Value = Double.parseDouble(param.improvePrice1);
+        double improvePrice2Value = Double.parseDouble(param.improvePrice2);
         String improveVastXmlToCache = improvePrice1Value > improvePrice2Value
-                ? getVastXmlToCache(improveAdm1, "improvedigital", improvePrice1, improvePlacementId)
-                : getVastXmlToCache(improveAdm2, "improvedigital", improvePrice2, improvePlacementId);
+                ? getVastXmlToCache(param.improveAdm1, "improvedigital", param.improvePrice1, param.improvePlacementId)
+                : getVastXmlToCache(param.improveAdm2, "improvedigital", param.improvePrice2, param.improvePlacementId);
 
-        double genericPrice1Value = Double.parseDouble(genericPrice1);
-        double genericPrice2Value = Double.parseDouble(genericPrice2);
+        double genericPrice1Value = Double.parseDouble(param.genericPrice1);
+        double genericPrice2Value = Double.parseDouble(param.genericPrice2);
         String genericVastXmlToCache = genericPrice1Value > genericPrice2Value
-                ? getVastXmlToCache(genericAdm1, "generic", genericPrice1, improvePlacementId)
-                : getVastXmlToCache(genericAdm2, "generic", genericPrice2, improvePlacementId);
+                ? getVastXmlToCache(param.genericAdm1, "generic", param.genericPrice1, param.improvePlacementId)
+                : getVastXmlToCache(param.genericAdm2, "generic", param.genericPrice2, param.improvePlacementId);
 
-        BidResponseBidExt improveDealBidExt = new BidResponseBidExt().putBuyingType("classic").putLineItemId(improvePlacementId * 10);
+        BidResponseBidExt improveDealBidExt = new BidResponseBidExt()
+                .putBuyingType("classic")
+                .putLineItemId(param.improvePlacementId * 10);
 
-        Map<String, List<String>> waterfalls = defaultWaterfalls == null ? null : Map.of("default", defaultWaterfalls);
+        Map<String, List<String>> waterfalls = param.defaultWaterfalls == null
+                ? null : Map.of("default", param.defaultWaterfalls);
+
         String uniqueId = UUID.randomUUID().toString();
 
         WIRE_MOCK_RULE.stubFor(
@@ -1217,7 +1280,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                         .currency("USD")
                                         .impExt(new SSPBidRequestImpExt()
                                                 .putBidder()
-                                                .putBidderKeyValue("placementId", improvePlacementId))
+                                                .putBidderKeyValue("placementId", param.improvePlacementId))
                                         .extRequestTargeting(getExtPrebidTargetingForGvast())
                                         .extRequestPrebidCache(getExtPrebidCacheForGvast())
                                         .build()
@@ -1226,15 +1289,15 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                 uniqueId, "USD",
                                 BidResponseTestData.builder()
                                         .price(improvePrice1Value)
-                                        .adm(improveAdm1)
-                                        .bidExt(improveReturnsDeal && improvePrice1Value > improvePrice2Value
+                                        .adm(param.improveAdm1)
+                                        .bidExt(param.improveReturnsDeal && improvePrice1Value > improvePrice2Value
                                                 ? improveDealBidExt
                                                 : null)
                                         .build(),
                                 BidResponseTestData.builder()
                                         .price(improvePrice2Value)
-                                        .adm(improveAdm2)
-                                        .bidExt(improveReturnsDeal && improvePrice2Value > improvePrice1Value
+                                        .adm(param.improveAdm2)
+                                        .bidExt(param.improveReturnsDeal && improvePrice2Value > improvePrice1Value
                                                 ? improveDealBidExt
                                                 : null)
                                         .build()
@@ -1257,11 +1320,11 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                 uniqueId, "USD",
                                 BidResponseTestData.builder()
                                         .price(genericPrice1Value)
-                                        .adm(genericAdm1)
+                                        .adm(param.genericAdm1)
                                         .build(),
                                 BidResponseTestData.builder()
                                         .price(genericPrice2Value)
-                                        .adm(genericAdm2)
+                                        .adm(param.genericAdm2)
                                         .build()
                         )))
         );
@@ -1279,8 +1342,8 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                         "com/improvedigital/prebid/server/it/"
                                                 + "test-gvast-multiple-bidder-cache-response.json",
                                         "{"
-                                                + "\"" + improveVastXmlToCache + "\":\"" + improveCacheId + "\","
-                                                + "\"" + genericVastXmlToCache + "\":\"" + genericCacheId + "\""
+                                                + "\"" + improveVastXmlToCache + "\":\"" + param.improveCacheId + "\","
+                                                + "\"" + genericVastXmlToCache + "\":\"" + param.genericCacheId + "\""
                                                 + "}"
                                 ))
                         )
@@ -1293,7 +1356,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 get(urlPathEqualTo("/cache"))
                         .inScenario(cacheStubScenario)
                         .whenScenarioStateIs(Scenario.STARTED)
-                        .withQueryParam("uuid", equalToIgnoreCase(improveCacheId))
+                        .withQueryParam("uuid", equalToIgnoreCase(param.improveCacheId))
                         .willReturn(aResponse()
                                 .withBody(improveVastXmlToCache))
                         .willSetStateTo(cacheStubNext)
@@ -1302,7 +1365,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 get(urlPathEqualTo("/cache"))
                         .inScenario(cacheStubScenario)
                         .whenScenarioStateIs(cacheStubNext)
-                        .withQueryParam("uuid", equalToIgnoreCase(genericCacheId))
+                        .withQueryParam("uuid", equalToIgnoreCase(param.genericCacheId))
                         .willReturn(aResponse()
                                 .withBody(genericVastXmlToCache))
                         .willSetStateTo(Scenario.STARTED)
@@ -1313,10 +1376,10 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         .currency("USD")
                         .impExt(new AuctionBidRequestImpExt()
                                 .putImprovedigitalPbs()
-                                .putImprovedigitalPbsKeyValue("responseType", responseType)
+                                .putImprovedigitalPbsKeyValue("responseType", param.responseType)
                                 .putImprovedigitalPbsKeyValue("waterfall", waterfalls)
                                 .putBidder("improvedigital")
-                                .putBidderKeyValue("improvedigital", "placementId", improvePlacementId)
+                                .putBidderKeyValue("improvedigital", "placementId", param.improvePlacementId)
                                 .putBidder("generic")
                                 .putBidderKeyValue("generic", "exampleProperty", "examplePropertyValue"))
                         .build()
@@ -1380,5 +1443,46 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                 + "</InLine>"
                 )
                 .replace("\"", "\\\"");
+    }
+
+    /**
+     * Class to deal with many permutation/combination of gvast request/response parameters.
+     * This is to avoid long method parameter names code smell.
+     */
+    @Builder(toBuilder = true)
+    public static class GvastAuctionTestParam {
+        String responseType;
+        List<String> defaultWaterfalls;
+        List<Integer> videoProtocols;
+        Map<String, ?> gamParams;
+        List<String> siteIabCategories;
+        String storedImpId;
+        int improvePlacementId;
+        Map<String, String> improveCustomKeyValues;
+        String improveAdm;
+        String improvePrice;
+        String improveCacheId;
+    }
+
+    /**
+     * Class to deal with many permutation/combination of gvast request/response parameters.
+     * This is to avoid long method parameter names code smell.
+     */
+    @Builder(toBuilder = true)
+    public static class GvastMultipleBidderAuctionTestParam {
+        String responseType;
+        List<String> defaultWaterfalls;
+        int improvePlacementId;
+        String improveAdm1;
+        String improvePrice1;
+        String improveAdm2;
+        String improvePrice2;
+        String improveCacheId;
+        boolean improveReturnsDeal;
+        String genericAdm1;
+        String genericPrice1;
+        String genericAdm2;
+        String genericPrice2;
+        String genericCacheId;
     }
 }

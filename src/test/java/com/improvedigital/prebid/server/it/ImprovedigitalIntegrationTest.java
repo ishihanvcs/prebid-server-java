@@ -13,6 +13,7 @@ import com.iab.openrtb.request.Publisher;
 import com.iab.openrtb.request.Regs;
 import com.iab.openrtb.request.Site;
 import com.iab.openrtb.request.Source;
+import com.iab.openrtb.request.User;
 import com.iab.openrtb.request.Video;
 import com.iab.openrtb.response.Bid;
 import com.iab.openrtb.response.BidResponse;
@@ -44,6 +45,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidPbs;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidServer;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestTargeting;
 import org.prebid.server.proto.openrtb.ext.request.ExtSite;
+import org.prebid.server.proto.openrtb.ext.request.ExtUser;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.test.context.TestPropertySource;
 
@@ -154,6 +156,11 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                         .site(Site.builder()
                                 .cat(bidRequestData.siteIABCategories)
                                 .build())
+                        .user(User.builder()
+                                .ext(ExtUser.builder()
+                                        .consent(bidRequestData.gdprConsent)
+                                        .build())
+                                .build())
                         .build()
         );
     }
@@ -188,6 +195,11 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                         .device(Device.builder()
                                 .ua(IT_TEST_USER_AGENT)
                                 .ip(IT_TEST_IP)
+                                .build())
+                        .user(User.builder()
+                                .ext(ExtUser.builder()
+                                        .consent(bidRequestData.gdprConsent)
+                                        .build())
                                 .build())
                         .at(1)
                         .tmax(5000L)
@@ -280,6 +292,8 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
 
         List<String> siteIABCategories;
 
+        String gdprConsent;
+
         @JsonIgnore
         public List<Integer> getVideoProtocols(int defaultProtocol) {
             return CollectionUtils.isEmpty(videoProtocols) ? Arrays.asList(defaultProtocol) : videoProtocols;
@@ -303,6 +317,8 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         List<Integer> videoProtocols;
 
         List<String> siteIABCategories;
+
+        String gdprConsent;
 
         @JsonIgnore
         public List<Integer> getVideoProtocols(int defaultProtocol) {

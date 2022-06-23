@@ -48,6 +48,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.PATH;
 
 @TestPropertySource(
         locations = {
@@ -346,6 +347,14 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertSSPSyncPixels(adm, "5");
         assertNoCreative(adm, "5");
         assertExtensions(adm, "5", 5);
+
+        // Last ad will not have fallbackOnNoAd=true. All the others will.
+        assertFallbackOnNoAd(adm, true, "0");
+        assertFallbackOnNoAd(adm, true, "1");
+        assertFallbackOnNoAd(adm, true, "2");
+        assertFallbackOnNoAd(adm, true, "3");
+        assertFallbackOnNoAd(adm, true, "4");
+        assertFallbackOnNoAd(adm, false, "5");
     }
 
     @Test
@@ -362,6 +371,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .improveAdm(vastXml)
                 .improvePrice("1.11")
                 .improveCacheId(cacheId)
+                .gdprConsent("BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA")
                 .defaultWaterfalls(Arrays.asList(
                         "gam", "https://my.customvast.xml"
                                 + "?gdpr={{gdpr}}"
@@ -384,7 +394,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String vastAdTagUri2 = getVastTagUri(adm, "1");
         Map<String, List<String>> customUrlParams = splitQuery(new URL(vastAdTagUri2).getQuery());
         assertQuerySingleValue(customUrlParams.get("gdpr"), "0");
-        assertQuerySingleValue(customUrlParams.get("gdpr_consent"), "");
+        assertQuerySingleValue(customUrlParams.get("gdpr_consent"), "BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA");
         assertQuerySingleValue(customUrlParams.get("referrer"), "http://pbs.improvedigital.com");
         assertThat(Long.parseLong(customUrlParams.get("t").get(0)) > (System.currentTimeMillis() - 5 * 60 * 1000L));
         assertThat(Long.parseLong(customUrlParams.get("t").get(0)) < System.currentTimeMillis());
@@ -804,7 +814,6 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     @Test
     public void moreTests() {
         // Use gdpr_consent=BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA
-        // For last ad, <Wrapper fallbackOnNoAd="true">
         // Bidder sends Wrapper.
         // Bid discarded when vastxml is not cached.
     }
@@ -1042,6 +1051,15 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertThat(extensionAttr.getNamedItem("fallback_index").getNodeValue()).isEqualTo("" + fallbackIndex);
     }
 
+    private void assertFallbackOnNoAd(String vastXml, boolean hasFallbackOnNoAd, String adId) throws XPathExpressionException {
+        String wrapperLookupAttr = hasFallbackOnNoAd ? "@fallbackOnNoAd='true'" : "not(@fallbackOnNoAd)";
+
+        NodeList wrappers = (NodeList) XPathFactory.newInstance().newXPath()
+                .compile("/VAST/Ad[@id='" + adId + "']/Wrapper[" + wrapperLookupAttr + "]")
+                .evaluate(new InputSource(new StringReader(vastXml)), XPathConstants.NODESET);
+        assertThat(wrappers.getLength()).isEqualTo(1);
+    }
+
     private void assertGamGeneralParameters(Map<String, List<String>> vastQueryParams, String placementId) {
         assertGamGeneralParameters(vastQueryParams, placementId, "http://pbs.improvedigital.com" /* Web request */);
     }
@@ -1150,7 +1168,8 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                 .putStoredRequest(storedImpId)
                                 .putImprovedigitalPbs()
                                 .putImprovedigitalPbsKeyValue("responseType", "vast")
-                        ).build()
+                        )
+                        .build()
                 ))
                 .post(Endpoint.openrtb2_auction.value());
 
@@ -1187,6 +1206,9 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                                 .putBidderKeyValue("keyValues", param.improveCustomKeyValues))
                                         .extRequestTargeting(getExtPrebidTargetingForGvast())
                                         .extRequestPrebidCache(getExtPrebidCacheForGvast())
+                                        .videoProtocols(param.videoProtocols)
+                                        .siteIABCategories(param.siteIabCategories)
+                                        .gdprConsent(param.gdprConsent)
                                         .build()
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(
@@ -1236,6 +1258,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         .impExt(auctionImpExt)
                         .videoProtocols(param.videoProtocols)
                         .siteIABCategories(param.siteIabCategories)
+                        .gdprConsent(param.gdprConsent)
                         .build()
                 ))
                 .post(Endpoint.openrtb2_auction.value());
@@ -1462,6 +1485,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String improveAdm;
         String improvePrice;
         String improveCacheId;
+        String gdprConsent;
     }
 
     /**

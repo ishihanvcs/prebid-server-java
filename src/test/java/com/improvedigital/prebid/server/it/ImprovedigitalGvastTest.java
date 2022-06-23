@@ -48,7 +48,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.InstanceOfAssertFactories.PATH;
 
 @TestPropertySource(
         locations = {
@@ -808,14 +807,48 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
-    public void testGvastResponseWithFallbackOnNoAd() {
-    }
+    public void testGvastResponseWhenBidDiscardedForNotCaching() throws IOException, JSONException, XPathExpressionException {
+        String improveVastXml1 = getVastXmlInline("improve_ad_1", true);
+        String improveVastXml2 = getVastXmlInline("improve_ad_2", true);
 
-    @Test
-    public void moreTests() {
-        // Use gdpr_consent=BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA
-        // Bidder sends Wrapper.
-        // Bid discarded when vastxml is not cached.
+        String genericVastXml1 = getVastXmlInline("generic_ad_1", false);
+        String genericVastXml2 = getVastXmlInline("generic_ad_2", false);
+
+        // Prebid core will select 1 bid, having the highest price, from each bidder.
+        // Hence, improvedigital's 2nd bid and generic's 1st bid will be picked and cached.
+        String improveCacheId = getCacheIdRandom();
+        String genericCacheId = getCacheIdRandom();
+
+        JSONObject responseJson = doGvastAuctionRequestToMultipleBidder(GvastMultipleBidderAuctionTestParam.builder()
+                .responseType("gvast")
+                .improvePlacementId(20220617)
+                .improveAdm1(improveVastXml1)
+                .improvePrice1("1.65")
+                .improveAdm2(improveVastXml2)
+                .improvePrice2("1.75")
+                .improveCacheId(improveCacheId)
+                .improveReturnsDeal(true)
+                .genericAdm1(genericVastXml1)
+                .genericPrice1("1.95")
+                .genericAdm2(genericVastXml2)
+                .genericPrice2("1.85")
+                .genericCacheId(genericCacheId)
+                .isCacheFailForImprove(true) /* Improve's adm's caching will fail. */
+                .build()
+        );
+
+        String adm = getAdm(responseJson, 0, 0);
+
+        // 1st tag = generic's bid. Even though we had deal which was supposed to be 1st tag, we will not
+        // get it because it's content was not cached.
+        String vastAdTagUri1 = getVastTagUri(adm, "0");
+        assertGamUrlWithGenericAsSingleBidder(vastAdTagUri1, genericCacheId, "20220617", "1.95");
+        assertSSPSyncPixels(adm, "0");
+        assertNoCreative(adm, "0");
+        assertNoExtensions(adm, "0");
+
+        // Make sure we have only 1 ad and that is generic.
+        assertAdCount(adm, 1);
     }
 
     private String getVastTagUri(String adm, String adId) throws XPathExpressionException {
@@ -872,6 +905,43 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
             assertThat(custParams.get("tnl_wog")).isNull(); /* No disabling of other SSP */
         }
 
+        assertQuerySingleValue(custParams.get("tnl_asset_id"), "prebidserver");
+    }
+
+    private void assertGamUrlWithGenericAsSingleBidder(
+            String vastAdTagUri, String uniqueId, String placementId, String price
+    ) throws MalformedURLException {
+        assertThat(vastAdTagUri.startsWith("https://pubads.g.doubleclick.net/gampad/ads")).isTrue();
+
+        Map<String, List<String>> vastQueryParams = splitQuery(new URL(vastAdTagUri).getQuery());
+
+        assertGamGeneralParameters(vastQueryParams, placementId);
+
+        assertThat(vastQueryParams.get("cust_params")).isNotNull();
+        assertThat(vastQueryParams.get("cust_params").size()).isEqualTo(1);
+
+        Map<String, List<String>> custParams = splitQuery(vastQueryParams.get("cust_params").get(0));
+        assertQuerySingleValue(custParams.get("hb_bidder"), "generic");
+        assertQuerySingleValue(custParams.get("hb_bidder_generic"), "generic");
+
+        assertQuerySingleValue(custParams.get("hb_uuid"), uniqueId);
+        assertQuerySingleValue(custParams.get("hb_uuid_generic"), uniqueId);
+
+        assertQuerySingleValue(custParams.get("hb_format"), "video");
+        assertQuerySingleValue(custParams.get("hb_format_generic"), "video");
+
+        assertQuerySingleValue(custParams.get("hb_pb"), price);
+        assertQuerySingleValue(custParams.get("hb_pb_generic"), price);
+
+        assertThat(getCustomParamCacheUrl(custParams, null))
+                .isEqualTo(IT_TEST_CACHE_URL + "?uuid=" + uniqueId);
+        assertThat(getCustomParamCacheUrl(custParams, "generic"))
+                .isEqualTo(IT_TEST_CACHE_URL + "?uuid=" + uniqueId);
+
+        assertQuerySingleValue(custParams.get("pbct"), "1");
+        assertThat(custParams.get("fl")).isNull(); /* No first look */
+        assertThat(custParams.get("nf")).isNull();
+        assertThat(custParams.get("tnl_wog")).isNull(); /* No disabling of other SSP */
         assertQuerySingleValue(custParams.get("tnl_asset_id"), "prebidserver");
     }
 
@@ -1032,6 +1102,13 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         );
     }
 
+    private void assertAdCount(String vastXml, int expectedAdCount) throws XPathExpressionException {
+        NodeList creatives = (NodeList) XPathFactory.newInstance().newXPath()
+                .compile("/VAST/Ad")
+                .evaluate(new InputSource(new StringReader(vastXml)), XPathConstants.NODESET);
+        assertThat(creatives.getLength()).isEqualTo(expectedAdCount);
+    }
+
     private void assertNoExtensions(String vastXml, String adId) throws XPathExpressionException {
         NodeList creatives = (NodeList) XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='" + adId + "']//Extension")
@@ -1143,7 +1220,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                         .build()
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(
-                                uniqueId, "USD", BidResponseTestData.builder()
+                                "improvedigital", uniqueId, "USD", BidResponseTestData.builder()
                                         .price(Double.parseDouble(price))
                                         .adm(improveAdm)
                                         .build()
@@ -1212,7 +1289,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                         .build()
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(
-                                uniqueId, "USD", BidResponseTestData.builder()
+                                "improvedigital", uniqueId, "USD", BidResponseTestData.builder()
                                         .price(Double.parseDouble(param.improvePrice))
                                         .adm(param.improveAdm)
                                         .build()
@@ -1309,7 +1386,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                         .build()
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(
-                                uniqueId, "USD",
+                                "improvedigital", uniqueId, "USD",
                                 BidResponseTestData.builder()
                                         .price(improvePrice1Value)
                                         .adm(param.improveAdm1)
@@ -1340,7 +1417,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                         .build()
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(
-                                uniqueId, "USD",
+                                "generic", uniqueId, "USD",
                                 BidResponseTestData.builder()
                                         .price(genericPrice1Value)
                                         .adm(param.genericAdm1)
@@ -1351,6 +1428,14 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                         .build()
                         )))
         );
+
+        List<String> cacheResponses = new ArrayList<>();
+        if (param.isCacheFailForImprove) {
+            cacheResponses.add("\"" + improveVastXmlToCache + "\":\"\"");
+        } else {
+            cacheResponses.add("\"" + improveVastXmlToCache + "\":\"" + param.improveCacheId + "\"");
+        }
+        cacheResponses.add("\"" + genericVastXmlToCache + "\":\"" + param.genericCacheId + "\"");
 
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/cache"))
@@ -1364,10 +1449,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                 .withTransformerParameter("matcherName", createResourceFile(
                                         "com/improvedigital/prebid/server/it/"
                                                 + "test-gvast-multiple-bidder-cache-response.json",
-                                        "{"
-                                                + "\"" + improveVastXmlToCache + "\":\"" + param.improveCacheId + "\","
-                                                + "\"" + genericVastXmlToCache + "\":\"" + param.genericCacheId + "\""
-                                                + "}"
+                                        "{" + String.join(",", cacheResponses) + "}"
                                 ))
                         )
         );
@@ -1380,8 +1462,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         .inScenario(cacheStubScenario)
                         .whenScenarioStateIs(Scenario.STARTED)
                         .withQueryParam("uuid", equalToIgnoreCase(param.improveCacheId))
-                        .willReturn(aResponse()
-                                .withBody(improveVastXmlToCache))
+                        .willReturn(aResponse().withBody(improveVastXmlToCache))
                         .willSetStateTo(cacheStubNext)
         );
         WIRE_MOCK_RULE.stubFor(
@@ -1389,8 +1470,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         .inScenario(cacheStubScenario)
                         .whenScenarioStateIs(cacheStubNext)
                         .withQueryParam("uuid", equalToIgnoreCase(param.genericCacheId))
-                        .willReturn(aResponse()
-                                .withBody(genericVastXmlToCache))
+                        .willReturn(aResponse().withBody(genericVastXmlToCache))
                         .willSetStateTo(Scenario.STARTED)
         );
 
@@ -1508,5 +1588,6 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String genericAdm2;
         String genericPrice2;
         String genericCacheId;
+        boolean isCacheFailForImprove;
     }
 }

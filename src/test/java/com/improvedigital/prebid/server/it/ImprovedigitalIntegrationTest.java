@@ -250,14 +250,14 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         }
     }
 
-    protected String getBidResponse(String uniqueId, String currency, BidResponseTestData... responseData) {
+    protected String getBidResponse(String bidderName, String uniqueId, String currency, BidResponseTestData... responseData) {
         BidResponse bidResponse = BidResponse.builder()
                 .id("request_id_" + uniqueId) /* request id is tied to the bid request. */
                 .cur(currency)
                 .seatbid(Arrays.asList(SeatBid.builder()
                         .bid(IntStream.range(0, responseData.length).mapToObj(i ->
                                 Bid.builder()
-                                        .id("bid_id_" + i + "_" + uniqueId)
+                                        .id("bid_id_" + bidderName + "_" + i + "_" + uniqueId)
                                         .impid("imp_id_" + uniqueId) /* imp id is tied to the bid request. */
                                         .price(new BigDecimal(responseData[i].price).setScale(2, RoundingMode.HALF_EVEN))
                                         .adm(responseData[i].adm)

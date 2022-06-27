@@ -57,7 +57,7 @@ public class GVastHooksModule implements Module {
         return Arrays.asList(
                 new EntrypointHook(settingsLoader, requestUtils, merger),
                 new ProcessedAuctionRequestHook(requestUtils, gVastHookUtils),
-                new AuctionResponseHook(requestUtils, macroProcessor,
+                new AuctionResponseHook(requestUtils, gVastHookUtils, macroProcessor,
                         externalUrl, gamNetworkCode, cacheHost)
         );
     }

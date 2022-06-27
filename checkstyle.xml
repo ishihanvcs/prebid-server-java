@@ -56,7 +56,10 @@
         <module name="StaticVariableName"/>
         <module name="TypeName"/>
         <module name="AvoidStarImport"/>
-        <module name="AvoidStaticImport"/>
+        <module name="AvoidStaticImport">
+            <property name="excludes" value="org.junit.Assert.*,org.assertj.core.api.Assertions.*"/>
+        </module>
+        <module name="SuppressionCommentFilter"/>
         <module name="IllegalImport">
             <!-- Avoids shaded imports if IDE autosuggests them. Avoid lang in favor of lang3. -->
             <property name="illegalPkgs" value="autovalue.shaded.com.google,org.inferred.freebuilder.shaded.com.google,org.apache.commons.lang"/>

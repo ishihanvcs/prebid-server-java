@@ -1,0 +1,406 @@
+{
+  "id": "f2140dc6-67c2-4b05-b2b2-7430a78d796e",
+  "seatbid": [
+    {
+      "bid": [
+        {
+          "id": "656bffff-572f-489b-81ae-b9fba93b2f78",
+          "impid": "video",
+          "price": 10.00000000000001,
+          "adm": "<VAST version=\"3.0\"><Ad id=\"li321329_cr542371\"><InLine><AdSystem>Improve Digital</AdSystem><AdTitle>Improve Digital Ad</AdTitle><Description>N/A</Description><Error><![CDATA[https://euw-ice.360yield.com/vastevent?e=error&error_code=[ERRORCODE]&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Error><Impression><![CDATA[https://euw-ice.360yield.com/vastevent?e=impression&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Impression><Creatives><Creative><Linear><Duration>00:00:04</Duration><TrackingEvents><Tracking event=\"creativeView\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=creativeView&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\"start\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=start&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\"firstQuartile\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=firstQuartile&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\"midpoint\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=midpoint&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\"thirdQuartile\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=thirdQuartile&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\"complete\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=complete&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\"mute\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=mute&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\"unmute\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=unmute&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\"pause\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=pause&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\"resume\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=resume&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\"rewind\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=rewind&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\"fullscreen\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=fullscreen&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\"close\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=close&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\"skip\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=skip&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\"collapse\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=collapse&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\"expand\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=expand&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking></TrackingEvents><VideoClicks><ClickThrough><![CDATA[https://improvedigital.com]]></ClickThrough><ClickTracking><![CDATA[https://euw-ice.360yield.com/click/8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=//]]></ClickTracking><ClickTracking><![CDATA[https://euw-ice.360yield.com/vastevent?e=click&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></ClickTracking></VideoClicks><MediaFiles><MediaFile bitrate=\"1\" delivery=\"progressive\" height=\"360\" type=\"video/mp4\" width=\"640\"><![CDATA[https://hb.improvedigital.com/creatives/video/improve_house-640x360.mp4]]></MediaFile></MediaFiles></Linear></Creative></Creatives><Impression><![CDATA[https://pad.360polaris.biz/ssp_bids?bidder=improvedigital&cpm=10.521&pid=22137694]]></Impression></InLine></Ad></VAST>",
+          "cid": "123159",
+          "crid": "542371",
+          "dealid": "321329",
+          "exp": 900,
+          "ext": {
+            "improvedigital": {
+              "line_item_id": 321329,
+              "bidder_id": 0,
+              "brand_name": "",
+              "buying_type": "classic",
+              "agency_id": "0"
+            },
+            "origbidcpm": 10.00000000000001,
+            "origbidcur": "EUR",
+            "prebid": {
+              "type": "video",
+              "targeting": {
+                "hb_cache_path_improv": "/cache",
+                "hb_deal_improvedigit": "321329",
+                "hb_cache_host_improv": "pbc-proto.360polaris.biz",
+                "hb_format_improvedig": "video",
+                "hb_uuid_improvedigit": "63703eea-8cc9-47ef-b7ce-16b6b5b78d35",
+                "hb_pb_improvedigital": "10.00",
+                "hb_bidder_improvedig": "improvedigital"
+              },
+              "cache": {
+                "vastXml": {
+                  "url": "https://pbc-proto.360polaris.biz/cache?uuid=63703eea-8cc9-47ef-b7ce-16b6b5b78d35",
+                  "cacheId": "63703eea-8cc9-47ef-b7ce-16b6b5b78d35"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "seat": "improvedigital",
+      "group": 0
+    },
+    {
+      "bid": [
+        {
+          "id": "C4722BF1-599B-4CFC-A018-6CF7814D1865",
+          "impid": "video",
+          "price": 14.257,
+          "adm": "<VAST version=\"3.0\"> <Ad id=\"123\"> <InLine> <AdSystem>PubMatic</AdSystem> <AdTitle>VAST 2.0 Instream Test</AdTitle> <Description>VAST 2.0 Instream Test</Description> <Error> <![CDATA[https://aktrack.pubmatic.com/er=[ERRORCODE]]]> </Error> <Impression> <![CDATA[https://aktrack.pubmatic.com?e=impression]]> </Impression> <Creatives> <Creative AdID=\"123\"> <Linear> <Duration>00:00:30</Duration> <TrackingEvents> <Tracking event=\"creativeView\"> <![CDATA[https://aktrack.pubmatic.com?e=creativeView]]> </Tracking> <Tracking event=\"start\"> <![CDATA[https://aktrack.pubmatic.com?e=start]]> </Tracking> <Tracking event=\"midpoint\"> <![CDATA[https://aktrack.pubmatic.com?e=midpoint]]> </Tracking> <Tracking event=\"firstQuartile\"> <![CDATA[https://aktrack.pubmatic.com?e=firstQuartile]]> </Tracking> <Tracking event=\"thirdQuartile\"> <![CDATA[https://aktrack.pubmatic.com?e=thirdQuartile]]> </Tracking> <Tracking event=\"complete\"> <![CDATA[https://aktrack.pubmatic.com?e=complete]]> </Tracking> </TrackingEvents> <VideoClicks> <ClickThrough> <![CDATA[https://www.pubmatic.com]]> </ClickThrough> </VideoClicks> <MediaFiles> <MediaFile delivery=\"progressive\" type=\"video/mp4\" bitrate=\"500\" width=\"480\" height=\"460\" scalable=\"true\" maintainAspectRatio=\"true\"> <![CDATA[https://staging.pubmatic.com:8443/test/spinning-logo-480x360_video.mp4]]> </MediaFile> <MediaFile delivery=\"progressive\" type=\"video/ogg\" bitrate=\"500\" width=\"480\" height=\"460\" scalable=\"true\" maintainAspectRatio=\"true\"> <![CDATA[https://staging.pubmatic.com:8443/test/spinning-logo-480x360_video.ogg]]> </MediaFile> <MediaFile delivery=\"progressive\" type=\"video/x-flv\" bitrate=\"500\" width=\"400\" height=\"300\" scalable=\"true\" maintainAspectRatio=\"true\"> <![CDATA[https://staging.pubmatic.com:8443/test/PubMatic_test_video.flv]]> </MediaFile> </MediaFiles> </Linear> </Creative> <Creative AdID=\"123\"> <NonLinearAds> <TrackingEvents></TrackingEvents> <NonLinear height=\"50\" width=\"300\" minSuggestedDuration=\"00:00:05\"> <StaticResource creativeType=\"image/jpeg\"> <![CDATA[https://staging.pubmatic.com:8443/test/PubMatic_LetsBeClear_300x50.jpeg]]> </StaticResource> <NonLinearClickThrough> <![CDATA[https://www.pubmatic.com]]> </NonLinearClickThrough> </NonLinear> </NonLinearAds> </Creative> <Creative AdID=\"123\"> <CompanionAds> <Companion width=\"300\" height=\"250\"> <StaticResource creativeType=\"image/jpeg\"> <![CDATA[https://staging.pubmatic.com:8443/test/PubMatic_LetsBeClear_320x250.jpg]]> </StaticResource> <CompanionClickThrough> <![CDATA[https://www.pubmatic.com]]> </CompanionClickThrough> </Companion> </CompanionAds> </Creative> </Creatives> <Impression><![CDATA[https://pad.360polaris.biz/ssp_bids?bidder=pubmatic&cpm=15&pid=22137694]]></Impression></InLine> </Ad> </VAST>",
+          "adomain": [
+            "news.americanexpress.com"
+          ],
+          "cid": "16939",
+          "crid": "12345",
+          "exp": 300,
+          "ext": {
+            "dspid": 6,
+            "advid": 5863,
+            "bidtype": 1,
+            "origbidcpm": 15,
+            "origbidcur": "USD",
+            "prebid": {
+              "type": "video",
+              "targeting": {
+                "hb_pb": "14.00",
+                "hb_pb_pubmatic": "14.00",
+                "hb_cache_path": "/cache",
+                "hb_uuid": "efbac95e-54dd-4071-ae13-63fa93618996",
+                "hb_cache_path_pubmat": "/cache",
+                "hb_uuid_pubmatic": "efbac95e-54dd-4071-ae13-63fa93618996",
+                "hb_format_pubmatic": "video",
+                "hb_bidder": "pubmatic",
+                "hb_cache_host": "pbc-proto.360polaris.biz",
+                "hb_format": "video",
+                "hb_bidder_pubmatic": "pubmatic",
+                "hb_cache_host_pubmat": "pbc-proto.360polaris.biz"
+              },
+              "cache": {
+                "vastXml": {
+                  "url": "https://pbc-proto.360polaris.biz/cache?uuid=efbac95e-54dd-4071-ae13-63fa93618996",
+                  "cacheId": "efbac95e-54dd-4071-ae13-63fa93618996"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "seat": "pubmatic",
+      "group": 0
+    },
+    {
+      "bid": [
+        {
+          "id": "4015437593144238339",
+          "impid": "video",
+          "price": 4.744900,
+          "adm": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><VAST version=\"3.0\"><Ad id=\"97517771\"><Wrapper><AdSystem version=\"3.0\">adnxs</AdSystem><VASTAdTagURI><![CDATA[https://ams1-ib.adnxs.com/ab?an_audit=0&test=1&referrer=https%3A%2F%2Fhb.improvedigital.com%2Fprebid%2Fprebid-server%2Ftester%2Findex.html&e=wqT_3QK0EKA0CAAAAwDWAAUBCJLc0JUGELKzvPaM9oTiMRiA9JeZtfuEp0wqNgkAAAECCBRAEQEHNAAAFEAZAAAA4HoUFEAhERIAKREJADERG6gw6dGnBjjtSEDtSEgCUMuBwC5YnPFbYABoi8akAXjP4ASAAQGKAQNVU0SSBQbwUpgBAaABAagBAbABALgBA8ABA8gBAtABCdgBAOABAfABAIoCO3VmKCdhJywgMjUyOTg4NSwgMTY1NTk3NTQ0Mik7dWYoJ3InLCA5NzUxNzc3MSwgLh4A9AUBkgLxAyE2VkdCV0FpMi1Md0tFTXVCd0M0WUFDQ2M4VnN3QURnQVFBUkk3VWhRNmRHbkJsZ0FZUF9fX184UGFBQndBWGdCZ0FFQmlBRUJrQUVCbUFFQm9BRUJxQUVEc0FFQXVRSHpyV3FrQUFBVVFNRUI4NjFxcEFBQUZFREpBZHFTamM5MjNlMF8yUUVBQUFBQUFBRHdQLUFCQVBVQkFBQUFBSmdDQUtBQ0FMVUNBQUFBQUwwQ0FBQUFBTUFDQWNnQ0FkQUNBZGdDQWVBQ0FPZ0NBUGdDQUlBREFaZ0RBYm9EQ1VGTlV6RTZNems0T09BRDBDNklCQUNRQkFDWUJBSEJCQUFBQQ16CHlRUQ0KJEFBQU5nRUFQRUUBCwkBIENJQlpRZnFRVQkPGEFEd1A3RUYNDRRBQUFEQkIdPwB5FSgBTDIoAABaLigAuDRBV2d3aDd3QllURDN3TDRCZDIwbWdHQ0JnTlZVMFNJQmdDUUJnR1lCZ0NoQmdBAU40QUFCUkFxQVlCc2dZa0MddABFHQwARx0MAEkdDDh1QVlLmgKVASFvQS11b3c29QEkblBGYklBUW9BRBX4VFVRRG9KUVUxVE1Ub3pPVGc0UU5BdVMRUQxQQV9VEQwMQUFBVx0MAFkdDABhHQwAYx0MEGVBQ0pBHRDwbcICP2h0dHA6Ly9wcmViaWQub3JnL2Rldi1kb2NzL3Nob3ctdmlkZW8td2l0aC1hLWRmcC12aWRlby10YWcuaHRtbNgC9-kD4AKtmEjqAkRodHRwczovL2hiLmltcHJvdmVkaWdpdGFsLmNvbS9wBWMNakwtc2VydmVyL3Rlc3Rlci9pbmRleAVRPPICEQoGQURWX0lEEgcyNTJhYQUUCENQRwUUGDU3NTkzNjQBFAgFQ1ABEzQIMjE5Njk5NzTyAg0KCAE8GEZSRVESATAFEBxSRU1fVVNFUgUQAAwJIBhDT0RFEgDyAQ8BVxEPEAsKB0NQFQ4QCQoFSU8BYAQA8gEaBElPFRo4EwoPQ1VTVE9NX01PREVMDSQIGgoWMhYAHExFQUZfTkFNBWoIHgoaNh0ACEFTVAE-EElGSUVEAWIcDQoIU1BMSVQBTfCaATCAAwCIAwGQAwCYAxSgAwGqAwDAA-CoAcgDANgD7Nox4AMA6AMA-AMDgAQAkgQJL29wZW5ydGIymAQAogQOMTYzLjE3NS4xOTYuMzeoBACyBBAIARAAGIAFIOADKAIwADgDuAQAwASA2rgiyAQA0gQOOTMyNSNBTVMxOjM5ODjaBAIIAeAEAPAEy4HALogFAZgFAKAF______8BBfA-AaoFJGYyMTQwZGM2LTY3YzItNGIwNS1iMmIyLTc0MzBhNzhkNzk2ZbIFDgoDRVVSEcvbEU4LXu4_wAUAyQUApaMU8D_SBQkJBQuYAAAA2AUB4AUB8AXDlQv6BQQIABAAkAYBmAYAsgaRA0NQTWQ4cDBQBQb0mwFBY0FCQkVOQmlDc0FQX0FBSF9BQUNoUUlFTmZfWF9fYjNfai1fNTlmX3QwZVkxUDlfN192LTB6amhmZHQtOE4yZl9YX0w4WDQyTTd2RjM2cHE0S3VSNEV1M0xCSVFkbEhPSGNUVW13Nm9rVnJ6UHNiazJNcjdOS0o3UEVtbk1iTzJkWUdIOV9uOTNUdVpLWTdfXzhfX196X18tdl92X19fX2Zfci0zXzNfXzU5WC0tLV9lX1YzOTl6THY5X19fX185bk5fX3dRRUFKTU5TLUFDN0VzY0dUYU5Lb1VRSXdyQ1E2QVVBRkZBTUxSTllRTXJncDJWd0Vlb0lXQUNFMUFSZ1JBZ3hCUml3Q0FBUUNBSkNJZ0pBRHdRQ0lBaUFRQUFnQlVnSVFBRWJBSUxBQ3dNQWdBRkFOQ3hBaWdDRUNRZ3lPQ281VEFnSWtXaWduc3JBRW91OWpUQ0VNb3NBS0JSX1JVWUNKUWdnV0JrSkN3Y3h3QklBQUEuZl9nQURfZ0FBQUFBuAYAwQYAAAAAAADwP9AG9S_aBhYKEAAAIckZAVwQABgA4AYE8gYCCACABwGIBwCgB0C6Bw8h3UgYACAAMAA4zxVAAMgHz-AE0gcNVQsBOAjaBwYJJ2jgBwDqBwIIAPAHwbQGiggCEACVCAAAgD-YCAE.&s=9a786ccf42b374193265950d679358d62711eea0&pp=${AUCTION_PRICE}&ppc=${AUCTION_CURRENCY}]]></VASTAdTagURI><Impression><![CDATA[https://ib.adnxs.com/nop]]></Impression><Creatives><Creative adID=\"97517771\"><Linear></Linear></Creative></Creatives><Impression><![CDATA[https://pad.360polaris.biz/ssp_bids?bidder=appnexus&cpm=4.992&pid=22137694]]></Impression></Wrapper></Ad></VAST>",
+          "adid": "97517771",
+          "adomain": [
+            ""
+          ],
+          "iurl": "https://ams1-ib.adnxs.com/cr?id=97517771",
+          "cid": "9325",
+          "crid": "97517771",
+          "w": 1,
+          "h": 1,
+          "exp": 300,
+          "ext": {
+            "appnexus": {
+              "brand_id": 182979,
+              "auction_id": 3586012853398608306,
+              "bidder_id": 2,
+              "bid_ad_type": 1,
+              "creative_info": {
+                "video": {
+                  "duration": 30,
+                  "mimes": [
+                    "video/x-flv",
+                    "video/mp4",
+                    "video/webm"
+                  ]
+                }
+              }
+            },
+            "origbidcpm": 4.744900,
+            "origbidcur": "EUR",
+            "prebid": {
+              "type": "video",
+              "targeting": {
+                "hb_uuid_appnexus": "2e62969f-ff89-4e02-ae1d-03f0972f9339",
+                "hb_pb_appnexus": "4.70",
+                "hb_bidder_appnexus": "appnexus",
+                "hb_cache_host_appnex": "pbc-proto.360polaris.biz",
+                "hb_format_appnexus": "video",
+                "hb_size_appnexus": "1x1",
+                "hb_cache_path_appnex": "/cache"
+              },
+              "cache": {
+                "vastXml": {
+                  "url": "https://pbc-proto.360polaris.biz/cache?uuid=2e62969f-ff89-4e02-ae1d-03f0972f9339",
+                  "cacheId": "2e62969f-ff89-4e02-ae1d-03f0972f9339"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "seat": "appnexus",
+      "group": 0
+    }
+  ],
+  "cur": "EUR",
+  "ext": {
+    "debug": {
+      "httpcalls": {
+        "pubmatic": [
+          {
+            "uri": "https://hbopenbid.pubmatic.com/translator?source=prebid-server",
+            "requestbody": "{\"id\":\"f2140dc6-67c2-4b05-b2b2-7430a78d796e\",\"imp\":[{\"id\":\"video\",\"video\":{\"mimes\":[\"video/mp4\",\"application/javascript\",\"video/webm\",\"video/ogg\"],\"minduration\":1,\"maxduration\":30,\"protocols\":[2,3,5,6],\"w\":640,\"h\":480,\"startdelay\":0,\"placement\":1,\"linearity\":1,\"skip\":1,\"api\":[2]},\"tagid\":\"a10.com_game_preroll\",\"bidfloor\":0,\"bidfloorcur\":\"USD\"}],\"site\":{\"domain\":\"hb.improvedigital.com\",\"page\":\"https://hb.improvedigital.com/prebid/prebid-server/tester/index.html\",\"publisher\":{\"id\":\"156946\",\"domain\":\"improvedigital.com\",\"ext\":{\"prebid\":{\"parentAccount\":\"950\"}}},\"ext\":{\"amp\":0}},\"device\":{\"ua\":\"insomnia/2022.3.0\",\"ip\":\"163.175.196.37\",\"h\":989,\"w\":1480},\"user\":{\"ext\":{\"consent\":\"CPMd8p0PMd8p0AcABBENBiCsAP_AAH_AAChQIENf_X__b3_j-_59f_t0eY1P9_7_v-0zjhfdt-8N2f_X_L8X42M7vF36pq4KuR4Eu3LBIQdlHOHcTUmw6okVrzPsbk2Mr7NKJ7PEmnMbO2dYGH9_n93TuZKY7__8___z__-v_v____f_r-3_3__59X---_e_V399zLv9_____9nN__wQEAJMNS-AC7EscGTaNKoUQIwrCQ6AUAFFAMLRNYQMrgp2VwEeoIWACE1ARgRAgxBRiwCAAQCAJCIgJADwQCIAiAQAAgBUgIQAEbAILACwMAgAFANCxAigCECQgyOCo5TAgIkWignsrAEou9jTCEMosAKBR_RUYCJQggWBkJCwcxwBIAAA.f_gAD_gAAAAA\"}},\"test\":1,\"at\":1,\"tmax\":5000,\"cur\":[\"EUR\"],\"source\":{\"tid\":\"f2140dc6-67c2-4b05-b2b2-7430a78d796e\"},\"regs\":{\"ext\":{\"gdpr\":0}},\"ext\":{\"prebid\":{\"targeting\":{\"pricegranularity\":{\"ranges\":[{\"max\":2,\"increment\":0.01},{\"max\":5,\"increment\":0.05},{\"max\":10,\"increment\":0.1},{\"max\":40,\"increment\":0.5},{\"max\":100,\"increment\":1}],\"precision\":2},\"includewinners\":true,\"includebidderkeys\":true,\"includeformat\":true},\"cache\":{\"vastxml\":{\"returnCreative\":true}},\"channel\":{\"name\":\"web\"},\"pbs\":{\"endpoint\":\"/openrtb2/auction\"},\"server\":{\"externalurl\":\"https://pbs-proto.360polaris.biz\",\"gvlid\":253,\"datacenter\":\"local\"}}}}",
+            "responsebody": "{\"id\":\"f2140dc6-67c2-4b05-b2b2-7430a78d796e\",\"seatbid\":[{\"bid\":[{\"id\":\"C4722BF1-599B-4CFC-A018-6CF7814D1865\",\"impid\":\"video\",\"price\":15,\"adm\":\"<VAST version=\\\"3.0\\\"> <Ad id=\\\"123\\\"> <InLine> <AdSystem>PubMatic</AdSystem> <AdTitle>VAST 2.0 Instream Test</AdTitle> <Description>VAST 2.0 Instream Test</Description> <Error> <![CDATA[https://aktrack.pubmatic.com/er=[ERRORCODE]]]> </Error> <Impression> <![CDATA[https://aktrack.pubmatic.com?e=impression]]> </Impression> <Creatives> <Creative AdID=\\\"123\\\"> <Linear> <Duration>00:00:30</Duration> <TrackingEvents> <Tracking event=\\\"creativeView\\\"> <![CDATA[https://aktrack.pubmatic.com?e=creativeView]]> </Tracking> <Tracking event=\\\"start\\\"> <![CDATA[https://aktrack.pubmatic.com?e=start]]> </Tracking> <Tracking event=\\\"midpoint\\\"> <![CDATA[https://aktrack.pubmatic.com?e=midpoint]]> </Tracking> <Tracking event=\\\"firstQuartile\\\"> <![CDATA[https://aktrack.pubmatic.com?e=firstQuartile]]> </Tracking> <Tracking event=\\\"thirdQuartile\\\"> <![CDATA[https://aktrack.pubmatic.com?e=thirdQuartile]]> </Tracking> <Tracking event=\\\"complete\\\"> <![CDATA[https://aktrack.pubmatic.com?e=complete]]> </Tracking> </TrackingEvents> <VideoClicks> <ClickThrough> <![CDATA[https://www.pubmatic.com]]> </ClickThrough> </VideoClicks> <MediaFiles> <MediaFile delivery=\\\"progressive\\\" type=\\\"video/mp4\\\" bitrate=\\\"500\\\" width=\\\"480\\\" height=\\\"460\\\" scalable=\\\"true\\\" maintainAspectRatio=\\\"true\\\"> <![CDATA[https://staging.pubmatic.com:8443/test/spinning-logo-480x360_video.mp4]]> </MediaFile> <MediaFile delivery=\\\"progressive\\\" type=\\\"video/ogg\\\" bitrate=\\\"500\\\" width=\\\"480\\\" height=\\\"460\\\" scalable=\\\"true\\\" maintainAspectRatio=\\\"true\\\"> <![CDATA[https://staging.pubmatic.com:8443/test/spinning-logo-480x360_video.ogg]]> </MediaFile> <MediaFile delivery=\\\"progressive\\\" type=\\\"video/x-flv\\\" bitrate=\\\"500\\\" width=\\\"400\\\" height=\\\"300\\\" scalable=\\\"true\\\" maintainAspectRatio=\\\"true\\\"> <![CDATA[https://staging.pubmatic.com:8443/test/PubMatic_test_video.flv]]> </MediaFile> </MediaFiles> </Linear> </Creative> <Creative AdID=\\\"123\\\"> <NonLinearAds> <TrackingEvents></TrackingEvents> <NonLinear height=\\\"50\\\" width=\\\"300\\\" minSuggestedDuration=\\\"00:00:05\\\"> <StaticResource creativeType=\\\"image/jpeg\\\"> <![CDATA[https://staging.pubmatic.com:8443/test/PubMatic_LetsBeClear_300x50.jpeg]]> </StaticResource> <NonLinearClickThrough> <![CDATA[https://www.pubmatic.com]]> </NonLinearClickThrough> </NonLinear> </NonLinearAds> </Creative> <Creative AdID=\\\"123\\\"> <CompanionAds> <Companion width=\\\"300\\\" height=\\\"250\\\"> <StaticResource creativeType=\\\"image/jpeg\\\"> <![CDATA[https://staging.pubmatic.com:8443/test/PubMatic_LetsBeClear_320x250.jpg]]> </StaticResource> <CompanionClickThrough> <![CDATA[https://www.pubmatic.com]]> </CompanionClickThrough> </Companion> </CompanionAds> </Creative> </Creatives> </InLine> </Ad> </VAST>\",\"adomain\":[\"news.americanexpress.com\"],\"cid\":\"16939\",\"crid\":\"12345\",\"ext\":{\"dspid\":6,\"advid\":5863,\"bidtype\":1}}],\"seat\":\"pubmatic\"}],\"cur\":\"USD\"}",
+            "requestheaders": {
+              "Accept": [
+                "application/json"
+              ],
+              "x-prebid": [
+                "pbs-java/undefined"
+              ],
+              "Content-Type": [
+                "application/json;charset=utf-8"
+              ]
+            },
+            "status": 200
+          }
+        ],
+        "cache": [
+          {
+            "uri": "https://pbc-proto.360polaris.biz/cache",
+            "requestbody": "{\"puts\":[{\"type\":\"xml\",\"value\":\"<VAST version=\\\"3.0\\\"> <Ad id=\\\"123\\\"> <InLine> <AdSystem>PubMatic</AdSystem> <AdTitle>VAST 2.0 Instream Test</AdTitle> <Description>VAST 2.0 Instream Test</Description> <Error> <![CDATA[https://aktrack.pubmatic.com/er=[ERRORCODE]]]> </Error> <Impression> <![CDATA[https://aktrack.pubmatic.com?e=impression]]> </Impression> <Creatives> <Creative AdID=\\\"123\\\"> <Linear> <Duration>00:00:30</Duration> <TrackingEvents> <Tracking event=\\\"creativeView\\\"> <![CDATA[https://aktrack.pubmatic.com?e=creativeView]]> </Tracking> <Tracking event=\\\"start\\\"> <![CDATA[https://aktrack.pubmatic.com?e=start]]> </Tracking> <Tracking event=\\\"midpoint\\\"> <![CDATA[https://aktrack.pubmatic.com?e=midpoint]]> </Tracking> <Tracking event=\\\"firstQuartile\\\"> <![CDATA[https://aktrack.pubmatic.com?e=firstQuartile]]> </Tracking> <Tracking event=\\\"thirdQuartile\\\"> <![CDATA[https://aktrack.pubmatic.com?e=thirdQuartile]]> </Tracking> <Tracking event=\\\"complete\\\"> <![CDATA[https://aktrack.pubmatic.com?e=complete]]> </Tracking> </TrackingEvents> <VideoClicks> <ClickThrough> <![CDATA[https://www.pubmatic.com]]> </ClickThrough> </VideoClicks> <MediaFiles> <MediaFile delivery=\\\"progressive\\\" type=\\\"video/mp4\\\" bitrate=\\\"500\\\" width=\\\"480\\\" height=\\\"460\\\" scalable=\\\"true\\\" maintainAspectRatio=\\\"true\\\"> <![CDATA[https://staging.pubmatic.com:8443/test/spinning-logo-480x360_video.mp4]]> </MediaFile> <MediaFile delivery=\\\"progressive\\\" type=\\\"video/ogg\\\" bitrate=\\\"500\\\" width=\\\"480\\\" height=\\\"460\\\" scalable=\\\"true\\\" maintainAspectRatio=\\\"true\\\"> <![CDATA[https://staging.pubmatic.com:8443/test/spinning-logo-480x360_video.ogg]]> </MediaFile> <MediaFile delivery=\\\"progressive\\\" type=\\\"video/x-flv\\\" bitrate=\\\"500\\\" width=\\\"400\\\" height=\\\"300\\\" scalable=\\\"true\\\" maintainAspectRatio=\\\"true\\\"> <![CDATA[https://staging.pubmatic.com:8443/test/PubMatic_test_video.flv]]> </MediaFile> </MediaFiles> </Linear> </Creative> <Creative AdID=\\\"123\\\"> <NonLinearAds> <TrackingEvents></TrackingEvents> <NonLinear height=\\\"50\\\" width=\\\"300\\\" minSuggestedDuration=\\\"00:00:05\\\"> <StaticResource creativeType=\\\"image/jpeg\\\"> <![CDATA[https://staging.pubmatic.com:8443/test/PubMatic_LetsBeClear_300x50.jpeg]]> </StaticResource> <NonLinearClickThrough> <![CDATA[https://www.pubmatic.com]]> </NonLinearClickThrough> </NonLinear> </NonLinearAds> </Creative> <Creative AdID=\\\"123\\\"> <CompanionAds> <Companion width=\\\"300\\\" height=\\\"250\\\"> <StaticResource creativeType=\\\"image/jpeg\\\"> <![CDATA[https://staging.pubmatic.com:8443/test/PubMatic_LetsBeClear_320x250.jpg]]> </StaticResource> <CompanionClickThrough> <![CDATA[https://www.pubmatic.com]]> </CompanionClickThrough> </Companion> </CompanionAds> </Creative> </Creatives> <Impression><![CDATA[https://pad.360polaris.biz/ssp_bids?bidder=pubmatic&cpm=15&pid=22137694]]></Impression></InLine> </Ad> </VAST>\",\"ttlseconds\":300,\"aid\":\"f2140dc6-67c2-4b05-b2b2-7430a78d796e\"},{\"type\":\"xml\",\"value\":\"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\" standalone=\\\"yes\\\"?><VAST version=\\\"3.0\\\"><Ad id=\\\"97517771\\\"><Wrapper><AdSystem version=\\\"3.0\\\">adnxs</AdSystem><VASTAdTagURI><![CDATA[https://ams1-ib.adnxs.com/ab?an_audit=0&test=1&referrer=https%3A%2F%2Fhb.improvedigital.com%2Fprebid%2Fprebid-server%2Ftester%2Findex.html&e=wqT_3QK0EKA0CAAAAwDWAAUBCJLc0JUGELKzvPaM9oTiMRiA9JeZtfuEp0wqNgkAAAECCBRAEQEHNAAAFEAZAAAA4HoUFEAhERIAKREJADERG6gw6dGnBjjtSEDtSEgCUMuBwC5YnPFbYABoi8akAXjP4ASAAQGKAQNVU0SSBQbwUpgBAaABAagBAbABALgBA8ABA8gBAtABCdgBAOABAfABAIoCO3VmKCdhJywgMjUyOTg4NSwgMTY1NTk3NTQ0Mik7dWYoJ3InLCA5NzUxNzc3MSwgLh4A9AUBkgLxAyE2VkdCV0FpMi1Md0tFTXVCd0M0WUFDQ2M4VnN3QURnQVFBUkk3VWhRNmRHbkJsZ0FZUF9fX184UGFBQndBWGdCZ0FFQmlBRUJrQUVCbUFFQm9BRUJxQUVEc0FFQXVRSHpyV3FrQUFBVVFNRUI4NjFxcEFBQUZFREpBZHFTamM5MjNlMF8yUUVBQUFBQUFBRHdQLUFCQVBVQkFBQUFBSmdDQUtBQ0FMVUNBQUFBQUwwQ0FBQUFBTUFDQWNnQ0FkQUNBZGdDQWVBQ0FPZ0NBUGdDQUlBREFaZ0RBYm9EQ1VGTlV6RTZNems0T09BRDBDNklCQUNRQkFDWUJBSEJCQUFBQQ16CHlRUQ0KJEFBQU5nRUFQRUUBCwkBIENJQlpRZnFRVQkPGEFEd1A3RUYNDRRBQUFEQkIdPwB5FSgBTDIoAABaLigAuDRBV2d3aDd3QllURDN3TDRCZDIwbWdHQ0JnTlZVMFNJQmdDUUJnR1lCZ0NoQmdBAU40QUFCUkFxQVlCc2dZa0MddABFHQwARx0MAEkdDDh1QVlLmgKVASFvQS11b3c29QEkblBGYklBUW9BRBX4VFVRRG9KUVUxVE1Ub3pPVGc0UU5BdVMRUQxQQV9VEQwMQUFBVx0MAFkdDABhHQwAYx0MEGVBQ0pBHRDwbcICP2h0dHA6Ly9wcmViaWQub3JnL2Rldi1kb2NzL3Nob3ctdmlkZW8td2l0aC1hLWRmcC12aWRlby10YWcuaHRtbNgC9-kD4AKtmEjqAkRodHRwczovL2hiLmltcHJvdmVkaWdpdGFsLmNvbS9wBWMNakwtc2VydmVyL3Rlc3Rlci9pbmRleAVRPPICEQoGQURWX0lEEgcyNTJhYQUUCENQRwUUGDU3NTkzNjQBFAgFQ1ABEzQIMjE5Njk5NzTyAg0KCAE8GEZSRVESATAFEBxSRU1fVVNFUgUQAAwJIBhDT0RFEgDyAQ8BVxEPEAsKB0NQFQ4QCQoFSU8BYAQA8gEaBElPFRo4EwoPQ1VTVE9NX01PREVMDSQIGgoWMhYAHExFQUZfTkFNBWoIHgoaNh0ACEFTVAE-EElGSUVEAWIcDQoIU1BMSVQBTfCaATCAAwCIAwGQAwCYAxSgAwGqAwDAA-CoAcgDANgD7Nox4AMA6AMA-AMDgAQAkgQJL29wZW5ydGIymAQAogQOMTYzLjE3NS4xOTYuMzeoBACyBBAIARAAGIAFIOADKAIwADgDuAQAwASA2rgiyAQA0gQOOTMyNSNBTVMxOjM5ODjaBAIIAeAEAPAEy4HALogFAZgFAKAF______8BBfA-AaoFJGYyMTQwZGM2LTY3YzItNGIwNS1iMmIyLTc0MzBhNzhkNzk2ZbIFDgoDRVVSEcvbEU4LXu4_wAUAyQUApaMU8D_SBQkJBQuYAAAA2AUB4AUB8AXDlQv6BQQIABAAkAYBmAYAsgaRA0NQTWQ4cDBQBQb0mwFBY0FCQkVOQmlDc0FQX0FBSF9BQUNoUUlFTmZfWF9fYjNfai1fNTlmX3QwZVkxUDlfN192LTB6amhmZHQtOE4yZl9YX0w4WDQyTTd2RjM2cHE0S3VSNEV1M0xCSVFkbEhPSGNUVW13Nm9rVnJ6UHNiazJNcjdOS0o3UEVtbk1iTzJkWUdIOV9uOTNUdVpLWTdfXzhfX196X18tdl92X19fX2Zfci0zXzNfXzU5WC0tLV9lX1YzOTl6THY5X19fX185bk5fX3dRRUFKTU5TLUFDN0VzY0dUYU5Lb1VRSXdyQ1E2QVVBRkZBTUxSTllRTXJncDJWd0Vlb0lXQUNFMUFSZ1JBZ3hCUml3Q0FBUUNBSkNJZ0pBRHdRQ0lBaUFRQUFnQlVnSVFBRWJBSUxBQ3dNQWdBRkFOQ3hBaWdDRUNRZ3lPQ281VEFnSWtXaWduc3JBRW91OWpUQ0VNb3NBS0JSX1JVWUNKUWdnV0JrSkN3Y3h3QklBQUEuZl9nQURfZ0FBQUFBuAYAwQYAAAAAAADwP9AG9S_aBhYKEAAAIckZAVwQABgA4AYE8gYCCACABwGIBwCgB0C6Bw8h3UgYACAAMAA4zxVAAMgHz-AE0gcNVQsBOAjaBwYJJ2jgBwDqBwIIAPAHwbQGiggCEACVCAAAgD-YCAE.&s=9a786ccf42b374193265950d679358d62711eea0&pp=${AUCTION_PRICE}&ppc=${AUCTION_CURRENCY}]]></VASTAdTagURI><Impression><![CDATA[https://ib.adnxs.com/nop]]></Impression><Creatives><Creative adID=\\\"97517771\\\"><Linear></Linear></Creative></Creatives><Impression><![CDATA[https://pad.360polaris.biz/ssp_bids?bidder=appnexus&cpm=4.992&pid=22137694]]></Impression></Wrapper></Ad></VAST>\",\"ttlseconds\":300,\"aid\":\"f2140dc6-67c2-4b05-b2b2-7430a78d796e\"},{\"type\":\"xml\",\"value\":\"<VAST version=\\\"3.0\\\"><Ad id=\\\"li321329_cr542371\\\"><InLine><AdSystem>Improve Digital</AdSystem><AdTitle>Improve Digital Ad</AdTitle><Description>N/A</Description><Error><![CDATA[https://euw-ice.360yield.com/vastevent?e=error&error_code=[ERRORCODE]&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Error><Impression><![CDATA[https://euw-ice.360yield.com/vastevent?e=impression&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Impression><Creatives><Creative><Linear><Duration>00:00:04</Duration><TrackingEvents><Tracking event=\\\"creativeView\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=creativeView&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"start\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=start&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"firstQuartile\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=firstQuartile&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"midpoint\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=midpoint&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"thirdQuartile\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=thirdQuartile&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"complete\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=complete&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"mute\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=mute&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"unmute\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=unmute&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"pause\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=pause&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"resume\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=resume&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"rewind\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=rewind&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"fullscreen\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=fullscreen&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"close\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=close&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"skip\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=skip&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"collapse\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=collapse&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"expand\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=expand&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking></TrackingEvents><VideoClicks><ClickThrough><![CDATA[https://improvedigital.com]]></ClickThrough><ClickTracking><![CDATA[https://euw-ice.360yield.com/click/8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=//]]></ClickTracking><ClickTracking><![CDATA[https://euw-ice.360yield.com/vastevent?e=click&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></ClickTracking></VideoClicks><MediaFiles><MediaFile bitrate=\\\"1\\\" delivery=\\\"progressive\\\" height=\\\"360\\\" type=\\\"video/mp4\\\" width=\\\"640\\\"><![CDATA[https://hb.improvedigital.com/creatives/video/improve_house-640x360.mp4]]></MediaFile></MediaFiles></Linear></Creative></Creatives><Impression><![CDATA[https://pad.360polaris.biz/ssp_bids?bidder=improvedigital&cpm=10.521&pid=22137694]]></Impression></InLine></Ad></VAST>\",\"ttlseconds\":900,\"aid\":\"f2140dc6-67c2-4b05-b2b2-7430a78d796e\"}]}",
+            "responsebody": "{\"responses\":[{\"uuid\":\"efbac95e-54dd-4071-ae13-63fa93618996\"},{\"uuid\":\"2e62969f-ff89-4e02-ae1d-03f0972f9339\"},{\"uuid\":\"63703eea-8cc9-47ef-b7ce-16b6b5b78d35\"}]}",
+            "requestheaders": {
+              "Accept": [
+                "application/json"
+              ],
+              "Content-Type": [
+                "application/json;charset=utf-8"
+              ]
+            },
+            "status": 200
+          }
+        ],
+        "improvedigital": [
+          {
+            "uri": "http://ad.360yield.com/pbs",
+            "requestbody": "{\"id\":\"f2140dc6-67c2-4b05-b2b2-7430a78d796e\",\"imp\":[{\"id\":\"video\",\"video\":{\"mimes\":[\"video/mp4\",\"application/javascript\",\"video/webm\",\"video/ogg\"],\"minduration\":1,\"maxduration\":30,\"protocols\":[2,3,5,6],\"w\":640,\"h\":480,\"startdelay\":0,\"placement\":1,\"linearity\":1,\"skip\":1,\"api\":[2]},\"bidfloor\":0,\"bidfloorcur\":\"USD\",\"ext\":{\"prebid\":{\"storedrequest\":{\"id\":\"22137694.local\"},\"is_rewarded_inventory\":1},\"bidder\":{\"placementId\":22137694},\"is_rewarded_inventory\":true}}],\"site\":{\"domain\":\"hb.improvedigital.com\",\"page\":\"https://hb.improvedigital.com/prebid/prebid-server/tester/index.html\",\"publisher\":{\"id\":\"1\",\"domain\":\"improvedigital.com\",\"ext\":{\"prebid\":{\"parentAccount\":\"950\"}}},\"ext\":{\"amp\":0}},\"device\":{\"ua\":\"insomnia/2022.3.0\",\"ip\":\"163.175.196.37\",\"h\":989,\"w\":1480},\"user\":{\"ext\":{\"consent\":\"CPMd8p0PMd8p0AcABBENBiCsAP_AAH_AAChQIENf_X__b3_j-_59f_t0eY1P9_7_v-0zjhfdt-8N2f_X_L8X42M7vF36pq4KuR4Eu3LBIQdlHOHcTUmw6okVrzPsbk2Mr7NKJ7PEmnMbO2dYGH9_n93TuZKY7__8___z__-v_v____f_r-3_3__59X---_e_V399zLv9_____9nN__wQEAJMNS-AC7EscGTaNKoUQIwrCQ6AUAFFAMLRNYQMrgp2VwEeoIWACE1ARgRAgxBRiwCAAQCAJCIgJADwQCIAiAQAAgBUgIQAEbAILACwMAgAFANCxAigCECQgyOCo5TAgIkWignsrAEou9jTCEMosAKBR_RUYCJQggWBkJCwcxwBIAAA.f_gAD_gAAAAA\"}},\"test\":1,\"at\":1,\"tmax\":5000,\"cur\":[\"EUR\"],\"source\":{\"tid\":\"f2140dc6-67c2-4b05-b2b2-7430a78d796e\"},\"regs\":{\"ext\":{\"gdpr\":0}},\"ext\":{\"prebid\":{\"targeting\":{\"pricegranularity\":{\"ranges\":[{\"max\":2,\"increment\":0.01},{\"max\":5,\"increment\":0.05},{\"max\":10,\"increment\":0.1},{\"max\":40,\"increment\":0.5},{\"max\":100,\"increment\":1}],\"precision\":2},\"includewinners\":true,\"includebidderkeys\":true,\"includeformat\":true},\"cache\":{\"vastxml\":{\"returnCreative\":true}},\"channel\":{\"name\":\"web\"},\"pbs\":{\"endpoint\":\"/openrtb2/auction\"},\"server\":{\"externalurl\":\"https://pbs-proto.360polaris.biz\",\"gvlid\":253,\"datacenter\":\"local\"}}}}",
+            "responsebody": "{\"id\":\"f2140dc6-67c2-4b05-b2b2-7430a78d796e\",\"cur\":\"EUR\",\"seatbid\":[{\"seat\":\"improvedigital\",\"bid\":[{\"ext\":{\"improvedigital\":{\"line_item_id\":321329,\"bidder_id\":0,\"brand_name\":\"\",\"buying_type\":\"classic\",\"agency_id\":\"0\"}},\"crid\":\"542371\",\"exp\":900,\"id\":\"656bffff-572f-489b-81ae-b9fba93b2f78\",\"price\":10.00000000000001,\"impid\":\"video\",\"adm\":\"<VAST version=\\\"3.0\\\"><Ad id=\\\"li321329_cr542371\\\"><InLine><AdSystem>Improve Digital</AdSystem><AdTitle>Improve Digital Ad</AdTitle><Description>N/A</Description><Error><![CDATA[https://euw-ice.360yield.com/vastevent?e=error&error_code=[ERRORCODE]&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Error><Impression><![CDATA[https://euw-ice.360yield.com/vastevent?e=impression&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Impression><Creatives><Creative><Linear><Duration>00:00:04</Duration><TrackingEvents><Tracking event=\\\"creativeView\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=creativeView&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"start\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=start&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"firstQuartile\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=firstQuartile&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"midpoint\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=midpoint&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"thirdQuartile\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=thirdQuartile&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"complete\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=complete&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"mute\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=mute&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"unmute\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=unmute&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"pause\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=pause&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"resume\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=resume&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"rewind\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=rewind&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"fullscreen\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=fullscreen&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"close\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=close&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"skip\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=skip&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"collapse\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=collapse&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking><Tracking event=\\\"expand\\\"><![CDATA[https://euw-ice.360yield.com/vastevent?e=expand&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></Tracking></TrackingEvents><VideoClicks><ClickThrough><![CDATA[https://improvedigital.com]]></ClickThrough><ClickTracking><![CDATA[https://euw-ice.360yield.com/click/8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=//]]></ClickTracking><ClickTracking><![CDATA[https://euw-ice.360yield.com/vastevent?e=click&ic=8Ny.sJ92aJyuJPaloOMOed7kRNhdmD0Jt5Q51FsJqpS6d9iOmJipKMjypxoZZE0ZyjAUftRPodKVfyDOYw0F7T3LblVOaPJAhydmGJtut7TQo0eYD9HiHoGuYbV6g-kOCtRlUVmcPJKL5BKV0tuvNNNAEL5GzARIK.1ssG9OQk.II.Q26.zuEErjwo.HIByqq2SCslbAeYiW-ikl-WliAmu29Qlw0jbHJTaiRU8wU.oGT4OAsHXyDObyTDgHqnzncmJ53dLw1lK1WXt.z9Z5dvBmz1OqzJbrHxahTa1uTFw2gOowkLu7Qa5iikOgiRtXEZQDkTqyh7Jf8ZwD5Tr6Bq.Nz2Bu2J1w-TXhQFHgu0mHrq9l8elXA03YAXxEAol9z6lBerFMU.YgmvftgCKVapoCVFESW8fDp8NsCKqXoHF5.1w-ZpCJ5eda1bxqI6UWNe0KhTNzwWIMFtY6EJJ5rTa3kcYqESbJK4WtnJNRrhxiyU7F2KCV-9GKkx-ysFtTm1c5yQDLBd0q2WQ=]]></ClickTracking></VideoClicks><MediaFiles><MediaFile bitrate=\\\"1\\\" delivery=\\\"progressive\\\" height=\\\"360\\\" type=\\\"video/mp4\\\" width=\\\"640\\\"><![CDATA[https://hb.improvedigital.com/creatives/video/improve_house-640x360.mp4]]></MediaFile></MediaFiles></Linear></Creative></Creatives></InLine></Ad></VAST>\",\"cid\":\"123159\"}]}]}",
+            "requestheaders": {
+              "Accept": [
+                "application/json"
+              ],
+              "x-prebid": [
+                "pbs-java/undefined"
+              ],
+              "Content-Type": [
+                "application/json;charset=utf-8"
+              ]
+            },
+            "status": 200
+          }
+        ],
+        "appnexus": [
+          {
+            "uri": "http://ib.adnxs.com/openrtb2",
+            "requestbody": "{\"id\":\"f2140dc6-67c2-4b05-b2b2-7430a78d796e\",\"imp\":[{\"id\":\"video\",\"video\":{\"mimes\":[\"video/mp4\",\"application/javascript\",\"video/webm\",\"video/ogg\"],\"minduration\":1,\"maxduration\":30,\"protocols\":[2,3,5,6],\"w\":640,\"h\":480,\"startdelay\":0,\"placement\":1,\"linearity\":1,\"skip\":1,\"api\":[2]},\"bidfloor\":0,\"bidfloorcur\":\"USD\",\"ext\":{\"appnexus\":{\"placement_id\":13232361,\"use_pmt_rule\":false}}}],\"site\":{\"domain\":\"hb.improvedigital.com\",\"page\":\"https://hb.improvedigital.com/prebid/prebid-server/tester/index.html\",\"publisher\":{\"id\":\"1\",\"domain\":\"improvedigital.com\",\"ext\":{\"prebid\":{\"parentAccount\":\"950\"}}},\"ext\":{\"amp\":0}},\"device\":{\"ua\":\"insomnia/2022.3.0\",\"ip\":\"163.175.196.37\",\"h\":989,\"w\":1480},\"user\":{\"ext\":{\"consent\":\"CPMd8p0PMd8p0AcABBENBiCsAP_AAH_AAChQIENf_X__b3_j-_59f_t0eY1P9_7_v-0zjhfdt-8N2f_X_L8X42M7vF36pq4KuR4Eu3LBIQdlHOHcTUmw6okVrzPsbk2Mr7NKJ7PEmnMbO2dYGH9_n93TuZKY7__8___z__-v_v____f_r-3_3__59X---_e_V399zLv9_____9nN__wQEAJMNS-AC7EscGTaNKoUQIwrCQ6AUAFFAMLRNYQMrgp2VwEeoIWACE1ARgRAgxBRiwCAAQCAJCIgJADwQCIAiAQAAgBUgIQAEbAILACwMAgAFANCxAigCECQgyOCo5TAgIkWignsrAEou9jTCEMosAKBR_RUYCJQggWBkJCwcxwBIAAA.f_gAD_gAAAAA\"}},\"test\":1,\"at\":1,\"tmax\":5000,\"cur\":[\"EUR\"],\"source\":{\"tid\":\"f2140dc6-67c2-4b05-b2b2-7430a78d796e\"},\"regs\":{\"ext\":{\"gdpr\":0}},\"ext\":{\"prebid\":{\"targeting\":{\"pricegranularity\":{\"ranges\":[{\"max\":2,\"increment\":0.01},{\"max\":5,\"increment\":0.05},{\"max\":10,\"increment\":0.1},{\"max\":40,\"increment\":0.5},{\"max\":100,\"increment\":1}],\"precision\":2},\"includewinners\":true,\"includebidderkeys\":true,\"includeformat\":true},\"cache\":{\"vastxml\":{\"returnCreative\":true}},\"channel\":{\"name\":\"web\"},\"pbs\":{\"endpoint\":\"/openrtb2/auction\"},\"server\":{\"externalurl\":\"https://pbs-proto.360polaris.biz\",\"gvlid\":253,\"datacenter\":\"local\"}},\"appnexus\":{\"is_amp\":0,\"hb_source\":5}}}",
+            "responsebody": "{\"id\":\"f2140dc6-67c2-4b05-b2b2-7430a78d796e\",\"seatbid\":[{\"bid\":[{\"id\":\"4015437593144238339\",\"impid\":\"video\",\"price\":4.744900,\"adid\":\"97517771\",\"adm\":\"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\" standalone=\\\"yes\\\"?><VAST version=\\\"3.0\\\"><Ad id=\\\"97517771\\\"><Wrapper><AdSystem version=\\\"3.0\\\">adnxs<\\/AdSystem><VASTAdTagURI><![CDATA[https:\\/\\/ams1-ib.adnxs.com\\/ab?an_audit=0&test=1&referrer=https%3A%2F%2Fhb.improvedigital.com%2Fprebid%2Fprebid-server%2Ftester%2Findex.html&e=wqT_3QK0EKA0CAAAAwDWAAUBCJLc0JUGELKzvPaM9oTiMRiA9JeZtfuEp0wqNgkAAAECCBRAEQEHNAAAFEAZAAAA4HoUFEAhERIAKREJADERG6gw6dGnBjjtSEDtSEgCUMuBwC5YnPFbYABoi8akAXjP4ASAAQGKAQNVU0SSBQbwUpgBAaABAagBAbABALgBA8ABA8gBAtABCdgBAOABAfABAIoCO3VmKCdhJywgMjUyOTg4NSwgMTY1NTk3NTQ0Mik7dWYoJ3InLCA5NzUxNzc3MSwgLh4A9AUBkgLxAyE2VkdCV0FpMi1Md0tFTXVCd0M0WUFDQ2M4VnN3QURnQVFBUkk3VWhRNmRHbkJsZ0FZUF9fX184UGFBQndBWGdCZ0FFQmlBRUJrQUVCbUFFQm9BRUJxQUVEc0FFQXVRSHpyV3FrQUFBVVFNRUI4NjFxcEFBQUZFREpBZHFTamM5MjNlMF8yUUVBQUFBQUFBRHdQLUFCQVBVQkFBQUFBSmdDQUtBQ0FMVUNBQUFBQUwwQ0FBQUFBTUFDQWNnQ0FkQUNBZGdDQWVBQ0FPZ0NBUGdDQUlBREFaZ0RBYm9EQ1VGTlV6RTZNems0T09BRDBDNklCQUNRQkFDWUJBSEJCQUFBQQ16CHlRUQ0KJEFBQU5nRUFQRUUBCwkBIENJQlpRZnFRVQkPGEFEd1A3RUYNDRRBQUFEQkIdPwB5FSgBTDIoAABaLigAuDRBV2d3aDd3QllURDN3TDRCZDIwbWdHQ0JnTlZVMFNJQmdDUUJnR1lCZ0NoQmdBAU40QUFCUkFxQVlCc2dZa0MddABFHQwARx0MAEkdDDh1QVlLmgKVASFvQS11b3c29QEkblBGYklBUW9BRBX4VFVRRG9KUVUxVE1Ub3pPVGc0UU5BdVMRUQxQQV9VEQwMQUFBVx0MAFkdDABhHQwAYx0MEGVBQ0pBHRDwbcICP2h0dHA6Ly9wcmViaWQub3JnL2Rldi1kb2NzL3Nob3ctdmlkZW8td2l0aC1hLWRmcC12aWRlby10YWcuaHRtbNgC9-kD4AKtmEjqAkRodHRwczovL2hiLmltcHJvdmVkaWdpdGFsLmNvbS9wBWMNakwtc2VydmVyL3Rlc3Rlci9pbmRleAVRPPICEQoGQURWX0lEEgcyNTJhYQUUCENQRwUUGDU3NTkzNjQBFAgFQ1ABEzQIMjE5Njk5NzTyAg0KCAE8GEZSRVESATAFEBxSRU1fVVNFUgUQAAwJIBhDT0RFEgDyAQ8BVxEPEAsKB0NQFQ4QCQoFSU8BYAQA8gEaBElPFRo4EwoPQ1VTVE9NX01PREVMDSQIGgoWMhYAHExFQUZfTkFNBWoIHgoaNh0ACEFTVAE-EElGSUVEAWIcDQoIU1BMSVQBTfCaATCAAwCIAwGQAwCYAxSgAwGqAwDAA-CoAcgDANgD7Nox4AMA6AMA-AMDgAQAkgQJL29wZW5ydGIymAQAogQOMTYzLjE3NS4xOTYuMzeoBACyBBAIARAAGIAFIOADKAIwADgDuAQAwASA2rgiyAQA0gQOOTMyNSNBTVMxOjM5ODjaBAIIAeAEAPAEy4HALogFAZgFAKAF______8BBfA-AaoFJGYyMTQwZGM2LTY3YzItNGIwNS1iMmIyLTc0MzBhNzhkNzk2ZbIFDgoDRVVSEcvbEU4LXu4_wAUAyQUApaMU8D_SBQkJBQuYAAAA2AUB4AUB8AXDlQv6BQQIABAAkAYBmAYAsgaRA0NQTWQ4cDBQBQb0mwFBY0FCQkVOQmlDc0FQX0FBSF9BQUNoUUlFTmZfWF9fYjNfai1fNTlmX3QwZVkxUDlfN192LTB6amhmZHQtOE4yZl9YX0w4WDQyTTd2RjM2cHE0S3VSNEV1M0xCSVFkbEhPSGNUVW13Nm9rVnJ6UHNiazJNcjdOS0o3UEVtbk1iTzJkWUdIOV9uOTNUdVpLWTdfXzhfX196X18tdl92X19fX2Zfci0zXzNfXzU5WC0tLV9lX1YzOTl6THY5X19fX185bk5fX3dRRUFKTU5TLUFDN0VzY0dUYU5Lb1VRSXdyQ1E2QVVBRkZBTUxSTllRTXJncDJWd0Vlb0lXQUNFMUFSZ1JBZ3hCUml3Q0FBUUNBSkNJZ0pBRHdRQ0lBaUFRQUFnQlVnSVFBRWJBSUxBQ3dNQWdBRkFOQ3hBaWdDRUNRZ3lPQ281VEFnSWtXaWduc3JBRW91OWpUQ0VNb3NBS0JSX1JVWUNKUWdnV0JrSkN3Y3h3QklBQUEuZl9nQURfZ0FBQUFBuAYAwQYAAAAAAADwP9AG9S_aBhYKEAAAIckZAVwQABgA4AYE8gYCCACABwGIBwCgB0C6Bw8h3UgYACAAMAA4zxVAAMgHz-AE0gcNVQsBOAjaBwYJJ2jgBwDqBwIIAPAHwbQGiggCEACVCAAAgD-YCAE.&s=9a786ccf42b374193265950d679358d62711eea0&pp=${AUCTION_PRICE}&ppc=${AUCTION_CURRENCY}]]><\\/VASTAdTagURI><Impression><![CDATA[https:\\/\\/ib.adnxs.com\\/nop]]><\\/Impression><Creatives><Creative adID=\\\"97517771\\\"><Linear><\\/Linear><\\/Creative><\\/Creatives><\\/Wrapper><\\/Ad><\\/VAST>\",\"adomain\":[\"\"],\"iurl\":\"https:\\/\\/ams1-ib.adnxs.com\\/cr?id=97517771\",\"cid\":\"9325\",\"crid\":\"97517771\",\"h\":1,\"w\":1,\"ext\":{\"appnexus\":{\"brand_id\":182979,\"auction_id\":3586012853398608306,\"bidder_id\":2,\"bid_ad_type\":1,\"creative_info\":{\"video\":{\"duration\":30,\"mimes\":[\"video\\/x-flv\",\"video\\/mp4\",\"video\\/webm\"]}}}}}],\"seat\":\"9325\"}],\"bidid\":\"1003079640865873647\",\"cur\":\"EUR\"}",
+            "requestheaders": {
+              "Accept": [
+                "application/json"
+              ],
+              "x-prebid": [
+                "pbs-java/undefined"
+              ],
+              "Content-Type": [
+                "application/json;charset=utf-8"
+              ]
+            },
+            "status": 200
+          }
+        ]
+      },
+      "resolvedrequest": {
+        "id": "f2140dc6-67c2-4b05-b2b2-7430a78d796e",
+        "imp": [
+          {
+            "id": "video",
+            "video": {
+              "mimes": [
+                "video/mp4",
+                "application/javascript",
+                "video/webm",
+                "video/ogg"
+              ],
+              "minduration": 1,
+              "maxduration": 30,
+              "protocols": [
+                2,
+                3,
+                5,
+                6
+              ],
+              "w": 640,
+              "h": 480,
+              "startdelay": 0,
+              "placement": 1,
+              "linearity": 1,
+              "skip": 1,
+              "api": [
+                2
+              ]
+            },
+            "bidfloor": 0,
+            "bidfloorcur": "USD",
+            "ext": {
+              "prebid": {
+                "is_rewarded_inventory": 1,
+                "improvedigitalpbs": {
+                  "accountId": "950",
+                  "waterfall": {
+                    "default": [
+                      "gam_first_look",
+                      "gam",
+                      "https://ad.360yield.com/advast?p=22137694&w=4&h=3&gdpr={{gdpr_consent}}"
+                    ]
+                  },
+                  "responseType": "vast"
+                },
+                "bidder": {
+                  "pubmatic": {
+                    "publisherId": "156946",
+                    "adSlot": "a10.com_game_preroll"
+                  },
+                  "improvedigital": {
+                    "placementId": 22137694
+                  },
+                  "appnexus": {
+                    "use_pmt_rule": false,
+                    "placement_id": 13232361
+                  }
+                },
+                "storedrequest": {
+                  "id": "22137694.local"
+                }
+              }
+            }
+          }
+        ],
+        "site": {
+          "domain": "hb.improvedigital.com",
+          "page": "https://hb.improvedigital.com/prebid/prebid-server/tester/index.html",
+          "publisher": {
+            "id": "1",
+            "domain": "improvedigital.com",
+            "ext": {
+              "prebid": {
+                "parentAccount": "950"
+              }
+            }
+          },
+          "ext": {
+            "amp": 0
+          }
+        },
+        "device": {
+          "ua": "insomnia/2022.3.0",
+          "ip": "163.175.196.37",
+          "h": 989,
+          "w": 1480
+        },
+        "user": {
+          "ext": {
+            "consent": "CPMd8p0PMd8p0AcABBENBiCsAP_AAH_AAChQIENf_X__b3_j-_59f_t0eY1P9_7_v-0zjhfdt-8N2f_X_L8X42M7vF36pq4KuR4Eu3LBIQdlHOHcTUmw6okVrzPsbk2Mr7NKJ7PEmnMbO2dYGH9_n93TuZKY7__8___z__-v_v____f_r-3_3__59X---_e_V399zLv9_____9nN__wQEAJMNS-AC7EscGTaNKoUQIwrCQ6AUAFFAMLRNYQMrgp2VwEeoIWACE1ARgRAgxBRiwCAAQCAJCIgJADwQCIAiAQAAgBUgIQAEbAILACwMAgAFANCxAigCECQgyOCo5TAgIkWignsrAEou9jTCEMosAKBR_RUYCJQggWBkJCwcxwBIAAA.f_gAD_gAAAAA"
+          }
+        },
+        "test": 1,
+        "at": 1,
+        "tmax": 5000,
+        "cur": [
+          "EUR"
+        ],
+        "source": {
+          "tid": "f2140dc6-67c2-4b05-b2b2-7430a78d796e"
+        },
+        "regs": {
+          "ext": {
+            "gdpr": 0
+          }
+        },
+        "ext": {
+          "prebid": {
+            "targeting": {
+              "pricegranularity": {
+                "ranges": [
+                  {
+                    "max": 2,
+                    "increment": 0.01
+                  },
+                  {
+                    "max": 5,
+                    "increment": 0.05
+                  },
+                  {
+                    "max": 10,
+                    "increment": 0.1
+                  },
+                  {
+                    "max": 40,
+                    "increment": 0.5
+                  },
+                  {
+                    "max": 100,
+                    "increment": 1
+                  }
+                ],
+                "precision": 2
+              },
+              "includewinners": true,
+              "includebidderkeys": true,
+              "includeformat": true
+            },
+            "cache": {
+              "vastxml": {
+                "returnCreative": true
+              }
+            },
+            "channel": {
+              "name": "web"
+            },
+            "pbs": {
+              "endpoint": "/openrtb2/auction"
+            },
+            "server": {
+              "externalurl": "https://pbs-proto.360polaris.biz",
+              "gvlid": 253,
+              "datacenter": "local"
+            }
+          }
+        }
+      }
+    },
+    "responsetimemillis": {
+      "cache": 187,
+      "improvedigital": 255,
+      "appnexus": 564,
+      "pubmatic": 229
+    },
+    "tmaxrequest": 5000,
+    "prebid": {
+      "auctiontimestamp": 1655975442109
+    }
+  }
+}

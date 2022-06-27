@@ -3,6 +3,7 @@ package com.improvedigital.prebid.server;
 import ch.qos.logback.classic.Level;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.response.BidResponse;
@@ -44,17 +45,24 @@ public abstract class UnitTestBase extends VertxTest {
     protected static JsonMerger merger;
     protected static JsonUtils jsonUtils;
     protected static RequestUtils requestUtils;
+    protected static XmlMapper xmlMapper;
 
     static {
         merger = new JsonMerger(jacksonMapper);
         jsonUtils = new JsonUtils(jacksonMapper);
         requestUtils = new RequestUtils(jsonUtils);
+        xmlMapper = new XmlMapper();
     }
 
     protected String resourceDir = null;
     protected String impsDir = "imps";
     protected String requestsDir = "requests";
     protected String responsesDir = "responses";
+
+    protected final String defaultRequestId = "minimal";
+    protected final String defaultResponseId = "video-vast";
+    protected final String defaultStoredImpId = "video-gvast";
+    protected final String defaultStoredRequestId = "stored-request";
 
     protected Timeout timeout = createTimeout(10000L);
 
@@ -430,5 +438,14 @@ public abstract class UnitTestBase extends VertxTest {
         return jacksonMapper.decodeValue(
             jacksonMapper.encodeToBytes(source), clazz
         );
+    }
+
+    protected <T> T parseXml(String xml, Class<T> clazz) {
+        try {
+            return xmlMapper.readValue(xml, clazz);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

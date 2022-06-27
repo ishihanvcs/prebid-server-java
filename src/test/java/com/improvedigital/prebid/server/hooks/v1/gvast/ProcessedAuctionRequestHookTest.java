@@ -65,7 +65,7 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
 
     @Test
     public void shouldRejectWhenImprovedigitalPlacementIdIsMissingForAnyImp() {
-        BidRequest bidRequest = getStoredRequest("minimal");
+        BidRequest bidRequest = getStoredRequest(defaultRequestId);
         final LogCaptor logCaptor = LogCaptor.forClass(this.hook.getClass());
         executeHookAndValidateRejectedInvocationResult(
                 hook,
@@ -97,7 +97,7 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
     @Test
     public void shouldUpdateExtInBidRequestWhenNonVastVideoImpIsPresent() {
         BidRequest waterfallBidRequest = getDefaultBidRequest(bidRequest1 -> {
-            Imp imp = getStoredImp("video-basic",
+            Imp imp = getStoredImp(defaultStoredImpId,
                     imp1 -> setImpConfigProperties(
                             imp1, configNode -> configNode.put(
                                     "responseType",
@@ -313,7 +313,7 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
             BigDecimal impBidFloor, String impBidFloorCur, BigDecimal configBidFloor, String configBidFloorCur
     ) {
         return getDefaultBidRequest(bidRequest1 -> {
-            Imp.ImpBuilder impBuilder = getStoredImp("video-basic")
+            Imp.ImpBuilder impBuilder = getStoredImp(defaultStoredImpId)
                     .toBuilder()
                     .id("1");
             if (impBidFloor != null) {
@@ -375,7 +375,7 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
     }
 
     private BidRequest getDefaultBidRequest(Function<BidRequest, BidRequest> modifier) {
-        return getStoredRequest("minimal", bidRequest -> {
+        return getStoredRequest(defaultRequestId, bidRequest -> {
             if (modifier != null) {
                 bidRequest = modifier.apply(bidRequest);
             }

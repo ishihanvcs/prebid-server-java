@@ -38,7 +38,6 @@ public class EntrypointHookTest extends UnitTestBase {
     EntrypointHook hook;
 
     private final String defaultAccountId = "2018";
-    private final String defaultStoredRequestId = "stored-request";
 
     @Before
     public void setUp() {
@@ -52,16 +51,14 @@ public class EntrypointHookTest extends UnitTestBase {
 
     @Test
     public void shouldNotModifyBidRequestWhenAccountIdAndRequestIdMisMatchedInImps() {
-        final String storedImpId = "video-basic";
-        final String bidRequestId = "minimal";
         final Set<String> storedImpIds = Set.of();
 
-        final Imp imp1 = getStoredImp(storedImpId, imp -> setImpConfigProperties(imp, configNode -> {
+        final Imp imp1 = getStoredImp(defaultStoredImpId, imp -> setImpConfigProperties(imp, configNode -> {
             configNode.put("accountId", "1");
             configNode.put("requestId", "1");
         }).toBuilder().id("1").build());
 
-        final Imp imp2 = getStoredImp(storedImpId, imp -> setImpConfigProperties(imp, configNode -> {
+        final Imp imp2 = getStoredImp(defaultStoredImpId, imp -> setImpConfigProperties(imp, configNode -> {
             configNode.put("accountId", "2");
             configNode.put("requestId", "2");
         }).toBuilder().id("2").build());
@@ -76,7 +73,7 @@ public class EntrypointHookTest extends UnitTestBase {
 
         executeHookAndValidateBidRequest(
                 createEntrypointPayload(
-                        bidRequestId,
+                        defaultRequestId,
                         bidRequest -> bidRequest.toBuilder().imp(List.of(imp1, imp2)).build()
                 ),
                 timeout,
@@ -109,11 +106,9 @@ public class EntrypointHookTest extends UnitTestBase {
 
     @Test
     public void shouldNotModifyBidRequestWhenParentAccountAndRequestIdIsEmpty() {
-        final String storedImpId = "video-basic";
-        final String bidRequestId = "minimal";
-        final Set<String> storedImpIds = Set.of(storedImpId);
+        final Set<String> storedImpIds = Set.of(defaultStoredImpId);
         final Map<String, String> impToStoredIdMap = new HashMap<>() {{
-                put("1", storedImpId);
+                put("1", defaultStoredImpId);
             }};
 
         when(settingsLoader.getStoredImpsSafely(storedImpIds, timeout)).thenReturn(
@@ -124,7 +119,7 @@ public class EntrypointHookTest extends UnitTestBase {
 
         executeHookAndValidateBidRequest(
                 createEntrypointPayload(
-                        bidRequestId,
+                        defaultRequestId,
                         bidRequest -> setStoredImpIds(bidRequest, impToStoredIdMap)
                 ),
                 timeout,
@@ -136,11 +131,9 @@ public class EntrypointHookTest extends UnitTestBase {
 
     @Test
     public void shouldSetAccountIdAndRequestIdFromImpConfig() {
-        final String storedImpId = "video-basic";
-        final String bidRequestId = "minimal";
-        final Set<String> storedImpIds = Set.of(storedImpId);
+        final Set<String> storedImpIds = Set.of(defaultStoredImpId);
         final Map<String, String> impToStoredIdMap = new HashMap<>() {{
-                put("1", storedImpId);
+                put("1", defaultStoredImpId);
             }};
 
         when(settingsLoader.getStoredImpsSafely(storedImpIds, timeout)).thenReturn(
@@ -155,7 +148,7 @@ public class EntrypointHookTest extends UnitTestBase {
 
         executeHookAndValidateBidRequest(
                 createEntrypointPayload(
-                        bidRequestId,
+                        defaultRequestId,
                         bidRequest -> setStoredImpIds(bidRequest, impToStoredIdMap)
                 ),
                 timeout,

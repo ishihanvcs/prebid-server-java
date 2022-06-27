@@ -52,7 +52,7 @@ public class AuctionResponseHookTest extends UnitTestBase {
         MockitoAnnotations.openMocks(this);
         gVastHookUtils = new GVastHookUtils(requestUtils, merger, currencyConversionService);
         hook = new AuctionResponseHook(
-                requestUtils, macroProcessor, EXTERNAL_URL, GAM_NETWORK_CODE, CACHE_HOST
+                requestUtils, gVastHookUtils, macroProcessor, EXTERNAL_URL, GAM_NETWORK_CODE, CACHE_HOST
         );
     }
 
@@ -134,7 +134,7 @@ public class AuctionResponseHookTest extends UnitTestBase {
     }
 
     private BidResponse getBidResponse(Function<BidResponse, BidResponse> modifier) {
-        return getStoredResponse("basic-video", bidResponse -> {
+        return getStoredResponse(defaultResponseId, bidResponse -> {
             if (modifier != null) {
                 bidResponse = modifier.apply(bidResponse);
             }
@@ -156,8 +156,8 @@ public class AuctionResponseHookTest extends UnitTestBase {
     }
 
     private BidRequest getBidRequest(Function<BidRequest, BidRequest> modifier) {
-        return getStoredRequest("minimal", bidRequest -> {
-            Imp imp = getStoredImp("video-basic")
+        return getStoredRequest(defaultRequestId, bidRequest -> {
+            Imp imp = getStoredImp(defaultStoredImpId)
                     .toBuilder().id("video").build();
             bidRequest = bidRequest.toBuilder().imp(
                     new ArrayList<>(List.of(imp))

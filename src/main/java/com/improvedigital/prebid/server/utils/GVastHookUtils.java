@@ -6,6 +6,9 @@ import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Device;
 import com.iab.openrtb.request.Geo;
 import com.iab.openrtb.request.Imp;
+import com.iab.openrtb.response.Bid;
+import com.iab.openrtb.response.BidResponse;
+import com.iab.openrtb.response.SeatBid;
 import com.improvedigital.prebid.server.auction.model.Floor;
 import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.hooks.v1.gvast.GVastHooksModuleContext;
@@ -23,10 +26,13 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRequestTargeting;
 import org.prebid.server.util.ObjectUtil;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class GVastHookUtils {
 
@@ -83,6 +89,41 @@ public class GVastHookUtils {
                         .build()
                 ).build()
         );
+    }
+
+    public List<SeatBid> findSeatBidsForImp(BidResponse bidResponse, Imp imp) {
+        return bidResponse.getSeatbid().stream()
+                .filter(seatBid -> seatBid.getBid().stream()
+                        .anyMatch(bid -> Objects.equals(bid.getImpid(), imp.getId()))
+                ).collect(Collectors.toList());
+    }
+
+    public SeatBid findOrCreateSeatBid(String name, BidResponse bidResponse, Imp imp) {
+        return findOrCreateSeatBid(name, findSeatBidsForImp(bidResponse, imp));
+    }
+
+    public SeatBid findOrCreateSeatBid(String name, List<SeatBid> seatBidsForImp) {
+        return seatBidsForImp.stream()
+                .filter(seatBid ->
+                        name.equals(seatBid.getSeat())
+                ).findFirst().orElse(
+                        SeatBid.builder()
+                                .seat(name)
+                                .bid(new ArrayList<>())
+                                .build()
+                );
+    }
+
+    public List<Bid> getBidsForImpId(SeatBid seatBid, Imp imp) {
+        return getBidsForImpId(List.of(seatBid), imp);
+    }
+
+    public List<Bid> getBidsForImpId(List<SeatBid> seatBids, Imp imp) {
+        return seatBids.stream().flatMap(seatBid ->
+                        seatBid.getBid().stream().filter(bid ->
+                                bid.getImpid().equals(imp.getId())
+                        )
+                ).collect(Collectors.toList());
     }
 
     public GVastHooksModuleContext createModuleContext(BidRequest bidRequest) {

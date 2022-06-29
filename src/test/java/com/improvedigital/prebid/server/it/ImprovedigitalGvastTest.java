@@ -289,9 +289,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         "gam_first_look",
                         "gam",
                         "gam_first_look",
-                        "https://my.customvast.xml",
-                        "gam_no_hb",
-                        "gam_improve_deal"
+                        "https://my.customvast.xml"
                 ))
                 .build()
         );
@@ -331,29 +329,11 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertNoCreative(adm, "3");
         assertExtensions(adm, "3", 3);
 
-        // 5th tag = gam_no_hb
-        String vastAdTagUri5 = getVastTagUri(adm, "4");
-        assertGamNoHbUrl(vastAdTagUri5, "20220608");
-        assertSSPSyncPixels(adm, "4");
-        assertNoCreative(adm, "4");
-        assertExtensions(adm, "4", 4);
-
-        // 6th tag = gam_improve_deal
-        String vastAdTagUri6 = getVastTagUri(adm, "5");
-        assertGamUrlWithImprovedigitalAsSingleBidder(
-                vastAdTagUri6, cacheId, "20220608", "1.09"
-        );
-        assertSSPSyncPixels(adm, "5");
-        assertNoCreative(adm, "5");
-        assertExtensions(adm, "5", 5);
-
         // Last ad will not have fallbackOnNoAd=true. All the others will.
         assertFallbackOnNoAd(adm, true, "0");
         assertFallbackOnNoAd(adm, true, "1");
         assertFallbackOnNoAd(adm, true, "2");
-        assertFallbackOnNoAd(adm, true, "3");
-        assertFallbackOnNoAd(adm, true, "4");
-        assertFallbackOnNoAd(adm, false, "5");
+        assertFallbackOnNoAd(adm, false, "3");
     }
 
     @Test

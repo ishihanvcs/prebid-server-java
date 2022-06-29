@@ -21,9 +21,11 @@ import org.prebid.server.currency.CurrencyConversionService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -241,7 +243,7 @@ public class GVastBidCreatorTest extends UnitTestBase {
     public void testWaterfallWithImproveDeal() throws Exception {
         BidResponse bidResponse = bidResponseDefault;
         createGVastBidAndValidateAds(
-                bidRequestWaterfall, bidResponse, 4, (id, wrapperNode) -> {
+                bidRequestWaterfall, bidResponse, 6, (id, wrapperNode) -> {
                     // TODO: test case specific validator will go here
                 }
         );
@@ -252,7 +254,7 @@ public class GVastBidCreatorTest extends UnitTestBase {
         BidResponse bidResponse = bidResponseDefault;
         removeImproveDealsFromTargeting(bidResponse);
         createGVastBidAndValidateAds(
-                bidRequestWaterfall, bidResponse, 4, (id, wrapperNode) -> {
+                bidRequestWaterfall, bidResponse, 6, (id, wrapperNode) -> {
                     // TODO: test case specific validator will go here
                 }
         );
@@ -267,7 +269,7 @@ public class GVastBidCreatorTest extends UnitTestBase {
                         .build())
                 .build();
         createGVastBidAndValidateAds(
-                bidRequest, bidResponse, 4, (id, wrapperNode) -> {
+                bidRequest, bidResponse, 6, (id, wrapperNode) -> {
                     // TODO: test case specific validator will go here
                 }
         );
@@ -278,7 +280,7 @@ public class GVastBidCreatorTest extends UnitTestBase {
         BidRequest bidRequest = getBidRequestWithCustParams(bidRequestWaterfall);
         BidResponse bidResponse = bidResponseDefault;
         createGVastBidAndValidateAds(
-                bidRequest, bidResponse, 4, (id, wrapperNode) -> {
+                bidRequest, bidResponse, 6, (id, wrapperNode) -> {
                     // TODO: test case specific validator will go here
                 }
         );
@@ -305,12 +307,18 @@ public class GVastBidCreatorTest extends UnitTestBase {
     }
 
     private SeatBid createImproveSeatBid(BidResponse bidResponse, Imp imp) {
-        SeatBid seatBid = gVastHookUtils.findOrCreateSeatBid(
+        SeatBid improveSeatBid = gVastHookUtils.findOrCreateSeatBid(
                 RequestUtils.IMPROVE_BIDDER_NAME,
                 bidResponse, imp
         );
-        return seatBid.toBuilder()
-                .bid(gVastHookUtils.getBidsForImpId(seatBid, imp))
+
+        final List<SeatBid> seatBidsForImp = bidResponse.getSeatbid().stream()
+                .filter(seatBid -> seatBid.getBid().stream()
+                        .anyMatch(bid -> Objects.equals(bid.getImpid(), imp.getId()))
+                ).collect(Collectors.toList());
+
+        return improveSeatBid.toBuilder()
+                .bid(gVastHookUtils.getBidsForImpId(seatBidsForImp, imp))
                 .build();
     }
 

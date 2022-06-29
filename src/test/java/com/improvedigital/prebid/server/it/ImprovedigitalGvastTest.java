@@ -1582,7 +1582,6 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         return responseJson;
     }
 
-
     private JSONObject doNonVastRequestWhenSSPReturnsNoBid(
             String responseType, String uniqueId, int placementId
     ) throws JSONException {
@@ -1602,7 +1601,6 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                 "improvedigital", uniqueId, "USD"
                         )))
         );
-
 
         Response response = specWithPBSHeader(18080)
                 .body(getAuctionBidRequestVideo(uniqueId, AuctionBidRequestTestData.builder()

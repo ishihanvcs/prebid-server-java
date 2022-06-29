@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToIgnoreCase;
@@ -865,15 +866,27 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         Map<String, List<String>> custParams = splitQuery(vastQueryParams.get("cust_params").get(0));
         assertQuerySingleValue(custParams.get("hb_bidder"), "improvedigital");
         assertQuerySingleValue(custParams.get("hb_bidder_improvedig"), "improvedigital");
+        assertNoOtherKeysExcept(custParams, "hb_bidder", Arrays.asList(
+                "hb_bidder", "hb_bidder_improvedig"
+        ));
 
         assertQuerySingleValue(custParams.get("hb_uuid"), uniqueId);
         assertQuerySingleValue(custParams.get("hb_uuid_improvedigit"), uniqueId);
+        assertNoOtherKeysExcept(custParams, "hb_uuid", Arrays.asList(
+                "hb_uuid", "hb_uuid_improvedigit"
+        ));
 
         assertQuerySingleValue(custParams.get("hb_format"), "video");
         assertQuerySingleValue(custParams.get("hb_format_improvedig"), "video");
+        assertNoOtherKeysExcept(custParams, "hb_format", Arrays.asList(
+                "hb_format", "hb_format_improvedig"
+        ));
 
         assertQuerySingleValue(custParams.get("hb_pb"), price);
         assertQuerySingleValue(custParams.get("hb_pb_improvedigital"), price);
+        assertNoOtherKeysExcept(custParams, "hb_pb", Arrays.asList(
+                "hb_pb", "hb_pb_improvedigital"
+        ));
 
         assertThat(getCustomParamCacheUrl(custParams, null))
                 .isEqualTo(IT_TEST_CACHE_URL + "?uuid=" + uniqueId);
@@ -909,15 +922,27 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         Map<String, List<String>> custParams = splitQuery(vastQueryParams.get("cust_params").get(0));
         assertQuerySingleValue(custParams.get("hb_bidder"), "generic");
         assertQuerySingleValue(custParams.get("hb_bidder_generic"), "generic");
+        assertNoOtherKeysExcept(custParams, "hb_bidder", Arrays.asList(
+                "hb_bidder", "hb_bidder_generic"
+        ));
 
         assertQuerySingleValue(custParams.get("hb_uuid"), uniqueId);
         assertQuerySingleValue(custParams.get("hb_uuid_generic"), uniqueId);
+        assertNoOtherKeysExcept(custParams, "hb_uuid", Arrays.asList(
+                "hb_uuid", "hb_uuid_generic"
+        ));
 
         assertQuerySingleValue(custParams.get("hb_format"), "video");
         assertQuerySingleValue(custParams.get("hb_format_generic"), "video");
+        assertNoOtherKeysExcept(custParams, "hb_format", Arrays.asList(
+                "hb_format", "hb_format_generic"
+        ));
 
         assertQuerySingleValue(custParams.get("hb_pb"), price);
         assertQuerySingleValue(custParams.get("hb_pb_generic"), price);
+        assertNoOtherKeysExcept(custParams, "hb_pb", Arrays.asList(
+                "hb_pb", "hb_pb_generic"
+        ));
 
         assertThat(getCustomParamCacheUrl(custParams, null))
                 .isEqualTo(IT_TEST_CACHE_URL + "?uuid=" + uniqueId);
@@ -950,18 +975,30 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertQuerySingleValue(custParams.get("hb_bidder"), "generic");
         assertQuerySingleValue(custParams.get("hb_bidder_generic"), "generic");
         assertQuerySingleValue(custParams.get("hb_bidder_improvedig"), "improvedigital");
+        assertNoOtherKeysExcept(custParams, "hb_bidder", Arrays.asList(
+                "hb_bidder", "hb_bidder_generic", "hb_bidder_improvedig"
+        ));
 
         assertQuerySingleValue(custParams.get("hb_uuid"), genericCacheId);
         assertQuerySingleValue(custParams.get("hb_uuid_generic"), genericCacheId);
         assertQuerySingleValue(custParams.get("hb_uuid_improvedigit"), improveCacheId);
+        assertNoOtherKeysExcept(custParams, "hb_uuid", Arrays.asList(
+                "hb_uuid", "hb_uuid_generic", "hb_uuid_improvedigit"
+        ));
 
         assertQuerySingleValue(custParams.get("hb_format"), "video");
         assertQuerySingleValue(custParams.get("hb_format_generic"), "video");
         assertQuerySingleValue(custParams.get("hb_format_improvedig"), "video");
+        assertNoOtherKeysExcept(custParams, "hb_format", Arrays.asList(
+                "hb_format", "hb_format_generic", "hb_format_improvedig"
+        ));
 
         assertQuerySingleValue(custParams.get("hb_pb"), genericPrice);
         assertQuerySingleValue(custParams.get("hb_pb_generic"), genericPrice);
         assertQuerySingleValue(custParams.get("hb_pb_improvedigital"), improvePrice);
+        assertNoOtherKeysExcept(custParams, "hb_pb", Arrays.asList(
+                "hb_pb", "hb_pb_generic", "hb_pb_improvedigital"
+        ));
 
         assertThat(getCustomParamCacheUrl(custParams, null))
                 .isEqualTo(IT_TEST_CACHE_URL + "?uuid=" + genericCacheId);
@@ -1534,6 +1571,19 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                 + "</InLine>"
                 )
                 .replace("\"", "\\\"");
+    }
+
+    private void assertNoOtherKeysExcept(
+            Map<String, List<String>> custParams, String keyPrefix, List<String> ignoringValues
+    ) {
+        assertThat(custParams.keySet().stream()
+                .filter(k -> k.startsWith(keyPrefix))
+                .sorted()
+                .collect(Collectors.toList())
+        ).isEqualTo(ignoringValues.stream()
+                .sorted()
+                .collect(Collectors.toList())
+        );
     }
 
     /**

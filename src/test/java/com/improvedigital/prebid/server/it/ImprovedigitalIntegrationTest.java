@@ -759,7 +759,23 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 + "</VAST>";
     }
 
-    protected void assertBidCountSingle(JSONObject responseJson) throws JSONException {
+    protected void assertBidCountIsOne(JSONObject responseJson) throws JSONException {
+        assertThat(responseJson.getJSONArray("seatbid").length())
+                .isOne();
+
+        assertThat(responseJson.getJSONArray("seatbid").getJSONObject(0).getJSONArray("bid").length())
+                .isOne();
+    }
+
+    protected void assertBidCountIsZero(JSONObject responseJson) throws JSONException {
+        assertThat(responseJson.getJSONArray("seatbid").length())
+                .isZero();
+
+        assertThat(responseJson.getJSONArray("seatbid").getJSONObject(0).getJSONArray("bid").length())
+                .isZero();
+    }
+
+    protected void assertBidCountIsOneOrMore(JSONObject responseJson) throws JSONException {
         assertThat(responseJson.getJSONArray("seatbid").length())
                 .isGreaterThanOrEqualTo(1);
 

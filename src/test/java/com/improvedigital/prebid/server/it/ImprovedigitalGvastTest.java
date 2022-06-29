@@ -1423,7 +1423,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .post(Endpoint.openrtb2_auction.value());
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertBidCountIsOne(responseJson);
+        assertBidCountIsOne(responseJson); /* As we are sending some bids from SSP, we will definitely get 1 bid. */
         assertBidIdExists(responseJson, 0, 0);
         assertBidImpId(responseJson, 0, 0, "imp_id_" + uniqueId);
         assertBidPrice(responseJson, 0, 0, 0.0);
@@ -1573,7 +1573,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .post(Endpoint.openrtb2_auction.value());
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertBidCountIsOne(responseJson);
+        assertBidCountIsOne(responseJson); /* As we are sending some bids from SSP, we will definitely get 1 bid. */
         assertBidIdExists(responseJson, 0, 0);
         assertBidImpId(responseJson, 0, 0, "imp_id_" + uniqueId);
         assertBidPrice(responseJson, 0, 0, 0.0);

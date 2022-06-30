@@ -586,10 +586,8 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         JSONObject responseJson = doNonVastRequestWhenSSPReturnsNoBid(
                 "waterfall", UUID.randomUUID().toString(), 20220629
         );
-        assertBidCountIsOne(responseJson);
+        assertBidCountIsZero(responseJson);
         assertCurrency(responseJson, "USD");
-        assertThat(getAdm(responseJson, 0, 0))
-                .isEqualTo("<?xml version=\"1.0\" encoding=\"UTF-8\"?><VAST version=\"2.0\"></VAST>");
     }
 
     @Test

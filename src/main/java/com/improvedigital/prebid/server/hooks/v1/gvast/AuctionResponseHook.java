@@ -116,8 +116,10 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
 
                     final Bid gVastBid = bidCreator.create(imp, tempSeatBid, true);
 
-                    copyEmptySeatBidIntoResultMapIfNotExist(resultSeatBids, improveSeatBid)
-                            .getBid().add(gVastBid);
+                    if (gVastBid != null) {
+                        copyEmptySeatBidIntoResultMapIfNotExist(resultSeatBids, improveSeatBid)
+                                .getBid().add(gVastBid);
+                    }
                 }
             }
             return bidResponse.toBuilder().seatbid(

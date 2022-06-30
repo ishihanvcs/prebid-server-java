@@ -396,22 +396,23 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String improveCacheId = getCacheIdRandom();
         String genericCacheId = getCacheIdRandom();
 
-        JSONObject responseJson = doCustomVastAuctionRequestToMultipleBidder(GvastMultipleBidderAuctionTestParam.builder()
-                .responseType("gvast")
-                .defaultWaterfalls(Arrays.asList("gam_first_look", "gam"))
-                .improvePlacementId(20220617)
-                .improveAdm1(improveVastXml1)
-                .improvePrice1("1.65")
-                .improveAdm2(improveVastXml2)
-                .improvePrice2("1.75")
-                .improveCacheId(improveCacheId)
-                .improveReturnsDeal(false)
-                .genericAdm1(genericVastXml1)
-                .genericPrice1("1.95")
-                .genericAdm2(genericVastXml2)
-                .genericPrice2("1.85")
-                .genericCacheId(genericCacheId)
-                .build()
+        JSONObject responseJson = doCustomVastAuctionRequestToMultipleBidder(
+                GvastMultipleBidderAuctionTestParam.builder()
+                        .responseType("gvast")
+                        .defaultWaterfalls(Arrays.asList("gam_first_look", "gam"))
+                        .improvePlacementId(20220617)
+                        .improveAdm1(improveVastXml1)
+                        .improvePrice1("1.65")
+                        .improveAdm2(improveVastXml2)
+                        .improvePrice2("1.75")
+                        .improveCacheId(improveCacheId)
+                        .improveReturnsDeal(false)
+                        .genericAdm1(genericVastXml1)
+                        .genericPrice1("1.95")
+                        .genericAdm2(genericVastXml2)
+                        .genericPrice2("1.85")
+                        .genericCacheId(genericCacheId)
+                        .build()
         );
 
         String adm = getAdm(responseJson, 0, 0);
@@ -456,22 +457,23 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String improveCacheId = getCacheIdRandom();
         String genericCacheId = getCacheIdRandom();
 
-        JSONObject responseJson = doCustomVastAuctionRequestToMultipleBidder(GvastMultipleBidderAuctionTestParam.builder()
-                .responseType("gvast")
-                .defaultWaterfalls(Arrays.asList("gam_first_look", "gam"))
-                .improvePlacementId(20220617)
-                .improveAdm1(improveVastXml1)
-                .improvePrice1("1.65")
-                .improveAdm2(improveVastXml2)
-                .improvePrice2("1.75")
-                .improveCacheId(improveCacheId)
-                .improveReturnsDeal(true)
-                .genericAdm1(genericVastXml1)
-                .genericPrice1("1.95")
-                .genericAdm2(genericVastXml2)
-                .genericPrice2("1.85")
-                .genericCacheId(genericCacheId)
-                .build()
+        JSONObject responseJson = doCustomVastAuctionRequestToMultipleBidder(
+                GvastMultipleBidderAuctionTestParam.builder()
+                        .responseType("gvast")
+                        .defaultWaterfalls(Arrays.asList("gam_first_look", "gam"))
+                        .improvePlacementId(20220617)
+                        .improveAdm1(improveVastXml1)
+                        .improvePrice1("1.65")
+                        .improveAdm2(improveVastXml2)
+                        .improvePrice2("1.75")
+                        .improveCacheId(improveCacheId)
+                        .improveReturnsDeal(true)
+                        .genericAdm1(genericVastXml1)
+                        .genericPrice1("1.95")
+                        .genericAdm2(genericVastXml2)
+                        .genericPrice2("1.85")
+                        .genericCacheId(genericCacheId)
+                        .build()
         );
 
         String adm = getAdm(responseJson, 0, 0);
@@ -543,21 +545,22 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String improveCacheId = getCacheIdRandom();
         String genericCacheId = getCacheIdRandom();
 
-        JSONObject responseJson = doCustomVastAuctionRequestToMultipleBidder(GvastMultipleBidderAuctionTestParam.builder()
-                .responseType("waterfall")
-                .improvePlacementId(20220615)
-                .improveAdm1(improveVastXml1)
-                .improvePrice1("1.17")
-                .improveAdm2(improveVastXml2)
-                .improvePrice2("1.11")
-                .improveCacheId(improveCacheId)
-                .improveReturnsDeal(true)
-                .genericAdm1(genericVastXml1)
-                .genericPrice1("1.01")
-                .genericAdm2(genericVastXml2)
-                .genericPrice2("1.05")
-                .genericCacheId(genericCacheId)
-                .build()
+        JSONObject responseJson = doCustomVastAuctionRequestToMultipleBidder(
+                GvastMultipleBidderAuctionTestParam.builder()
+                        .responseType("waterfall")
+                        .improvePlacementId(20220615)
+                        .improveAdm1(improveVastXml1)
+                        .improvePrice1("1.17")
+                        .improveAdm2(improveVastXml2)
+                        .improvePrice2("1.11")
+                        .improveCacheId(improveCacheId)
+                        .improveReturnsDeal(true)
+                        .genericAdm1(genericVastXml1)
+                        .genericPrice1("1.01")
+                        .genericAdm2(genericVastXml2)
+                        .genericPrice2("1.05")
+                        .genericCacheId(genericCacheId)
+                        .build()
         );
 
         String adm = getAdm(responseJson, 0, 0);
@@ -817,22 +820,23 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String improveCacheId = getCacheIdRandom();
         String genericCacheId = getCacheIdRandom();
 
-        JSONObject responseJson = doCustomVastAuctionRequestToMultipleBidder(GvastMultipleBidderAuctionTestParam.builder()
-                .responseType("gvast")
-                .improvePlacementId(20220617)
-                .improveAdm1(improveVastXml1)
-                .improvePrice1("1.65")
-                .improveAdm2(improveVastXml2)
-                .improvePrice2("1.75")
-                .improveCacheId(improveCacheId)
-                .improveReturnsDeal(true)
-                .genericAdm1(genericVastXml1)
-                .genericPrice1("1.95")
-                .genericAdm2(genericVastXml2)
-                .genericPrice2("1.85")
-                .genericCacheId(genericCacheId)
-                .isCacheFailForImprove(true) /* Improve's adm's caching will fail. */
-                .build()
+        JSONObject responseJson = doCustomVastAuctionRequestToMultipleBidder(
+                GvastMultipleBidderAuctionTestParam.builder()
+                        .responseType("gvast")
+                        .improvePlacementId(20220617)
+                        .improveAdm1(improveVastXml1)
+                        .improvePrice1("1.65")
+                        .improveAdm2(improveVastXml2)
+                        .improvePrice2("1.75")
+                        .improveCacheId(improveCacheId)
+                        .improveReturnsDeal(true)
+                        .genericAdm1(genericVastXml1)
+                        .genericPrice1("1.95")
+                        .genericAdm2(genericVastXml2)
+                        .genericPrice2("1.85")
+                        .genericCacheId(genericCacheId)
+                        .isCacheFailForImprove(true) /* Improve's adm's caching will fail. */
+                        .build()
         );
 
         String adm = getAdm(responseJson, 0, 0);

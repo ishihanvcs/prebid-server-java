@@ -1634,11 +1634,11 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .includeformat(true)
                 .pricegranularity(BID_REQUEST_MAPPER.valueToTree(
                         ExtPriceGranularity.of(2, Arrays.asList(
-                                ExtGranularityRange.of(new BigDecimal(2), new BigDecimal(0.01)),
-                                ExtGranularityRange.of(new BigDecimal(5), new BigDecimal(0.05)),
-                                ExtGranularityRange.of(new BigDecimal(10), new BigDecimal(0.1)),
-                                ExtGranularityRange.of(new BigDecimal(40), new BigDecimal(0.5)),
-                                ExtGranularityRange.of(new BigDecimal(100), new BigDecimal(1))
+                                ExtGranularityRange.of(BigDecimal.valueOf(2), BigDecimal.valueOf(0.01)),
+                                ExtGranularityRange.of(BigDecimal.valueOf(5), BigDecimal.valueOf(0.05)),
+                                ExtGranularityRange.of(BigDecimal.valueOf(10), BigDecimal.valueOf(0.1)),
+                                ExtGranularityRange.of(BigDecimal.valueOf(40), BigDecimal.valueOf(0.5)),
+                                ExtGranularityRange.of(BigDecimal.valueOf(100), BigDecimal.valueOf(1))
                         ))
                 ))
                 .build();

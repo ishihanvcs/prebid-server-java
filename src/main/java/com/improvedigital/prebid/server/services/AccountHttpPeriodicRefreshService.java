@@ -6,6 +6,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.apache.commons.collections4.MapUtils;
 import org.prebid.server.exception.PreBidException;
 import org.prebid.server.json.DecodeException;
 import org.prebid.server.json.JacksonMapper;
@@ -169,7 +170,7 @@ public class AccountHttpPeriodicRefreshService implements Initializable {
     }
 
     private Void cacheAccounts(Map<String, Account> accountMap) {
-        if (!accountMap.isEmpty()) {
+        if (MapUtils.isNotEmpty(accountMap)) {
             for (Map.Entry<String, Account> entry: accountMap.entrySet()) {
                 if (entry.getValue() == null) {
                     this.accountCache.remove(entry.getKey());

@@ -27,7 +27,6 @@ import com.improvedigital.prebid.server.utils.Nullable;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.proto.openrtb.ext.request.ExtRegs;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
@@ -124,7 +123,7 @@ public class GVastBidCreator {
 
         this.gdprConsent = nullableUser.get(User::getExt)
                 .get(ExtUser::getConsent)
-                .value();
+                .value("");
 
         final Geo geo = nullableDevice.get(Device::getGeo).value();
 
@@ -329,7 +328,7 @@ public class GVastBidCreator {
                 .get(ImprovedigitalPbsImpExt::getImprovedigitalPbsImpExtGam)
                 .value(ImprovedigitalPbsImpExtGam.of(null, null, null));
         String adUnit = gamConfig.getAdUnit();
-        String networkCode = ObjectUtils.defaultIfNull(gamConfig.getNetworkCode(), gamNetworkCode);
+        String networkCode = StringUtils.defaultIfEmpty(gamConfig.getNetworkCode(), gamNetworkCode);
         if (!StringUtils.isBlank(gamConfig.getChildNetworkCode())) {
             networkCode += "," + gamConfig.getChildNetworkCode();
         }
@@ -435,7 +434,8 @@ public class GVastBidCreator {
         String expanded = "";
         try {
             expanded = macroProcessor.process(tag, macroValues, true);
-        } catch (Exception ignored) { }
+        } catch (Exception ignored) {
+        }
         return expanded;
     }
 
@@ -465,7 +465,7 @@ public class GVastBidCreator {
                     "https://image8.pubmatic.com/AdServer/ImgSync?p=159706&gdpr=" + gdpr + "&gdpr_consent=" + gdprConsent
                             + "&us_privacy=&pu="
                             + HttpUtil.encodeUrl(
-                                    getRedirect(externalUrl, "pubmatic", gdpr, gdprConsent, "#PMUID")
+                            getRedirect(externalUrl, "pubmatic", gdpr, gdprConsent, "#PMUID")
                     ),
                     "https://ssbsync-global.smartadserver.com/api/sync?callerId=5&gdpr=" + gdpr + "&gdpr_consent=" + gdprConsent
                             + "&us_privacy=&redirectUri="
@@ -520,7 +520,7 @@ public class GVastBidCreator {
                 this.waterfall.isEmpty()
                         ? List.of("gam")
                         : this.waterfall
-                );
+        );
 
         if (isImprovedigitalDeal) {
             waterfall.add(0, "gam_improve_deal");

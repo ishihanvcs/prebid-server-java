@@ -9,7 +9,7 @@
       },
       "ext": {
         "bidder": {
-          "exampleProperty" : "exampleProperty"
+          "exampleProperty" : "examplePropertyValue"
         }
       }
     }

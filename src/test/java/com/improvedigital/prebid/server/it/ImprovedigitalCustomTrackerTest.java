@@ -18,7 +18,6 @@ import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Map;
-import java.util.function.Function;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
@@ -46,10 +45,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("banner");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("banner");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         assertThat(adm).isEqualTo("<img src='banner.png'/>"
                 + "<img src=\"" + getCustomTrackerUrl("1.25", "13245") + "\">"
@@ -64,10 +63,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("banner");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("banner");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         assertThat(adm).isEqualTo("<body>"
                 + "<img src='banner.png'/>"
@@ -84,10 +83,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("banner");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("banner");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         assertThat(adm).isEqualTo("<   body   >"
                 + "<img src='banner.png'/>"
@@ -104,10 +103,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("banner");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("banner");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         assertThat(adm).isEqualTo("<html>"
                 + "< body >"
@@ -128,10 +127,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("video");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         // 1st pixel is what we had on creative.
         String existingImpPixel = XPathFactory.newInstance().newXPath()
@@ -156,10 +155,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("video");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         // Ad-1: 1st pixel is what we had on creative.
         String existingImpPixel = XPathFactory.newInstance().newXPath()
@@ -196,10 +195,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("video");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         // 1st pixel is the custom tracker we added.
         String trackingImpPixel = XPathFactory.newInstance().newXPath()
@@ -218,10 +217,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("video");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         // 1st pixel is what we had on creative.
         String existingImpPixel = XPathFactory.newInstance().newXPath()
@@ -246,10 +245,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("video");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         // Ad-1: 1st pixel is what we had on creative.
         String existingImpPixel = XPathFactory.newInstance().newXPath()
@@ -286,10 +285,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("video");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
-        String adm = getAdmOf1stBid(responseJson);
+        String adm = getAdm(responseJson, 0, 0);
 
         // 1st pixel is the custom tracker we added.
         String trackingImpPixel = XPathFactory.newInstance().newXPath()
@@ -311,12 +310,12 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOfNthBid(responseJson, 0)).isEqualTo("video");
-        assertThat(getExtPrebidTypeOfNthBid(responseJson, 1)).isEqualTo("video");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
+        assertThat(getBidExtPrebidType(responseJson, 0, 1)).isEqualTo("video");
         assertCurrency(responseJson, "USD");
 
-        String adm1 = getAdmOfNthBid(responseJson, 0);
-        String adm2 = getAdmOfNthBid(responseJson, 1);
+        String adm1 = getAdm(responseJson, 0, 0);
+        String adm2 = getAdm(responseJson, 0, 1);
 
         // Swapping the multi responses so that adm1 contains the imp_1's and adm2 contains imp_2's response.
         if (adm2.contains("20220601_1")) {
@@ -347,10 +346,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("native");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("native");
         assertCurrency(responseJson, "USD");
 
-        JSONObject adm = new JSONObject(getAdmOf1stBid(responseJson));
+        JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
 
         // Check we didn't place the tracker in "eventtrackers"/"imptrackers".
         assertThat(adm.has("eventtrackers")).isFalse();
@@ -366,10 +365,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("native");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("native");
         assertCurrency(responseJson, "USD");
 
-        JSONObject adm = new JSONObject(getAdmOf1stBid(responseJson));
+        JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
 
         // Check we didn't place the tracker in "eventtrackers"/"imptrackers".
         assertThat(adm.has("eventtrackers")).isTrue();
@@ -387,10 +386,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("native");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("native");
         assertCurrency(responseJson, "USD");
 
-        JSONObject adm = new JSONObject(getAdmOf1stBid(responseJson));
+        JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
 
         // Check we placed the tracker in "eventtrackers" properly.
         JSONObject customTrackerEvent = findATrackerInEventTrackers(adm, "/ssp_bid");
@@ -412,10 +411,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("native");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("native");
         assertCurrency(responseJson, "USD");
 
-        JSONObject adm = new JSONObject(getAdmOf1stBid(responseJson));
+        JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
 
         // Check we didn't place the tracker in "eventtrackers".
         assertThat(adm.has("eventtrackers")).isFalse();
@@ -437,10 +436,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("native");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("native");
         assertCurrency(responseJson, "USD");
 
-        JSONObject adm = new JSONObject(getAdmOf1stBid(responseJson));
+        JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
 
         // Check we placed the tracker in "eventtrackers" properly.
         JSONObject customTrackerEvent = findATrackerInEventTrackers(adm, "/ssp_bid");
@@ -464,10 +463,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getExtPrebidTypeOf1stBid(responseJson)).isEqualTo("native");
+        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("native");
         assertCurrency(responseJson, "USD"); /* PBS responds in request currency */
 
-        JSONObject adm = new JSONObject(getAdmOf1stBid(responseJson));
+        JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
 
         // Bid request was made with USD and bidder returned 1.25 EUR. Hence, we will get ~1.424 USD finally.
         // The exchange rate is hard coded (src/test/resources/org/prebid/server/it/currency/latest.json).
@@ -631,10 +630,6 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .isEqualTo(getCustomTrackerUrl(cpmInUsd, pid));
     }
 
-    private void assertCurrency(JSONObject responseJson, String expectedCurrency) throws JSONException {
-        assertThat(responseJson.getString("cur")).isEqualTo(expectedCurrency);
-    }
-
     @NotNull
     private String getCustomTrackerUrl(String cpmInUsd, String pid) {
         return "https://it.pbs.com/ssp_bids?bidder=improvedigital&cpm=" + cpmInUsd + "&pid=" + pid;
@@ -668,182 +663,5 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         }
 
         return null;
-    }
-
-    private String getAdmOf1stBid(JSONObject responseJson) throws JSONException {
-        return getAdmOfNthBid(responseJson, 0);
-    }
-
-    @NotNull
-    private String getAdmOfNthBid(JSONObject responseJson, int bidIndex) throws JSONException {
-        assertThat(responseJson.getJSONArray("seatbid").length())
-                .isGreaterThanOrEqualTo(1);
-
-        assertThat(responseJson.getJSONArray("seatbid").getJSONObject(0).getJSONArray("bid").length())
-                .isGreaterThanOrEqualTo(1);
-
-        return responseJson
-                .getJSONArray("seatbid").getJSONObject(0)
-                .getJSONArray("bid").getJSONObject(bidIndex)
-                .getString("adm");
-    }
-
-    private String getExtPrebidTypeOf1stBid(JSONObject responseJson) throws JSONException {
-        return getExtPrebidTypeOfNthBid(responseJson, 0);
-    }
-
-    private String getExtPrebidTypeOfNthBid(JSONObject responseJson, int bidIndex) throws JSONException {
-        return responseJson
-                .getJSONArray("seatbid").getJSONObject(0)
-                .getJSONArray("bid").getJSONObject(bidIndex)
-                .getJSONObject("ext")
-                .getJSONObject("prebid")
-                .getString("type");
-    }
-
-    private static String jsonFromFileWithMacro(String file, Map<String, String> macrosInFileContent)
-            throws IOException {
-        // workaround to clear formatting
-        String fileContent = mapper.writeValueAsString(
-                mapper.readTree(ImprovedigitalIntegrationTest.class.getResourceAsStream(file))
-        );
-
-        // Replace all occurrences of <key>s by it's <value> of map.
-        if (macrosInFileContent != null) {
-            return macrosInFileContent.entrySet().stream()
-                    .map(m -> (Function<String, String>) s -> s.replace(m.getKey(), m.getValue()))
-                    .reduce(Function.identity(), Function::andThen)
-                    .apply(fileContent);
-        }
-
-        return fileContent;
-    }
-
-    private String getVastXmlInline(String adId, boolean hasImpPixel) {
-        return "<VAST version=\"2.0\">"
-                + "  <Ad id=\"" + adId + "\">"
-                + "    <InLine>"
-                + "      <AdSystem>PBS IT Test Case</AdSystem>"
-                + "      <AdTitle>VAST 2.0</AdTitle>"
-                + "      <Description>PBS IT Test Case - VAST 2.0</Description>"
-                + "      <Error>https://error.pbs.improvedigital.com/" + adId + "</Error>"
-                + (hasImpPixel ? "<Impression>https://imp.pbs.improvedigital.com/" + adId + "</Impression>" : "")
-                + "      <Creatives>"
-                + "        <Creative AdID=\"20220406\">"
-                + "          <Linear>"
-                + "            <Duration>00:00:60</Duration>"
-                + "            <VideoClicks>"
-                + "              <ClickThrough>https://click.pbs.improvedigital.com/" + adId + "</ClickThrough>"
-                + "            </VideoClicks>"
-                + "            <MediaFiles>"
-                + "              <MediaFile type=\"video/mp4\" width=\"640\" height=\"480\">"
-                + "                https://media.pbs.improvedigital.com/" + adId + ".mp4"
-                + "              </MediaFile>"
-                + "            </MediaFiles>"
-                + "          </Linear>"
-                + "        </Creative>"
-                + "      </Creatives>"
-                + "    </InLine>"
-                + "  </Ad>"
-                + "</VAST>";
-    }
-
-    private String getVastXmlInlineWithMultipleAds(String adId, boolean hasImpPixel) {
-        return "<VAST version=\"2.0\">"
-                + "  <Ad id=\"" + adId + "-1" + "\">"
-                + "    <InLine>"
-                + "      <AdSystem>PBS IT Test Case</AdSystem>"
-                + "      <AdTitle>VAST 2.0 - Ad 1</AdTitle>"
-                + "      <Description>PBS IT Test Case - VAST 2.0</Description>"
-                + "      <Error>https://error.pbs.improvedigital.com/" + adId + "-1" + "</Error>"
-                + (hasImpPixel ? "<Impression>https://imp.pbs.improvedigital.com/" + adId + "-1" + "</Impression>" : "")
-                + "      <Creatives>"
-                + "        <Creative AdID=\"" + adId + "-1" + "\">"
-                + "          <Linear>"
-                + "            <Duration>00:00:60</Duration>"
-                + "            <VideoClicks>"
-                + "              <ClickThrough>https://click.pbs.improvedigital.com/" + adId + "-1" + "</ClickThrough>"
-                + "            </VideoClicks>"
-                + "            <MediaFiles>"
-                + "              <MediaFile type=\"video/mp4\" width=\"640\" height=\"480\">"
-                + "                https://media.pbs.improvedigital.com/" + adId + "-1" + ".mp4"
-                + "              </MediaFile>"
-                + "            </MediaFiles>"
-                + "          </Linear>"
-                + "        </Creative>"
-                + "      </Creatives>"
-                + "    </InLine>"
-                + "  </Ad>"
-                + "  <Ad id=\"" + adId + "-2" + "\">"
-                + "    <InLine>"
-                + "      <AdSystem>PBS IT Test Case</AdSystem>"
-                + "      <AdTitle>VAST 2.0 - Ad 2</AdTitle>"
-                + "      <Description>PBS IT Test Case - VAST 2.0</Description>"
-                + "      <Error>https://error.pbs.improvedigital.com/" + adId + "-2" + "</Error>"
-                + (hasImpPixel ? "<Impression>https://imp.pbs.improvedigital.com/" + adId + "-2" + "</Impression>" : "")
-                + "      <Creatives>"
-                + "        <Creative AdID=\"" + adId + "-2" + "\">"
-                + "          <Linear>"
-                + "            <Duration>00:00:30</Duration>"
-                + "            <VideoClicks>"
-                + "              <ClickThrough>https://click.pbs.improvedigital.com/" + adId + "-2" + "</ClickThrough>"
-                + "            </VideoClicks>"
-                + "            <MediaFiles>"
-                + "              <MediaFile type=\"video/mp4\" width=\"640\" height=\"480\">"
-                + "                https://media.pbs.improvedigital.com/" + adId + "-2" + ".mp4"
-                + "              </MediaFile>"
-                + "            </MediaFiles>"
-                + "          </Linear>"
-                + "        </Creative>"
-                + "      </Creatives>"
-                + "    </InLine>"
-                + "  </Ad>"
-                + "</VAST>";
-    }
-
-    private String getVastXmlWrapper(String adId, boolean hasImpPixel) {
-        return "<VAST version=\"2.0\">"
-                + "  <Ad id=\"" + adId + "\">"
-                + "    <Wrapper fallbackOnNoAd=\"true\">"
-                + "      <AdSystem>PBS IT Test Case</AdSystem>"
-                + "      <AdTitle>VAST 2.0</AdTitle>"
-                + "      <Description>PBS IT Test Case - VAST 2.0</Description>"
-                + "      <Error>https://error.pbs.improvedigital.com/" + adId + "</Error>"
-                + (hasImpPixel ? "<Impression>https://imp.pbs.improvedigital.com/" + adId + "</Impression>" : "")
-                + "      <VASTAdTagURI>"
-                + "        <![CDATA[https://vast.pbs.improvedigital.com/" + adId + "]]>"
-                + "      </VASTAdTagURI>"
-                + "    </Wrapper>"
-                + "  </Ad>"
-                + "</VAST>";
-    }
-
-    private String getVastXmlWrapperWithMultipleAds(String adId, boolean hasImpPixel) {
-        return "<VAST version=\"2.0\">"
-                + "  <Ad id=\"" + adId + "-1" + "\">"
-                + "    <Wrapper fallbackOnNoAd=\"true\">"
-                + "      <AdSystem>PBS IT Test Case</AdSystem>"
-                + "      <AdTitle>VAST 2.0 - Ad 1</AdTitle>"
-                + "      <Description>PBS IT Test Case - VAST 2.0</Description>"
-                + "      <Error>https://error.pbs.improvedigital.com/" + adId + "-1" + "</Error>"
-                + (hasImpPixel ? "<Impression>https://imp.pbs.improvedigital.com/" + adId + "-1" + "</Impression>" : "")
-                + "      <VASTAdTagURI>"
-                + "        <![CDATA[https://vast.pbs.improvedigital.com/" + adId + "-1" + "]]>"
-                + "      </VASTAdTagURI>"
-                + "    </Wrapper>"
-                + "  </Ad>"
-                + "  <Ad id=\"" + adId + "-2" + "\">"
-                + "    <Wrapper fallbackOnNoAd=\"true\">"
-                + "      <AdSystem>PBS IT Test Case</AdSystem>"
-                + "      <AdTitle>VAST 2.0 - Ad 1</AdTitle>"
-                + "      <Description>PBS IT Test Case - VAST 2.0</Description>"
-                + "      <Error>https://error.pbs.improvedigital.com/" + adId + "-2" + "</Error>"
-                + (hasImpPixel ? "<Impression>https://imp.pbs.improvedigital.com/" + adId + "-2" + "</Impression>" : "")
-                + "      <VASTAdTagURI>"
-                + "        <![CDATA[https://vast.pbs.improvedigital.com/" + adId + "-2" + "]]>"
-                + "      </VASTAdTagURI>"
-                + "    </Wrapper>"
-                + "  </Ad>"
-                + "</VAST>";
     }
 }

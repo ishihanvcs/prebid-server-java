@@ -4,19 +4,23 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.Tuple2;
-import org.prebid.server.exception.InvalidRequestException;
 import org.prebid.server.json.JacksonMapper;
+import org.prebid.server.util.ObjectUtil;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -103,6 +107,82 @@ public class JsonUtils {
                 .collect(Collectors.toList());
     }
 
+    public <T> T nonDestructiveMerge(T originalObject, T mergingObject, Class<T> clazz) {
+        if (!ObjectUtils.anyNotNull(originalObject, mergingObject)) {
+            return null;
+        }
+
+        if (!ObjectUtils.allNotNull(originalObject, mergingObject)) {
+            return ObjectUtils.defaultIfNull(originalObject, mergingObject);
+        }
+
+        JsonNode originalNode = objectMapper.valueToTree(originalObject);
+        JsonNode mergingNode = objectMapper.valueToTree(mergingObject);
+
+        if (!originalNode.isObject() || !mergingNode.isObject()) {
+            return mergingObject;
+        }
+
+        return nonDestructiveMerge(
+                (ObjectNode) originalNode,
+                (ObjectNode) mergingNode,
+                clazz
+        );
+    }
+
+    public <T> T nonDestructiveMerge(ObjectNode originalObject, ObjectNode mergingObject, Class<T> clazz) {
+        ObjectNode mergedNode = nonDestructiveMerge(originalObject, mergingObject);
+        return ObjectUtil.getIfNotNull(mergedNode, node -> objectMapper.convertValue(node, clazz));
+    }
+
+    /**
+     * A simple non-destructive merge algorithm that recursively traverse properties in
+     * mergingObject and sets those properties in originalObject, if and only if the value
+     * is not null (which differs from JsonMerge object found in PBS core). This allows us
+     * to superimpose mergingObject into originalObject, that results all non-null properties
+     * in mergingObject to be available in a copy of originalObject, that will be returned by
+     * this method. To understand detail behaviour of this method, please refer to respective
+     * test case in JsonUtilsTest class.
+     *
+     * Please note, this method does not mutate any of the originalObject or mergingObject
+     * and always returns a new object with the merging result.
+     *
+     * @param originalObject {@link ObjectNode} the object where the merge will occur upon
+     * @param mergingObject {@link ObjectNode} the object that will be merged
+     * @return ObjectNode
+     */
+    public ObjectNode nonDestructiveMerge(ObjectNode originalObject, ObjectNode mergingObject) {
+        if (!ObjectUtils.anyNotNull(originalObject, mergingObject)) {
+            return null;
+        }
+
+        if (!ObjectUtils.allNotNull(originalObject, mergingObject)) {
+            return ObjectUtils.defaultIfNull(originalObject, mergingObject).deepCopy();
+        }
+
+        ObjectNode ret = originalObject.isObject() ? originalObject.deepCopy()
+                : objectMapper.createObjectNode();
+
+        for (Iterator<Map.Entry<String, JsonNode>> it = mergingObject.fields(); it.hasNext(); ) {
+            Map.Entry<String, JsonNode> entry = it.next();
+            String key = entry.getKey();
+            JsonNode value = entry.getValue();
+            if (value != null && !(value instanceof NullNode)) {
+                if (value.isObject()) {
+                    ObjectNode mergingValue = (ObjectNode) value;
+                    ObjectNode originalValue = ret.get(key) != null && ret.get(key).isObject()
+                            ? (ObjectNode) ret.get(key)
+                            : objectMapper.createObjectNode();
+                    ObjectNode mergedValue = nonDestructiveMerge(originalValue, mergingValue);
+                    ret.set(key, mergedValue);
+                } else {
+                    ret.set(key, value);
+                }
+            }
+        }
+        return ret;
+    }
+
     /**
      * Find the decimal value at jsonPointerExpr and expects it to be {@link BigDecimal} and return it.
      *
@@ -179,11 +259,6 @@ public class JsonUtils {
     }
 
     public BidRequest parseBidRequest(String body) {
-        try {
-            JsonNode bidRequestNode = objectMapper.readTree(body);
-            return objectMapper.treeToValue(bidRequestNode, BidRequest.class);
-        } catch (JsonProcessingException e) {
-            throw new InvalidRequestException(String.format("Error decoding bidRequest: %s", e.getMessage()));
-        }
+        return mapper.decodeValue(body, BidRequest.class);
     }
 }

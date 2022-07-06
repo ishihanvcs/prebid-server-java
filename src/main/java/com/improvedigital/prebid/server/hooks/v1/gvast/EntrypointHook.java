@@ -1,6 +1,5 @@
 package com.improvedigital.prebid.server.hooks.v1.gvast;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
@@ -21,7 +20,6 @@ import org.prebid.server.hooks.v1.InvocationContext;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.entrypoint.EntrypointPayload;
 import org.prebid.server.json.JsonMerger;
-import org.prebid.server.proto.openrtb.ext.request.ExtImp;
 import org.prebid.server.proto.openrtb.ext.request.ExtPublisher;
 import org.prebid.server.proto.openrtb.ext.request.ExtPublisherPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
@@ -30,6 +28,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.EntrypointHook {
@@ -43,21 +42,19 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
 
     public EntrypointHook(
             SettingsLoader settingsLoader,
-            JsonUtils jsonUtils,
             RequestUtils requestUtils,
             JsonMerger merger
     ) {
-        this.settingsLoader = settingsLoader;
-        this.jsonUtils = jsonUtils;
-        this.mapper = jsonUtils.getObjectMapper();
-        this.requestUtils = requestUtils;
-        this.merger = merger;
+        this.settingsLoader = Objects.requireNonNull(settingsLoader);
+        this.requestUtils = Objects.requireNonNull(requestUtils);
+        this.merger = Objects.requireNonNull(merger);
+        this.jsonUtils = Objects.requireNonNull(requestUtils.getJsonUtils());
+        this.mapper = Objects.requireNonNull(jsonUtils.getObjectMapper());
     }
 
     @Override
     public Future<InvocationResult<EntrypointPayload>> call(
             EntrypointPayload entrypointPayload, InvocationContext invocationContext) {
-
         try {
             final BidRequest originalBidRequest = jsonUtils.parseBidRequest(entrypointPayload.body());
 
@@ -66,23 +63,26 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
             );
 
             final boolean hasStoredRequest = StringUtils.isNotBlank(
-                    requestUtils.getStoredRequestId(originalBidRequest.getExt())
+                    requestUtils.getStoredRequestId(originalBidRequest)
             );
 
             if (!hasAccountId || !hasStoredRequest) {
                 final Map<Imp, String> impToStoredRequestId = originalBidRequest.getImp().stream()
-                        .map(this::getImpToStoredRequestIdTuple)
+                        .map(imp -> Tuple2.of(imp, requestUtils.getStoredImpId(imp)))
                         .filter(t -> StringUtils.isNotBlank(t.getRight()))
                         .collect(Collectors.toMap(Tuple2::getLeft, Tuple2::getRight));
 
                 // let core logic for auction handle errors in later phase of hook execution
                 return settingsLoader.getStoredImpsSafely(
-                                new HashSet<>(impToStoredRequestId.values()), invocationContext.timeout())
+                        new HashSet<>(impToStoredRequestId.values()), invocationContext.timeout())
                         .compose(storedImps -> {
                             try {
                                 BidRequest updatedBidRequest = originalBidRequest;
                                 String accountId = null;
                                 String requestId = null;
+                                boolean hasMismatchedAccount = false;
+                                boolean hasMismatchedRequest = false;
+
                                 for (final Imp imp : originalBidRequest.getImp()) {
                                     final String storedRequestId = impToStoredRequestId.get(imp);
                                     final Imp storedImp = storedRequestId != null
@@ -91,38 +91,44 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
                                     final ImprovedigitalPbsImpExt pbsImpExt
                                             = mergeImprovedigitalPbsImpExt(imp, storedImp);
                                     if (pbsImpExt != null) {
-                                        if (pbsImpExt.getAccountId() != null) {
+                                        if (!hasAccountId && pbsImpExt.getAccountId() != null) {
                                             if (accountId == null) {
                                                 accountId = pbsImpExt.getAccountId();
                                             } else if (!accountId.equals(pbsImpExt.getAccountId())) {
-                                                return Future.succeededFuture(
-                                                        InvocationResultImpl.rejected(
-                                                                "accountId mismatched in imp[].prebid.improvedigitalpbs"
-                                                        )
-                                                );
+                                                hasMismatchedAccount = true;
                                             }
                                         }
 
-                                        if (pbsImpExt.getRequestId() != null) {
+                                        if (!hasStoredRequest && pbsImpExt.getRequestId() != null) {
                                             if (requestId == null) {
                                                 requestId = pbsImpExt.getRequestId();
                                             } else if (!requestId.equals(pbsImpExt.getRequestId())) {
-                                                return Future.succeededFuture(
-                                                        InvocationResultImpl.rejected(
-                                                                "requestId mismatched in imp[].prebid.improvedigitalpbs"
-                                                        )
-                                                );
+                                                hasMismatchedRequest = true;
                                             }
                                         }
                                     }
                                 }
 
-                                if (!hasAccountId) {
+                                if (!hasMismatchedAccount) {
                                     updatedBidRequest = setParentAccountId(updatedBidRequest, accountId);
+                                } else {
+                                    logger.warn(
+                                            entrypointPayload,
+                                            new InvalidRequestException(
+                                                    "accountId mismatched in imp[].prebid.improvedigitalpbs"
+                                            )
+                                    );
                                 }
 
-                                if (!hasStoredRequest) {
+                                if (!hasMismatchedRequest) {
                                     updatedBidRequest = setRequestId(updatedBidRequest, requestId);
+                                } else {
+                                    logger.warn(
+                                            entrypointPayload,
+                                            new InvalidRequestException(
+                                                    "requestId mismatched in imp[].prebid.improvedigitalpbs"
+                                            )
+                                    );
                                 }
                                 final String updatedBody = mapper.writeValueAsString(updatedBidRequest);
                                 return Future.succeededFuture(InvocationResultImpl.succeeded(
@@ -156,55 +162,41 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
     private ImprovedigitalPbsImpExt mergeImprovedigitalPbsImpExt(Imp imp, Imp storedImp) {
         ImprovedigitalPbsImpExt ext1 = jsonUtils.getImprovedigitalPbsImpExt(imp);
         ImprovedigitalPbsImpExt ext2 = jsonUtils.getImprovedigitalPbsImpExt(storedImp);
-
         return merger.merge(ext1, ext2, ImprovedigitalPbsImpExt.class);
     }
 
-    private Tuple2<Imp, String> getImpToStoredRequestIdTuple(Imp imp) {
-        String storedImpId = null;
-        if (imp != null && imp.getExt().isObject()) {
-            try {
-                ExtImp extImp = mapper.treeToValue(imp.getExt(), ExtImp.class);
-                storedImpId = requestUtils.getStoredImpId(extImp);
-            } catch (JsonProcessingException e) {
-                throw new InvalidRequestException(String.format("Error decoding imp.ext: %s", e.getMessage()));
-            }
-        }
-        return Tuple2.of(imp, storedImpId);
-    }
-
     private BidRequest setParentAccountId(BidRequest bidRequest, String accountId) {
-        if (accountId != null) {
-            BidRequest.BidRequestBuilder requestBuilder = bidRequest.toBuilder();
-            final Publisher publisherWithParentAccount = Publisher.builder().ext(
-                    ExtPublisher.of(
-                            ExtPublisherPrebid.of(accountId)
-                    )
-            ).build();
-            if (bidRequest.getSite() != null) {
-                requestBuilder.site(
-                        bidRequest.getSite().toBuilder().publisher(
-                                merger.merge(
-                                        publisherWithParentAccount,
-                                        bidRequest.getSite().getPublisher(),
-                                        Publisher.class
-                                )
-                        ).build()
-                );
-            } else {
-                requestBuilder.app(
-                        bidRequest.getApp().toBuilder().publisher(
-                                merger.merge(
-                                        publisherWithParentAccount,
-                                        bidRequest.getApp().getPublisher(),
-                                        Publisher.class
-                                )
-                        ).build()
-                ).build();
-            }
-            return requestBuilder.build();
+        if (accountId == null) {
+            return bidRequest;
         }
-        throw new InvalidRequestException("accountId not defined in bidRequest or any of the imps");
+        BidRequest.BidRequestBuilder requestBuilder = bidRequest.toBuilder();
+        final Publisher publisherWithParentAccount = Publisher.builder().ext(
+                ExtPublisher.of(
+                        ExtPublisherPrebid.of(accountId)
+                )
+        ).build();
+        if (bidRequest.getSite() != null) {
+            requestBuilder.site(
+                    bidRequest.getSite().toBuilder().publisher(
+                            merger.merge(
+                                    bidRequest.getSite().getPublisher(),
+                                    publisherWithParentAccount,
+                                    Publisher.class
+                            )
+                    ).build()
+            );
+        } else {
+            requestBuilder.app(
+                    bidRequest.getApp().toBuilder().publisher(
+                            merger.merge(
+                                    bidRequest.getApp().getPublisher(),
+                                    publisherWithParentAccount,
+                                    Publisher.class
+                            )
+                    ).build()
+            ).build();
+        }
+        return requestBuilder.build();
     }
 
     private BidRequest setRequestId(BidRequest bidRequest, String requestId) {
@@ -220,7 +212,11 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
 
         return bidRequest.toBuilder()
                 .ext(
-                        merger.merge(extRequest, bidRequest.getExt(), ExtRequest.class)
+                        merger.merge(
+                                extRequest,
+                                bidRequest.getExt(),
+                                ExtRequest.class
+                        )
                 )
         .build();
     }

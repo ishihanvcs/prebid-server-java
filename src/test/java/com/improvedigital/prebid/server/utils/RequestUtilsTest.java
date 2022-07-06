@@ -13,10 +13,10 @@ import com.iab.openrtb.request.Video;
 import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.auction.model.VastResponseType;
 import org.assertj.core.api.Assertions;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.prebid.server.json.JacksonMapper;
+import org.prebid.server.json.JsonMerger;
 import org.prebid.server.proto.openrtb.ext.request.ExtImp;
 import org.prebid.server.proto.openrtb.ext.request.ExtImpPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtPublisher;
@@ -31,8 +31,10 @@ import java.util.function.Function;
 
 public class RequestUtilsTest {
 
-    private final ObjectMapper mapper = new ObjectMapper();
-    private final JsonUtils jsonUtils = new JsonUtils(new JacksonMapper(mapper));
+    protected final ObjectMapper objectMapper = new ObjectMapper();
+    protected final JacksonMapper mapper = new JacksonMapper(objectMapper);
+    protected final JsonMerger merger = new JsonMerger(mapper);
+    protected final JsonUtils jsonUtils = new JsonUtils(mapper);
     private final RequestUtils requestUtils = new RequestUtils(jsonUtils);
 
     private BidRequest siteRequestWithoutPublisher;
@@ -91,118 +93,192 @@ public class RequestUtilsTest {
     @Test
     public void testGetAccountId() {
         String result = requestUtils.getAccountId(null);
-        Assert.assertNull(result);
+        Assertions.assertThat(result).isNull();
 
         result = requestUtils.getAccountId(siteRequestWithoutPublisher);
-        Assert.assertNull(result);
+        Assertions.assertThat(result).isNull();
 
         result = requestUtils.getAccountId(siteRequestWithoutParentAccountId);
-        Assert.assertNotNull(result);
-        Assert.assertNotEquals(accountId, result);
-        Assert.assertEquals(publisherId, result);
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result).isNotEqualTo(accountId);
+        Assertions.assertThat(result).isEqualTo(publisherId);
 
         result = requestUtils.getAccountId(siteRequestWithParentAccountId);
-        Assert.assertNotNull(result);
-        Assert.assertNotEquals(publisherId, result);
-        Assert.assertEquals(accountId, result);
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result).isNotEqualTo(publisherId);
+        Assertions.assertThat(result).isEqualTo(accountId);
 
         result = requestUtils.getAccountId(appRequestWithoutPublisher);
-        Assert.assertNull(result);
+        Assertions.assertThat(result).isNull();
 
         result = requestUtils.getAccountId(appRequestWithoutParentAccountId);
-        Assert.assertNotNull(result);
-        Assert.assertNotEquals(accountId, result);
-        Assert.assertEquals(publisherId, result);
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result).isNotEqualTo(accountId);
+        Assertions.assertThat(result).isEqualTo(publisherId);
 
         result = requestUtils.getAccountId(appRequestWithParentAccountId);
-        Assert.assertNotNull(result);
-        Assert.assertNotEquals(publisherId, result);
-        Assert.assertEquals(accountId, result);
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result).isNotEqualTo(publisherId);
+        Assertions.assertThat(result).isEqualTo(accountId);
     }
 
     @Test
     public void testGetParentAccountId() {
         String result = requestUtils.getParentAccountId(null);
-        Assert.assertNull(result);
+        Assertions.assertThat(result).isNull();
 
         result = requestUtils.getParentAccountId(siteRequestWithoutPublisher);
-        Assert.assertNull(result);
+        Assertions.assertThat(result).isNull();
 
         result = requestUtils.getParentAccountId(siteRequestWithoutParentAccountId);
-        Assert.assertNull(result);
+        Assertions.assertThat(result).isNull();
 
         result = requestUtils.getParentAccountId(siteRequestWithParentAccountId);
-        Assert.assertNotNull(result);
-        Assert.assertNotEquals(publisherId, result);
-        Assert.assertEquals(accountId, result);
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result).isNotEqualTo(publisherId);
+        Assertions.assertThat(result).isEqualTo(accountId);
 
         result = requestUtils.getParentAccountId(appRequestWithoutPublisher);
-        Assert.assertNull(result);
+        Assertions.assertThat(result).isNull();
 
         result = requestUtils.getParentAccountId(appRequestWithoutParentAccountId);
-        Assert.assertNull(result);
+        Assertions.assertThat(result).isNull();
 
         result = requestUtils.getParentAccountId(appRequestWithParentAccountId);
-        Assert.assertNotNull(result);
-        Assert.assertNotEquals(publisherId, result);
-        Assert.assertEquals(accountId, result);
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result).isNotEqualTo(publisherId);
+        Assertions.assertThat(result).isEqualTo(accountId);
     }
 
     @Test
     public void testGetStoredRequestId() {
-        String result = requestUtils.getStoredRequestId(null);
-        Assert.assertNull(result);
+        final String storedRequestId = "stored-request-id";
 
-        final ExtRequest extRequestWithoutStoredRequest = ExtRequest.of(
+        String result = requestUtils.getStoredRequestId(null);
+        Assertions.assertThat(result).isNull();
+
+        result = requestUtils.getStoredRequestIdFromExtRequest(null);
+        Assertions.assertThat(result).isNull();
+
+        result = requestUtils.getStoredRequestIdFromExtRequestNode(null);
+        Assertions.assertThat(result).isNull();
+
+        BidRequest bidRequest = BidRequest.builder().build();
+
+        result = requestUtils.getStoredRequestId(bidRequest);
+        Assertions.assertThat(result).isNull();
+
+        ExtRequest extRequest = ExtRequest.of(
                 ExtRequestPrebid.builder()
                         .build()
         );
 
-        result = requestUtils.getStoredRequestId(extRequestWithoutStoredRequest);
-        Assert.assertNull(result);
+        ObjectNode extRequestNode =
+                (ObjectNode) jsonUtils.valueToTree(extRequest);
 
-        final ExtRequest extRequestWithStoredRequest = ExtRequest.of(
+        bidRequest = BidRequest.builder().ext(extRequest).build();
+
+        result = requestUtils.getStoredRequestId(bidRequest);
+        Assertions.assertThat(result).isNull();
+
+        result = requestUtils.getStoredRequestIdFromExtRequest(extRequest);
+        Assertions.assertThat(result).isNull();
+
+        result = requestUtils.getStoredRequestIdFromExtRequestNode(extRequestNode);
+        Assertions.assertThat(result).isNull();
+
+        extRequest = ExtRequest.of(
                 ExtRequestPrebid.builder()
                         .storedrequest(
-                                ExtStoredRequest.of("stored-request-id")
+                                ExtStoredRequest.of(storedRequestId)
                         )
                         .build()
         );
 
-        result = requestUtils.getStoredRequestId(extRequestWithStoredRequest);
-        Assert.assertNotNull(result);
-        Assert.assertEquals("stored-request-id", result);
+        extRequestNode =
+                (ObjectNode) jsonUtils.valueToTree(extRequest);
+
+        bidRequest = BidRequest.builder().ext(extRequest).build();
+
+        result = requestUtils.getStoredRequestId(bidRequest);
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result).isEqualTo(storedRequestId);
+
+        result = requestUtils.getStoredRequestIdFromExtRequest(extRequest);
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result).isEqualTo(storedRequestId);
+
+        result = requestUtils.getStoredRequestIdFromExtRequestNode(extRequestNode);
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result).isEqualTo(storedRequestId);
     }
 
     @Test
     public void testGetStoredImpId() {
-        String result = requestUtils.getStoredImpId(null);
-        Assert.assertNull(result);
+        final String storedImpId = "stored-imp-id";
 
-        final ExtImp extImpWithoutStoredRequest = ExtImp.of(
+        String result = requestUtils.getStoredImpId(null);
+        Assertions.assertThat(result).isNull();
+
+        result = requestUtils.getStoredImpIdFromExtImp(null);
+        Assertions.assertThat(result).isNull();
+
+        result = requestUtils.getStoredImpIdFromExtImpNode(null);
+        Assertions.assertThat(result).isNull();
+
+        Imp imp = Imp.builder().build();
+
+        result = requestUtils.getStoredImpId(imp);
+        Assertions.assertThat(result).isNull();
+
+        ExtImp extImp = ExtImp.of(
                 ExtImpPrebid.builder().build(), null
         );
 
-        result = requestUtils.getStoredImpId(extImpWithoutStoredRequest);
-        Assert.assertNull(result);
+        ObjectNode extImpNode =
+                (ObjectNode) jsonUtils.valueToTree(extImp);
 
-        final ExtImp extImpWithStoredRequest = ExtImp.of(
+        imp = Imp.builder().ext(extImpNode).build();
+
+        result = requestUtils.getStoredImpId(imp);
+        Assertions.assertThat(result).isNull();
+
+        result = requestUtils.getStoredImpIdFromExtImp(extImp);
+        Assertions.assertThat(result).isNull();
+
+        result = requestUtils.getStoredImpIdFromExtImpNode(extImpNode);
+        Assertions.assertThat(result).isNull();
+
+        extImp = ExtImp.of(
                 ExtImpPrebid.builder()
                         .storedrequest(
-                                ExtStoredRequest.of("stored-imp-id")
+                                ExtStoredRequest.of(storedImpId)
                         )
                         .build(), null
         );
 
-        result = requestUtils.getStoredImpId(extImpWithStoredRequest);
-        Assert.assertNotNull(result);
-        Assert.assertEquals("stored-imp-id", result);
+        extImpNode =
+                (ObjectNode) jsonUtils.valueToTree(extImp);
+
+        imp = Imp.builder().ext(extImpNode).build();
+
+        result = requestUtils.getStoredImpId(imp);
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result).isEqualTo(storedImpId);
+
+        result = requestUtils.getStoredImpIdFromExtImp(extImp);
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result).isEqualTo(storedImpId);
+
+        result = requestUtils.getStoredImpIdFromExtImpNode(extImpNode);
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result).isEqualTo(storedImpId);
     }
 
     @Test
     public void testIsNonVastVideo() {
         boolean result = requestUtils.isNonVastVideo(null);
-        Assert.assertFalse(result);
+        Assertions.assertThat(result).isFalse();
 
         final Imp emptyImp = Imp.builder()
                 .id("1")
@@ -227,47 +303,47 @@ public class RequestUtilsTest {
                 .build();
 
         result = requestUtils.isNonVastVideo(emptyImp);
-        Assert.assertFalse(result);
+        Assertions.assertThat(result).isFalse();
 
         result = requestUtils.isNonVastVideo(null, null);
-        Assert.assertFalse(result);
+        Assertions.assertThat(result).isFalse();
 
         result = requestUtils.isNonVastVideo(emptyImp, null);
-        Assert.assertFalse(result);
+        Assertions.assertThat(result).isFalse();
 
         result = requestUtils.isNonVastVideo(defaultImp);
-        Assert.assertFalse(result);
+        Assertions.assertThat(result).isFalse();
 
         result = requestUtils.isNonVastVideo(defaultImp, jsonUtils.getImprovedigitalPbsImpExt(defaultImp));
-        Assert.assertFalse(result);
+        Assertions.assertThat(result).isFalse();
 
         result = requestUtils.isNonVastVideo(videoImp);
-        Assert.assertFalse(result);
+        Assertions.assertThat(result).isFalse();
 
         result = requestUtils.isNonVastVideo(videoImp, jsonUtils.getImprovedigitalPbsImpExt(videoImp));
-        Assert.assertFalse(result);
+        Assertions.assertThat(result).isFalse();
 
         result = requestUtils.isNonVastVideo(gVastImp);
-        Assert.assertTrue(result);
+        Assertions.assertThat(result).isTrue();
 
         result = requestUtils.isNonVastVideo(gVastImp, jsonUtils.getImprovedigitalPbsImpExt(gVastImp));
-        Assert.assertTrue(result);
+        Assertions.assertThat(result).isTrue();
 
         result = requestUtils.isNonVastVideo(waterfallImp);
-        Assert.assertTrue(result);
+        Assertions.assertThat(result).isTrue();
 
         result = requestUtils.isNonVastVideo(waterfallImp, jsonUtils.getImprovedigitalPbsImpExt(waterfallImp));
-        Assert.assertTrue(result);
+        Assertions.assertThat(result).isTrue();
     }
 
     @Test
     public void testHasNonVastVideo() {
         boolean result = requestUtils.hasNonVastVideo(null);
-        Assert.assertFalse(result);
+        Assertions.assertThat(result).isFalse();
 
         BidRequest emptyRequest = createRequest(null);
         result = requestUtils.hasNonVastVideo(emptyRequest);
-        Assert.assertFalse(result);
+        Assertions.assertThat(result).isFalse();
 
         Imp emptyImp = Imp.builder()
                 .id("1")
@@ -278,7 +354,7 @@ public class RequestUtilsTest {
                 .build();
 
         result = requestUtils.hasNonVastVideo(requestWithEmptyImp);
-        Assert.assertFalse(result);
+        Assertions.assertThat(result).isFalse();
 
         final Imp defaultImp = emptyImp.toBuilder()
                 .ext(createImpExtNode(null))
@@ -289,7 +365,7 @@ public class RequestUtilsTest {
                 .build();
 
         result = requestUtils.hasNonVastVideo(requestWithDefaultImp);
-        Assert.assertFalse(result);
+        Assertions.assertThat(result).isFalse();
 
         final Imp videoImp = defaultImp.toBuilder()
                 .video(Video.builder().build())
@@ -300,7 +376,7 @@ public class RequestUtilsTest {
                 .build();
 
         result = requestUtils.hasNonVastVideo(requestWithVideoImp);
-        Assert.assertFalse(result);
+        Assertions.assertThat(result).isFalse();
 
         final Imp gVastImp = videoImp.toBuilder()
                 .ext(createImpExtNode(builder -> builder
@@ -313,7 +389,7 @@ public class RequestUtilsTest {
                 .build();
 
         result = requestUtils.hasNonVastVideo(requestWithGVastImp);
-        Assert.assertTrue(result);
+        Assertions.assertThat(result).isTrue();
 
         final Imp waterfallImp = videoImp.toBuilder()
                 .ext(createImpExtNode(builder -> builder.responseType(VastResponseType.waterfall)))
@@ -324,73 +400,67 @@ public class RequestUtilsTest {
                 .build();
 
         result = requestUtils.hasNonVastVideo(requestWithWaterfallImp);
-        Assert.assertTrue(result);
+        Assertions.assertThat(result).isTrue();
     }
 
     @Test
     public void testExtractBidderInfoAndGetImprovePlacementId() {
         // Test extractBidderInfo
         JsonNode bidderInfoNode = requestUtils.extractBidderInfo(null, null, null);
-        Assert.assertTrue(bidderInfoNode.isMissingNode());
+        Assertions.assertThat(bidderInfoNode.isMissingNode()).isTrue();
 
         final Imp emptyImp = Imp.builder()
                 .id("1")
                 .build();
 
         bidderInfoNode = requestUtils.extractBidderInfo(emptyImp, null, null);
-        Assert.assertTrue(bidderInfoNode.isMissingNode());
+        Assertions.assertThat(bidderInfoNode.isMissingNode()).isTrue();
 
         bidderInfoNode = requestUtils.extractBidderInfo(emptyImp, "bidder", null);
-        Assert.assertTrue(bidderInfoNode.isMissingNode());
+        Assertions.assertThat(bidderInfoNode.isMissingNode()).isTrue();
 
         bidderInfoNode = requestUtils.extractBidderInfo(emptyImp, "bidder", "invalid-path");
-        Assert.assertTrue(bidderInfoNode.isMissingNode());
+        Assertions.assertThat(bidderInfoNode.isMissingNode()).isTrue();
 
         final Imp impWithBidder = emptyImp.toBuilder()
                 .ext(createImpExtNode(null, true))
                 .build();
 
         bidderInfoNode = requestUtils.extractBidderInfo(impWithBidder, "unknown", "invalid-path");
-        Assert.assertTrue(bidderInfoNode.isMissingNode());
-
-        Assertions.assertThatExceptionOfType(IllegalArgumentException.class)
-                .isThrownBy(() -> requestUtils.extractBidderInfo(
-                        impWithBidder, "improvedigital", "invalid-json-ptr"
-                ))
-                .withMessageStartingWith("Invalid input: JSON Pointer expression must start with '/'");
+        Assertions.assertThat(bidderInfoNode.isMissingNode()).isTrue();
 
         bidderInfoNode = requestUtils.extractBidderInfo(
                 impWithBidder, "improvedigital", "/invalid-property"
         );
 
-        Assert.assertTrue(bidderInfoNode.isMissingNode());
+        Assertions.assertThat(bidderInfoNode.isMissingNode()).isTrue();
 
         bidderInfoNode = requestUtils.extractBidderInfo(
                 impWithBidder, "improvedigital", "/placementId"
         );
 
-        Assert.assertFalse(bidderInfoNode.isMissingNode());
-        Assert.assertTrue(bidderInfoNode.isInt());
-        Assert.assertEquals(20220325, bidderInfoNode.asInt());
+        Assertions.assertThat(bidderInfoNode.isMissingNode()).isFalse();
+        Assertions.assertThat(bidderInfoNode.isInt()).isTrue();
+        Assertions.assertThat(bidderInfoNode.asInt()).isEqualTo(20220325);
 
         bidderInfoNode = requestUtils.extractBidderInfo(
                 impWithBidder, "pubmatic", "/publisherId"
         );
 
-        Assert.assertFalse(bidderInfoNode.isMissingNode());
-        Assert.assertTrue(bidderInfoNode.isTextual());
-        Assert.assertEquals("156946", bidderInfoNode.asText());
+        Assertions.assertThat(bidderInfoNode.isMissingNode()).isFalse();
+        Assertions.assertThat(bidderInfoNode.isTextual()).isTrue();
+        Assertions.assertThat(bidderInfoNode.asText()).isEqualTo("156946");
 
         // Test getImprovePlacementId
         Integer placementId = requestUtils.getImprovePlacementId(null);
-        Assert.assertNull(placementId);
+        Assertions.assertThat(placementId).isNull();
 
         placementId = requestUtils.getImprovePlacementId(emptyImp);
-        Assert.assertNull(placementId);
+        Assertions.assertThat(placementId).isNull();
 
         placementId = requestUtils.getImprovePlacementId(impWithBidder);
-        Assert.assertNotNull(placementId);
-        Assert.assertEquals(20220325, (int) placementId);
+        Assertions.assertThat(placementId).isNotNull();
+        Assertions.assertThat(placementId).isEqualTo(20220325);
     }
 
     private BidRequest createRequest(Function<BidRequest.BidRequestBuilder, BidRequest.BidRequestBuilder> modifier) {
@@ -415,7 +485,7 @@ public class RequestUtilsTest {
         ObjectNode bidder = null;
         if (withBidder) {
             try {
-                bidder = mapper.readValue("{\n"
+                bidder = objectMapper.readValue("{\n"
                         + "        \"improvedigital\": {\n"
                         + "          \"placementId\": 20220325\n"
                         + "        },\n"
@@ -430,7 +500,7 @@ public class RequestUtilsTest {
             } catch (JsonProcessingException ignored) {
             }
         }
-        ObjectNode impExtNode = mapper.valueToTree(
+        ObjectNode impExtNode = objectMapper.valueToTree(
                 ExtImp.of(
                         ExtImpPrebid.builder()
                                 .bidder(bidder)
@@ -443,7 +513,7 @@ public class RequestUtilsTest {
                     = ImprovedigitalPbsImpExt.builder();
             configConsumer.accept(configBuilder);
             ((ObjectNode) impExtNode.at("/prebid"))
-                    .set("improvedigitalpbs", mapper.valueToTree(configBuilder.build()));
+                    .set("improvedigitalpbs", objectMapper.valueToTree(configBuilder.build()));
         }
         return impExtNode;
     }

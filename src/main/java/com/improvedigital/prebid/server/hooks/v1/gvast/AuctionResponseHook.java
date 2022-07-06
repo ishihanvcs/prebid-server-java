@@ -7,6 +7,7 @@ import com.iab.openrtb.response.BidResponse;
 import com.iab.openrtb.response.SeatBid;
 import com.improvedigital.prebid.server.auction.GVastBidCreator;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
+import com.improvedigital.prebid.server.utils.GVastHookUtils;
 import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
 import com.improvedigital.prebid.server.utils.RequestUtils;
@@ -37,17 +38,19 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
     private final String gamNetworkCode;
     private final String cacheHost;
     private final RequestUtils requestUtils;
+    private final GVastHookUtils gVastHookUtils;
 
     public AuctionResponseHook(
-            JsonUtils jsonUtils,
             RequestUtils requestUtils,
+            GVastHookUtils gVastHookUtils,
             MacroProcessor macroProcessor,
             String externalUrl,
             String gamNetworkCode,
             String cacheHost) {
-        this.jsonUtils = jsonUtils;
-        this.requestUtils = requestUtils;
-        this.macroProcessor = macroProcessor;
+        this.requestUtils = Objects.requireNonNull(requestUtils);
+        this.gVastHookUtils = Objects.requireNonNull(gVastHookUtils);
+        this.jsonUtils = Objects.requireNonNull(requestUtils.getJsonUtils());
+        this.macroProcessor = Objects.requireNonNull(macroProcessor);
         this.externalUrl = externalUrl;
         this.gamNetworkCode = gamNetworkCode;
         this.cacheHost = cacheHost;
@@ -95,29 +98,28 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
                     for (final SeatBid seatBid : seatBidsForImp) {
                         final SeatBid resultSeatBid = copyEmptySeatBidIntoResultMapIfNotExist(resultSeatBids, seatBid);
                         resultSeatBid.getBid().addAll(
-                                getBidsForImpId(seatBid, imp)
+                                gVastHookUtils.getBidsForImpId(seatBid, imp)
                         );
                     }
                 } else {
-                    improveSeatBid = ObjectUtils.defaultIfNull(improveSeatBid, seatBidsForImp.stream()
-                            .filter(seatBid ->
-                                    RequestUtils.IMPROVE_BIDDER_NAME.equals(seatBid.getSeat())
-                            ).findFirst().orElse(
-                                    SeatBid.builder()
-                                            .seat(RequestUtils.IMPROVE_BIDDER_NAME)
-                                            .bid(new ArrayList<>())
-                                            .build()
-                            ));
+                    improveSeatBid = ObjectUtils.defaultIfNull(
+                            improveSeatBid,
+                            gVastHookUtils.findOrCreateSeatBid(
+                                    RequestUtils.IMPROVE_BIDDER_NAME,
+                                    seatBidsForImp
+                            )
+                    );
 
-                    final SeatBid tempSeatBid = improveSeatBid.toBuilder()
-                            .bid(
-                                    getBidsForImpId(seatBidsForImp, imp)
-                            ).build();
+                    final SeatBid tempSeatBid = improveSeatBid.toBuilder().bid(
+                            gVastHookUtils.getBidsForImpId(seatBidsForImp, imp)
+                    ).build();
 
                     final Bid gVastBid = bidCreator.create(imp, tempSeatBid, true);
 
-                    copyEmptySeatBidIntoResultMapIfNotExist(resultSeatBids, improveSeatBid)
-                            .getBid().add(gVastBid);
+                    if (gVastBid != null) {
+                        copyEmptySeatBidIntoResultMapIfNotExist(resultSeatBids, improveSeatBid)
+                                .getBid().add(gVastBid);
+                    }
                 }
             }
             return bidResponse.toBuilder().seatbid(
@@ -138,16 +140,6 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
 
         resultMap.put(seatBid.getSeat(), seatBid);
         return seatBid;
-    }
-
-    private List<Bid> getBidsForImpId(SeatBid seatBid, Imp imp) {
-        return getBidsForImpId(List.of(seatBid), imp);
-    }
-
-    private List<Bid> getBidsForImpId(List<SeatBid> seatBids, Imp imp) {
-        return seatBids.stream().flatMap(seatBid ->
-                seatBid.getBid().stream().filter(bid -> bid.getImpid().equals(imp.getId())))
-                .collect(Collectors.toList());
     }
 
     @Override

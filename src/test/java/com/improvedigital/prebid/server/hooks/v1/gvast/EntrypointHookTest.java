@@ -1,13 +1,13 @@
 package com.improvedigital.prebid.server.hooks.v1.gvast;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import ch.qos.logback.classic.Level;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
-import com.improvedigital.prebid.server.hooks.v1.HooksTestBase;
+import com.improvedigital.prebid.server.UnitTestBase;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
 import io.vertx.core.Future;
+import nl.altindag.log.LogCaptor;
 import org.apache.commons.collections4.map.HashedMap;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -17,54 +17,123 @@ import org.prebid.server.hooks.execution.v1.InvocationContextImpl;
 import org.prebid.server.hooks.execution.v1.entrypoint.EntrypointPayloadImpl;
 import org.prebid.server.hooks.v1.InvocationContext;
 import org.prebid.server.hooks.v1.entrypoint.EntrypointPayload;
-import org.prebid.server.json.JsonMerger;
 import org.prebid.server.model.CaseInsensitiveMultiMap;
 import org.prebid.server.model.Endpoint;
-import org.prebid.server.proto.openrtb.ext.request.ExtImp;
-import org.prebid.server.proto.openrtb.ext.request.ExtImpPrebid;
-import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class EntrypointHookTest extends HooksTestBase {
+public class EntrypointHookTest extends UnitTestBase {
 
     @Mock
     SettingsLoader settingsLoader;
 
-    private final JsonMerger merger = new JsonMerger(mapper);
-
-    EntrypointHook entrypointHook;
-    Timeout timeout;
+    EntrypointHook hook;
 
     private final String defaultAccountId = "2018";
-    private final String defaultStoredRequestId = "stored-request";
 
     @Before
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        entrypointHook = new EntrypointHook(
+        hook = new EntrypointHook(
                 settingsLoader,
-                jsonUtils,
                 requestUtils,
                 merger
         );
-        timeout = createTimeout(1000L);
     }
 
     @Test
-    public void shouldSetAccountIdAndRequestIdFromImpConfig() throws Exception {
-        final String storedImpId = "video-basic";
-        final String bidRequestId = "minimal";
-        final Set<String> storedImpIds = Set.of(storedImpId);
+    public void shouldNotModifyBidRequestWhenAccountIdAndRequestIdMisMatchedInImps() {
+        final Set<String> storedImpIds = Set.of();
+
+        final Imp imp1 = getStoredImp(defaultStoredImpId, imp -> setImpConfigProperties(imp, configNode -> {
+            configNode.put("accountId", "1");
+            configNode.put("requestId", "1");
+        }).toBuilder().id("1").build());
+
+        final Imp imp2 = getStoredImp(defaultStoredImpId, imp -> setImpConfigProperties(imp, configNode -> {
+            configNode.put("accountId", "2");
+            configNode.put("requestId", "2");
+        }).toBuilder().id("2").build());
+
+        when(settingsLoader.getStoredImpsSafely(storedImpIds, timeout)).thenReturn(
+                createSucceededFutureWithImps(
+                        storedImpIds
+                )
+        );
+
+        final LogCaptor logCaptor = LogCaptor.forClass(this.hook.getClass());
+
+        executeHookAndValidateBidRequest(
+                createEntrypointPayload(
+                        defaultRequestId,
+                        bidRequest -> bidRequest.toBuilder().imp(List.of(imp1, imp2)).build()
+                ),
+                timeout,
+                (originalBidRequest, updatedBidRequest) -> {
+                    assertThat(originalBidRequest)
+                            .describedAs("bidRequest should not be modified")
+                            .isEqualTo(updatedBidRequest);
+                    assertThat(logCaptor.getWarnLogs())
+                            .isNotEmpty();
+
+                    assertThat(logCaptor.getWarnLogs().size())
+                            .isEqualTo(2);
+
+                    assertThat(
+                            hasLogEventWith(logCaptor,
+                                    "accountId mismatched in imp[].prebid.improvedigitalpbs",
+                                    Level.WARN
+                            )
+                    ).isTrue();
+
+                    assertThat(
+                            hasLogEventWith(logCaptor,
+                                    "requestId mismatched in imp[].prebid.improvedigitalpbs",
+                                    Level.WARN
+                            )
+                    ).isTrue();
+                }
+        );
+    }
+
+    @Test
+    public void shouldNotModifyBidRequestWhenParentAccountAndRequestIdIsEmpty() {
+        final Set<String> storedImpIds = Set.of(defaultStoredImpId);
         final Map<String, String> impToStoredIdMap = new HashMap<>() {{
-                put("1", storedImpId);
+                put("1", defaultStoredImpId);
+            }};
+
+        when(settingsLoader.getStoredImpsSafely(storedImpIds, timeout)).thenReturn(
+                createSucceededFutureWithImps(
+                        storedImpIds
+                )
+        );
+
+        executeHookAndValidateBidRequest(
+                createEntrypointPayload(
+                        defaultRequestId,
+                        bidRequest -> setStoredImpIds(bidRequest, impToStoredIdMap)
+                ),
+                timeout,
+                (originalBidRequest, updatedBidRequest) -> assertThat(originalBidRequest)
+                        .describedAs("bidRequest should not be modified")
+                        .isEqualTo(updatedBidRequest)
+        );
+    }
+
+    @Test
+    public void shouldSetAccountIdAndRequestIdFromImpConfig() {
+        final Set<String> storedImpIds = Set.of(defaultStoredImpId);
+        final Map<String, String> impToStoredIdMap = new HashMap<>() {{
+                put("1", defaultStoredImpId);
             }};
 
         when(settingsLoader.getStoredImpsSafely(storedImpIds, timeout)).thenReturn(
@@ -79,34 +148,40 @@ public class EntrypointHookTest extends HooksTestBase {
 
         executeHookAndValidateBidRequest(
                 createEntrypointPayload(
-                        bidRequestId,
+                        defaultRequestId,
                         bidRequest -> setStoredImpIds(bidRequest, impToStoredIdMap)
                 ),
                 timeout,
                 (originalBidRequest, updatedBidRequest) -> {
-                    Assert.assertNotNull(updatedBidRequest);
-                    Assert.assertNotNull(updatedBidRequest.getImp());
-                    Assert.assertEquals(updatedBidRequest.getImp().size(), 1);
+                    assertThat(updatedBidRequest)
+                            .isNotNull();
+                    assertThat(updatedBidRequest.getImp())
+                            .isNotNull();
+                    assertThat(updatedBidRequest.getImp())
+                            .isNotEmpty();
+                    assertThat(updatedBidRequest.getImp().size())
+                            .isEqualTo(1);
                     final String parentAccountId = updatedBidRequest.getSite()
                             .getPublisher().getExt().getPrebid().getParentAccount();
-                    Assert.assertNotNull(
-                            parentAccountId
-                    );
-                    Assert.assertEquals(parentAccountId, defaultAccountId);
+                    assertThat(parentAccountId)
+                            .isNotNull();
+                    assertThat(parentAccountId)
+                            .isEqualTo(defaultAccountId);
                     final String storedRequestId = updatedBidRequest.getExt()
                             .getPrebid().getStoredrequest().getId();
-                    Assert.assertNotNull(
-                            storedRequestId
-                    );
-                    Assert.assertEquals(storedRequestId, defaultStoredRequestId);
+                    assertThat(storedRequestId)
+                            .isNotNull();
+                    assertThat(storedRequestId)
+                            .isEqualTo(defaultStoredRequestId);
                 }
         );
     }
 
     @Test
     public void testCode() throws Exception {
-        String result = entrypointHook.code();
-        Assert.assertEquals("improvedigital-gvast-hooks-entrypoint", result);
+        String result = hook.code();
+        assertThat(result)
+                .isEqualTo("improvedigital-gvast-hooks-entrypoint");
     }
 
     private void executeHookAndValidateBidRequest(
@@ -114,51 +189,19 @@ public class EntrypointHookTest extends HooksTestBase {
             Timeout timeout,
             BiConsumer<BidRequest/*originalBidRequest*/, BidRequest/*updatedBidRequest*/> validator
     ) {
-        executeHookAndValidatePayload(
-                entrypointHook,
+        executeHookAndValidatePayloadUpdate(
+                hook,
                 payload,
                 createInvocationContext(timeout),
                 (initialPayload, updatedPayload) -> {
                 String updatedBody = updatedPayload.body();
-                Assert.assertNotNull(updatedBody);
+                assertThat(updatedBody)
+                        .isNotNull();
                 BidRequest originalBidRequest = bidRequestFromString(initialPayload.body());
                 BidRequest updatedBidRequest = bidRequestFromString(updatedBody);
                 validator.accept(originalBidRequest, updatedBidRequest);
             }
         );
-    }
-
-    private BidRequest setStoredImpIds(
-            BidRequest request, Map<String /*impId*/, String /*storedImpId*/> impIdToStoredIdMap
-    ) {
-        request.getImp().replaceAll(imp -> {
-            if (impIdToStoredIdMap.containsKey(imp.getId())) {
-                final String storedImpId = impIdToStoredIdMap.get(imp.getId());
-                ExtImp extImp = ExtImp.of(ExtImpPrebid.builder()
-                        .storedrequest(ExtStoredRequest.of(storedImpId))
-                        .build(), null);
-                ObjectNode extNode = objectMapper.valueToTree(extImp);
-                return imp.toBuilder().ext(
-                        merger.merge(extNode, imp.getExt(), ObjectNode.class)
-                ).build();
-            }
-            return imp;
-        });
-        return request;
-    }
-
-    private Imp setImpConfigProperties(Imp imp, Consumer<ObjectNode> configSetter) {
-        final ObjectNode impExt = mapper.mapper().valueToTree(
-                ExtImp.of(ExtImpPrebid.builder().build(), null)
-        );
-        ObjectNode configNode = ((ObjectNode) impExt.at("/prebid"))
-                .putObject("improvedigitalpbs");
-
-        configSetter.accept(configNode);
-
-        return imp.toBuilder().ext(
-                merger.merge(impExt, imp.getExt(), ObjectNode.class)
-        ).build();
     }
 
     private Future<Map<String, Imp>> createSucceededFutureWithImps(Set<String> storedImpIds) {

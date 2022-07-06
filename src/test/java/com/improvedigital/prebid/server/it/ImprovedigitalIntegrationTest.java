@@ -179,7 +179,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                                 .linearity(1)
                                 .placement(5)
                                 .build())
-                        .bidfloor(new BigDecimal(0).setScale(1, RoundingMode.HALF_EVEN))
+                        .bidfloor(BigDecimal.ZERO)
                         .bidfloorcur(bidRequestData.currency)
                         .build(),
                 bidRequest -> bidRequest.toBuilder()
@@ -264,7 +264,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                                 Bid.builder()
                                         .id("bid_id_" + bidderName + "_" + i + "_" + uniqueId)
                                         .impid("imp_id_" + uniqueId) /* imp id is tied to the bid request. */
-                                        .price(new BigDecimal(data[i].price).setScale(2, RoundingMode.HALF_EVEN))
+                                        .price(BigDecimal.valueOf(data[i].price).setScale(2, RoundingMode.HALF_EVEN))
                                         .adm(data[i].adm)
                                         .cid("campaign_id_" + i + "_" + uniqueId)
                                         .adid("ad_id_" + i + "_" + uniqueId)

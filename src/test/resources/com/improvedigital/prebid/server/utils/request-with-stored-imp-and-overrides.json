@@ -1,0 +1,89 @@
+{
+  "id": "f2140dc6-67c2-4b05-b2b2-7430a78d796e",
+  "cur": [
+    "EUR"
+  ],
+  "source": {
+    "tid": "f2140dc6-67c2-4b05-b2b2-7430a78d796e",
+    "ext": {
+      "schain": {
+        "ver": "1.0",
+        "complete": 1,
+        "nodes": [
+          {
+            "asi": "headerlift.com",
+            "hp": 1,
+            "sid": "1234abc"
+          }
+        ]
+      }
+    }
+  },
+  "tmax": 10000,
+  "imp": [
+    {
+      "id": "video",
+      "ext": {
+        "prebid": {
+          "storedrequest": {
+            "id": "imp-with-waterfall"
+          },
+          "improvedigitalpbs": {
+            "responseType": "gvast"
+          },
+          "bidder": {
+            "improvedigital": {
+              "placementId": 1234
+            }
+          }
+        }
+      },
+      "video": {
+        "mimes": [
+          "video/mp4"
+        ],
+        "protocols": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "playbackmethod": [
+          2
+        ],
+        "placement": 1
+      }
+    }
+  ],
+  "ext": {
+    "prebid": {
+      "targeting": {
+        "includebidderkeys": false
+      }
+    }
+  },
+  "site": {
+    "publisher": {
+      "id": "1"
+    },
+    "page": "https://hb.improvedigital.com/prebid/prebid-server/tester/index.html"
+  },
+  "device": {
+    "w": 1480,
+    "h": 989
+  },
+  "regs": {
+    "ext": {
+      "gdpr": 0
+    }
+  },
+  "user": {
+    "ext": {
+      "consent": "gdpr_consent"
+    }
+  }
+}

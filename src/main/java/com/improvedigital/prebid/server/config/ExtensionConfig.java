@@ -11,6 +11,7 @@ import com.improvedigital.prebid.server.handler.GVastHandler;
 import com.improvedigital.prebid.server.hooks.v1.customtrackers.TrackerHooksModule;
 import com.improvedigital.prebid.server.hooks.v1.gvast.GVastHooksModule;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
+import com.improvedigital.prebid.server.utils.GVastHookUtils;
 import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
 import com.improvedigital.prebid.server.utils.RequestUtils;
@@ -132,11 +133,24 @@ public class ExtensionConfig {
     }
 
     @Bean
+    GVastHookUtils gVastHookUtils(
+            JsonMerger merger,
+            RequestUtils requestUtils,
+            CurrencyConversionService currencyConversionService
+    ) {
+        return new GVastHookUtils(
+                requestUtils,
+                merger,
+                currencyConversionService
+        );
+    }
+
+    @Bean
     Module gVastHooksModule(
             SettingsLoader settingsLoader,
-            JsonUtils jsonUtils,
             RequestUtils requestUtils,
             JsonMerger merger,
+            GVastHookUtils gVastHookUtils,
             CurrencyConversionService currencyConversionService,
             MacroProcessor macroProcessor,
             @Value("${external-url}") String externalUrl,
@@ -145,10 +159,9 @@ public class ExtensionConfig {
     ) {
         return new GVastHooksModule(
                 settingsLoader,
-                jsonUtils,
                 requestUtils,
+                gVastHookUtils,
                 merger,
-                currencyConversionService,
                 macroProcessor,
                 externalUrl,
                 gamNetworkCode,

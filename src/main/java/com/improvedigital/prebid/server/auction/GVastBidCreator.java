@@ -182,12 +182,13 @@ public class GVastBidCreator {
                 ? buildVastXmlResponseWithoutGam(debugInfo)
                 : buildVastXmlResponseWithGam(debugInfo);
 
-        return Bid.builder()
-                .id(UUID.randomUUID().toString())
-                .impid(imp.getId())
-                .adm(adm)
-                .price(BigDecimal.ZERO) // TODO: set price as per imp configuration
-                .build();
+        return StringUtils.isBlank(adm) ? null
+                : Bid.builder()
+                    .id(UUID.randomUUID().toString())
+                    .impid(imp.getId())
+                    .adm(adm)
+                    .price(BigDecimal.ZERO) // TODO: set price as per imp configuration
+                    .build();
     }
 
     private List<String> getCachedBidUrls() {
@@ -571,17 +572,20 @@ public class GVastBidCreator {
     }
 
     private String buildVastXmlResponseWithoutGam(String hbAuctionDebugInfo) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?><VAST version=\"2.0\">");
-
         List<String> vastTags = getCachedBidUrls();
-
         vastTags.addAll(waterfall);
 
         // If there's no bid/tag but the debug mode is enabled, respond with a test domain and debug info
         if (isDebug && vastTags.isEmpty()) {
             vastTags.add("https://example.com");
         }
+
+        if (vastTags.isEmpty()) {
+            return null;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?><VAST version=\"2.0\">");
 
         for (int i = 0; i < vastTags.size(); i++) {
             sb.append(buildVastAdTag(vastTags.get(i), true,

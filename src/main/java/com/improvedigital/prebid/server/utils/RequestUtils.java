@@ -2,6 +2,7 @@ package com.improvedigital.prebid.server.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.MissingNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.App;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
@@ -76,7 +77,7 @@ public class RequestUtils {
                 .value();
     }
 
-    public String getStoredRequestId(ExtRequest extRequest) {
+    public String getStoredRequestIdFromExtRequest(ExtRequest extRequest) {
         return Nullable.of(extRequest)
                 .get(ExtRequest::getPrebid)
                 .get(ExtRequestPrebid::getStoredrequest)
@@ -84,11 +85,39 @@ public class RequestUtils {
                 .value();
     }
 
-    public String getStoredImpId(ExtImp extImp) {
+    public String getStoredRequestId(BidRequest bidRequest) {
+        return Nullable.of(bidRequest)
+                .get(BidRequest::getExt)
+                .get(this::getStoredRequestIdFromExtRequest)
+                .value();
+    }
+
+    public String getStoredRequestIdFromExtRequestNode(ObjectNode extRequest) {
+        return Nullable.of(extRequest)
+                .get(node -> node.at("/prebid/storedrequest/id"))
+                .get(node -> node.isMissingNode() ? null : node.asText())
+                .value();
+    }
+
+    public String getStoredImpIdFromExtImp(ExtImp extImp) {
         return Nullable.of(extImp)
                 .get(ExtImp::getPrebid)
                 .get(ExtImpPrebid::getStoredrequest)
                 .get(this::storedRequestIdFromExtStoredRequest)
+                .value();
+    }
+
+    public String getStoredImpId(Imp imp) {
+        return Nullable.of(imp)
+                .get(Imp::getExt)
+                .get(this::getStoredImpIdFromExtImpNode)
+                .value();
+    }
+
+    public String getStoredImpIdFromExtImpNode(ObjectNode extImp) {
+        return Nullable.of(extImp)
+                .get(node -> node.at("/prebid/storedrequest/id"))
+                .get(node -> node.isMissingNode() ? null : node.asText())
                 .value();
     }
 
@@ -100,17 +129,18 @@ public class RequestUtils {
     }
 
     public boolean isNonVastVideo(Imp imp) {
-        return Nullable.of(imp).get(Imp::getVideo).isNotNull()
-                && Nullable.of(imp)
+        Nullable<Imp> impNullable = Nullable.of(imp);
+        return impNullable.get(Imp::getVideo).isNotNull()
+                && impNullable
                     .get(jsonUtils::getImprovedigitalPbsImpExt)
-                    .get(pbsImpExt -> pbsImpExt.getResponseType() != VastResponseType.vast)
+                    .get(pbsImpExt -> pbsImpExt.responseTypeOrDefault() != VastResponseType.vast)
                     .value(false);
     }
 
     public boolean isNonVastVideo(Imp imp, ImprovedigitalPbsImpExt impExt) {
         return Nullable.of(imp).get(Imp::getVideo).isNotNull()
                 && Nullable.of(impExt)
-                    .get(pbsImpExt -> pbsImpExt.getResponseType() != VastResponseType.vast)
+                    .get(pbsImpExt -> pbsImpExt.responseTypeOrDefault() != VastResponseType.vast)
                     .value(false);
     }
 
@@ -149,29 +179,13 @@ public class RequestUtils {
     public JsonNode extractBidderInfo(Imp imp, String bidderName, String path) {
         return Nullable.of(imp)
                 .get(Imp::getExt)
-                .get(this::normalizeImpExt)
-                .get(ExtImp::getPrebid)
-                .get(ExtImpPrebid::getBidder)
-                .get(node -> node.get(bidderName))
-                .get(node -> node.at(path))
+                .get(node -> node.at("/prebid/bidder/" + bidderName + path))
                 .value(MissingNode.getInstance());
-    }
-
-    private ExtImp normalizeImpExt(Object impExt) {
-        if (impExt == null) {
-            return null;
-        }
-
-        if (impExt instanceof ExtImp) {
-            return (ExtImp) impExt;
-        }
-
-        return jsonUtils.getObjectMapper().convertValue(impExt, ExtImp.class);
     }
 
     private boolean isOfResponseType(ImprovedigitalPbsImpExt impExt, VastResponseType responseType) {
         return Nullable.of(impExt)
-                .get(pbsImpExt -> pbsImpExt.getResponseType() == responseType)
+                .get(pbsImpExt -> pbsImpExt.responseTypeOrDefault() == responseType)
                 .value(false);
     }
 }

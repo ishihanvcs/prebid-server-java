@@ -15,7 +15,7 @@ import java.util.Map;
 public class ImprovedigitalPbsImpExt {
 
     public static final String DEFAULT_CONFIG_KEY = "default";
-    public static final BigDecimal DEFAULT_BID_FLOOR_PRICE = BigDecimal.valueOf(0.0);
+    public static final BigDecimal DEFAULT_BID_FLOOR_PRICE = BigDecimal.ZERO;
     public static final String DEFAULT_BID_FLOOR_CUR = "USD";
     private static final Floor DEFAULT_BID_FLOOR = Floor.of(DEFAULT_BID_FLOOR_PRICE, DEFAULT_BID_FLOOR_CUR);
     private static final List<String> DEFAULT_WATERFALL = List.of();
@@ -35,11 +35,8 @@ public class ImprovedigitalPbsImpExt {
     @JsonProperty("responseType")
     VastResponseType responseType;
 
-    Map<String, List<String>> waterfall;
-
-    public VastResponseType getResponseType() {
-        return responseType == null ? VastResponseType.vast : responseType;
-    }
+    @JsonProperty("waterfall")
+    Map<String, List<String>> waterfalls;
 
     private String resolveCountryCode(Map<String, ?> map, Geo geo) {
         return ObjectUtil.getIfNotNullOrDefault(geo,
@@ -50,12 +47,20 @@ public class ImprovedigitalPbsImpExt {
         );
     }
 
-    public Map<String, Floor> getFloors() {
+    public VastResponseType responseTypeOrDefault() {
+        return responseType == null ? VastResponseType.vast : responseType;
+    }
+
+    private Map<String, Floor> defaultFloorsIfNull() {
         return floors == null ? Map.of(DEFAULT_CONFIG_KEY, DEFAULT_BID_FLOOR) : floors;
     }
 
+    private Map<String, List<String>> defaultWaterfallsIfNull() {
+        return waterfalls == null ? Map.of(DEFAULT_CONFIG_KEY, DEFAULT_WATERFALL) : waterfalls;
+    }
+
     public Floor getFloor(Geo geo) {
-        final Map<String, Floor> floors = this.getFloors();
+        final Map<String, Floor> floors = this.defaultFloorsIfNull();
         if (floors.isEmpty()) {
             return DEFAULT_BID_FLOOR;
         }
@@ -68,12 +73,8 @@ public class ImprovedigitalPbsImpExt {
         return DEFAULT_BID_FLOOR;
     }
 
-    public Map<String, List<String>> getWaterfall() {
-        return waterfall == null ? Map.of(DEFAULT_CONFIG_KEY, DEFAULT_WATERFALL) : waterfall;
-    }
-
     public List<String> getWaterfall(Geo geo) {
-        final Map<String, List<String>> waterfall = this.getWaterfall();
+        final Map<String, List<String>> waterfall = this.defaultWaterfallsIfNull();
         if (waterfall.isEmpty()) {
             return DEFAULT_WATERFALL;
         }

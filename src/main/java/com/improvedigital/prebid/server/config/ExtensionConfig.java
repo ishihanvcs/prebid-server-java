@@ -22,6 +22,7 @@ import org.prebid.server.analytics.reporter.AnalyticsReporterDelegator;
 import org.prebid.server.auction.ExchangeService;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
 import org.prebid.server.currency.CurrencyConversionService;
+import com.improvedigital.prebid.server.hooks.v1.supplychain.ImprovedigitalSupplyChainModule;
 import org.prebid.server.hooks.v1.Module;
 import org.prebid.server.identity.IdGenerator;
 import org.prebid.server.json.JacksonMapper;
@@ -185,5 +186,10 @@ public class ExtensionConfig {
     @Bean
     ITrackerInjector trackerInjector(JacksonMapper mapper) {
         return new TrackerInjector(mapper);
+    }
+
+    @Bean
+    ImprovedigitalSupplyChainModule improvedigitalSupplyChainModule(JsonUtils jsonUtils) {
+        return new ImprovedigitalSupplyChainModule(jsonUtils);
     }
 }

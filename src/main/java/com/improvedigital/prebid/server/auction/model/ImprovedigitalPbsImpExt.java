@@ -38,6 +38,12 @@ public class ImprovedigitalPbsImpExt {
     @JsonProperty("waterfall")
     Map<String, List<String>> waterfalls;
 
+    @JsonProperty("schainNodes")
+    List<String> schainNodes;
+
+    @JsonProperty("headerliftPartnerId")
+    String headerliftPartnerId;
+
     private String resolveCountryCode(Map<String, ?> map, Geo geo) {
         return ObjectUtil.getIfNotNullOrDefault(geo,
                 gn -> map.containsKey(gn.getCountry())

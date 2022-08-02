@@ -1,0 +1,25 @@
+{
+  "ext": {
+    "prebid": {
+      "improvedigitalpbs": {
+        "schainNodes": [
+          "headerlift.com",
+          "pubgalaxy.com"
+        ],
+        "headerliftPartnerId": "hl-2022072201"
+      },
+      "bidder": {
+        "improvedigital": {
+          "placementId": 20220722
+        },
+        "generic": {
+          "exampleProperty": "examplePropertyValue"
+        }
+      }
+    }
+  },
+  "banner": {
+    "w": 300,
+    "h": 250
+  }
+}

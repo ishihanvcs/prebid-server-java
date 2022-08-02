@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.iab.openrtb.request.Banner;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Device;
 import com.iab.openrtb.request.Imp;
@@ -42,9 +43,12 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCache;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidChannel;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidPbs;
+import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidSchainSchainNode;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidServer;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestTargeting;
 import org.prebid.server.proto.openrtb.ext.request.ExtSite;
+import org.prebid.server.proto.openrtb.ext.request.ExtSource;
+import org.prebid.server.proto.openrtb.ext.request.ExtSourceSchain;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.test.context.TestPropertySource;
@@ -136,7 +140,101 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 .build();
     }
 
-    protected String getAuctionBidRequestVideo(String uniqueId, AuctionBidRequestTestData bidRequestData) {
+    protected String getAuctionBidRequestBanner(String uniqueId, AuctionBidRequestBannerTestData bidRequestData) {
+        // We do not want version, complete when no nodes are there.
+        final ExtSource reqSourceExt = CollectionUtils.isEmpty(bidRequestData.schainNodes) ? null : ExtSource.of(
+                ExtSourceSchain.of(
+                        bidRequestData.schainVer,
+                        bidRequestData.schainComplete,
+                        bidRequestData.schainNodes,
+                        null
+                )
+        );
+
+        return getBidRequestWeb(uniqueId,
+                imp -> imp.toBuilder()
+                        .ext(bidRequestData.impExt == null ? null : bidRequestData.impExt.get())
+                        .banner(Banner.builder()
+                                .w(300)
+                                .h(250)
+                                .mimes(Arrays.asList("image/jpg"))
+                                .build())
+                        .build(),
+                bidRequest -> bidRequest.toBuilder()
+                        .cur(Arrays.asList(bidRequestData.currency))
+                        .user(User.builder()
+                                .ext(ExtUser.builder()
+                                        .consent(bidRequestData.gdprConsent)
+                                        .build())
+                                .build())
+                        .source(Source.builder()
+                                .tid("source_tid_" + uniqueId)
+                                .ext(reqSourceExt)
+                                .build())
+                        .test(bidRequestData.test)
+                        .build()
+        );
+    }
+
+    protected String getSSPBidRequestBanner(String uniqueId, SSPBidRequestBannerTestData bidRequestData) {
+        // We do not want version, complete when no nodes are there.
+        final ExtSource reqSourceExt = CollectionUtils.isEmpty(bidRequestData.schainNodes) ? null : ExtSource.of(
+                ExtSourceSchain.of(
+                        bidRequestData.schainVer,
+                        bidRequestData.schainComplete,
+                        bidRequestData.schainNodes,
+                        null
+                )
+        );
+
+        return getBidRequestWeb(uniqueId,
+                imp -> imp.toBuilder()
+                        .ext(bidRequestData.impExt == null ? null : bidRequestData.impExt.get())
+                        .banner(Banner.builder()
+                                .w(300)
+                                .h(250)
+                                .mimes(Arrays.asList("image/jpg"))
+                                .build())
+                        .bidfloor(BigDecimal.ZERO)
+                        .bidfloorcur(bidRequestData.currency)
+                        .build(),
+                bidRequest -> bidRequest.toBuilder()
+                        .site(Site.builder()
+                                .domain(IT_TEST_DOMAIN)
+                                .page("http://" + IT_TEST_DOMAIN)
+                                .publisher(Publisher.builder()
+                                        .domain(IT_TEST_MAIN_DOMAIN)
+                                        .build())
+                                .ext(ExtSite.of(0, null))
+                                .build())
+                        .device(Device.builder()
+                                .ua(IT_TEST_USER_AGENT)
+                                .ip(IT_TEST_IP)
+                                .build())
+                        .user(User.builder()
+                                .ext(ExtUser.builder()
+                                        .consent(bidRequestData.gdprConsent)
+                                        .build())
+                                .build())
+                        .at(1)
+                        .tmax(5000L)
+                        .cur(Arrays.asList(bidRequestData.currency))
+                        .regs(Regs.of(null, ExtRegs.of(0, null)))
+                        .ext(ExtRequest.of(ExtRequestPrebid.builder()
+                                .pbs(ExtRequestPrebidPbs.of("/openrtb2/auction"))
+                                .server(ExtRequestPrebidServer.of(
+                                        "http://localhost:8080", 1, "local"
+                                ))
+                                .build()))
+                        .source(Source.builder()
+                                .tid("source_tid_" + uniqueId)
+                                .ext(reqSourceExt)
+                                .build())
+                        .build()
+        );
+    }
+
+    protected String getAuctionBidRequestVideo(String uniqueId, AuctionBidRequestVideoTestData bidRequestData) {
         return getBidRequestWeb(uniqueId,
                 imp -> imp.toBuilder()
                         .ext(bidRequestData.impExt == null ? null : bidRequestData.impExt.get())
@@ -165,7 +263,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         );
     }
 
-    protected String getSSPBidRequestVideo(String uniqueId, SSPBidRequestTestData bidRequestData) {
+    protected String getSSPBidRequestVideo(String uniqueId, SSPBidRequestVideoTestData bidRequestData) {
         return getBidRequestWeb(uniqueId,
                 imp -> imp.toBuilder()
                         .ext(bidRequestData.impExt == null ? null : bidRequestData.impExt.get())
@@ -288,7 +386,47 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
      * Some test case may set subset of the fields.
      */
     @Builder(toBuilder = true)
-    public static class AuctionBidRequestTestData {
+    public static class AuctionBidRequestBannerTestData {
+        String currency;
+
+        AuctionBidRequestImpExt impExt;
+
+        String gdprConsent;
+
+        String schainVer;
+
+        Integer schainComplete;
+
+        List<ExtRequestPrebidSchainSchainNode> schainNodes;
+
+        Integer test;
+    }
+
+    /**
+     * This class contains full list of fields that we will use for IT test case.
+     * Some test case may set subset of the fields.
+     */
+    @Builder(toBuilder = true)
+    public static class SSPBidRequestBannerTestData {
+        String currency;
+
+        SSPBidRequestImpExt impExt;
+
+        String gdprConsent;
+
+        String schainVer;
+
+        Integer schainComplete;
+
+        List<ExtRequestPrebidSchainSchainNode> schainNodes;
+    }
+
+    /**
+     * This class contains full list of fields that we will use for IT test case.
+     * Some test case may set subset of the fields.
+     */
+    @Builder(toBuilder = true)
+    public static class AuctionBidRequestVideoTestData {
         String currency;
 
         AuctionBidRequestImpExt impExt;
@@ -310,7 +448,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
      * Some test case may set subset of the fields.
      */
     @Builder(toBuilder = true)
-    public static class SSPBidRequestTestData {
+    public static class SSPBidRequestVideoTestData {
         String currency;
 
         SSPBidRequestImpExt impExt;
@@ -459,6 +597,15 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         public AuctionBidRequestImpExt putImprovedigitalPbsKeyValue(String key, String value) {
             if (value != null) {
                 ((ObjectNode) impExt.at("/prebid/improvedigitalpbs")).put(key, value);
+            }
+            return this;
+        }
+
+        public AuctionBidRequestImpExt putImprovedigitalPbsKeyValue(String key, List<String> values) {
+            if (values != null) {
+                ((ObjectNode) impExt.at("/prebid/improvedigitalpbs")).putIfAbsent(
+                        key, BID_REQUEST_MAPPER.valueToTree(values)
+                );
             }
             return this;
         }
@@ -862,5 +1009,9 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
 
     protected void assertCurrency(JSONObject responseJson, String expectedCurrency) throws JSONException {
         assertThat(responseJson.getString("cur")).isEqualTo(expectedCurrency);
+    }
+
+    protected void assertNoExtErrors(JSONObject responseJson) throws JSONException {
+        assertThat(responseJson.getJSONObject("ext").has("errors")).isFalse();
     }
 }

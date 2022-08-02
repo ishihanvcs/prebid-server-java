@@ -1297,7 +1297,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
                         .withRequestBody(equalToJson(getSSPBidRequestVideo(uniqueId,
-                                SSPBidRequestTestData.builder()
+                                SSPBidRequestVideoTestData.builder()
                                         .currency("USD")
                                         .impExt(new SSPBidRequestImpExt()
                                                 .putStoredRequest(storedImpId)
@@ -1325,7 +1325,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         );
 
         Response response = specWithPBSHeader(18080)
-                .body(getAuctionBidRequestVideo(uniqueId, AuctionBidRequestTestData.builder()
+                .body(getAuctionBidRequestVideo(uniqueId, AuctionBidRequestVideoTestData.builder()
                         .currency("USD")
                         .impExt(new AuctionBidRequestImpExt()
                                 .putStoredRequest(storedImpId)
@@ -1360,7 +1360,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
                         .withRequestBody(equalToJson(getSSPBidRequestVideo(uniqueId,
-                                SSPBidRequestTestData.builder()
+                                SSPBidRequestVideoTestData.builder()
                                         .currency("USD")
                                         .impExt(new SSPBidRequestImpExt()
                                                 .putStoredRequest(param.storedImpId)
@@ -1416,7 +1416,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         }
 
         Response response = specWithPBSHeader(18080)
-                .body(getAuctionBidRequestVideo(uniqueId, AuctionBidRequestTestData.builder()
+                .body(getAuctionBidRequestVideo(uniqueId, AuctionBidRequestVideoTestData.builder()
                         .currency("USD")
                         .impExt(auctionImpExt)
                         .videoProtocols(param.videoProtocols)
@@ -1463,7 +1463,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
                         .withRequestBody(equalToJson(getSSPBidRequestVideo(uniqueId,
-                                SSPBidRequestTestData.builder()
+                                SSPBidRequestVideoTestData.builder()
                                         .currency("USD")
                                         .impExt(new SSPBidRequestImpExt()
                                                 .putBidder()
@@ -1494,7 +1494,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/generic-exchange"))
                         .withRequestBody(equalToJson(getSSPBidRequestVideo(uniqueId,
-                                SSPBidRequestTestData.builder()
+                                SSPBidRequestVideoTestData.builder()
                                         .currency("USD")
                                         .impExt(new SSPBidRequestImpExt()
                                                 .putBidder()
@@ -1562,7 +1562,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         );
 
         Response response = specWithPBSHeader(18080)
-                .body(getAuctionBidRequestVideo(uniqueId, AuctionBidRequestTestData.builder()
+                .body(getAuctionBidRequestVideo(uniqueId, AuctionBidRequestVideoTestData.builder()
                         .currency("USD")
                         .impExt(new AuctionBidRequestImpExt()
                                 .putImprovedigitalPbs()
@@ -1592,7 +1592,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
                         .withRequestBody(equalToJson(getSSPBidRequestVideo(uniqueId,
-                                SSPBidRequestTestData.builder()
+                                SSPBidRequestVideoTestData.builder()
                                         .currency("USD")
                                         .impExt(new SSPBidRequestImpExt()
                                                 .putBidder()
@@ -1607,7 +1607,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         );
 
         Response response = specWithPBSHeader(18080)
-                .body(getAuctionBidRequestVideo(uniqueId, AuctionBidRequestTestData.builder()
+                .body(getAuctionBidRequestVideo(uniqueId, AuctionBidRequestVideoTestData.builder()
                         .currency("USD")
                         .impExt(new AuctionBidRequestImpExt()
                                 .putImprovedigitalPbs()

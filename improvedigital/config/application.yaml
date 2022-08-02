@@ -176,8 +176,8 @@ hooks:
                   "timeout": 500,
                   "hook-sequence": [
                     {
-                      "module-code": "improvedigital-gvast-hooks-module",
-                      "hook-impl-code": "improvedigital-gvast-hooks-entrypoint"
+                      "module-code": "improvedigital-custom-vast-hooks-module",
+                      "hook-impl-code": "improvedigital-custom-vast-hooks-entrypoint"
                     }
                   ]
                 },
@@ -185,8 +185,8 @@ hooks:
                   "timeout": 50,
                   "hook-sequence": [
                     {
-                      "module-code": "improvedigital-custom-trackers-hooks-module",
-                      "hook-impl-code": "improvedigital-custom-trackers-hooks-entrypoint"
+                      "module-code": "improvedigital-custom-tracker-hooks-module",
+                      "hook-impl-code": "improvedigital-custom-tracker-hooks-entrypoint"
                     }
                   ]
                 }
@@ -198,8 +198,8 @@ hooks:
                   "timeout": 5,
                   "hook-sequence": [
                     {
-                      "module-code": "improvedigital-gvast-hooks-module",
-                      "hook-impl-code": "improvedigital-gvast-hooks-processed-auction-request"
+                      "module-code": "improvedigital-custom-vast-hooks-module",
+                      "hook-impl-code": "improvedigital-custom-vast-hooks-processed-auction-request"
                     },
                     {
                       "module-code": "improvedigital-supplychain-module",
@@ -211,8 +211,8 @@ hooks:
                   "timeout": 5,
                   "hook-sequence": [
                     {
-                      "module-code": "improvedigital-custom-trackers-hooks-module",
-                      "hook-impl-code": "improvedigital-custom-trackers-hooks-processed-auction-request"
+                      "module-code": "improvedigital-custom-tracker-hooks-module",
+                      "hook-impl-code": "improvedigital-custom-tracker-hooks-processed-auction-request"
                     }
                   ]
                 }
@@ -224,8 +224,8 @@ hooks:
                   "timeout": 5,
                   "hook-sequence": [
                     {
-                      "module-code": "improvedigital-custom-trackers-hooks-module",
-                      "hook-impl-code": "improvedigital-custom-trackers-hooks-processed-bidder-response"
+                      "module-code": "improvedigital-custom-tracker-hooks-module",
+                      "hook-impl-code": "improvedigital-custom-tracker-hooks-processed-bidder-response"
                     }
                   ]
                 }
@@ -237,8 +237,8 @@ hooks:
                   "timeout": 5,
                   "hook-sequence": [
                     {
-                      "module-code": "improvedigital-gvast-hooks-module",
-                      "hook-impl-code": "improvedigital-gvast-hooks-auction-response"
+                      "module-code": "improvedigital-custom-vast-hooks-module",
+                      "hook-impl-code": "improvedigital-custom-vast-hooks-auction-response"
                     }
                   ]
                 }

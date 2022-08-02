@@ -8,8 +8,8 @@ import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.request.Publisher;
 import com.iab.openrtb.request.Site;
-import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
-import com.improvedigital.prebid.server.auction.model.VastResponseType;
+import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
+import com.improvedigital.prebid.server.customvast.model.VastResponseType;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.proto.openrtb.ext.request.ExtImp;
 import org.prebid.server.proto.openrtb.ext.request.ExtImpPrebid;
@@ -21,6 +21,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Optional;
 
 public class RequestUtils {
 
@@ -38,110 +39,110 @@ public class RequestUtils {
 
     public String getAccountId(BidRequest bidRequest) {
         final Publisher publisher = resolvePublisher(bidRequest);
-        final Nullable<Publisher> publisherNullable = Nullable.of(publisher);
-        return publisherNullable
-                .get(this::parentAccountIdFromPublisher)
-                .value(publisherNullable
-                        .get(Publisher::getId)
-                        .get(StringUtils::stripToNull)
-                        .value()
+        final Optional<Publisher> publisherOptional = Optional.ofNullable(publisher);
+        return publisherOptional
+                .map(this::parentAccountIdFromPublisher)
+                .orElse(publisherOptional
+                        .map(Publisher::getId)
+                        .map(StringUtils::stripToNull)
+                        .orElse(null)
                 );
     }
 
     public String getParentAccountId(BidRequest bidRequest) {
         final Publisher publisher = resolvePublisher(bidRequest);
-        return Nullable.of(publisher)
-                .get(this::parentAccountIdFromPublisher)
-                .value();
+        return Optional.ofNullable(publisher)
+                .map(this::parentAccountIdFromPublisher)
+                .orElse(null);
     }
 
     private Publisher resolvePublisher(BidRequest bidRequest) {
-        return Nullable.of(bidRequest)
-                .get(BidRequest::getApp)
-                .get(App::getPublisher)
-                .value(Nullable.of(bidRequest)
-                        .get(BidRequest::getSite)
-                        .get(Site::getPublisher)
-                        .value());
+        return Optional.ofNullable(bidRequest)
+                .map(BidRequest::getApp)
+                .map(App::getPublisher)
+                .orElse(Optional.ofNullable(bidRequest)
+                        .map(BidRequest::getSite)
+                        .map(Site::getPublisher)
+                        .orElse(null));
     }
 
     /**
      * Parses publisher.ext and returns parentAccount value from it. Returns null if any parsing error occurs.
      */
     private String parentAccountIdFromPublisher(Publisher publisher) {
-        return Nullable.of(publisher)
-                .get(Publisher::getExt)
-                .get(ExtPublisher::getPrebid)
-                .get(ExtPublisherPrebid::getParentAccount)
-                .get(StringUtils::stripToNull)
-                .value();
+        return Optional.ofNullable(publisher)
+                .map(Publisher::getExt)
+                .map(ExtPublisher::getPrebid)
+                .map(ExtPublisherPrebid::getParentAccount)
+                .map(StringUtils::stripToNull)
+                .orElse(null);
     }
 
     public String getStoredRequestIdFromExtRequest(ExtRequest extRequest) {
-        return Nullable.of(extRequest)
-                .get(ExtRequest::getPrebid)
-                .get(ExtRequestPrebid::getStoredrequest)
-                .get(this::storedRequestIdFromExtStoredRequest)
-                .value();
+        return Optional.ofNullable(extRequest)
+                .map(ExtRequest::getPrebid)
+                .map(ExtRequestPrebid::getStoredrequest)
+                .map(this::storedRequestIdFromExtStoredRequest)
+                .orElse(null);
     }
 
     public String getStoredRequestId(BidRequest bidRequest) {
-        return Nullable.of(bidRequest)
-                .get(BidRequest::getExt)
-                .get(this::getStoredRequestIdFromExtRequest)
-                .value();
+        return Optional.ofNullable(bidRequest)
+                .map(BidRequest::getExt)
+                .map(this::getStoredRequestIdFromExtRequest)
+                .orElse(null);
     }
 
     public String getStoredRequestIdFromExtRequestNode(ObjectNode extRequest) {
-        return Nullable.of(extRequest)
-                .get(node -> node.at("/prebid/storedrequest/id"))
-                .get(node -> node.isMissingNode() ? null : node.asText())
-                .value();
+        return Optional.ofNullable(extRequest)
+                .map(node -> node.at("/prebid/storedrequest/id"))
+                .map(node -> node.isMissingNode() ? null : node.asText())
+                .orElse(null);
     }
 
     public String getStoredImpIdFromExtImp(ExtImp extImp) {
-        return Nullable.of(extImp)
-                .get(ExtImp::getPrebid)
-                .get(ExtImpPrebid::getStoredrequest)
-                .get(this::storedRequestIdFromExtStoredRequest)
-                .value();
+        return Optional.ofNullable(extImp)
+                .map(ExtImp::getPrebid)
+                .map(ExtImpPrebid::getStoredrequest)
+                .map(this::storedRequestIdFromExtStoredRequest)
+                .orElse(null);
     }
 
     public String getStoredImpId(Imp imp) {
-        return Nullable.of(imp)
-                .get(Imp::getExt)
-                .get(this::getStoredImpIdFromExtImpNode)
-                .value();
+        return Optional.ofNullable(imp)
+                .map(Imp::getExt)
+                .map(this::getStoredImpIdFromExtImpNode)
+                .orElse(null);
     }
 
     public String getStoredImpIdFromExtImpNode(ObjectNode extImp) {
-        return Nullable.of(extImp)
-                .get(node -> node.at("/prebid/storedrequest/id"))
-                .get(node -> node.isMissingNode() ? null : node.asText())
-                .value();
+        return Optional.ofNullable(extImp)
+                .map(node -> node.at("/prebid/storedrequest/id"))
+                .map(node -> node.isMissingNode() ? null : node.asText())
+                .orElse(null);
     }
 
     private String storedRequestIdFromExtStoredRequest(ExtStoredRequest extStoredRequest) {
-        return Nullable.of(extStoredRequest)
-                .get(ExtStoredRequest::getId)
-                .get(StringUtils::stripToNull)
-                .value();
+        return Optional.ofNullable(extStoredRequest)
+                .map(ExtStoredRequest::getId)
+                .map(StringUtils::stripToNull)
+                .orElse(null);
     }
 
-    public boolean isNonVastVideo(Imp imp) {
-        Nullable<Imp> impNullable = Nullable.of(imp);
-        return impNullable.get(Imp::getVideo).isNotNull()
-                && impNullable
-                    .get(jsonUtils::getImprovedigitalPbsImpExt)
-                    .get(pbsImpExt -> pbsImpExt.responseTypeOrDefault() != VastResponseType.vast)
-                    .value(false);
+    private boolean isOfResponseType(ImprovedigitalPbsImpExt pbsImpExt, VastResponseType responseType) {
+        return Optional.ofNullable(pbsImpExt)
+                .map(pbsImpExt1 -> pbsImpExt1.responseTypeOrDefault() == responseType)
+                .orElse(false);
     }
 
-    public boolean isNonVastVideo(Imp imp, ImprovedigitalPbsImpExt impExt) {
-        return Nullable.of(imp).get(Imp::getVideo).isNotNull()
-                && Nullable.of(impExt)
-                    .get(pbsImpExt -> pbsImpExt.responseTypeOrDefault() != VastResponseType.vast)
-                    .value(false);
+    public boolean isCustomVastVideo(Imp imp) {
+        ImprovedigitalPbsImpExt pbsImpExt = jsonUtils.getImprovedigitalPbsImpExt(imp);
+        return isCustomVastVideo(imp, pbsImpExt);
+    }
+
+    public boolean isCustomVastVideo(Imp imp, ImprovedigitalPbsImpExt pbsImpExt) {
+        return imp != null && imp.getVideo() != null && pbsImpExt != null
+                && !isOfResponseType(pbsImpExt, VastResponseType.vast);
     }
 
     public boolean hasGVastResponseType(ImprovedigitalPbsImpExt impExt) {
@@ -152,11 +153,12 @@ public class RequestUtils {
         return isOfResponseType(impExt, VastResponseType.waterfall);
     }
 
-    public boolean hasNonVastVideo(BidRequest bidRequest) {
-        return Nullable.of(bidRequest).get(BidRequest::getImp)
-                .value(new ArrayList<>())
+    public boolean hasCustomVastVideo(BidRequest bidRequest) {
+        return Optional.ofNullable(bidRequest)
+                .map(BidRequest::getImp)
+                .orElse(new ArrayList<>())
                 .stream()
-                .anyMatch(this::isNonVastVideo);
+                .anyMatch(this::isCustomVastVideo);
     }
 
     public Integer getImprovePlacementId(Imp imp) {
@@ -170,22 +172,16 @@ public class RequestUtils {
     public Integer getImprovePlacementId(BidRequest bidRequest, String impId) {
         return getImprovePlacementId(
                 bidRequest.getImp().stream()
-                .filter(i -> i.getId().equals(impId))
-                .findFirst()
+                        .filter(i -> i.getId().equals(impId))
+                        .findFirst()
                         .orElse(null)
         );
     }
 
     public JsonNode extractBidderInfo(Imp imp, String bidderName, String path) {
-        return Nullable.of(imp)
-                .get(Imp::getExt)
-                .get(node -> node.at("/prebid/bidder/" + bidderName + path))
-                .value(MissingNode.getInstance());
-    }
-
-    private boolean isOfResponseType(ImprovedigitalPbsImpExt impExt, VastResponseType responseType) {
-        return Nullable.of(impExt)
-                .get(pbsImpExt -> pbsImpExt.responseTypeOrDefault() == responseType)
-                .value(false);
+        return Optional.ofNullable(imp)
+                .map(Imp::getExt)
+                .map(node -> node.at("/prebid/bidder/" + bidderName + path))
+                .orElse(MissingNode.getInstance());
     }
 }

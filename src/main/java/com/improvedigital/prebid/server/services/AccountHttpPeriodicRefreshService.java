@@ -149,7 +149,7 @@ public class AccountHttpPeriodicRefreshService implements Initializable {
      * Handles errors occurred while HTTP request or response processing.
      */
     private static Future<Void> failResponse(Throwable exception) {
-        logger.warn("Error occurred while request to http periodic refresh service", exception);
+        logger.warn("Error occurred while request to account http periodic refresh service", exception);
         return Future.failedFuture(exception);
     }
 

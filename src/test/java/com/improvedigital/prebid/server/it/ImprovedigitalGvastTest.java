@@ -1,7 +1,7 @@
 package com.improvedigital.prebid.server.it;
 
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
-import com.improvedigital.prebid.server.handler.GVastHandler;
+import com.improvedigital.prebid.server.customvast.handler.GVastHandler;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import lombok.Builder;

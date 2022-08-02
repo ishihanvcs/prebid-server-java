@@ -1,17 +1,17 @@
 package com.improvedigital.prebid.server.config;
 
-import com.improvedigital.prebid.server.auction.requestfactory.GVastParamsResolver;
-import com.improvedigital.prebid.server.auction.requestfactory.GVastRequestFactory;
-import com.improvedigital.prebid.server.customtrackers.BidderBidModifier;
-import com.improvedigital.prebid.server.customtrackers.contracts.ITrackerInjector;
-import com.improvedigital.prebid.server.customtrackers.contracts.ITrackerMacroResolver;
-import com.improvedigital.prebid.server.customtrackers.injectors.TrackerInjector;
-import com.improvedigital.prebid.server.customtrackers.resolvers.TrackerMacroResolver;
-import com.improvedigital.prebid.server.handler.GVastHandler;
-import com.improvedigital.prebid.server.hooks.v1.customtrackers.TrackerHooksModule;
-import com.improvedigital.prebid.server.hooks.v1.gvast.GVastHooksModule;
+import com.improvedigital.prebid.server.customvast.resolvers.GVastHandlerParamsResolver;
+import com.improvedigital.prebid.server.customvast.requestfactory.GVastRequestFactory;
+import com.improvedigital.prebid.server.customtracker.BidderBidModifier;
+import com.improvedigital.prebid.server.customtracker.contracts.ITrackerInjector;
+import com.improvedigital.prebid.server.customtracker.contracts.ITrackerMacroResolver;
+import com.improvedigital.prebid.server.customtracker.injectors.TrackerInjector;
+import com.improvedigital.prebid.server.customtracker.resolvers.TrackerMacroResolver;
+import com.improvedigital.prebid.server.customvast.handler.GVastHandler;
+import com.improvedigital.prebid.server.hooks.v1.customtracker.CustomTrackerHooksModule;
+import com.improvedigital.prebid.server.hooks.v1.customvast.CustomVastHooksModule;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
-import com.improvedigital.prebid.server.utils.GVastHookUtils;
+import com.improvedigital.prebid.server.customvast.CustomVastUtils;
 import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
 import com.improvedigital.prebid.server.utils.RequestUtils;
@@ -63,19 +63,19 @@ public class ExtensionConfig {
     }
 
     @Bean
-    GVastParamsResolver gVastParamsResolver(GdprConfig gdprConfig) {
-        return new GVastParamsResolver(gdprConfig);
+    GVastHandlerParamsResolver gVastParamsResolver(GdprConfig gdprConfig) {
+        return new GVastHandlerParamsResolver(gdprConfig);
     }
 
     @Bean
     GVastRequestFactory gvastRequestFactory(
-            GVastParamsResolver gVastParamsResolver,
+            GVastHandlerParamsResolver gVastHandlerParamsResolver,
             AuctionRequestFactory auctionRequestFactory,
             Clock clock,
             @Qualifier("sourceIdGenerator") IdGenerator idGenerator,
             JacksonMapper mapper) {
         return new GVastRequestFactory(
-                gVastParamsResolver,
+                gVastHandlerParamsResolver,
                 auctionRequestFactory,
                 clock,
                 idGenerator,
@@ -117,7 +117,7 @@ public class ExtensionConfig {
             BidderBidModifier bidderBidModifier,
             JacksonMapper mapper
     ) {
-        return new TrackerHooksModule(
+        return new CustomTrackerHooksModule(
                 applicationContext,
                 settingsLoader,
                 bidderBidModifier);
@@ -134,15 +134,23 @@ public class ExtensionConfig {
     }
 
     @Bean
-    GVastHookUtils gVastHookUtils(
+    CustomVastUtils gVastUtils(
             JsonMerger merger,
             RequestUtils requestUtils,
-            CurrencyConversionService currencyConversionService
+            CurrencyConversionService currencyConversionService,
+            MacroProcessor macroProcessor,
+            @Value("${external-url}") String externalUrl,
+            @Value("${google-ad-manager.network-code}") String gamNetworkCode,
+            @Value("${cache.host}") String cacheHost
     ) {
-        return new GVastHookUtils(
+        return new CustomVastUtils(
                 requestUtils,
                 merger,
-                currencyConversionService
+                currencyConversionService,
+                macroProcessor,
+                externalUrl,
+                gamNetworkCode,
+                cacheHost
         );
     }
 
@@ -151,17 +159,17 @@ public class ExtensionConfig {
             SettingsLoader settingsLoader,
             RequestUtils requestUtils,
             JsonMerger merger,
-            GVastHookUtils gVastHookUtils,
+            CustomVastUtils customVastUtils,
             CurrencyConversionService currencyConversionService,
             MacroProcessor macroProcessor,
             @Value("${external-url}") String externalUrl,
             @Value("${google-ad-manager.network-code}") String gamNetworkCode,
             @Value("${cache.host}") String cacheHost
     ) {
-        return new GVastHooksModule(
+        return new CustomVastHooksModule(
                 settingsLoader,
                 requestUtils,
-                gVastHookUtils,
+                customVastUtils,
                 merger,
                 macroProcessor,
                 externalUrl,

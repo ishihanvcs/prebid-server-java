@@ -1,14 +1,16 @@
 package com.improvedigital.prebid.server.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
-import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
+import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.Tuple2;
@@ -22,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -55,8 +58,17 @@ public class JsonUtils {
         return Tuple2.of(root, leaf);
     }
 
-    public JsonNode valueToTree(Object fromValue) {
+    public <T extends JsonNode> T valueToTree(Object fromValue) {
         return objectMapper.valueToTree(fromValue);
+    }
+
+    public JsonNode readTree(String content) {
+        try {
+            return objectMapper.readTree(content);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public <T> T treeToValue(TreeNode node, Class<T> clazz) {
@@ -105,6 +117,68 @@ public class JsonUtils {
         return StreamSupport.stream(node.spliterator(), false)
                 .map(JsonNode::asText)
                 .collect(Collectors.toList());
+    }
+
+    public static <T> List<T> findArrayNodeAndConvertToList(
+            ObjectNode containerNode, String arrayNodePath,
+            Class<T> itemClass, ObjectCodec objectCodec,
+            List<T> defaultValue) {
+        if (containerNode.at(arrayNodePath).isMissingNode()) {
+            return defaultValue;
+        }
+
+        ArrayNode arrayNode;
+        JsonNode mayBeArrayNode = containerNode.at(arrayNodePath);
+        if (mayBeArrayNode.isArray()) {
+            arrayNode = (ArrayNode) mayBeArrayNode;
+        } else {
+            arrayNode = (ArrayNode) objectCodec.createArrayNode();
+            arrayNode.add(mayBeArrayNode);
+        }
+        return arrayNodeToValueList(
+                arrayNode, itemClass,
+                (itemNode, valueClass) ->
+                        nodeToValue(objectCodec, itemNode, valueClass)
+        );
+    }
+
+    public static <T> List<T> arrayNodeToValueList(
+            ArrayNode arrayNode,
+            Class<T> valueClass,
+            BiFunction<JsonNode, Class<T>, T> valueConverter
+    ) {
+        List<T> list = new ArrayList<>();
+        arrayNode.elements().forEachRemaining(itemNode -> {
+            if (itemNode == null || itemNode.isNull()) {
+                list.add(null);
+                return;
+            }
+            T value = valueConverter.apply(itemNode, valueClass);
+            if (value != null) { // null means value conversion error. So, skip it
+                list.add(value);
+            }
+        });
+        return list;
+    }
+
+    public static <T> T nodeToValue(ObjectCodec objectCodec, JsonNode node, Class<T> valueClass) {
+        try {
+            return objectCodec.treeToValue(node, valueClass);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static String nodeToValue(ObjectCodec objectCodec, JsonNode node, boolean emptyToNull) {
+        try {
+            String value = objectCodec.treeToValue(node, String.class);
+            return emptyToNull && StringUtils.EMPTY.equals(value)
+                    ? null : value;
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public <T> T nonDestructiveMerge(T originalObject, T mergingObject, Class<T> clazz) {
@@ -190,7 +264,7 @@ public class JsonUtils {
      * @param jsonPointerExpr jackson pointer expression (e.g., "/path/to/a/node")
      * @return value at the jsonPointerExpr
      */
-    public BigDecimal getBigDecimalAt(JsonNode node, String jsonPointerExpr) {
+    public static BigDecimal getBigDecimalAt(JsonNode node, String jsonPointerExpr) {
         return getBigDecimalAt(node, jsonPointerExpr, null);
     }
 
@@ -202,7 +276,7 @@ public class JsonUtils {
      * @param defaultValue    default value to return on anything missing.
      * @return value at the jsonPointerExpr
      */
-    public BigDecimal getBigDecimalAt(JsonNode node, String jsonPointerExpr, BigDecimal defaultValue) {
+    public static BigDecimal getBigDecimalAt(JsonNode node, String jsonPointerExpr, BigDecimal defaultValue) {
         if (node == null || node.isMissingNode()) {
             return defaultValue;
         }
@@ -224,7 +298,7 @@ public class JsonUtils {
      * @param jsonPointerExpr jackson pointer expression (e.g., "/path/to/a/node")
      * @return value at the jsonPointerExpr
      */
-    public String getStringAt(JsonNode node, String jsonPointerExpr) {
+    public static String getStringAt(JsonNode node, String jsonPointerExpr) {
         return getStringAt(node, jsonPointerExpr, null);
     }
 
@@ -236,7 +310,7 @@ public class JsonUtils {
      * @param defaultValue    default value to return on anything missing.
      * @return value at the jsonPointerExpr
      */
-    public String getStringAt(JsonNode node, String jsonPointerExpr, String defaultValue) {
+    public static String getStringAt(JsonNode node, String jsonPointerExpr, String defaultValue) {
         if (node == null || node.isMissingNode()) {
             return defaultValue;
         }
@@ -246,7 +320,7 @@ public class JsonUtils {
     }
 
     public ImprovedigitalPbsImpExt getImprovedigitalPbsImpExt(Imp imp) {
-        if (imp == null) {
+        if (imp == null || imp.getExt() == null) {
             return null;
         }
         try {

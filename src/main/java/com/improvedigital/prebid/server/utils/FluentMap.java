@@ -129,7 +129,9 @@ public class FluentMap<K, V> {
                 .map(entry -> {
                     final String encodedValue;
                     final Object value = entry.getValue();
-                    if (value instanceof Map<?, ?>) {
+                    if (value == null) {
+                        return null;
+                    } else if (value instanceof Map<?, ?>) {
                         encodedValue = FluentMap.from((Map<?, ?>) value).queryString();
                     } else if (value.getClass().isArray()) {
                         encodedValue = encodeStream(Arrays.stream((Object[]) value));

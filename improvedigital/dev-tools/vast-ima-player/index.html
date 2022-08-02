@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <!-- loading IMA on your own -->
+    <script src="https://imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
+    <!-- and the vast-ima-player -->
+    <script src="https://unpkg.com/@glomex/vast-ima-player@1/dist/vast-ima-player.umd.js"></script>
+
+    <title>Vast IMA Player for PBS</title>
+    <style>
+    #videoContainer {
+      width: 100%;
+      max-width: 480px;
+      position: relative;
+    }
+
+    #mediaElement {
+      width: 100%;
+      height: 100%;
+    }
+
+    #adContainer {
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
+    input[type=text],
+    input[type=url] {
+      width: 100%;
+      max-width: 640px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    fieldset {
+      margin: 1rem 0;
+    }
+
+    section {
+      padding: 1rem;
+    }
+
+
+    </style>
+</head>
+
+<body>
+<section>
+    <div id="videoContainer">
+        <video id="mediaElement" controls playsinline
+               poster="https://glomex.github.io/vast-ima-player/big-buck-bunny.png"
+               preload="none">
+            <source type="video/mp4" src="https://glomex.github.io/vast-ima-player/big-buck-bunny.mp4">
+            </source>
+        </video>
+        <!-- the ad-container needs to be placed above the video container -->
+        <div id="adContainer"></div>
+    </div>
+</section>
+<section id="controlButtons">
+    <button id="playButton">Play</button>
+    <button id="pauseButton">Pause</button>
+    <button id="toggleMuteButton">Mute / Unmute</button>
+    <input id="volumeSlider" type="range" min="0" max="100"><br><br>
+</section>
+<section id="fields">
+    <fieldset>
+        <label for="selEnvironment">Environment</label><br>
+        <select name="selEnvironment" id="selEnvironment">
+            <option value="http://localhost:8080" selected>Localhost</option>
+            <option value="https://pbs-proto.360polaris.biz">Proto</option>
+            <option value="https://pbs.360yield.com">Production</option>
+            <option value="custom">Custom</option>
+        </select>
+        <input type="url" id="inpBaseUrl" value="http://localhost:8080" required placeholder="Enter base url">
+    </fieldset>
+    <fieldset>
+        <div>Request type:</div>
+        <label for="radAuction">
+            <input type="radio" name="radRequestType" id="radAuction" value="auction" checked> Auction
+        </label>
+        <label for="radGVast">
+            <input type="radio" name="radRequestType" id="radGVast" value="gvast"> GVast
+        </label>
+        <br>
+        <br>
+        <button id="playGVast">Request &amp; play</button>
+    </fieldset>
+    <fieldset id="gVastParams" class="hidden">
+        <label for="inpGVastParams">GVast Params</label><br>
+        <input type="text" id="inpGVastParams" value="p=22137694&debug=1">
+    </fieldset>
+    <fieldset id="bidRequest">
+        <label for="txtRequestBody">Request Body (JSON)</label><br>
+        <textarea id="txtRequestBody" rows="10" cols="80">{
+      "id": "f2140dc6-67c2-4b05-b2b2-7430a78d796e",
+      "cur": [
+        "EUR"
+      ],
+      "source": {
+        "tid": "f2140dc6-67c2-4b05-b2b2-7430a78d796e"
+      },
+      "tmax": 10000,
+      "imp": [
+        {
+          "id": "video",
+          "ext": {
+            "prebid": {
+              "storedrequest": {
+                "id": "22137694"
+              },
+              "improvedigitalpbs": {
+                "responseType": "gvast"
+              }
+            }
+          }
+        }
+      ],
+      "test": 1,
+      "site": {
+        "publisher": {
+          "id": "1"
+        },
+        "page": "https://hb.improvedigital.com/prebid/prebid-server/tester/index.html"
+      },
+      "device": {
+        "w": 1480,
+        "h": 989
+      },
+      "regs": {
+        "ext": {
+          "gdpr": 1
+        }
+      },
+      "user": {
+        "ext": {
+          "consent": "CPMd8p0PMd8p0AcABBENBiCsAP_AAH_AAChQIENf_X__b3_j-_59f_t0eY1P9_7_v-0zjhfdt-8N2f_X_L8X42M7vF36pq4KuR4Eu3LBIQdlHOHcTUmw6okVrzPsbk2Mr7NKJ7PEmnMbO2dYGH9_n93TuZKY7__8___z__-v_v____f_r-3_3__59X---_e_V399zLv9_____9nN__wQEAJMNS-AC7EscGTaNKoUQIwrCQ6AUAFFAMLRNYQMrgp2VwEeoIWACE1ARgRAgxBRiwCAAQCAJCIgJADwQCIAiAQAAgBUgIQAEbAILACwMAgAFANCxAigCECQgyOCo5TAgIkWignsrAEou9jTCEMosAKBR_RUYCJQggWBkJCwcxwBIAAA.f_gAD_gAAAAA"
+        }
+      },
+      "ext": {
+        "prebid": {
+          "cache": {
+            "vastxml": {
+              "returnCreative": true
+            }
+          },
+          "targeting": {
+            "includeformat": true,
+            "includebidderkeys": true,
+            "includewinners": true,
+            "pricegranularity": {
+              "precision": 2,
+              "ranges": [
+                {
+                  "max": 2,
+                  "increment": 0.01
+                },
+                {
+                  "max": 5,
+                  "increment": 0.05
+                },
+                {
+                  "max": 10,
+                  "increment": 0.1
+                },
+                {
+                  "max": 40,
+                  "increment": 0.5
+                },
+                {
+                  "max": 100,
+                  "increment": 1
+                }
+              ]
+            }
+          }
+        }
+      }
+    }</textarea>
+    </fieldset>
+</section>
+<script src="./script.js"></script>
+</body>
+</html>

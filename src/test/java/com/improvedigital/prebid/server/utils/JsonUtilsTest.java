@@ -20,11 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class JsonUtilsTest extends UnitTestBase {
 
-    public JsonUtilsTest() {
-        impsDir = "";
-        requestsDir = "";
-    }
-
     @Test
     public void testJsonMergerMergeWithRespectToNonDestructiveMerge() {
         BidRequest defaultRequest = getStoredRequest("request-with-stored-imp-and-overrides");
@@ -156,11 +151,11 @@ public class JsonUtilsTest extends UnitTestBase {
         assertThat(jsonUtils.getBigDecimalAt(node, "/whatever"))
                 .isNull();
 
-        assertThat(jsonUtils.getBigDecimalAt(node, "/seatbid/0/bid/0", BigDecimal.valueOf(10.0)))
+        assertThat(JsonUtils.getBigDecimalAt(node, "/seatbid/0/bid/0", BigDecimal.valueOf(10.0)))
                 .isEqualTo(BigDecimal.valueOf(10.0));
-        assertThat(jsonUtils.getBigDecimalAt(node, "/seatbid/0/bid/0/ext/origbidcur", BigDecimal.valueOf(15.0)))
+        assertThat(JsonUtils.getBigDecimalAt(node, "/seatbid/0/bid/0/ext/origbidcur", BigDecimal.valueOf(15.0)))
                 .isEqualTo(BigDecimal.valueOf(15.0));
-        assertThat(jsonUtils.getBigDecimalAt(node, "/whatever", BigDecimal.valueOf(20.0)))
+        assertThat(JsonUtils.getBigDecimalAt(node, "/whatever", BigDecimal.valueOf(20.0)))
                 .isEqualTo(BigDecimal.valueOf(20.0));
     }
 
@@ -179,11 +174,11 @@ public class JsonUtilsTest extends UnitTestBase {
         assertThat(jsonUtils.getStringAt(node, "/whatever"))
                 .isNull();
 
-        assertThat(jsonUtils.getStringAt(node, "/seatbid/0/bid/0", "USD"))
+        assertThat(JsonUtils.getStringAt(node, "/seatbid/0/bid/0", "USD"))
                 .isEqualTo("USD");
-        assertThat(jsonUtils.getStringAt(node, "/seatbid/0/bid/0/ext/origbidcpm", "EUR"))
+        assertThat(JsonUtils.getStringAt(node, "/seatbid/0/bid/0/ext/origbidcpm", "EUR"))
                 .isEqualTo("EUR");
-        assertThat(jsonUtils.getStringAt(node, "/whatever", "BDT"))
+        assertThat(JsonUtils.getStringAt(node, "/whatever", "BDT"))
                 .isEqualTo("BDT");
     }
 

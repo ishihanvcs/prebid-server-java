@@ -10,19 +10,19 @@ trackers:
     # - bid_currency (original bid currency in BidderBid response)
     # - bid_price_usd (bid price converted to USD)
     # - improve_digital_placement_id (improvedigital placementId as specified in original BidRequest)
-      # com.improvedigital.prebid.server.customtrackers.TrackerContext class
+      # com.improvedigital.prebid.server.customtracker.model.TrackerContext class
 
     macroResolver: "trackerMacroResolver" # optional
     # When macroResolver is omitted or value left blank, and a bean with named "trackerMacroResolver" + id is available, that will be used
     # otherwise default "trackerMacroResolver" bean will be used
     # To know actual implementation details, please refer to getMacroResolver() method of
-    # com.improvedigital.prebid.server.customtrackers.TrackerContext class
+    # com.improvedigital.prebid.server.customtracker.model.TrackerContext class
 
     injector: "trackerInjector" # optional
     # When injector is omitted or value left blank, and a bean with named "trackerInjector" + id is available, that will be used
     # otherwise default "trackerInjector" bean will be used
     # To know actual implementation details, please refer to getInjector() method of
-    # com.improvedigital.prebid.server.customtrackers.TrackerContext class
+    # com.improvedigital.prebid.server.customtracker.model.TrackerContext class
 
     excludedAccounts: [] # optional, array of account ids for which the tracker should be disabled
 

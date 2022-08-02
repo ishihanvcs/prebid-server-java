@@ -511,8 +511,8 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .getJSONObject("prebid")
                 .getJSONObject("modules")
                 .getJSONObject("errors")
-                .getJSONObject("improvedigital-gvast-hooks-module")
-                .getJSONArray("improvedigital-gvast-hooks-processed-auction-request")
+                .getJSONObject("improvedigital-custom-vast-hooks-module")
+                .getJSONArray("improvedigital-custom-vast-hooks-processed-auction-request")
                 .getString(0)
         ).isEqualTo("improvedigital placementId is not defined for one or more imp(s)");
     }

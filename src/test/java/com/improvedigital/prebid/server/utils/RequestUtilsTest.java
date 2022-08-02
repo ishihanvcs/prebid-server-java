@@ -10,8 +10,8 @@ import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.request.Publisher;
 import com.iab.openrtb.request.Site;
 import com.iab.openrtb.request.Video;
-import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
-import com.improvedigital.prebid.server.auction.model.VastResponseType;
+import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
+import com.improvedigital.prebid.server.customvast.model.VastResponseType;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
@@ -276,8 +276,8 @@ public class RequestUtilsTest {
     }
 
     @Test
-    public void testIsNonVastVideo() {
-        boolean result = requestUtils.isNonVastVideo(null);
+    public void testIsCustomVastVideo() {
+        boolean result = requestUtils.isCustomVastVideo(null);
         Assertions.assertThat(result).isFalse();
 
         final Imp emptyImp = Imp.builder()
@@ -302,47 +302,47 @@ public class RequestUtilsTest {
                 .ext(createImpExtNode(builder -> builder.responseType(VastResponseType.waterfall)))
                 .build();
 
-        result = requestUtils.isNonVastVideo(emptyImp);
+        result = requestUtils.isCustomVastVideo(emptyImp);
         Assertions.assertThat(result).isFalse();
 
-        result = requestUtils.isNonVastVideo(null, null);
+        result = requestUtils.isCustomVastVideo(null, null);
         Assertions.assertThat(result).isFalse();
 
-        result = requestUtils.isNonVastVideo(emptyImp, null);
+        result = requestUtils.isCustomVastVideo(emptyImp, null);
         Assertions.assertThat(result).isFalse();
 
-        result = requestUtils.isNonVastVideo(defaultImp);
+        result = requestUtils.isCustomVastVideo(defaultImp);
         Assertions.assertThat(result).isFalse();
 
-        result = requestUtils.isNonVastVideo(defaultImp, jsonUtils.getImprovedigitalPbsImpExt(defaultImp));
+        result = requestUtils.isCustomVastVideo(defaultImp, jsonUtils.getImprovedigitalPbsImpExt(defaultImp));
         Assertions.assertThat(result).isFalse();
 
-        result = requestUtils.isNonVastVideo(videoImp);
+        result = requestUtils.isCustomVastVideo(videoImp);
         Assertions.assertThat(result).isFalse();
 
-        result = requestUtils.isNonVastVideo(videoImp, jsonUtils.getImprovedigitalPbsImpExt(videoImp));
+        result = requestUtils.isCustomVastVideo(videoImp, jsonUtils.getImprovedigitalPbsImpExt(videoImp));
         Assertions.assertThat(result).isFalse();
 
-        result = requestUtils.isNonVastVideo(gVastImp);
+        result = requestUtils.isCustomVastVideo(gVastImp);
         Assertions.assertThat(result).isTrue();
 
-        result = requestUtils.isNonVastVideo(gVastImp, jsonUtils.getImprovedigitalPbsImpExt(gVastImp));
+        result = requestUtils.isCustomVastVideo(gVastImp, jsonUtils.getImprovedigitalPbsImpExt(gVastImp));
         Assertions.assertThat(result).isTrue();
 
-        result = requestUtils.isNonVastVideo(waterfallImp);
+        result = requestUtils.isCustomVastVideo(waterfallImp);
         Assertions.assertThat(result).isTrue();
 
-        result = requestUtils.isNonVastVideo(waterfallImp, jsonUtils.getImprovedigitalPbsImpExt(waterfallImp));
+        result = requestUtils.isCustomVastVideo(waterfallImp, jsonUtils.getImprovedigitalPbsImpExt(waterfallImp));
         Assertions.assertThat(result).isTrue();
     }
 
     @Test
-    public void testHasNonVastVideo() {
-        boolean result = requestUtils.hasNonVastVideo(null);
+    public void testHasCustomVastVideo() {
+        boolean result = requestUtils.hasCustomVastVideo(null);
         Assertions.assertThat(result).isFalse();
 
         BidRequest emptyRequest = createRequest(null);
-        result = requestUtils.hasNonVastVideo(emptyRequest);
+        result = requestUtils.hasCustomVastVideo(emptyRequest);
         Assertions.assertThat(result).isFalse();
 
         Imp emptyImp = Imp.builder()
@@ -353,7 +353,7 @@ public class RequestUtilsTest {
                 .imp(List.of(emptyImp))
                 .build();
 
-        result = requestUtils.hasNonVastVideo(requestWithEmptyImp);
+        result = requestUtils.hasCustomVastVideo(requestWithEmptyImp);
         Assertions.assertThat(result).isFalse();
 
         final Imp defaultImp = emptyImp.toBuilder()
@@ -364,7 +364,7 @@ public class RequestUtilsTest {
                 .imp(List.of(defaultImp))
                 .build();
 
-        result = requestUtils.hasNonVastVideo(requestWithDefaultImp);
+        result = requestUtils.hasCustomVastVideo(requestWithDefaultImp);
         Assertions.assertThat(result).isFalse();
 
         final Imp videoImp = defaultImp.toBuilder()
@@ -375,7 +375,7 @@ public class RequestUtilsTest {
                 .imp(List.of(videoImp))
                 .build();
 
-        result = requestUtils.hasNonVastVideo(requestWithVideoImp);
+        result = requestUtils.hasCustomVastVideo(requestWithVideoImp);
         Assertions.assertThat(result).isFalse();
 
         final Imp gVastImp = videoImp.toBuilder()
@@ -388,7 +388,7 @@ public class RequestUtilsTest {
                 .imp(List.of(gVastImp))
                 .build();
 
-        result = requestUtils.hasNonVastVideo(requestWithGVastImp);
+        result = requestUtils.hasCustomVastVideo(requestWithGVastImp);
         Assertions.assertThat(result).isTrue();
 
         final Imp waterfallImp = videoImp.toBuilder()
@@ -399,7 +399,7 @@ public class RequestUtilsTest {
                 .imp(List.of(waterfallImp))
                 .build();
 
-        result = requestUtils.hasNonVastVideo(requestWithWaterfallImp);
+        result = requestUtils.hasCustomVastVideo(requestWithWaterfallImp);
         Assertions.assertThat(result).isTrue();
     }
 

@@ -8,6 +8,7 @@ import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.response.BidResponse;
 import com.improvedigital.prebid.server.utils.JsonUtils;
+import com.improvedigital.prebid.server.utils.MacroProcessor;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -42,16 +43,25 @@ import java.util.function.Function;
 
 public abstract class UnitTestBase extends VertxTest {
 
+    protected static final String EXTERNAL_URL = "https://pbs-proto.360polaris.biz";
+    protected static final String GAM_NETWORK_CODE = "1015413";
+    protected static final String PROTO_CACHE_HOST = "euw-pbc-proto.360polaris.biz";
+    protected static final String PROTO_CACHE_URL = String.format("https://%s/cache", PROTO_CACHE_HOST);
+    protected static final String PRODUCTION_CACHE_HOST = "euw-pbc.360yield.com";
+    protected static final String PRODUCTION_CACHE_URL = String.format("https://%s/cache", PRODUCTION_CACHE_HOST);
+
     protected static JsonMerger merger;
     protected static JsonUtils jsonUtils;
     protected static RequestUtils requestUtils;
     protected static XmlMapper xmlMapper;
+    protected static MacroProcessor macroProcessor;
 
     static {
         merger = new JsonMerger(jacksonMapper);
         jsonUtils = new JsonUtils(jacksonMapper);
         requestUtils = new RequestUtils(jsonUtils);
         xmlMapper = new XmlMapper();
+        macroProcessor = new MacroProcessor();
     }
 
     protected String resourceDir = null;
@@ -92,7 +102,7 @@ public abstract class UnitTestBase extends VertxTest {
         String resourceDir = normalizeDir(
                 StringUtils.defaultIfBlank(
                     this.resourceDir,
-                    this.getClass().getPackageName().replaceAll("\\.", "/")
+                    UnitTestBase.class.getPackageName().replaceAll("\\.", "/") + "/shared"
                 )
         );
         final String resourcePath = resourceDir + StringUtils.removeStart(relativePath, "/");

@@ -1,6 +1,6 @@
 package com.improvedigital.prebid.server.hooks.v1.supplychain;
 
-import com.improvedigital.prebid.server.auction.model.ImprovedigitalPbsImpExt;
+import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.utils.JsonUtils;
 import io.vertx.core.Future;

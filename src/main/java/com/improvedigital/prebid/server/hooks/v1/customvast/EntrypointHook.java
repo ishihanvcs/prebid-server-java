@@ -81,9 +81,6 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
                         .getStoredImpsSafely(
                             new HashSet<>(impToStoredRequestId.values()), invocationContext.timeout()
                         ).map(storedImps -> {
-                            if (storedImps.isEmpty()) {
-                                return defaultResult;
-                            }
                             try {
                                 BidRequest updatedBidRequest = originalBidRequest;
                                 String accountId = null;

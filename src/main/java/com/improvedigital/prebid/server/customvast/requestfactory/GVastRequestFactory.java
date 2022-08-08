@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.App;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Device;
+import com.iab.openrtb.request.Geo;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.request.Regs;
 import com.iab.openrtb.request.Site;
@@ -145,6 +146,7 @@ public class GVastRequestFactory {
                         .os(gVastHandlerParams.getOs())
                         .osv(gVastHandlerParams.getOsv())
                         .ua(gVastHandlerParams.getUa())
+                        .geo(resolveGeo(gVastHandlerParams))
                         .build())
                 .imp(new ArrayList<>(List.of(Imp.builder()
                     .id("1")
@@ -188,6 +190,16 @@ public class GVastRequestFactory {
                         .name(gVastHandlerParams.getAppName())
                         .storeurl(gVastHandlerParams.getStoreUrl())
                         .build())
+                .build();
+    }
+
+    private Geo resolveGeo(GVastHandlerParams gVastHandlerParams) {
+        if (StringUtils.isBlank(gVastHandlerParams.getAlpha3Country())) {
+            return null;
+        }
+
+        return Geo.builder()
+                .country(gVastHandlerParams.getAlpha3Country())
                 .build();
     }
 

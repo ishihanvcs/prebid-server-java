@@ -63,7 +63,7 @@ public class CreatorContextTest extends UnitTestBase {
         assertThat(result.isDebug()).isFalse();
         assertThat(result.getGdpr()).isNull();
         assertThat(result.getGdprConsent()).isEmpty();
-        assertThat(result.getGeo()).isNull();
+        assertThat(result.getAlpha3Country()).isBlank();
         assertThat(result.getIfa()).isNull();
         assertThat(result.getLmt()).isNull();
         assertThat(result.getOs()).isNull();

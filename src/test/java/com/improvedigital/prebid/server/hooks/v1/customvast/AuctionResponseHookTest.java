@@ -4,9 +4,9 @@ import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.response.BidResponse;
 import com.improvedigital.prebid.server.UnitTestBase;
+import com.improvedigital.prebid.server.customvast.CustomVastUtils;
 import com.improvedigital.prebid.server.customvast.model.HooksModuleContext;
 import com.improvedigital.prebid.server.customvast.model.VastResponseType;
-import com.improvedigital.prebid.server.customvast.CustomVastUtils;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,9 +14,12 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.prebid.server.currency.CurrencyConversionService;
 import org.prebid.server.execution.Timeout;
+import org.prebid.server.geolocation.CountryCodeMapper;
+import org.prebid.server.geolocation.GeoLocationService;
 import org.prebid.server.hooks.execution.v1.InvocationContextImpl;
 import org.prebid.server.hooks.execution.v1.auction.AuctionInvocationContextImpl;
 import org.prebid.server.hooks.execution.v1.auction.AuctionResponsePayloadImpl;
+import org.prebid.server.metric.Metrics;
 import org.prebid.server.model.Endpoint;
 
 import java.math.BigDecimal;
@@ -45,6 +48,13 @@ public class AuctionResponseHookTest extends UnitTestBase {
 
     @Mock
     CurrencyConversionService currencyConversionService;
+    @Mock
+    GeoLocationService geoLocationService;
+    @Mock
+    Metrics metrics;
+    @Mock
+    CountryCodeMapper countryCodeMapper;
+
     AuctionResponseHook hook;
     CustomVastUtils customVastUtils;
 
@@ -53,6 +63,7 @@ public class AuctionResponseHookTest extends UnitTestBase {
         MockitoAnnotations.openMocks(this);
         customVastUtils = new CustomVastUtils(
                 requestUtils, merger, currencyConversionService, macroProcessor,
+                geoLocationService, metrics, countryCodeMapper,
                 EXTERNAL_URL, GAM_NETWORK_CODE, PROTO_CACHE_HOST
         );
         hook = new AuctionResponseHook(
@@ -152,7 +163,7 @@ public class AuctionResponseHookTest extends UnitTestBase {
 
     private HooksModuleContext getModuleContext(Function<BidRequest, BidRequest> requestModifier) {
         BidRequest bidRequest = getBidRequest(requestModifier);
-        return customVastUtils.createModuleContext(bidRequest);
+        return customVastUtils.createModuleContext(bidRequest, null);
     }
 
     private BidRequest getBidRequest() {

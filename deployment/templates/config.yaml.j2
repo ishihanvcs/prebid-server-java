@@ -133,6 +133,21 @@ external-url: {{ external_url }}
 google-ad-manager:
   network-code: 1015413
 
+geolocation:
+  enabled: true
+  type: maxmind
+  maxmind:
+    remote-file-syncer:
+      download-url: https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key=6O2UlqKmfUcyXzGP&suffix=tar.gz
+      save-filepath: /var/tmp/prebid/GeoLite2-City.tar.gz
+      retry-count: 3
+      retry-interval-ms: 3000
+      timeout-ms: 300000
+      update-interval-ms: 0
+      http-client:
+        connect-timeout-ms: 3000
+        max-redirects: 3
+
 # Following section defines hooks to inject custom trackers in bid responses
 # for /openrtb2/auction endpoint. Do not change this, if you don't know how
 # hooks are implemented in PBS. As /gvast endpoint internally makes an auction

@@ -15,6 +15,7 @@ public class HooksModuleContext {
 
     Map<String, ImprovedigitalPbsImpExt> impIdToPbsImpExt;
     Map<String, Floor> impIdToEffectiveFloor;
+    String alpha3Country;
     BidRequest bidRequest;
     BidResponse bidResponse;
 
@@ -34,6 +35,10 @@ public class HooksModuleContext {
 
     public HooksModuleContext with(Map<String, Floor> impIdToFloor) {
         return this.toBuilder().impIdToEffectiveFloor(impIdToFloor).build();
+    }
+
+    public HooksModuleContext with(String alpha3Country) {
+        return this.toBuilder().alpha3Country(alpha3Country).build();
     }
 
     public ImprovedigitalPbsImpExt getPbsImpExt(String impId) {

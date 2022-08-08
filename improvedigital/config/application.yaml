@@ -141,7 +141,7 @@ google-ad-manager:
   network-code: 1015413
 
 geolocation:
-  enabled: false
+  enabled: true
   type: maxmind
   maxmind:
     remote-file-syncer:

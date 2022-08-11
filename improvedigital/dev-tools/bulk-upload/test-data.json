@@ -1,0 +1,26 @@
+{
+  "imps": {
+    "3246": {
+      "ext": {
+        "prebid": {
+          "improvedigitalpbs": {
+            "accountId": "1220"
+          },
+          "bidder": {
+            "improvedigital": {
+              "placementId": 3246
+            },
+            "appnexus": {
+              "placement_id": 18785899
+            },
+            "outbrain": {
+              "publisher": {
+                "id": "1234"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

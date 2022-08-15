@@ -9,8 +9,13 @@ import org.prebid.server.hooks.execution.v1.auction.AuctionRequestPayloadImpl;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.auction.AuctionInvocationContext;
 import org.prebid.server.hooks.v1.auction.AuctionRequestPayload;
+import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
+import org.prebid.server.proto.openrtb.ext.request.ExtRequestBidAdjustmentFactors;
+import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
 
 public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.auction.ProcessedAuctionRequestHook {
 
@@ -31,7 +36,7 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
     public Future<InvocationResult<AuctionRequestPayload>> call(
             AuctionRequestPayload auctionRequestPayload, AuctionInvocationContext invocationContext) {
 
-        final BigDecimal bidAdjustment = null; /* TODO: */
+        final BigDecimal bidAdjustment = BigDecimal.valueOf(0.95); /* TODO */
 
         if (bidAdjustment == null) {
             return Future.succeededFuture(InvocationResultImpl.succeeded(
@@ -39,14 +44,16 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
             ));
         }
 
+        List<String> biddersToCutRevShare = Arrays.asList("improvedigital"); /* TODO */
+
+        final ExtRequestBidAdjustmentFactors factors = ExtRequestBidAdjustmentFactors.builder().build();
+        biddersToCutRevShare.stream().forEach(b -> factors.addFactor(b, bidAdjustment));
+
         return Future.succeededFuture(InvocationResultImpl.succeeded(
                 payload -> AuctionRequestPayloadImpl.of(auctionRequestPayload.bidRequest().toBuilder()
-                        .imp(auctionRequestPayload.bidRequest().getImp().stream()
-                                .map(imp -> imp.toBuilder()
-                                        // Adjusting the bidfloor.
-                                        .bidfloor(imp.getBidfloor().divide(bidAdjustment))
-                                        .build())
-                                .toList())
+                        .ext(ExtRequest.of(ExtRequestPrebid.builder()
+                                .bidadjustmentfactors(factors)
+                                .build()))
                         .build()
                 ), invocationContext.moduleContext()
         ));

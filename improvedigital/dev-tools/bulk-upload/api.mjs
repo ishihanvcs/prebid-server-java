@@ -8,6 +8,7 @@ const configEndpoints = {
 };
 
 const supportedOps = ["insert", "update"];
+
 const pastForms = {
   insert: "inserted",
   update: "updated",
@@ -40,20 +41,30 @@ export default class ApiClient {
   #userName;
   #password;
   #token;
+  #debug
 
-  constructor({ apiBase, userName, password }) {
+  constructor({ apiBase, userName, password, debug }) {
     assert(apiBase, "apiBase must not be empty");
     assert(userName, "userName must not be empty");
     assert(password, "password must not be empty");
     this.#apiBase = apiBase.replace(/\/$/, "") + "/";
     this.#userName = userName;
     this.#password = password;
+    this.#debug = debug;
     this.#token = null;
+  }
+
+  #stringify(value, pretty) {
+    pretty = pretty === undefined ? this.#debug : pretty;
+    return JSON.stringify(
+      value, null,
+      pretty ? " ".repeat(4) : null
+    )
   }
 
   async #callApi(endpoint, data) {
     const url = `${this.#apiBase}${endpoint}`;
-    const body = JSON.stringify({ data });
+    const body = this.#stringify({ data });
     const headers = {
       "Content-Type": "application/json",
     };
@@ -69,7 +80,10 @@ export default class ApiClient {
       headers,
       body,
     };
-    // console.log({ url, ...requestOptions });
+    if (this.#debug) {
+      console.log(`Invoking ${endpoint} api:`, { url, ...requestOptions });
+    }
+
     const response = await fetch(url, requestOptions);
     return response.json().then((res) => {
       if (!res.IsValid) {
@@ -111,10 +125,13 @@ export default class ApiClient {
     }
     const data = {
       id,
-      config: JSON.stringify(config, null, " ".repeat(4)),
+      config: this.#stringify(config, false),
       isActive,
     };
-    return await this.#callApi(endpoint, data);
+    console.log(`Calling ${operation} api for ${configType} with id: ${id}`);
+    const result = await this.#callApi(endpoint, data);
+    console.log(`Successfully ${pastForms[operation]} ${configType} with id: ${id}`);
+    return result;
   }
 
   async insertConfig(configType, id, config) {
@@ -126,13 +143,14 @@ export default class ApiClient {
   }
 
   async saveConfig(configType, id, config) {
-    for (let index = 0; index < supportedOps.length; index++) {
-      const operation = supportedOps[index];
+    const methodsToTry = [
+      this.insertConfig, this.updateConfig
+    ];
+
+    for (let index = 0; index < methodsToTry.length; index++) {
       try {
-        console.log(`Calling ${operation} api for ${configType} with id: ${id}`);
-        const data = await this.#callConfigApi(configType, operation, id, config);
-        console.log(`Successfully ${pastForms[operation]} ${configType} with id: ${id}`);
-        return data;
+        const method = methodsToTry[index].bind(this);
+        return await method(configType, id, config);
       } catch (error) {
         if (error instanceof ApiError) {
           console.log(error.message, error.details);

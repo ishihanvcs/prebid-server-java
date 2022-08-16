@@ -4,6 +4,7 @@
 * **userName** (required): can be specified via `AZERION_SSO_USER` environment variable and/or `--user` (short form: `-u`) option. If `--user` option is provided, it's value will be used instead of value of `AZERION_SSO_USER` environment variable (if exist).
 * **password** (required): can be specified via `AZERION_SSO_PASSWORD` environment variable and/or `--password` (short form: `-p`) option. If `--password` option is provided, it's value will be used instead of value of `AZERION_SSO_PASSWORD` environment variable (if exist).
 * **dataFilePath** (optional): can be specified via `--file` (short form: `-f`) option and/or as the first argument to the script. If `--file` is provided, it's value will be used instead of value of first argument. If neither is available, then `stdin` will be read for the content of data file.
+* **debug** (optional): can be specified via `--debug` option. If `--debug` option is provided, additional debug info will be logged into console.
 
 ## Structure of data
 
@@ -56,6 +57,11 @@ node index.mjs -u <userName> -p <password> <dataFilePath>
 ```
 
 ```sh
+# run via node: enable debug mode
+node index.mjs -u <userName> -p <password> --debug <dataFilePath>
+```
+
+```sh
 # run via node: read data from stdin
 
 cat <dataFilePath> | node index.mjs -u <userName> -p <password>
@@ -77,4 +83,10 @@ cat <dataFilePath> | AZERION_SSO_USER=<userName> AZERION_SSO_PASSWORD=<password>
 # run via npm script: AZERION_SSO_USER and AZERION_SSO_PASSWORD are set globally in shell environment
 
 cat <dataFilePath> | npm run bulk-upload
+```
+
+```sh
+# run via npm script: enable debug mode
+
+cat <dataFilePath> | npm run bulk-upload -- --debug
 ```

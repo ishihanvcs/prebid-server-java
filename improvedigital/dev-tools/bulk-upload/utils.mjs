@@ -15,13 +15,15 @@ const defaultOptions = {
     userName: process.env.AZERION_SSO_USER,
     password: process.env.AZERION_SSO_PASSWORD,
     dataFilePath: null,
+    debug: false,
 }
 
 const argToOptKeys = {
     "--user": "userName",
     "--password": "password",
     "--file": "dataFilePath",
-    "--api-base": "apiBase"
+    "--api-base": "apiBase",
+    "--debug": "debug",
 }
 
 const argSpec = {
@@ -29,12 +31,13 @@ const argSpec = {
     "--api-base": String,
     "--password": String,
     "--file": String,
+    "--debug": Boolean,
     "-u": "--user",
     "-p": "--password",
     "-f": "--file"
 }
 
-function validatedOpts({ apiBase, userName, password, dataFilePath }) {
+function validatedOpts({ apiBase, userName, password, dataFilePath, debug }) {
     if (!userName) {
         throw new Error("apiUserName must not be empty");
     }
@@ -61,7 +64,7 @@ function validatedOpts({ apiBase, userName, password, dataFilePath }) {
     }
 
     return {
-        apiBase, userName, password, dataFilePath,
+        apiBase, userName, password, dataFilePath, debug
     }
 }
 
@@ -96,7 +99,7 @@ export async function getData(dataFilePath) {
 }
 
 export function showHelp() {
-    console.log("Usage: node index.mjs --user=apiUserName  --password=apiPassword [--api-base=https://api.headerlift.com/] [--file=dataFilePath] [dataFilePath]");
+    console.log("Usage: node index.mjs --user=apiUserName  --password=apiPassword [--api-base=https://api.headerlift.com/] [--file=dataFilePath] [dataFilePath] [--debug]");
 }
 
 

@@ -39,6 +39,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtImp;
 import org.prebid.server.proto.openrtb.ext.request.ExtImpPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRegs;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
+import org.prebid.server.proto.openrtb.ext.request.ExtRequestBidAdjustmentFactors;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCache;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidChannel;
@@ -221,6 +222,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                         .cur(Arrays.asList(bidRequestData.currency))
                         .regs(Regs.of(null, ExtRegs.of(0, null)))
                         .ext(ExtRequest.of(ExtRequestPrebid.builder()
+                                .bidadjustmentfactors(bidRequestData.reqExtBidAdjustmentFactors)
                                 .pbs(ExtRequestPrebidPbs.of("/openrtb2/auction"))
                                 .server(ExtRequestPrebidServer.of(
                                         "http://localhost:8080", 1, "local"
@@ -304,6 +306,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                         .cur(Arrays.asList(bidRequestData.currency))
                         .regs(Regs.of(null, ExtRegs.of(0, null)))
                         .ext(ExtRequest.of(ExtRequestPrebid.builder()
+                                .bidadjustmentfactors(bidRequestData.reqExtBidAdjustmentFactors)
                                 .channel(ExtRequestPrebidChannel.of("web"))
                                 .pbs(ExtRequestPrebidPbs.of("/openrtb2/auction"))
                                 .server(ExtRequestPrebidServer.of(
@@ -419,6 +422,8 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         Integer schainComplete;
 
         List<ExtRequestPrebidSchainSchainNode> schainNodes;
+
+        ExtRequestBidAdjustmentFactors reqExtBidAdjustmentFactors;
     }
 
     /**
@@ -462,6 +467,8 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         List<String> siteIABCategories;
 
         String gdprConsent;
+
+        ExtRequestBidAdjustmentFactors reqExtBidAdjustmentFactors;
 
         @JsonIgnore
         public List<Integer> getVideoProtocols(int defaultProtocol) {

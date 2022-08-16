@@ -10,6 +10,7 @@ import com.improvedigital.prebid.server.customtracker.resolvers.TrackerMacroReso
 import com.improvedigital.prebid.server.customvast.handler.GVastHandler;
 import com.improvedigital.prebid.server.hooks.v1.customtracker.CustomTrackerHooksModule;
 import com.improvedigital.prebid.server.hooks.v1.customvast.CustomVastHooksModule;
+import com.improvedigital.prebid.server.hooks.v1.revshare.ImprovedigitalBidAdjustmentModule;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
 import com.improvedigital.prebid.server.customvast.CustomVastUtils;
 import com.improvedigital.prebid.server.utils.JsonUtils;
@@ -199,5 +200,10 @@ public class ExtensionConfig {
     @Bean
     ImprovedigitalSupplyChainModule improvedigitalSupplyChainModule(JsonUtils jsonUtils) {
         return new ImprovedigitalSupplyChainModule(jsonUtils);
+    }
+
+    @Bean
+    ImprovedigitalBidAdjustmentModule improvedigitalBidAdjustmentModule(JsonUtils jsonUtils) {
+        return new ImprovedigitalBidAdjustmentModule(jsonUtils);
     }
 }

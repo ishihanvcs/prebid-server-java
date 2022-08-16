@@ -11,7 +11,6 @@ import org.prebid.server.hooks.v1.auction.AuctionInvocationContext;
 import org.prebid.server.hooks.v1.auction.AuctionRequestPayload;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestBidAdjustmentFactors;
-import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -44,14 +43,14 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
             ));
         }
 
-        List<String> biddersToCutRevShare = Arrays.asList("improvedigital"); /* TODO */
+        List<String> biddersToCutRevShare = Arrays.asList("generic"); /* TODO */
 
         final ExtRequestBidAdjustmentFactors factors = ExtRequestBidAdjustmentFactors.builder().build();
         biddersToCutRevShare.stream().forEach(b -> factors.addFactor(b, bidAdjustment));
 
         return Future.succeededFuture(InvocationResultImpl.succeeded(
                 payload -> AuctionRequestPayloadImpl.of(auctionRequestPayload.bidRequest().toBuilder()
-                        .ext(ExtRequest.of(ExtRequestPrebid.builder()
+                        .ext(ExtRequest.of(auctionRequestPayload.bidRequest().getExt().getPrebid().toBuilder()
                                 .bidadjustmentfactors(factors)
                                 .build()))
                         .build()

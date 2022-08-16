@@ -7,9 +7,11 @@ import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.prebid.server.model.Endpoint;
+import org.prebid.server.proto.openrtb.ext.request.ExtRequestBidAdjustmentFactors;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -34,11 +36,11 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
     public void testBidIsDecreasedToMultipleBidders() throws Exception {
         String uniqueId = UUID.randomUUID().toString();
 
-        final JSONObject responseJson = doAuctionRequestToMultipleBidder(
+        final JSONObject responseJson = doAuctionRequestToMultipleBidder(0.95,
                 BidAdjustmentMultipleBidderAuctionTestParam.builder()
                         .auctionRequestId(uniqueId)
-                        .storedImpId("2022072201")
-                        .improvePlacementId(20220722)
+                        .storedImpId("2022081501")
+                        .improvePlacementId(20220815)
                         .improveAdm1("<img src='banner-1.png'/>")
                         .improvePrice1("1.10")
                         .improveAdm2("<img src='banner-2.png'/>")
@@ -52,14 +54,14 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
 
         assertBidIdExists(responseJson, 0, 0);
         assertBidImpId(responseJson, 0, 0, "imp_id_" + uniqueId);
-        assertBidPrice(responseJson, 0, 0, 1.12);
+        assertBidPrice(responseJson, 0, 0, 1.25 * 95 / 100); /* 95% is kept. */
         assertSeat(responseJson, 0, "generic");
         assertThat(getAdm(responseJson, 0, 0)).contains("<img src='banner-4.png'/>");
         assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("banner");
 
         assertBidIdExists(responseJson, 1, 0);
         assertBidImpId(responseJson, 1, 0, "imp_id_" + uniqueId);
-        assertBidPrice(responseJson, 1, 0, 1.15);
+        assertBidPrice(responseJson, 1, 0, 1.15); /* No adjustment. */
         assertSeat(responseJson, 1, "improvedigital");
         assertThat(getAdm(responseJson, 1, 0)).contains("<img src='banner-2.png'/>");
         assertThat(getBidExtPrebidType(responseJson, 1, 0)).isEqualTo("banner");
@@ -133,14 +135,17 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
         return responseJson;
     }
 
-    private JSONObject doAuctionRequestToMultipleBidder(BidAdjustmentMultipleBidderAuctionTestParam param)
-            throws JSONException {
+    private JSONObject doAuctionRequestToMultipleBidder(
+            double bidAdjustmentPct, BidAdjustmentMultipleBidderAuctionTestParam param) throws JSONException {
 
         double improvePrice1Value = Double.parseDouble(param.improvePrice1);
         double improvePrice2Value = Double.parseDouble(param.improvePrice2);
 
         double genericPrice1Value = Double.parseDouble(param.genericPrice1);
         double genericPrice2Value = Double.parseDouble(param.genericPrice2);
+
+        ExtRequestBidAdjustmentFactors factors = ExtRequestBidAdjustmentFactors.builder().build();
+        factors.addFactor("generic", BigDecimal.valueOf(bidAdjustmentPct));
 
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
@@ -151,6 +156,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                                                 .putStoredRequest(param.storedImpId)
                                                 .putBidder()
                                                 .putBidderKeyValue("placementId", param.improvePlacementId))
+                                        .reqExtBidAdjustmentFactors(factors)
                                         .build()
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(
@@ -175,6 +181,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                                                 .putStoredRequest(param.storedImpId)
                                                 .putBidder()
                                                 .putBidderKeyValue("exampleProperty", "examplePropertyValue"))
+                                        .reqExtBidAdjustmentFactors(factors)
                                         .build()
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(
@@ -190,7 +197,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                         )))
         );
 
-        Response response = specWithPBSHeader(18082)
+        Response response = specWithPBSHeader(18083)
                 .body(getAuctionBidRequestBanner(param.auctionRequestId, AuctionBidRequestBannerTestData.builder()
                         .currency("USD")
                         .impExt(new AuctionBidRequestImpExt()

@@ -36,7 +36,7 @@ public class GVastHandlerParams {
 
     CustParams custParams;
 
-    String country; // Country code using ISO-3166-1-alpha-2 (NB: oRTB requires alpha-3)
+    String alpha3Country; // Country code using ISO-3166-1-alpha-3 (NB: oRTB requires alpha-3)
 
     List<String> cat; // Array of IAB content categories of the site
 

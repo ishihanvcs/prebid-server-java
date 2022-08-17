@@ -6,11 +6,11 @@ import com.iab.openrtb.response.Bid;
 import com.iab.openrtb.response.BidResponse;
 import com.iab.openrtb.response.SeatBid;
 import com.improvedigital.prebid.server.customvast.CustomVastCreator;
+import com.improvedigital.prebid.server.customvast.CustomVastUtils;
 import com.improvedigital.prebid.server.customvast.model.CreatorContext;
 import com.improvedigital.prebid.server.customvast.model.CustomVast;
 import com.improvedigital.prebid.server.customvast.model.HooksModuleContext;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
-import com.improvedigital.prebid.server.customvast.CustomVastUtils;
 import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import com.improvedigital.prebid.server.utils.ResponseUtils;
@@ -66,8 +66,7 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
     private BidResponse updatedBidResponse(HooksModuleContext context) {
         final BidResponse bidResponse = context.getBidResponse();
         final BidRequest bidRequest = context.getBidRequest();
-        final CreatorContext commonContext = CreatorContext
-                .from(bidRequest, bidResponse, jsonUtils);
+        final CreatorContext commonContext = CreatorContext.from(context, jsonUtils);
         final CustomVastCreator customVastCreator = new CustomVastCreator(customVastUtils);
         try {
             final Map<String, SeatBid> resultSeatBids = new HashedMap<>();

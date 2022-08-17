@@ -1,5 +1,6 @@
 package com.improvedigital.prebid.server.customvast.model;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.response.BidResponse;
@@ -9,7 +10,9 @@ import org.junit.Test;
 import org.prebid.server.proto.openrtb.ext.response.ExtBidResponse;
 import org.prebid.server.proto.openrtb.ext.response.ExtBidResponsePrebid;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -63,7 +66,7 @@ public class CreatorContextTest extends UnitTestBase {
         assertThat(result.isDebug()).isFalse();
         assertThat(result.getGdpr()).isNull();
         assertThat(result.getGdprConsent()).isEmpty();
-        assertThat(result.getGeo()).isNull();
+        assertThat(result.getAlpha3Country()).isBlank();
         assertThat(result.getIfa()).isNull();
         assertThat(result.getLmt()).isNull();
         assertThat(result.getOs()).isNull();
@@ -85,6 +88,55 @@ public class CreatorContextTest extends UnitTestBase {
         assertThat(result.getWaterfall(true).size()).isEqualTo(2);
         assertThat(result.getWaterfall(true).get(0)).isEqualTo("gam_improve_deal");
         assertThat(result.getWaterfall(true).get(1)).isEqualTo("gam_no_hb");
+    }
+
+    @Test
+    public void testWaterfallAndFloorForAlpha3Country() {
+        final String alpha3Country = "NLD";
+        final String defaultKey = ImprovedigitalPbsImpExt.DEFAULT_CONFIG_KEY;
+
+        final Floor defaultFloor = Floor.of(BigDecimal.valueOf(1), "USD");
+        final Floor countryFloor = Floor.of(BigDecimal.valueOf(2), "EUR");
+        final Map<String, Floor> floorsConfig = Map.of(
+                defaultKey, defaultFloor,
+                alpha3Country, countryFloor
+        );
+        final JsonNode floorsNode = mapper.valueToTree(floorsConfig);
+
+        final List<String> defaultWaterfall = List.of("gam_first_look", "gam");
+        final List<String> countryWaterfall = List.of("gam", "blah.com");
+        final Map<String, List<String>> waterfallConfig = Map.of(
+                defaultKey, defaultWaterfall,
+                alpha3Country, countryWaterfall
+        );
+
+        final JsonNode waterfallsNode = mapper.valueToTree(waterfallConfig);
+
+        final Imp impWithConfig = setImpConfigProperties(defaultImp, configNode -> {
+            configNode.set("floors", floorsNode);
+            configNode.set("waterfall", waterfallsNode);
+        });
+
+        final BidRequest bidRequest = emptyBidRequest.toBuilder()
+                .imp(List.of(impWithConfig))
+                .build();
+        final BidResponse bidResponse = defaultBidResponse;
+
+        CreatorContext context = CreatorContext.from(bidRequest, bidResponse, jsonUtils)
+                .with(impWithConfig, List.of(), jsonUtils);
+
+        assertThat(context.isGVast()).isTrue();
+        assertThat(context.getWaterfall())
+                .isEqualTo(defaultWaterfall);
+        assertThat(context.getBidfloor())
+                .isEqualTo(defaultFloor.getBidFloor().doubleValue());
+
+        context = context.with(alpha3Country).with(impWithConfig, List.of(), jsonUtils);
+        assertThat(context.isGVast()).isTrue();
+        assertThat(context.getWaterfall())
+                .isEqualTo(countryWaterfall);
+        assertThat(context.getBidfloor())
+                .isEqualTo(countryFloor.getBidFloor().doubleValue());
     }
 
     @Test

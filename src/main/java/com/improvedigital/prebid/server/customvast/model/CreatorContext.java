@@ -40,7 +40,6 @@ public class CreatorContext extends GVastHandlerParams {
     ObjectNode extBidResponse;
     List<Bid> bids;
     Imp imp;
-    Geo geo;
     List<String> waterfall;
     ImprovedigitalPbsImpExtGam gamConfig;
 
@@ -49,6 +48,11 @@ public class CreatorContext extends GVastHandlerParams {
 
     @Builder.Default
     VastResponseType responseType = VastResponseType.gvast;
+
+    public static CreatorContext from(HooksModuleContext context, JsonUtils jsonUtils) {
+        return from(context.getBidRequest(), context.getBidResponse(), jsonUtils)
+                .with(context.getAlpha3Country());
+    }
 
     public static CreatorContext from(BidRequest request, BidResponse response, JsonUtils jsonUtils) {
         Objects.requireNonNull(request);
@@ -81,7 +85,7 @@ public class CreatorContext extends GVastHandlerParams {
                 .map(ExtUser::getConsent)
                 .orElse(StringUtils.EMPTY));
 
-        builder.geo(deviceOptional.map(Device::getGeo).orElse(null));
+        builder.alpha3Country(deviceOptional.map(Device::getGeo).map(Geo::getCountry).orElse(null));
         builder.ifa(deviceOptional.map(Device::getIfa).orElse(null));
         builder.lmt(deviceOptional.map(Device::getLmt).orElse(null));
         builder.os(deviceOptional.map(Device::getOs).orElse(null));
@@ -139,6 +143,10 @@ public class CreatorContext extends GVastHandlerParams {
                 this.toBuilder(),
                 improvedigitalPbsImpExt
         ).build();
+    }
+
+    public CreatorContext with(String alpha3Country) {
+        return this.toBuilder().alpha3Country(alpha3Country).build();
     }
 
     public boolean isApp() {
@@ -207,7 +215,7 @@ public class CreatorContext extends GVastHandlerParams {
     public ImprovedigitalPbsImpExtGam getGamConfig() {
         return ObjectUtils.defaultIfNull(
                 gamConfig,
-                ImprovedigitalPbsImpExtGam.of(null, null, null)
+                ImprovedigitalPbsImpExtGam.DEFAULT
         );
     }
 
@@ -234,24 +242,32 @@ public class CreatorContext extends GVastHandlerParams {
                 .orElse(VastResponseType.gvast)
         );
 
+        final Optional<Floor> optionalFloor = optionalConfig
+                .map(config -> config.getFloor(this.getAlpha3Country()));
+
         builder.bidfloor(
-                optionalConfig
-                        .map(config -> config.getFloor(this.getGeo()))
+                optionalFloor
                         .map(Floor::getBidFloor)
                         .map(BigDecimal::doubleValue)
                         .orElse(0.0)
         );
 
+        builder.bidfloorcur(
+                optionalFloor
+                        .map(Floor::getBidFloorCur)
+                        .orElse("USD")
+        );
+
         builder.waterfall(
                 optionalConfig
-                        .map(config -> config.getWaterfall(this.getGeo()))
+                        .map(config -> config.getWaterfall(this.getAlpha3Country()))
                         .orElse(List.of())
         );
 
         builder.gamConfig(optionalConfig
                 .map(ImprovedigitalPbsImpExt::getImprovedigitalPbsImpExtGam)
                 .orElse(
-                        ImprovedigitalPbsImpExtGam.of(null, null, null)
+                        null
                 )
         );
 

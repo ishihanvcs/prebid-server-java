@@ -3,7 +3,6 @@ package com.improvedigital.prebid.server.customvast.requestfactory;
 import com.improvedigital.prebid.server.customvast.model.CustParams;
 import com.improvedigital.prebid.server.customvast.model.GVastHandlerParams;
 import com.improvedigital.prebid.server.customvast.resolvers.GVastHandlerParamsResolver;
-import io.vertx.core.logging.Logger;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -12,7 +11,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.prebid.server.VertxTest;
 import org.prebid.server.exception.InvalidRequestException;
-import org.prebid.server.log.ConditionalLogger;
+import org.prebid.server.geolocation.CountryCodeMapper;
 import org.prebid.server.model.CaseInsensitiveMultiMap;
 import org.prebid.server.model.HttpRequestContext;
 import org.prebid.server.settings.model.GdprConfig;
@@ -22,16 +21,20 @@ import java.util.ArrayList;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class GVastHandlerParamsResolverTest extends VertxTest {
 
     private static final String DEFAULT_ABSOLUTE_URI = "http://example.com/gvast";
-
-    @Mock
-    private Logger logger;
-
-    @Mock
-    private ConditionalLogger conditionalLogger;
+    private static final String VALID_COUNTRY_ALPHA2_NL = "nl";
+    private static final String VALID_COUNTRY_ALPHA2_BD = "bd";
+    private static final String VALID_COUNTRY_ALPHA3_NLD = "NLD";
+    private static final String VALID_COUNTRY_ALPHA3_BGD = "BGD";
+    private static final String INVALID_COUNTRY_ALPHA2 = "xy";
 
     @Rule
     public final MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -40,10 +43,13 @@ public class GVastHandlerParamsResolverTest extends VertxTest {
 
     private GdprConfig gdprConfig;
 
+    @Mock
+    private CountryCodeMapper countryCodeMapper;
+
     @Before
     public void setUp() {
         gdprConfig = GdprConfig.builder().enabled(true).defaultValue("1").build();
-        target = new GVastHandlerParamsResolver(gdprConfig);
+        target = new GVastHandlerParamsResolver(countryCodeMapper, gdprConfig);
     }
 
     @Test
@@ -82,6 +88,63 @@ public class GVastHandlerParamsResolverTest extends VertxTest {
         GVastHandlerParams expected = emptyParamsBuilder()
                 .impId("1")
                 .gdpr("1")
+                .build();
+
+        assertThat(result).usingRecursiveComparison().isEqualTo(expected);
+    }
+
+    @Test
+    public void shouldConvertValidAlpha2Country() {
+        when(countryCodeMapper.mapToAlpha3(VALID_COUNTRY_ALPHA2_NL)).thenReturn(VALID_COUNTRY_ALPHA3_NLD);
+        HttpRequestContext httpRequest = emptyRequestBuilder()
+                .queryParams(
+                        minQueryParamsBuilder()
+                                .add("country", VALID_COUNTRY_ALPHA2_NL)
+                                .build()
+                ).build();
+        GVastHandlerParams result = target.resolve(httpRequest);
+        verify(countryCodeMapper, times(1)).mapToAlpha3(any());
+        GVastHandlerParams expected = emptyParamsBuilder()
+                .impId("1")
+                .alpha3Country(VALID_COUNTRY_ALPHA3_NLD)
+                .build();
+
+        assertThat(result).usingRecursiveComparison().isEqualTo(expected);
+    }
+
+    @Test
+    public void shouldIgnoreInvalidAlpha2Country() {
+        when(countryCodeMapper.mapToAlpha3(INVALID_COUNTRY_ALPHA2)).thenReturn(null);
+        HttpRequestContext httpRequest = emptyRequestBuilder()
+                .queryParams(
+                        minQueryParamsBuilder()
+                                .add("country", INVALID_COUNTRY_ALPHA2)
+                                .build()
+                ).build();
+        GVastHandlerParams result = target.resolve(httpRequest);
+        verify(countryCodeMapper, times(1)).mapToAlpha3(any());
+        GVastHandlerParams expected = emptyParamsBuilder()
+                .impId("1")
+                .alpha3Country(null)
+                .build();
+
+        assertThat(result).usingRecursiveComparison().isEqualTo(expected);
+    }
+
+    @Test
+    public void shouldPrioritizeAlpha3CountryIfFoundInQueryParams() {
+        HttpRequestContext httpRequest = emptyRequestBuilder()
+                .queryParams(
+                        minQueryParamsBuilder()
+                                .add("country", VALID_COUNTRY_ALPHA2_BD)
+                                .add("country_alpha3", VALID_COUNTRY_ALPHA3_NLD)
+                                .build()
+                ).build();
+        GVastHandlerParams result = target.resolve(httpRequest);
+        verify(countryCodeMapper, never()).mapToAlpha3(any());
+        GVastHandlerParams expected = emptyParamsBuilder()
+                .impId("1")
+                .alpha3Country(VALID_COUNTRY_ALPHA3_NLD)
                 .build();
 
         assertThat(result).usingRecursiveComparison().isEqualTo(expected);
@@ -132,7 +195,7 @@ public class GVastHandlerParamsResolverTest extends VertxTest {
             .add("p", "1");
     }
 
-    private GVastHandlerParams.GVastHandlerParamsBuilder emptyParamsBuilder() {
+    private GVastHandlerParams.GVastHandlerParamsBuilder<?, ?> emptyParamsBuilder() {
         return GVastHandlerParams.builder()
             .gdpr(gdprConfig.getDefaultValue())
             .gdprConsent("")

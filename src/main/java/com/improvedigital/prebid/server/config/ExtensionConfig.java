@@ -1,18 +1,19 @@
 package com.improvedigital.prebid.server.config;
 
-import com.improvedigital.prebid.server.customvast.resolvers.GVastHandlerParamsResolver;
-import com.improvedigital.prebid.server.customvast.requestfactory.GVastRequestFactory;
 import com.improvedigital.prebid.server.customtracker.BidderBidModifier;
 import com.improvedigital.prebid.server.customtracker.contracts.ITrackerInjector;
 import com.improvedigital.prebid.server.customtracker.contracts.ITrackerMacroResolver;
 import com.improvedigital.prebid.server.customtracker.injectors.TrackerInjector;
 import com.improvedigital.prebid.server.customtracker.resolvers.TrackerMacroResolver;
+import com.improvedigital.prebid.server.customvast.CustomVastUtils;
 import com.improvedigital.prebid.server.customvast.handler.GVastHandler;
+import com.improvedigital.prebid.server.customvast.requestfactory.GVastRequestFactory;
+import com.improvedigital.prebid.server.customvast.resolvers.GVastHandlerParamsResolver;
 import com.improvedigital.prebid.server.hooks.v1.customtracker.CustomTrackerHooksModule;
 import com.improvedigital.prebid.server.hooks.v1.customvast.CustomVastHooksModule;
 import com.improvedigital.prebid.server.hooks.v1.revshare.ImprovedigitalBidAdjustmentModule;
+import com.improvedigital.prebid.server.hooks.v1.supplychain.ImprovedigitalSupplyChainModule;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
-import com.improvedigital.prebid.server.customvast.CustomVastUtils;
 import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
 import com.improvedigital.prebid.server.utils.RequestUtils;
@@ -24,7 +25,8 @@ import org.prebid.server.auction.ExchangeService;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
 import org.prebid.server.bidder.BidderCatalog;
 import org.prebid.server.currency.CurrencyConversionService;
-import com.improvedigital.prebid.server.hooks.v1.supplychain.ImprovedigitalSupplyChainModule;
+import org.prebid.server.geolocation.CountryCodeMapper;
+import org.prebid.server.geolocation.GeoLocationService;
 import org.prebid.server.hooks.v1.Module;
 import org.prebid.server.identity.IdGenerator;
 import org.prebid.server.json.JacksonMapper;
@@ -69,8 +71,10 @@ public class ExtensionConfig {
     }
 
     @Bean
-    GVastHandlerParamsResolver gVastParamsResolver(GdprConfig gdprConfig) {
-        return new GVastHandlerParamsResolver(gdprConfig);
+    GVastHandlerParamsResolver gVastParamsResolver(
+            CountryCodeMapper countryCodeMapper,
+            GdprConfig gdprConfig) {
+        return new GVastHandlerParamsResolver(countryCodeMapper, gdprConfig);
     }
 
     @Bean
@@ -140,11 +144,14 @@ public class ExtensionConfig {
     }
 
     @Bean
-    CustomVastUtils gVastUtils(
+    CustomVastUtils customVastUtils(
             JsonMerger merger,
             RequestUtils requestUtils,
             CurrencyConversionService currencyConversionService,
             MacroProcessor macroProcessor,
+            @Autowired(required = false) GeoLocationService geoLocationService,
+            Metrics metrics,
+            CountryCodeMapper countryCodeMapper,
             @Value("${external-url}") String externalUrl,
             @Value("${google-ad-manager.network-code}") String gamNetworkCode,
             @Value("${cache.host}") String cacheHost
@@ -154,6 +161,9 @@ public class ExtensionConfig {
                 merger,
                 currencyConversionService,
                 macroProcessor,
+                geoLocationService,
+                metrics,
+                countryCodeMapper,
                 externalUrl,
                 gamNetworkCode,
                 cacheHost
@@ -161,26 +171,17 @@ public class ExtensionConfig {
     }
 
     @Bean
-    Module gVastHooksModule(
+    Module customVastHooksModule(
             SettingsLoader settingsLoader,
             RequestUtils requestUtils,
             JsonMerger merger,
-            CustomVastUtils customVastUtils,
-            CurrencyConversionService currencyConversionService,
-            MacroProcessor macroProcessor,
-            @Value("${external-url}") String externalUrl,
-            @Value("${google-ad-manager.network-code}") String gamNetworkCode,
-            @Value("${cache.host}") String cacheHost
+            CustomVastUtils customVastUtils
     ) {
         return new CustomVastHooksModule(
                 settingsLoader,
                 requestUtils,
                 customVastUtils,
-                merger,
-                macroProcessor,
-                externalUrl,
-                gamNetworkCode,
-                cacheHost
+                merger
         );
     }
 

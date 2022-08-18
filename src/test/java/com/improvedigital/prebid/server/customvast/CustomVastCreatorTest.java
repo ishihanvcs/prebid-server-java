@@ -17,6 +17,9 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.prebid.server.currency.CurrencyConversionService;
+import org.prebid.server.geolocation.CountryCodeMapper;
+import org.prebid.server.geolocation.GeoLocationService;
+import org.prebid.server.metric.Metrics;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,6 +45,13 @@ public class CustomVastCreatorTest extends UnitTestBase {
 
     @Mock
     CurrencyConversionService currencyConversionService;
+    @Mock
+    GeoLocationService geoLocationService;
+    @Mock
+    Metrics metrics;
+    @Mock
+    CountryCodeMapper countryCodeMapper;
+
     private CustomVastUtils customVastUtils;
     private BidResponse bidResponseDefault;
     private CustomVastCreator customVastCreator;
@@ -51,6 +61,7 @@ public class CustomVastCreatorTest extends UnitTestBase {
         MockitoAnnotations.openMocks(this);
         this.customVastUtils = new CustomVastUtils(
                 requestUtils, merger, currencyConversionService, macroProcessor,
+                geoLocationService, metrics, countryCodeMapper,
                 EXTERNAL_URL, GAM_NETWORK_CODE, PROTO_CACHE_HOST
         );
         this.customVastCreator = new CustomVastCreator(customVastUtils);

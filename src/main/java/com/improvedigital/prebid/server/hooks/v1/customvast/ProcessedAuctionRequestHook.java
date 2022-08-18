@@ -1,9 +1,8 @@
 package com.improvedigital.prebid.server.hooks.v1.customvast;
 
 import com.iab.openrtb.request.BidRequest;
-import com.improvedigital.prebid.server.customvast.model.HooksModuleContext;
-import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.customvast.CustomVastUtils;
+import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
@@ -32,18 +31,18 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
     @Override
     public Future<InvocationResult<AuctionRequestPayload>> call(
             AuctionRequestPayload auctionRequestPayload, AuctionInvocationContext invocationContext) {
-        BidRequest bidRequest = auctionRequestPayload.bidRequest();
+        final BidRequest bidRequest = auctionRequestPayload.bidRequest();
         try {
             validateRequestWithBusinessLogic(bidRequest);
             Object moduleContext = invocationContext.moduleContext();
             if (moduleContext == null) {
-                HooksModuleContext context = customVastUtils.createModuleContext(bidRequest);
-                bidRequest = context.getBidRequest();
-                moduleContext = context;
+                return customVastUtils.resolveCountryAndCreateModuleContext(bidRequest, invocationContext.timeout())
+                        .map(context -> InvocationResultImpl.succeeded(
+                                payload -> AuctionRequestPayloadImpl.of(context.getBidRequest()), context
+                        ));
             }
-            BidRequest finalBidRequest = bidRequest;
             return Future.succeededFuture(InvocationResultImpl.succeeded(
-                    payload -> AuctionRequestPayloadImpl.of(finalBidRequest), moduleContext
+                    payload -> AuctionRequestPayloadImpl.of(bidRequest), moduleContext
             ));
         } catch (Throwable t) {
             logger.error(bidRequest, t);

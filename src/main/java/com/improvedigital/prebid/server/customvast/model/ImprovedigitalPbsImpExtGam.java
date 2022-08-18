@@ -6,6 +6,8 @@ import lombok.Value;
 @Value(staticConstructor = "of")
 public class ImprovedigitalPbsImpExtGam {
 
+    public static final ImprovedigitalPbsImpExtGam DEFAULT = ImprovedigitalPbsImpExtGam.of(null, null, null);
+
     @JsonProperty("adUnit")
     String adUnit;
 

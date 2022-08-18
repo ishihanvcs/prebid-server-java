@@ -22,6 +22,7 @@ import io.vertx.ext.web.Router;
 import org.prebid.server.analytics.reporter.AnalyticsReporterDelegator;
 import org.prebid.server.auction.ExchangeService;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
+import org.prebid.server.bidder.BidderCatalog;
 import org.prebid.server.currency.CurrencyConversionService;
 import com.improvedigital.prebid.server.hooks.v1.supplychain.ImprovedigitalSupplyChainModule;
 import org.prebid.server.hooks.v1.Module;
@@ -30,6 +31,7 @@ import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.json.JsonMerger;
 import org.prebid.server.log.HttpInteractionLogger;
 import org.prebid.server.metric.Metrics;
+import org.prebid.server.settings.ApplicationSettings;
 import org.prebid.server.settings.model.GdprConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -50,6 +52,9 @@ public class ExtensionConfig {
 
     @Autowired
     private ApplicationContext applicationContext;
+
+    @Autowired
+    private ApplicationSettings applicationSettings;
 
     @PostConstruct
     public void postConfigure() {
@@ -203,7 +208,8 @@ public class ExtensionConfig {
     }
 
     @Bean
-    ImprovedigitalBidAdjustmentModule improvedigitalBidAdjustmentModule(JsonUtils jsonUtils) {
-        return new ImprovedigitalBidAdjustmentModule(jsonUtils);
+    ImprovedigitalBidAdjustmentModule improvedigitalBidAdjustmentModule(
+            JsonUtils jsonUtils, BidderCatalog bidderCatalog) {
+        return new ImprovedigitalBidAdjustmentModule(jsonUtils, bidderCatalog, applicationSettings);
     }
 }

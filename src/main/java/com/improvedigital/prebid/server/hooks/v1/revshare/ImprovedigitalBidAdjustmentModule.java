@@ -1,6 +1,6 @@
 package com.improvedigital.prebid.server.hooks.v1.revshare;
 
-import com.improvedigital.prebid.server.utils.JsonUtils;
+import com.improvedigital.prebid.server.utils.RequestUtils;
 import org.prebid.server.bidder.BidderCatalog;
 import org.prebid.server.hooks.v1.Hook;
 import org.prebid.server.hooks.v1.InvocationContext;
@@ -17,15 +17,15 @@ public class ImprovedigitalBidAdjustmentModule implements Module {
 
     public static final String CODE = "improvedigital-bidadjustment-module";
 
-    private final JsonUtils jsonUtils;
+    private final RequestUtils requestUtils;
 
     private final BidderCatalog bidderCatalog;
 
     private final ApplicationSettings applicationSettings;
 
     public ImprovedigitalBidAdjustmentModule(
-            JsonUtils jsonUtils, BidderCatalog bidderCatalog, ApplicationSettings applicationSettings) {
-        this.jsonUtils = jsonUtils;
+            RequestUtils requestUtils, BidderCatalog bidderCatalog, ApplicationSettings applicationSettings) {
+        this.requestUtils = requestUtils;
         this.bidderCatalog = bidderCatalog;
         this.applicationSettings = applicationSettings;
     }
@@ -38,7 +38,7 @@ public class ImprovedigitalBidAdjustmentModule implements Module {
     @Override
     public Collection<? extends Hook<?, ? extends InvocationContext>> hooks() {
         return Arrays.asList(
-                new ProcessedAuctionRequestHook(jsonUtils, bidderCatalog, applicationSettings)
+                new ProcessedAuctionRequestHook(requestUtils, bidderCatalog, applicationSettings)
         );
     }
 }

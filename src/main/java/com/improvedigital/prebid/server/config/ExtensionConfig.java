@@ -210,7 +210,7 @@ public class ExtensionConfig {
 
     @Bean
     ImprovedigitalBidAdjustmentModule improvedigitalBidAdjustmentModule(
-            JsonUtils jsonUtils, BidderCatalog bidderCatalog) {
-        return new ImprovedigitalBidAdjustmentModule(jsonUtils, bidderCatalog, applicationSettings);
+            RequestUtils requestUtils, BidderCatalog bidderCatalog) {
+        return new ImprovedigitalBidAdjustmentModule(requestUtils, bidderCatalog, applicationSettings);
     }
 }

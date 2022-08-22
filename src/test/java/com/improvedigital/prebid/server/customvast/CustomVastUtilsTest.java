@@ -58,12 +58,8 @@ public class CustomVastUtilsTest extends UnitTestBase {
     private final BigDecimal bidFloorInEuro = BigDecimal.valueOf(1.5);
     private final BigDecimal bidFloorInEuro2 = BigDecimal.valueOf(3.5);
     private final BigDecimal usdToEuroConversionRate = BigDecimal.valueOf(1.07);
-    private final BigDecimal bidFloorInUsd = bidFloorInEuro
-            .multiply(usdToEuroConversionRate)
-            .setScale(3, RoundingMode.HALF_EVEN);
-    private final BigDecimal bidFloorInUsd2 = bidFloorInEuro2
-            .multiply(usdToEuroConversionRate)
-            .setScale(3, RoundingMode.HALF_EVEN);
+    private final BigDecimal bidFloorInUsd = convertEuroToUsd(bidFloorInEuro);
+    private final BigDecimal bidFloorInUsd2 = convertEuroToUsd(bidFloorInEuro2);
 
     private final Map<String, Floor> floorsEmpty = Map.of();
 
@@ -135,13 +131,13 @@ public class CustomVastUtilsTest extends UnitTestBase {
         BidRequest bidRequest = getBidRequestWithDeviceAndFloorsConfig(null, deviceWithValidCountry);
         executeAndValidateResolveCountryAndCreateModuleContext(bidRequest, (context, effectiveFloors) -> {
             assertThat(context.getAlpha3Country()).isEqualTo(countryAlpha3);
-            assertThat(effectiveFloors.get(impId)).isEqualTo(ImprovedigitalPbsImpExt.DEFAULT_BID_FLOOR);
+            assertThat(effectiveFloors.get(impId)).isNull();
         });
 
         bidRequest = getBidRequestWithDeviceAndFloorsConfig(floorsEmpty, deviceWithValidCountry);
         executeAndValidateResolveCountryAndCreateModuleContext(bidRequest, (context, effectiveFloors) -> {
             assertThat(context.getAlpha3Country()).isEqualTo(countryAlpha3);
-            assertThat(effectiveFloors.get(impId)).isEqualTo(ImprovedigitalPbsImpExt.DEFAULT_BID_FLOOR);
+            assertThat(effectiveFloors.get(impId)).isNull();
         });
 
         bidRequest = getBidRequestWithDeviceAndFloorsConfig(floorsWithDefaultAndUSD, deviceWithValidCountry);
@@ -205,13 +201,13 @@ public class CustomVastUtilsTest extends UnitTestBase {
         BidRequest bidRequest = getBidRequestWithDeviceAndFloorsConfig(null, deviceWithValidCountry);
         executeAndValidateResolveCountryAndCreateModuleContext(bidRequest, (context, effectiveFloors) -> {
             assertThat(context.getAlpha3Country()).isEqualTo(invalidCountry);
-            assertThat(effectiveFloors.get(impId)).isEqualTo(ImprovedigitalPbsImpExt.DEFAULT_BID_FLOOR);
+            assertThat(effectiveFloors.get(impId)).isNull();
         });
 
         bidRequest = getBidRequestWithDeviceAndFloorsConfig(floorsEmpty, deviceWithValidCountry);
         executeAndValidateResolveCountryAndCreateModuleContext(bidRequest, (context, effectiveFloors) -> {
             assertThat(context.getAlpha3Country()).isEqualTo(invalidCountry);
-            assertThat(effectiveFloors.get(impId)).isEqualTo(ImprovedigitalPbsImpExt.DEFAULT_BID_FLOOR);
+            assertThat(effectiveFloors.get(impId)).isNull();
         });
 
         bidRequest = getBidRequestWithDeviceAndFloorsConfig(floorsWithDefaultAndUSD, deviceWithValidCountry);
@@ -277,14 +273,14 @@ public class CustomVastUtilsTest extends UnitTestBase {
         BidRequest bidRequest = getBidRequestWithDeviceAndFloorsConfig(null, device);
         executeAndValidateResolveCountryAndCreateModuleContext(bidRequest, (context, effectiveFloors) -> {
             assertThat(context.getAlpha3Country()).isEqualTo(countryAlpha3);
-            assertThat(effectiveFloors.get(impId)).isEqualTo(ImprovedigitalPbsImpExt.DEFAULT_BID_FLOOR);
+            assertThat(effectiveFloors.get(impId)).isNull();
         });
 
         // Test # 2
         bidRequest = getBidRequestWithDeviceAndFloorsConfig(floorsEmpty, device);
         executeAndValidateResolveCountryAndCreateModuleContext(bidRequest, (context, effectiveFloors) -> {
             assertThat(context.getAlpha3Country()).isEqualTo(countryAlpha3);
-            assertThat(effectiveFloors.get(impId)).isEqualTo(ImprovedigitalPbsImpExt.DEFAULT_BID_FLOOR);
+            assertThat(effectiveFloors.get(impId)).isNull();
         });
 
         // Test # 3
@@ -355,14 +351,14 @@ public class CustomVastUtilsTest extends UnitTestBase {
         BidRequest bidRequest = getBidRequestWithDeviceAndFloorsConfig(null, device);
         executeAndValidateResolveCountryAndCreateModuleContext(bidRequest, (context, effectiveFloors) -> {
             assertThat(context.getAlpha3Country()).isNull();
-            assertThat(effectiveFloors.get(impId)).isEqualTo(ImprovedigitalPbsImpExt.DEFAULT_BID_FLOOR);
+            assertThat(effectiveFloors.get(impId)).isNull();
         });
 
         // Test # 2
         bidRequest = getBidRequestWithDeviceAndFloorsConfig(floorsEmpty, device);
         executeAndValidateResolveCountryAndCreateModuleContext(bidRequest, (context, effectiveFloors) -> {
             assertThat(context.getAlpha3Country()).isNull();
-            assertThat(effectiveFloors.get(impId)).isEqualTo(ImprovedigitalPbsImpExt.DEFAULT_BID_FLOOR);
+            assertThat(effectiveFloors.get(impId)).isNull();
         });
 
         // Test # 3
@@ -474,6 +470,134 @@ public class CustomVastUtilsTest extends UnitTestBase {
         Assert.assertEquals(List.of("String"), result);
     }
 
+    @Test
+    public void testResolveFloorBucketPriceWithEuro() {
+        String bidFloorCur = "EUR";
+
+        String result = customVastUtils.resolveGamFloorPrice(0.01, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.01");
+
+        result = customVastUtils.resolveGamFloorPrice(0.012, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.01");
+
+        result = customVastUtils.resolveGamFloorPrice(0.016, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.02");
+
+        result = customVastUtils.resolveGamFloorPrice(0.092, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.09");
+
+        result = customVastUtils.resolveGamFloorPrice(0.099, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.1");
+
+        result = customVastUtils.resolveGamFloorPrice(0.1, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.1");
+
+        result = customVastUtils.resolveGamFloorPrice(0.12, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.1");
+
+        result = customVastUtils.resolveGamFloorPrice(0.13, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.15");
+
+        result = customVastUtils.resolveGamFloorPrice(0.15, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.15");
+
+        result = customVastUtils.resolveGamFloorPrice(0.16, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.15");
+
+        result = customVastUtils.resolveGamFloorPrice(2.96, bidFloorCur, null);
+        assertThat(result).isEqualTo("2.95");
+
+        result = customVastUtils.resolveGamFloorPrice(2.99, bidFloorCur, null);
+        assertThat(result).isEqualTo("3");
+
+        result = customVastUtils.resolveGamFloorPrice(3.00, bidFloorCur, null);
+        assertThat(result).isEqualTo("3");
+
+        result = customVastUtils.resolveGamFloorPrice(3.09, bidFloorCur, null);
+        assertThat(result).isEqualTo("3.1");
+
+        result = customVastUtils.resolveGamFloorPrice(9.99, bidFloorCur, null);
+        assertThat(result).isEqualTo("10");
+
+        result = customVastUtils.resolveGamFloorPrice(11.991, bidFloorCur, null);
+        assertThat(result).isEqualTo("11.99");
+
+        result = customVastUtils.resolveGamFloorPrice(11.996, bidFloorCur, null);
+        assertThat(result).isEqualTo("12");
+    }
+
+    @Test
+    public void testResolveFloorBucketPriceWithUSD() {
+        String bidFloorCur = "USD";
+        double bidFloorInUsd = convertEuroToUsdAndStubMockedCurrencyConversionService(0.01, null);
+        String result = customVastUtils.resolveGamFloorPrice(bidFloorInUsd, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.01");
+
+        bidFloorInUsd = convertEuroToUsdAndStubMockedCurrencyConversionService(0.012, null);
+        result = customVastUtils.resolveGamFloorPrice(bidFloorInUsd, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.01");
+
+        bidFloorInUsd = convertEuroToUsdAndStubMockedCurrencyConversionService(0.016, null);
+        result = customVastUtils.resolveGamFloorPrice(bidFloorInUsd, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.02");
+
+        bidFloorInUsd = convertEuroToUsdAndStubMockedCurrencyConversionService(0.092, null);
+        result = customVastUtils.resolveGamFloorPrice(bidFloorInUsd, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.09");
+
+        bidFloorInUsd = convertEuroToUsdAndStubMockedCurrencyConversionService(0.099, null);
+        result = customVastUtils.resolveGamFloorPrice(bidFloorInUsd, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.1");
+
+        bidFloorInUsd = convertEuroToUsdAndStubMockedCurrencyConversionService(0.1, null);
+        result = customVastUtils.resolveGamFloorPrice(bidFloorInUsd, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.1");
+
+        bidFloorInUsd = convertEuroToUsdAndStubMockedCurrencyConversionService(0.12, null);
+        result = customVastUtils.resolveGamFloorPrice(bidFloorInUsd, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.1");
+
+        bidFloorInUsd = convertEuroToUsdAndStubMockedCurrencyConversionService(0.13, null);
+        result = customVastUtils.resolveGamFloorPrice(bidFloorInUsd, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.15");
+
+        bidFloorInUsd = convertEuroToUsdAndStubMockedCurrencyConversionService(0.15, null);
+        result = customVastUtils.resolveGamFloorPrice(bidFloorInUsd, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.15");
+
+        bidFloorInUsd = convertEuroToUsdAndStubMockedCurrencyConversionService(0.16, null);
+        result = customVastUtils.resolveGamFloorPrice(bidFloorInUsd, bidFloorCur, null);
+        assertThat(result).isEqualTo("0.15");
+
+        bidFloorInUsd = convertEuroToUsdAndStubMockedCurrencyConversionService(2.96, null);
+        result = customVastUtils.resolveGamFloorPrice(bidFloorInUsd, bidFloorCur, null);
+        assertThat(result).isEqualTo("2.95");
+
+        bidFloorInUsd = convertEuroToUsdAndStubMockedCurrencyConversionService(2.99, null);
+        result = customVastUtils.resolveGamFloorPrice(bidFloorInUsd, bidFloorCur, null);
+        assertThat(result).isEqualTo("3");
+
+        bidFloorInUsd = convertEuroToUsdAndStubMockedCurrencyConversionService(3.00, null);
+        result = customVastUtils.resolveGamFloorPrice(bidFloorInUsd, bidFloorCur, null);
+        assertThat(result).isEqualTo("3");
+
+        bidFloorInUsd = convertEuroToUsdAndStubMockedCurrencyConversionService(3.09, null);
+        result = customVastUtils.resolveGamFloorPrice(bidFloorInUsd, bidFloorCur, null);
+        assertThat(result).isEqualTo("3.1");
+
+        bidFloorInUsd = convertEuroToUsdAndStubMockedCurrencyConversionService(9.99, null);
+        result = customVastUtils.resolveGamFloorPrice(bidFloorInUsd, bidFloorCur, null);
+        assertThat(result).isEqualTo("10");
+
+        bidFloorInUsd = convertEuroToUsdAndStubMockedCurrencyConversionService(11.991, null);
+        result = customVastUtils.resolveGamFloorPrice(bidFloorInUsd, bidFloorCur, null);
+        assertThat(result).isEqualTo("11.99");
+
+        bidFloorInUsd = convertEuroToUsdAndStubMockedCurrencyConversionService(12.00, null);
+        result = customVastUtils.resolveGamFloorPrice(bidFloorInUsd, bidFloorCur, null);
+        assertThat(result).isEqualTo("12");
+    }
+
     // @Test
     public void testFormatPrebidGamKeyValueString() throws Exception {
         String result = customVastUtils.formatPrebidGamKeyValueString(List.of(null), true);
@@ -482,7 +606,7 @@ public class CustomVastUtilsTest extends UnitTestBase {
 
     // @Test
     public void testGetCustParams() throws Exception {
-        String result = customVastUtils.getCustParams(0d, null);
+        String result = customVastUtils.getCustParams(null, null);
         Assert.assertEquals("replaceMeWithExpectedResult", result);
     }
 
@@ -520,5 +644,18 @@ public class CustomVastUtilsTest extends UnitTestBase {
     public void testCustomVastFromXml() throws Exception {
         CustomVast result = CustomVastUtils.customVastFromXml("xml");
         Assert.assertEquals(null, result);
+    }
+
+    private BigDecimal convertEuroToUsd(BigDecimal priceInEuro) {
+        return priceInEuro.multiply(usdToEuroConversionRate)
+                .setScale(3, RoundingMode.HALF_EVEN);
+    }
+
+    private double convertEuroToUsdAndStubMockedCurrencyConversionService(double priceInEuro, BidRequest bidRequest) {
+        BigDecimal from = BigDecimal.valueOf(priceInEuro);
+        double priceInUsd = convertEuroToUsd(BigDecimal.valueOf(priceInEuro)).doubleValue();
+        when(currencyConversionService.convertCurrency(BigDecimal.valueOf(priceInUsd), bidRequest, "USD", "EUR"))
+                .thenReturn(from);
+        return priceInUsd;
     }
 }

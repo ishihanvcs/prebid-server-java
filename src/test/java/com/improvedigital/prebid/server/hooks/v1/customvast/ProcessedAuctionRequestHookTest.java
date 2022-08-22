@@ -242,7 +242,7 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
         BidRequest bidRequest = getBidRequestForBidFloorTest(null, null, null, null);
 
         executeHookAndValidateBidRequest(bidRequest, timeout,
-                (originalBidRequest, updatedBidRequest) -> bidFloorValidator(updatedBidRequest, BigDecimal.ZERO)
+                (originalBidRequest, updatedBidRequest) -> bidFloorValidator(updatedBidRequest, null)
         );
 
         // bidfloor defined in imp, but not in config
@@ -312,14 +312,17 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
 
     private void bidFloorValidator(BidRequest updatedBidRequest, BigDecimal floorInUsd) {
         Imp imp = updatedBidRequest.getImp().get(0);
-        assertThat(imp.getBidfloor())
-                .isNotNull();
-        assertThat(imp.getBidfloor())
-                .isEqualTo(floorInUsd);
-        assertThat(imp.getBidfloorcur())
-                .isNotNull();
-        assertThat(imp.getBidfloorcur())
-                .isEqualTo("USD");
+        if (floorInUsd == null) {
+            assertThat(imp.getBidfloor())
+                    .isNull();
+            assertThat(imp.getBidfloorcur())
+                    .isNull();
+        } else {
+            assertThat(imp.getBidfloor())
+                    .isEqualTo(floorInUsd);
+            assertThat(imp.getBidfloorcur())
+                    .isEqualTo("USD");
+        }
     }
 
     private BidRequest getBidRequestForBidFloorTest(

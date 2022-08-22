@@ -3,14 +3,24 @@ package com.improvedigital.prebid.server.customvast.model;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
+import com.iab.openrtb.response.Bid;
 import com.iab.openrtb.response.BidResponse;
 import com.improvedigital.prebid.server.UnitTestBase;
+import com.improvedigital.prebid.server.customvast.CustomVastUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.prebid.server.currency.CurrencyConversionService;
+import org.prebid.server.geolocation.CountryCodeMapper;
+import org.prebid.server.geolocation.GeoLocationService;
+import org.prebid.server.metric.Metrics;
 import org.prebid.server.proto.openrtb.ext.response.ExtBidResponse;
 import org.prebid.server.proto.openrtb.ext.response.ExtBidResponsePrebid;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -18,17 +28,39 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
+import static org.mockito.Mockito.when;
 
 public class CreatorContextTest extends UnitTestBase {
+
+    private final BigDecimal bidFloorInEuro = BigDecimal.valueOf(1.5);
+    private final BigDecimal bidFloorInEuro2 = BigDecimal.valueOf(3.5);
+    private final BigDecimal usdToEuroConversionRate = BigDecimal.valueOf(1.07);
+    private final BigDecimal bidFloorInUsd = bidFloorInEuro
+            .multiply(usdToEuroConversionRate)
+            .setScale(3, RoundingMode.HALF_EVEN);
+    private final BigDecimal bidFloorInUsd2 = bidFloorInEuro2
+            .multiply(usdToEuroConversionRate)
+            .setScale(3, RoundingMode.HALF_EVEN);
 
     private BidRequest emptyBidRequest;
     private BidResponse emptyBidResponse;
     private CreatorContext defaultContext;
     private BidResponse defaultBidResponse;
     private Imp defaultImp;
+    private CustomVastUtils customVastUtils;
+
+    @Mock
+    CurrencyConversionService currencyConversionService;
+    @Mock
+    GeoLocationService geoLocationService;
+    @Mock
+    Metrics metrics;
+    @Mock
+    CountryCodeMapper countryCodeMapper;
 
     @Before
     public void setUp() {
+        MockitoAnnotations.openMocks(this);
         emptyBidRequest = BidRequest.builder().build();
         emptyBidResponse = BidResponse.builder().build();
         defaultBidResponse = BidResponse.builder()
@@ -44,6 +76,12 @@ public class CreatorContextTest extends UnitTestBase {
         })).toBuilder().id("1").build();
         defaultContext = CreatorContext.from(emptyBidRequest, emptyBidResponse, jsonUtils)
                 .with(defaultImp, List.of(), jsonUtils);
+
+        customVastUtils = new CustomVastUtils(
+                requestUtils, merger, currencyConversionService,
+                macroProcessor, geoLocationService, metrics,
+                countryCodeMapper, EXTERNAL_URL, GAM_NETWORK_CODE, PROTO_CACHE_HOST
+        );
     }
 
     @Test
@@ -90,13 +128,46 @@ public class CreatorContextTest extends UnitTestBase {
         assertThat(result.getWaterfall(true).get(1)).isEqualTo("gam_no_hb");
     }
 
+    private CreatorContext creatorContext(
+            Imp imp, String alpha3Country, List<Bid> bids
+    ) {
+        final BidRequest bidRequest = emptyBidRequest.toBuilder()
+                .imp(new ArrayList<>(List.of(imp)))
+                .build();
+
+        return creatorContext(bidRequest, emptyBidResponse, alpha3Country, bids);
+    }
+
+    private CreatorContext creatorContext(
+            BidRequest bidRequest,
+            BidResponse bidResponse,
+            String alpha3Country,
+            List<Bid> bids
+    ) {
+        when(currencyConversionService.convertCurrency(
+                bidFloorInEuro, bidRequest, "EUR", "USD")
+        ).thenReturn(bidFloorInUsd);
+
+        when(currencyConversionService.convertCurrency(
+                bidFloorInEuro2, bidRequest, "EUR", "USD")
+        ).thenReturn(bidFloorInUsd2);
+
+        HooksModuleContext hooksModuleContext = customVastUtils.createModuleContext(bidRequest, alpha3Country)
+                .with(bidResponse);
+
+        final Imp updatedImp = hooksModuleContext.getBidRequest().getImp().get(0);
+
+        return CreatorContext.from(hooksModuleContext, jsonUtils)
+                .with(updatedImp, bids, jsonUtils);
+    }
+
     @Test
     public void testWaterfallAndFloorForAlpha3Country() {
         final String alpha3Country = "NLD";
         final String defaultKey = ImprovedigitalPbsImpExt.DEFAULT_CONFIG_KEY;
 
-        final Floor defaultFloor = Floor.of(BigDecimal.valueOf(1), "USD");
-        final Floor countryFloor = Floor.of(BigDecimal.valueOf(2), "EUR");
+        final Floor defaultFloor = Floor.of(bidFloorInUsd, "USD");
+        final Floor countryFloor = Floor.of(bidFloorInEuro2, "EUR");
         final Map<String, Floor> floorsConfig = Map.of(
                 defaultKey, defaultFloor,
                 alpha3Country, countryFloor
@@ -117,26 +188,20 @@ public class CreatorContextTest extends UnitTestBase {
             configNode.set("waterfall", waterfallsNode);
         });
 
-        final BidRequest bidRequest = emptyBidRequest.toBuilder()
-                .imp(List.of(impWithConfig))
-                .build();
-        final BidResponse bidResponse = defaultBidResponse;
-
-        CreatorContext context = CreatorContext.from(bidRequest, bidResponse, jsonUtils)
-                .with(impWithConfig, List.of(), jsonUtils);
+        CreatorContext context = creatorContext(impWithConfig, null, List.of());
 
         assertThat(context.isGVast()).isTrue();
         assertThat(context.getWaterfall())
                 .isEqualTo(defaultWaterfall);
         assertThat(context.getBidfloor())
-                .isEqualTo(defaultFloor.getBidFloor().doubleValue());
+                .isEqualTo(bidFloorInUsd.doubleValue());
 
-        context = context.with(alpha3Country).with(impWithConfig, List.of(), jsonUtils);
+        context = creatorContext(impWithConfig, alpha3Country, List.of());
         assertThat(context.isGVast()).isTrue();
         assertThat(context.getWaterfall())
                 .isEqualTo(countryWaterfall);
         assertThat(context.getBidfloor())
-                .isEqualTo(countryFloor.getBidFloor().doubleValue());
+                .isEqualTo(bidFloorInUsd2.doubleValue());
     }
 
     @Test

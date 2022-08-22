@@ -24,6 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.proto.openrtb.ext.request.ExtRegs;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
 import org.prebid.server.util.HttpUtil;
+import org.prebid.server.util.ObjectUtil;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ import java.util.Optional;
 @ToString
 public class CreatorContext extends GVastHandlerParams {
 
+    BidRequest bidRequest;
     ObjectNode extBidResponse;
     List<Bid> bids;
     Imp imp;
@@ -58,7 +60,7 @@ public class CreatorContext extends GVastHandlerParams {
         Objects.requireNonNull(request);
         Objects.requireNonNull(response);
         Objects.requireNonNull(jsonUtils);
-        CreatorContextBuilder<?, ?> builder = CreatorContext.builder();
+        CreatorContextBuilder<?, ?> builder = CreatorContext.builder().bidRequest(request);
         final Optional<Site> siteOptional = Optional.ofNullable(request.getSite());
         final Optional<App> appOptional = Optional.ofNullable(request.getApp());
         final Optional<Regs> regsOptional = Optional.ofNullable(request.getRegs());
@@ -116,6 +118,14 @@ public class CreatorContext extends GVastHandlerParams {
         CreatorContextBuilder<?, ?> builder = this.toBuilder()
                 .bids(bids)
                 .imp(imp);
+
+        builder.bidfloor(
+                ObjectUtil.getIfNotNull(imp.getBidfloor(), BigDecimal::doubleValue)
+        );
+
+        builder.bidfloorcur(
+                ObjectUtils.defaultIfNull(imp.getBidfloorcur(), "USD")
+        );
 
         builder.custParams(Optional.ofNullable(imp.getExt())
                 .map(impExt -> jsonUtils.objectPathToValue(
@@ -242,21 +252,8 @@ public class CreatorContext extends GVastHandlerParams {
                 .orElse(VastResponseType.gvast)
         );
 
-        final Optional<Floor> optionalFloor = optionalConfig
-                .map(config -> config.getFloor(this.getAlpha3Country()));
-
-        builder.bidfloor(
-                optionalFloor
-                        .map(Floor::getBidFloor)
-                        .map(BigDecimal::doubleValue)
-                        .orElse(0.0)
-        );
-
-        builder.bidfloorcur(
-                optionalFloor
-                        .map(Floor::getBidFloorCur)
-                        .orElse("USD")
-        );
+        // final Optional<Floor> optionalFloor = optionalConfig
+        //         .map(config -> config.getFloor(this.getAlpha3Country()));
 
         builder.waterfall(
                 optionalConfig

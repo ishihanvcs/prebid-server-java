@@ -42,7 +42,7 @@ public class CreatorContextTest extends UnitTestBase {
             .multiply(usdToEuroConversionRate)
             .setScale(3, RoundingMode.HALF_EVEN);
 
-    private BidRequest emptyBidRequest;
+    private BidRequest defaultBidRequest;
     private BidResponse emptyBidResponse;
     private CreatorContext defaultContext;
     private BidResponse defaultBidResponse;
@@ -61,8 +61,7 @@ public class CreatorContextTest extends UnitTestBase {
     @Before
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        emptyBidRequest = BidRequest.builder().build();
-        emptyBidResponse = BidResponse.builder().build();
+        emptyBidResponse = BidResponse.builder().seatbid(new ArrayList<>()).build();
         defaultBidResponse = BidResponse.builder()
                 .ext(ExtBidResponse
                         .builder()
@@ -74,32 +73,31 @@ public class CreatorContextTest extends UnitTestBase {
             config.put("responseType", VastResponseType.gvast.name());
             config.putObject("waterfall").putArray("default");
         })).toBuilder().id("1").build();
-        defaultContext = CreatorContext.from(emptyBidRequest, emptyBidResponse, jsonUtils)
-                .with(defaultImp, List.of(), jsonUtils);
+
+        defaultBidRequest = BidRequest.builder().imp(new ArrayList<>(List.of(defaultImp))).build();
 
         customVastUtils = new CustomVastUtils(
                 requestUtils, merger, currencyConversionService,
                 macroProcessor, geoLocationService, metrics,
                 countryCodeMapper, EXTERNAL_URL, GAM_NETWORK_CODE, PROTO_CACHE_HOST
         );
+
+        defaultContext = creatorContext(defaultImp, null, List.of());
     }
 
     @Test
     public void testFromEmptyObjects() throws Exception {
         assertThatExceptionOfType(NullPointerException.class)
-                .isThrownBy(() -> CreatorContext.from(null, emptyBidResponse, jsonUtils));
+                .isThrownBy(() -> creatorContext(null, emptyBidResponse, null, List.of()));
 
         assertThatExceptionOfType(NullPointerException.class)
-                .isThrownBy(() -> CreatorContext.from(emptyBidRequest, null, jsonUtils));
-
-        assertThatExceptionOfType(NullPointerException.class)
-                .isThrownBy(() -> CreatorContext.from(emptyBidRequest, emptyBidResponse, null));
+                .isThrownBy(() -> creatorContext(defaultBidRequest, null, null, List.of()));
 
         assertThatNoException()
-                .isThrownBy(() -> CreatorContext.from(emptyBidRequest, emptyBidResponse, jsonUtils));
+                .isThrownBy(() -> creatorContext(defaultBidRequest, emptyBidResponse, null, List.of()));
 
         // Test with empty BidRequest & BidResponse objects
-        CreatorContext result = CreatorContext.from(emptyBidRequest, emptyBidResponse, jsonUtils);
+        CreatorContext result = creatorContext(defaultBidRequest, emptyBidResponse, null, List.of());
         assertThat(result.getExtBidResponse()).isNull();
         assertThat(result.isDebug()).isFalse();
         assertThat(result.getGdpr()).isNull();
@@ -131,7 +129,7 @@ public class CreatorContextTest extends UnitTestBase {
     private CreatorContext creatorContext(
             Imp imp, String alpha3Country, List<Bid> bids
     ) {
-        final BidRequest bidRequest = emptyBidRequest.toBuilder()
+        final BidRequest bidRequest = defaultBidRequest.toBuilder()
                 .imp(new ArrayList<>(List.of(imp)))
                 .build();
 
@@ -155,10 +153,9 @@ public class CreatorContextTest extends UnitTestBase {
         HooksModuleContext hooksModuleContext = customVastUtils.createModuleContext(bidRequest, alpha3Country)
                 .with(bidResponse);
 
+        CreatorContext creatorContext = CreatorContext.from(hooksModuleContext, jsonUtils);
         final Imp updatedImp = hooksModuleContext.getBidRequest().getImp().get(0);
-
-        return CreatorContext.from(hooksModuleContext, jsonUtils)
-                .with(updatedImp, bids, jsonUtils);
+        return creatorContext.with(updatedImp, bids, jsonUtils);
     }
 
     @Test
@@ -206,15 +203,11 @@ public class CreatorContextTest extends UnitTestBase {
 
     @Test
     public void testFromValidObjects() throws Exception {
-        BidRequest bidRequest = emptyBidRequest
+        BidRequest bidRequest = defaultBidRequest
                 .toBuilder()
                 .test(1)
                 .build();
-        CreatorContext result = CreatorContext.from(
-                bidRequest,
-                defaultBidResponse,
-                jsonUtils
-        );
+        CreatorContext result = creatorContext(bidRequest, defaultBidResponse, null, List.of());
         assertThat(result.getExtBidResponse()).isNotNull();
         assertThat(result.isDebug()).isTrue();
     }

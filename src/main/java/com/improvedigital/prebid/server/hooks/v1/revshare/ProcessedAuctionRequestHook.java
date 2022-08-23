@@ -46,14 +46,14 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
     public Future<InvocationResult<AuctionRequestPayload>> call(
             AuctionRequestPayload auctionRequestPayload, AuctionInvocationContext invocationContext) {
 
-        String publisherId = requestUtils.getAccountId(auctionRequestPayload.bidRequest());
-        if (StringUtils.isEmpty(publisherId)) {
+        String accountId = requestUtils.getAccountId(auctionRequestPayload.bidRequest());
+        if (StringUtils.isEmpty(accountId)) {
             return Future.succeededFuture(InvocationResultImpl.succeeded(
                     payload -> auctionRequestPayload, invocationContext.moduleContext()
             ));
         }
 
-        return applicationSettings.getAccountById(publisherId, invocationContext.timeout()).map(account -> {
+        return applicationSettings.getAccountById(accountId, invocationContext.timeout()).map(account -> {
             ExtAccount accExt = account.getExt();
             if (accExt == null || getBidPriceAdjustment(accExt) == null) {
                 return InvocationResultImpl.succeeded(

@@ -7,6 +7,7 @@ import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.exception.InvalidRequestException;
+import org.prebid.server.geolocation.CountryCodeMapper;
 import org.prebid.server.log.ConditionalLogger;
 import org.prebid.server.model.CaseInsensitiveMultiMap;
 import org.prebid.server.model.HttpRequestContext;
@@ -26,9 +27,14 @@ public class GVastHandlerParamsResolver {
     private static final ConditionalLogger conditionalLogger = new ConditionalLogger(logger);
 
     private final GdprConfig gdprConfig;
+    private final CountryCodeMapper countryCodeMapper;
 
-    public GVastHandlerParamsResolver(GdprConfig gdprConfig) {
+    public GVastHandlerParamsResolver(
+            CountryCodeMapper countryCodeMapper,
+            GdprConfig gdprConfig
+    ) {
         this.gdprConfig = Objects.requireNonNull(gdprConfig);
+        this.countryCodeMapper = Objects.requireNonNull(countryCodeMapper);
     }
 
     private String resolveReferrer(HttpRequestContext httpRequest) {
@@ -75,6 +81,18 @@ public class GVastHandlerParamsResolver {
         }
 
         return builder.gdpr(gdpr).gdprConsent(gdprConsentString);
+    }
+
+    private String resolveAlpha3Country(CaseInsensitiveMultiMap queryParams) {
+        String alpha3Country = queryParams.get("country_alpha3");
+        if (StringUtils.isNotBlank(alpha3Country)) {
+            return alpha3Country;
+        }
+        String alpha2Country = queryParams.get("country");
+        if (StringUtils.isNotBlank(alpha2Country)) {
+            return countryCodeMapper.mapToAlpha3(alpha2Country);
+        }
+        return null;
     }
 
     private List<String> resolveCat(CaseInsensitiveMultiMap queryParams) {
@@ -178,6 +196,7 @@ public class GVastHandlerParamsResolver {
                 .os(queryParams.get("os"))
                 .osv(queryParams.get("osv"))
                 .ua(queryParams.get("ua"))
+                .alpha3Country(resolveAlpha3Country(queryParams))
                 // App
                 .appName(queryParams.get("appname"))
                 .bundle(queryParams.get("bundle"))

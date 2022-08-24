@@ -18,13 +18,18 @@ import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import com.improvedigital.prebid.server.utils.XmlUtils;
+import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.PriceGranularity;
 import org.prebid.server.currency.CurrencyConversionService;
+import org.prebid.server.execution.Timeout;
+import org.prebid.server.geolocation.CountryCodeMapper;
+import org.prebid.server.geolocation.GeoLocationService;
 import org.prebid.server.json.JsonMerger;
+import org.prebid.server.metric.Metrics;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCache;
@@ -67,6 +72,9 @@ public class CustomVastUtils {
     private final JsonMerger merger;
     private final CurrencyConversionService currencyConversionService;
     private final MacroProcessor macroProcessor;
+    private final GeoLocationService geoLocationService;
+    private final Metrics metrics;
+    private final CountryCodeMapper countryCodeMapper;
     private final String externalUrl;
     private final String gamNetworkCode;
     private final String cacheHost;
@@ -76,6 +84,9 @@ public class CustomVastUtils {
             JsonMerger merger,
             CurrencyConversionService currencyConversionService,
             MacroProcessor macroProcessor,
+            GeoLocationService geoLocationService,
+            Metrics metrics,
+            CountryCodeMapper countryCodeMapper,
             String externalUrl,
             String gamNetworkCode,
             String cacheHost
@@ -85,6 +96,9 @@ public class CustomVastUtils {
         this.merger = Objects.requireNonNull(merger);
         this.currencyConversionService = Objects.requireNonNull(currencyConversionService);
         this.macroProcessor = Objects.requireNonNull(macroProcessor);
+        this.geoLocationService = geoLocationService;
+        this.metrics = metrics;
+        this.countryCodeMapper = countryCodeMapper;
         this.externalUrl = externalUrl;
         this.gamNetworkCode = gamNetworkCode;
         this.cacheHost = cacheHost;
@@ -132,9 +146,37 @@ public class CustomVastUtils {
                 .build();
     }
 
-    public HooksModuleContext createModuleContext(BidRequest bidRequest) {
+    private Future<String> resolveCountry(BidRequest bidRequest, Timeout timeout) {
+        final Device currentDevice = bidRequest.getDevice();
+        final Geo geo = ObjectUtil.getIfNotNull(currentDevice, Device::getGeo);
+        String country = ObjectUtil.getIfNotNull(geo, Geo::getCountry);
+        if (geoLocationService != null && StringUtils.isEmpty(country)) {
+            String ipAddress = ObjectUtil.getIfNotNull(currentDevice, Device::getIp);
+            if (StringUtils.isNotEmpty(ipAddress)) {
+                return geoLocationService.lookup(ipAddress, timeout)
+                        .map(geoInfo -> {
+                            metrics.updateGeoLocationMetric(true);
+                            if (geoInfo == null || geoInfo.getCountry() == null) {
+                                return null;
+                            }
+                            return countryCodeMapper.mapToAlpha3(geoInfo.getCountry());
+                        });
+            }
+        }
+        return Future.succeededFuture(country);
+    }
+
+    public Future<HooksModuleContext> resolveCountryAndCreateModuleContext(BidRequest bidRequest, Timeout timeout) {
+        return resolveCountry(bidRequest, timeout).map(country -> createModuleContext(bidRequest, country))
+                .recover(t -> {
+                    logger.error("Could not resolve country", t);
+                    return Future.succeededFuture(createModuleContext(bidRequest, null));
+                }
+        );
+    }
+
+    public HooksModuleContext createModuleContext(BidRequest bidRequest, String alpha3Country) {
         final Map<String, ImprovedigitalPbsImpExt> impIdToPbsImpExt = new HashMap<>();
-        Geo geoInfo = ObjectUtil.getIfNotNull(bidRequest.getDevice(), Device::getGeo);
         Map<String, Floor> impIdToEffectiveFloor = new HashMap<>();
         boolean hasCustomVastVideo = false;
         boolean hasGVastVideo = false;
@@ -148,12 +190,13 @@ public class CustomVastUtils {
                 }
             }
             impIdToPbsImpExt.put(impId, pbsImpExt);
-            impIdToEffectiveFloor.put(impId, computeEffectiveFloor(imp, pbsImpExt, geoInfo));
+            impIdToEffectiveFloor.put(impId, computeEffectiveFloor(imp, pbsImpExt, alpha3Country));
         }
 
         HooksModuleContext context = HooksModuleContext
                 .from(impIdToPbsImpExt)
-                .with(impIdToEffectiveFloor);
+                .with(impIdToEffectiveFloor)
+                .with(alpha3Country);
 
         updateImpsWithBidFloorInUsd(bidRequest, context::getEffectiveFloor);
 
@@ -235,8 +278,8 @@ public class CustomVastUtils {
         return bidRequest.toBuilder().ext(mergedExtRequest).build();
     }
 
-    private static Floor computeEffectiveFloor(Imp imp, ImprovedigitalPbsImpExt pbsImpExt, Geo geo) {
-        Floor floor = ObjectUtil.getIfNotNull(pbsImpExt, pie -> pie.getFloor(geo));
+    private static Floor computeEffectiveFloor(Imp imp, ImprovedigitalPbsImpExt pbsImpExt, String alpha3Country) {
+        Floor floor = ObjectUtil.getIfNotNull(pbsImpExt, pie -> pie.getFloor(alpha3Country));
         BigDecimal effectiveFloorPrice = getEffectiveFloorPrice(imp, floor);
         if (effectiveFloorPrice == null) {
             return floor;
@@ -274,6 +317,7 @@ public class CustomVastUtils {
     public String resolveGamAdUnit(
             ImprovedigitalPbsImpExtGam gamConfig, int improvePlacementId
     ) {
+        gamConfig = ObjectUtils.defaultIfNull(gamConfig, ImprovedigitalPbsImpExtGam.DEFAULT);
         String adUnit = gamConfig.getAdUnit();
         String networkCode = StringUtils.defaultIfEmpty(gamConfig.getNetworkCode(), gamNetworkCode);
         if (!StringUtils.isBlank(gamConfig.getChildNetworkCode())) {

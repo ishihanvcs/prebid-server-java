@@ -55,6 +55,10 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
     @Override
     public Future<InvocationResult<EntrypointPayload>> call(
             EntrypointPayload entrypointPayload, InvocationContext invocationContext) {
+        final InvocationResult<EntrypointPayload> defaultResult = InvocationResultImpl.succeeded(
+                payload -> entrypointPayload
+        );
+
         try {
             final BidRequest originalBidRequest = jsonUtils.parseBidRequest(entrypointPayload.body());
 
@@ -72,10 +76,11 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
                         .filter(t -> StringUtils.isNotBlank(t.getRight()))
                         .collect(Collectors.toMap(Tuple2::getLeft, Tuple2::getRight));
 
-                // let core logic for auction handle errors in later phase of hook execution
-                return settingsLoader.getStoredImpsSafely(
-                        new HashSet<>(impToStoredRequestId.values()), invocationContext.timeout())
-                        .compose(storedImps -> {
+                // let core logic for auction handle/process errors in later phase
+                return settingsLoader
+                        .getStoredImpsSafely(
+                            new HashSet<>(impToStoredRequestId.values()), invocationContext.timeout()
+                        ).map(storedImps -> {
                             try {
                                 BidRequest updatedBidRequest = originalBidRequest;
                                 String accountId = null;
@@ -131,21 +136,17 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
                                     );
                                 }
                                 final String updatedBody = mapper.writeValueAsString(updatedBidRequest);
-                                return Future.succeededFuture(InvocationResultImpl.succeeded(
+                                return InvocationResultImpl.succeeded(
                                         payload -> EntrypointPayloadImpl.of(
                                                 entrypointPayload.queryParams(),
                                                 entrypointPayload.headers(),
                                                 updatedBody
-                                        )));
+                                        ));
                             } catch (Throwable t) {
                                 logger.error(entrypointPayload, t);
-                                return Future.succeededFuture(
-                                        InvocationResultImpl.succeeded(
-                                                payload -> entrypointPayload
-                                        )
-                                );
+                                return defaultResult;
                             }
-                        }, t -> Future.succeededFuture(InvocationResultImpl.rejected(t.getMessage())));
+                        });
             }
         } catch (Throwable t) {
             logger.error(entrypointPayload, t);
@@ -156,7 +157,6 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
                     payload -> entrypointPayload
                 )
         );
-
     }
 
     private ImprovedigitalPbsImpExt mergeImprovedigitalPbsImpExt(Imp imp, Imp storedImp) {

@@ -17,9 +17,12 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.prebid.server.currency.CurrencyConversionService;
 import org.prebid.server.execution.Timeout;
+import org.prebid.server.geolocation.CountryCodeMapper;
+import org.prebid.server.geolocation.GeoLocationService;
 import org.prebid.server.hooks.execution.v1.InvocationContextImpl;
 import org.prebid.server.hooks.execution.v1.auction.AuctionInvocationContextImpl;
 import org.prebid.server.hooks.execution.v1.auction.AuctionRequestPayloadImpl;
+import org.prebid.server.metric.Metrics;
 import org.prebid.server.model.Endpoint;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
@@ -39,6 +42,12 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
 
     @Mock
     CurrencyConversionService currencyConversionService;
+    @Mock
+    GeoLocationService geoLocationService;
+    @Mock
+    Metrics metrics;
+    @Mock
+    CountryCodeMapper countryCodeMapper;
 
     ProcessedAuctionRequestHook hook;
 
@@ -61,6 +70,7 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
                 requestUtils,
                 new CustomVastUtils(
                         requestUtils, merger, currencyConversionService, macroProcessor,
+                        geoLocationService, metrics, countryCodeMapper,
                         EXTERNAL_URL, GAM_NETWORK_CODE, PROTO_CACHE_HOST
                 )
         );

@@ -7,19 +7,22 @@
     "vast-player": "gulp vast-ima-player",
     "server": "npx node mock-server/index.js",
     "server:debug": "DEBUG=routes:* npm run server",
-    "schema:update": "npx node update-json-schema.js"
+    "schema:update": "npx node update-json-schema.js",
+    "bulk-upload": "npx node bulk-upload/index.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "arg": "^5.0.2",
     "colors": "1.4.0",
     "debug": "^4.3.3",
     "express": "^4.17.2",
+    "get-stdin": "^9.0.0",
     "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
     "morgan": "^1.10.0",
-    "node-fetch": "^2.6.6"
+    "node-fetch": "^2.6.7"
   },
   "devDependencies": {
     "browser-sync": "^2.27.10",

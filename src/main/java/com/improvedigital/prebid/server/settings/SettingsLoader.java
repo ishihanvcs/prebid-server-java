@@ -102,18 +102,19 @@ public class SettingsLoader {
 
     public Future<Imp> getStoredImp(String impId, Timeout timeout) {
         return getStoredDataResultFuture(null, Collections.emptySet(), Set.of(impId), timeout)
-                .compose(storedDataResult -> {
+                .map(storedDataResult -> {
                     try {
                         final String storedData = storedDataResult.getStoredIdToImp().getOrDefault(impId, null);
                         if (StringUtils.isBlank(storedData) || storedData.equals("null")) {
-                            return Future.failedFuture(new InvalidRequestException(
+                            throw new InvalidRequestException(
                                     String.format("Invalid impId '%s' provided.", impId)
-                            ));
+                            );
                         }
-                        final Imp imp = mapper.mapper().readValue(storedData, Imp.class);
-                        return Future.succeededFuture(imp);
+                        return mapper.mapper().readValue(storedData, Imp.class);
+                    } catch (InvalidRequestException ire) {
+                        throw ire;
                     } catch (Exception e) {
-                        return Future.failedFuture(new InvalidRequestException(e.getMessage(), e));
+                        throw new InvalidRequestException(e.getMessage(), e);
                     }
                 });
     }
@@ -123,8 +124,9 @@ public class SettingsLoader {
     }
 
     public Future<Map<String, Imp>> getStoredImps(Set<String> impIds, Timeout timeout, boolean suppressErrors) {
+        final Map<String, Imp> emptyResult = new HashMap<>();
         if (impIds.isEmpty()) {
-            return Future.succeededFuture(new HashMap<>());
+            return Future.succeededFuture(emptyResult);
         }
         return getStoredDataResultFuture(null, Collections.emptySet(), impIds, timeout)
                 .map(storedDataResult -> {
@@ -150,6 +152,12 @@ public class SettingsLoader {
                         }
                     });
                     return imps;
+                }).recover(throwable -> {
+                    if (suppressErrors) {
+                        logger.warn("Ignored error while fetching imps: " + throwable.getMessage());
+                        return Future.succeededFuture(emptyResult);
+                    }
+                    return Future.failedFuture(throwable);
                 });
     }
 

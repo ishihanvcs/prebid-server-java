@@ -8,13 +8,13 @@ import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
 import com.improvedigital.prebid.server.utils.JsonUtils;
+import com.improvedigital.prebid.server.utils.LogMessage;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.Tuple2;
-import org.prebid.server.exception.InvalidRequestException;
 import org.prebid.server.hooks.execution.v1.entrypoint.EntrypointPayloadImpl;
 import org.prebid.server.hooks.v1.InvocationContext;
 import org.prebid.server.hooks.v1.InvocationResult;
@@ -118,10 +118,8 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
                                     updatedBidRequest = setParentAccountId(updatedBidRequest, accountId);
                                 } else {
                                     logger.warn(
-                                            entrypointPayload,
-                                            new InvalidRequestException(
-                                                    "accountId mismatched in imp[].prebid.improvedigitalpbs"
-                                            )
+                                            LogMessage.from(originalBidRequest)
+                                                    .with("accountId mismatched in imp[].prebid.improvedigitalpbs")
                                     );
                                 }
 
@@ -129,10 +127,8 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
                                     updatedBidRequest = setRequestId(updatedBidRequest, requestId);
                                 } else {
                                     logger.warn(
-                                            entrypointPayload,
-                                            new InvalidRequestException(
-                                                    "requestId mismatched in imp[].prebid.improvedigitalpbs"
-                                            )
+                                            LogMessage.from(originalBidRequest)
+                                                    .with("requestId mismatched in imp[].prebid.improvedigitalpbs")
                                     );
                                 }
                                 final String updatedBody = mapper.writeValueAsString(updatedBidRequest);
@@ -143,13 +139,16 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
                                                 updatedBody
                                         ));
                             } catch (Throwable t) {
-                                logger.error(entrypointPayload, t);
+                                logger.error(
+                                        LogMessage.from(originalBidRequest)
+                                                .with(t)
+                                );
                                 return defaultResult;
                             }
                         });
             }
         } catch (Throwable t) {
-            logger.error(entrypointPayload, t);
+            logger.error(LogMessage.from(t));
         }
 
         return Future.succeededFuture(

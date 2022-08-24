@@ -243,7 +243,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
-    public void auctionEndpointReturnsGvastResponse() throws XPathExpressionException, IOException, JSONException {
+    public void testCustomVastResponse() throws XPathExpressionException, IOException, JSONException {
         String vastXml = getVastXmlInline("ad_1", true);
         String cacheId = getCacheIdRandom();
 
@@ -273,7 +273,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
-    public void auctionEndpointReturnsGvastResponseWithMultipleWaterfallConfig()
+    public void testCustomVastResponseWithMultipleWaterfallConfig()
             throws XPathExpressionException, IOException, JSONException {
 
         String vastXml = getVastXmlInline("ad_1", true);
@@ -338,7 +338,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
-    public void auctionEndpointReturnsGvastResponseWithMacroReplacement()
+    public void testCustomVastResponseWithMacroReplacement()
             throws XPathExpressionException, IOException, JSONException {
 
         String vastXml = getVastXmlInline("ad_1", true);
@@ -381,7 +381,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
-    public void auctionEndpointReturnsGvastResponseWithMultipleBidder()
+    public void testCustomVastResponseWithMultipleBidder()
             throws XPathExpressionException, IOException, JSONException {
         String improveVastXml1 = getVastXmlInline("improve_ad_1", true);
         String improveVastXml2 = getVastXmlInline("improve_ad_2", true);
@@ -444,7 +444,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
-    public void auctionEndpointReturnsGvastResponseWithMultipleBidderAndDeal()
+    public void testCustomVastResponseWithMultipleBidderAndDeal()
             throws XPathExpressionException, IOException, JSONException {
         String improveVastXml1 = getVastXmlInline("improve_ad_1", true);
         String improveVastXml2 = getVastXmlInline("improve_ad_2", true);
@@ -502,7 +502,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
-    public void testWaterfallResponse() throws XPathExpressionException, IOException, JSONException {
+    public void testCustomVastForWaterfallResponseType() throws XPathExpressionException, IOException, JSONException {
         String vastXml = getVastXmlInline("ad_1", true);
         String cacheId = getCacheIdRandom();
 
@@ -530,7 +530,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
-    public void testWaterfallResponseWithMultipleBidderAndDeal()
+    public void testCustomVastForWaterfallResponseTypeWithMultipleBidderAndDeal()
             throws XPathExpressionException, IOException, JSONException {
         String improveVastXml1 = getVastXmlInline("improve_ad_1", true);
         String improveVastXml2 = getVastXmlInline("improve_ad_2", true);
@@ -585,7 +585,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
-    public void testWaterfallResponseWhenSSPReturnsNoBid() throws JSONException {
+    public void testCustomVastForWaterfallResponseTypeWhenSSPReturnsNoBid() throws JSONException {
         JSONObject responseJson = doCustomVastRequestWhenSSPReturnsNoBid(
                 "waterfall", UUID.randomUUID().toString(), 20220629
         );
@@ -597,58 +597,58 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     public void testGvastResponseWithAdUnit()
             throws XPathExpressionException, IOException, JSONException {
 
-        assertThat(doGvastRequestAndGetAdUnitParam(
+        assertThat(doCustomVastRequestAndGetAdUnitParam(
                 getVastXmlInline("ad_1", true), "1.12", 20220618,
                 Map.of("adUnit", "", "networkCode", "", "childNetworkCode", "")
         )).isEqualTo("/" + GAM_NETWORK_CODE + "/pbs/20220618");
 
-        assertThat(doGvastRequestAndGetAdUnitParam(
+        assertThat(doCustomVastRequestAndGetAdUnitParam(
                 getVastXmlInline("ad_1", true), "1.12", 20220618,
                 Map.of("adUnit", "", "networkCode", "", "childNetworkCode", "DEF")
         )).isEqualTo("/" + GAM_NETWORK_CODE + ",DEF/pbs/20220618");
 
-        assertThat(doGvastRequestAndGetAdUnitParam(
+        assertThat(doCustomVastRequestAndGetAdUnitParam(
                 getVastXmlInline("ad_1", true), "1.12", 20220618,
                 Map.of("adUnit", "", "networkCode", "ABC", "childNetworkCode", "")
         )).isEqualTo("/ABC/pbs/20220618");
 
-        assertThat(doGvastRequestAndGetAdUnitParam(
+        assertThat(doCustomVastRequestAndGetAdUnitParam(
                 getVastXmlInline("ad_1", true), "1.12", 20220618,
                 Map.of("adUnit", "", "networkCode", "ABC", "childNetworkCode", "DEF")
         )).isEqualTo("/ABC,DEF/pbs/20220618");
 
-        assertThat(doGvastRequestAndGetAdUnitParam(
+        assertThat(doCustomVastRequestAndGetAdUnitParam(
                 getVastXmlInline("ad_1", true), "1.12", 20220618,
                 Map.of("adUnit", "/XYZ", "networkCode", "", "childNetworkCode", "")
         )).isEqualTo("/XYZ");
 
-        assertThat(doGvastRequestAndGetAdUnitParam(
+        assertThat(doCustomVastRequestAndGetAdUnitParam(
                 getVastXmlInline("ad_1", true), "1.12", 20220618,
                 Map.of("adUnit", "/XYZ", "networkCode", "ABC", "childNetworkCode", "DEF")
         )).isEqualTo("/XYZ");
 
-        assertThat(doGvastRequestAndGetAdUnitParam(
+        assertThat(doCustomVastRequestAndGetAdUnitParam(
                 getVastXmlInline("ad_1", true), "1.12", 20220618,
                 Map.of("adUnit", "XYZ", "networkCode", "", "childNetworkCode", "")
         )).isEqualTo("/" + GAM_NETWORK_CODE + "/XYZ");
 
-        assertThat(doGvastRequestAndGetAdUnitParam(
+        assertThat(doCustomVastRequestAndGetAdUnitParam(
                 getVastXmlInline("ad_1", true), "1.12", 20220618,
                 Map.of("adUnit", "XYZ", "networkCode", "", "childNetworkCode", "DEF")
         )).isEqualTo("/" + GAM_NETWORK_CODE + ",DEF/XYZ");
 
-        assertThat(doGvastRequestAndGetAdUnitParam(
+        assertThat(doCustomVastRequestAndGetAdUnitParam(
                 getVastXmlInline("ad_1", true), "1.12", 20220618,
                 Map.of("adUnit", "XYZ", "networkCode", "ABC", "childNetworkCode", "")
         )).isEqualTo("/ABC/XYZ");
 
-        assertThat(doGvastRequestAndGetAdUnitParam(
+        assertThat(doCustomVastRequestAndGetAdUnitParam(
                 getVastXmlInline("ad_1", true), "1.12", 20220618,
                 Map.of("adUnit", "XYZ", "networkCode", "ABC", "childNetworkCode", "DEF")
         )).isEqualTo("/ABC,DEF/XYZ");
     }
 
-    private String doGvastRequestAndGetAdUnitParam(
+    private String doCustomVastRequestAndGetAdUnitParam(
             String improveAdm, String improvePrice, int placementId, Map<String, String> gamParams
     ) throws IOException, JSONException, XPathExpressionException {
 
@@ -673,33 +673,33 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     public void testGvastResponseWithVideoProtocol()
             throws XPathExpressionException, IOException, JSONException {
 
-        assertThat(doGvastRequestWithProtocolAndGetOutputParam(
+        assertThat(doCustomVastRequestWithProtocolAndGetOutputParam(
                 getVastXmlInline("ad_1", true), "0.97", 20220620,
                 Arrays.asList(2, 3, 7)
         )).isEqualTo("xml_vast4");
 
-        assertThat(doGvastRequestWithProtocolAndGetOutputParam(
+        assertThat(doCustomVastRequestWithProtocolAndGetOutputParam(
                 getVastXmlInline("ad_1", true), "0.97", 20220620,
                 Arrays.asList(2, 3)
         )).isEqualTo("xml_vast3");
 
-        assertThat(doGvastRequestWithProtocolAndGetOutputParam(
+        assertThat(doCustomVastRequestWithProtocolAndGetOutputParam(
                 getVastXmlInline("ad_1", true), "0.97", 20220620,
                 Arrays.asList(2)
         )).isEqualTo("xml_vast2");
 
-        assertThat(doGvastRequestWithProtocolAndGetOutputParam(
+        assertThat(doCustomVastRequestWithProtocolAndGetOutputParam(
                 getVastXmlInline("ad_1", true), "0.97", 20220620,
                 Arrays.asList(1)
         )).isEqualTo("vast");
 
-        assertThat(doGvastRequestWithProtocolAndGetOutputParam(
+        assertThat(doCustomVastRequestWithProtocolAndGetOutputParam(
                 getVastXmlInline("ad_1", true), "0.97", 20220620,
                 Arrays.asList(1, 4, 5, 6, 8, 9, 10)
         )).isEqualTo("vast");
     }
 
-    private String doGvastRequestWithProtocolAndGetOutputParam(
+    private String doCustomVastRequestWithProtocolAndGetOutputParam(
             String improveAdm, String improvePrice, int placementId, List<Integer> protocols
     ) throws IOException, JSONException, XPathExpressionException {
 
@@ -722,23 +722,23 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
     @Test
     public void testGvastResponseWithSiteCategory() throws XPathExpressionException, IOException, JSONException {
-        assertThat(doGvastRequestWithSiteCategoryAndGetCategoryOfCustParam(
+        assertThat(doCustomVastRequestWithSiteCategoryAndGetCategoryOfCustParam(
                 getVastXmlInline("ad_1", true), "0.85", 20220620,
                 Arrays.asList()
         )).isNull();
 
-        assertThat(doGvastRequestWithSiteCategoryAndGetCategoryOfCustParam(
+        assertThat(doCustomVastRequestWithSiteCategoryAndGetCategoryOfCustParam(
                 getVastXmlInline("ad_1", true), "0.85", 20220620,
                 Arrays.asList("IAB1")
         )).isEqualTo("IAB1");
 
-        assertThat(doGvastRequestWithSiteCategoryAndGetCategoryOfCustParam(
+        assertThat(doCustomVastRequestWithSiteCategoryAndGetCategoryOfCustParam(
                 getVastXmlInline("ad_1", true), "0.85", 20220620,
                 Arrays.asList("IAB1", "IAB2")
         )).isEqualTo("IAB1,IAB2");
     }
 
-    private String doGvastRequestWithSiteCategoryAndGetCategoryOfCustParam(
+    private String doCustomVastRequestWithSiteCategoryAndGetCategoryOfCustParam(
             String improveAdm, String improvePrice, int placementId, List<String> siteIabCategories
     ) throws IOException, JSONException, XPathExpressionException {
 
@@ -770,7 +770,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
     @Test
     public void testGvastResponseWithCustomKeyValues() throws XPathExpressionException, JSONException, IOException {
-        Map<String, List<String>> custParams = doGvastRequestWithCustomKeyValuesAndGetCustParam(
+        Map<String, List<String>> custParams = doCustomVastRequestWithCustomKeyValuesAndGetCustParam(
                 getVastXmlInline("ad_1", false), "0.75", 20220620, Map.of(
                         "key1", "value1", "key2", "value2"
                 )
@@ -782,7 +782,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertThat(custParams.get("key2").get(0)).isEqualTo("value2");
     }
 
-    private Map<String, List<String>> doGvastRequestWithCustomKeyValuesAndGetCustParam(
+    private Map<String, List<String>> doCustomVastRequestWithCustomKeyValuesAndGetCustParam(
             String improveAdm, String improvePrice, int placementId, Map<String, String> customKeyValues
     ) throws IOException, JSONException, XPathExpressionException {
 
@@ -804,7 +804,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
-    public void testGvastResponseWhenBidDiscardedForNotCaching()
+    public void testCustomVastResponseWhenBidDiscardedForNotCaching()
             throws IOException, JSONException, XPathExpressionException {
 
         String improveVastXml1 = getVastXmlInline("improve_ad_1", true);
@@ -853,7 +853,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
-    public void testGvastResponseWhenSSPReturnsNoBid()
+    public void testCustomVastResponseWhenSSPReturnsNoBid()
             throws XPathExpressionException, IOException, JSONException {
 
         int placementId = 20220629;

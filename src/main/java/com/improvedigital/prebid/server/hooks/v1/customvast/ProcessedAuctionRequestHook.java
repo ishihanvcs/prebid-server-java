@@ -4,6 +4,7 @@ import com.iab.openrtb.request.BidRequest;
 import com.improvedigital.prebid.server.customvast.CustomVastUtils;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.utils.LogMessage;
+import com.improvedigital.prebid.server.utils.LogUtils;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
@@ -46,14 +47,19 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
                     payload -> AuctionRequestPayloadImpl.of(bidRequest), moduleContext
             ));
         } catch (Throwable t) {
-            logger.error(
-                    LogMessage.from(bidRequest)
-                            .with(t)
-            );
+            LogMessage logMessage = LogMessage.from(bidRequest);
             if (t instanceof CustomVastHooksException) {
+                LogUtils.log(
+                        logMessage.withLogCounterKey(logMessage.toString())
+                                .with(t)
+                                .withFrequency(1000),
+                        logger::error
+                );
                 return Future.succeededFuture(
                         InvocationResultImpl.rejected(t.getMessage())
                 );
+            } else {
+                logger.error(logMessage.with(t));
             }
         }
         return Future.succeededFuture(

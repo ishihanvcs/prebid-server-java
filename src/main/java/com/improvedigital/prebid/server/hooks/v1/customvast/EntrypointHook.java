@@ -118,8 +118,9 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
                                     updatedBidRequest = setParentAccountId(updatedBidRequest, accountId);
                                 } else {
                                     logger.warn(
-                                            LogMessage.from(originalBidRequest)
-                                                    .with("accountId mismatched in imp[].prebid.improvedigitalpbs")
+                                            LogMessage.from(originalBidRequest).withMessage(
+                                                    "accountId mismatched in imp[].prebid.improvedigitalpbs"
+                                            )
                                     );
                                 }
 
@@ -128,7 +129,9 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
                                 } else {
                                     logger.warn(
                                             LogMessage.from(originalBidRequest)
-                                                    .with("requestId mismatched in imp[].prebid.improvedigitalpbs")
+                                                    .withMessage(
+                                                            "requestId mismatched in imp[].prebid.improvedigitalpbs"
+                                                    )
                                     );
                                 }
                                 final String updatedBody = mapper.writeValueAsString(updatedBidRequest);

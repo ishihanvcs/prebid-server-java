@@ -27,6 +27,9 @@ public class LogMessage {
     BidResponse response;
     SeatBid seatBid;
     Bid bid;
+    String logCounterKey;
+    @Getter(AccessLevel.PUBLIC)
+    int frequency;
 
     // static 'from' methods
     public static LogMessage from(Throwable throwable) {
@@ -59,12 +62,20 @@ public class LogMessage {
 
     // with methods
 
-    public LogMessage with(Throwable throwable) {
-        return this.toBuilder().throwable(throwable).build();
+    public LogMessage withMessage(String message) {
+        return this.toBuilder().message(message).build();
     }
 
-    public LogMessage with(String message) {
-        return this.toBuilder().message(message).build();
+    public LogMessage withLogCounterKey(String logCounterKey) {
+        return this.toBuilder().logCounterKey(logCounterKey).build();
+    }
+
+    public LogMessage withFrequency(int frequency) {
+        return this.toBuilder().frequency(frequency).build();
+    }
+
+    public LogMessage with(Throwable throwable) {
+        return this.toBuilder().throwable(throwable).build();
     }
 
     public LogMessage with(BidRequest request) {
@@ -182,7 +193,6 @@ public class LogMessage {
     }
 
     private void appendBidInfo(StringBuilder sb, Bid bid) {
-        sb.append(String.format("\tbid[%s]: ", bid.getId())).append("\n");
         sb.append("\t\tbid.impid: ").append(bid.getImpid()).append("\n");
         sb.append("\t\tbid.price: ").append(bid.getPrice()).append("\n");
         sb.append("\t\tbid.dealid: ").append(bid.getDealid()).append("\n");
@@ -210,5 +220,21 @@ public class LogMessage {
                 appendImpInfo(sb, i);
             });
         }
+    }
+
+    public String resolveLogCounterKey() {
+        if (StringUtils.isNotBlank(logCounterKey)) {
+            return logCounterKey;
+        }
+
+        if (StringUtils.isNotBlank(message)) {
+            return message;
+        }
+
+        if (throwable != null && StringUtils.isNotBlank(throwable.getMessage())) {
+            return throwable.getMessage();
+        }
+
+        return toString();
     }
 }

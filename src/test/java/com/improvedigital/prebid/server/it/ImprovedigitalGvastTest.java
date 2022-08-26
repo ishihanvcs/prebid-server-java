@@ -865,7 +865,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         assertBidCountIsOne(responseJson);
         assertBidIdExists(responseJson, 0, 0);
-        assertBidImpId(responseJson, 0, 0, "imp_id_" + uniqueId);
+        assertBidImpId(responseJson, 0, 0, "imp_id_0_" + uniqueId);
         assertBidPrice(responseJson, 0, 0, 0.0);
         assertSeat(responseJson, 0, "improvedigital");
         assertCurrency(responseJson, "USD");
@@ -882,6 +882,37 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         // Make sure we have only 1 ad and that is generic.
         assertAdCount(adm, 1);
         assertFallbackOnNoAd(adm, false, "0");
+    }
+
+    @Test
+    public void testCustomVastResponseWithMultipleImpsInRequest()
+            throws XPathExpressionException, IOException, JSONException {
+        String vastXml = getVastXmlInline("ad_1", true);
+        String cacheId = getCacheIdRandom();
+
+        JSONObject responseJson = doCustomVastAuctionRequest(GvastAuctionTestParam.builder()
+                .responseType("gvast")
+                .storedImpId("20220608")
+                .improvePlacementId(20220608)
+                .improveAdm(vastXml)
+                .improvePrice("1.08")
+                .improveCacheId(cacheId)
+                .build()
+        );
+
+        String adm = getAdm(responseJson, 0, 0);
+
+        String vastAdTagUri = getVastTagUri(adm, "0");
+
+        assertGamUrlWithImprovedigitalAsSingleBidder(
+                vastAdTagUri, cacheId, "20220608", "1.08"
+        );
+        assertCachedContentFromCacheId(cacheId, getVastXmlToCache(
+                vastXml, "improvedigital", "1.08", 20220608
+        ));
+        assertSSPSyncPixels(adm, "0");
+        assertNoCreative(adm, "0");
+        assertNoExtensions(adm, "0");
     }
 
     private String getVastTagUri(String adm, String adId) throws XPathExpressionException {
@@ -1299,10 +1330,10 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         .withRequestBody(equalToJson(getSSPBidRequestVideo(uniqueId,
                                 SSPBidRequestVideoTestData.builder()
                                         .currency("USD")
-                                        .impExt(new SSPBidRequestImpExt()
+                                        .impExts(Arrays.asList(new SSPBidRequestImpExt()
                                                 .putStoredRequest(storedImpId)
                                                 .putBidder()
-                                                .putBidderKeyValue("placementId", placementIdOfStoredImp))
+                                                .putBidderKeyValue("placementId", placementIdOfStoredImp)))
                                         .build()
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(
@@ -1327,11 +1358,11 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         Response response = specWithPBSHeader(18080)
                 .body(getAuctionBidRequestVideo(uniqueId, AuctionBidRequestVideoTestData.builder()
                         .currency("USD")
-                        .impExt(new AuctionBidRequestImpExt()
+                        .impExts(Arrays.asList(new AuctionBidRequestImpExt()
                                 .putStoredRequest(storedImpId)
                                 .putImprovedigitalPbs()
                                 .putImprovedigitalPbsKeyValue("responseType", "vast")
-                        )
+                        ))
                         .build()
                 ))
                 .post(Endpoint.openrtb2_auction.value());
@@ -1339,7 +1370,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         JSONObject responseJson = new JSONObject(response.asString());
         assertBidCountIsOneOrMore(responseJson);
         assertBidIdExists(responseJson, 0, 0);
-        assertBidImpId(responseJson, 0, 0, "imp_id_" + uniqueId);
+        assertBidImpId(responseJson, 0, 0, "imp_id_0_" + uniqueId);
         assertBidPrice(responseJson, 0, 0, Double.parseDouble(price));
         assertSeat(responseJson, 0, "improvedigital");
         assertBidExtPrebidType(responseJson, 0, 0, "video");
@@ -1362,14 +1393,14 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         .withRequestBody(equalToJson(getSSPBidRequestVideo(uniqueId,
                                 SSPBidRequestVideoTestData.builder()
                                         .currency("USD")
-                                        .impExt(new SSPBidRequestImpExt()
+                                        .impExts(Arrays.asList(new SSPBidRequestImpExt()
                                                 .putStoredRequest(param.storedImpId)
                                                 .putBidder()
                                                 .putBidderKeyValue("placementId", param.improvePlacementId)
-                                                .putBidderKeyValue("keyValues", param.improveCustomKeyValues))
+                                                .putBidderKeyValue("keyValues", param.improveCustomKeyValues)))
                                         .extRequestTargeting(getExtPrebidTargetingForGvast())
                                         .extRequestPrebidCache(getExtPrebidCacheForGvast())
-                                        .videoProtocols(param.videoProtocols)
+                                        .videoProtocols(Arrays.asList(param.videoProtocols))
                                         .siteIABCategories(param.siteIabCategories)
                                         .gdprConsent(param.gdprConsent)
                                         .build()
@@ -1418,8 +1449,8 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         Response response = specWithPBSHeader(18080)
                 .body(getAuctionBidRequestVideo(uniqueId, AuctionBidRequestVideoTestData.builder()
                         .currency("USD")
-                        .impExt(auctionImpExt)
-                        .videoProtocols(param.videoProtocols)
+                        .impExts(Arrays.asList(auctionImpExt))
+                        .videoProtocols(Arrays.asList(param.videoProtocols))
                         .siteIABCategories(param.siteIabCategories)
                         .gdprConsent(param.gdprConsent)
                         .build()
@@ -1429,7 +1460,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         JSONObject responseJson = new JSONObject(response.asString());
         assertBidCountIsOne(responseJson); /* As we are sending some bids from SSP, we will definitely get 1 bid. */
         assertBidIdExists(responseJson, 0, 0);
-        assertBidImpId(responseJson, 0, 0, "imp_id_" + uniqueId);
+        assertBidImpId(responseJson, 0, 0, "imp_id_0_" + uniqueId);
         assertBidPrice(responseJson, 0, 0, 0.0);
         assertSeat(responseJson, 0, "improvedigital");
         assertCurrency(responseJson, "USD");
@@ -1465,9 +1496,9 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         .withRequestBody(equalToJson(getSSPBidRequestVideo(uniqueId,
                                 SSPBidRequestVideoTestData.builder()
                                         .currency("USD")
-                                        .impExt(new SSPBidRequestImpExt()
+                                        .impExts(Arrays.asList(new SSPBidRequestImpExt()
                                                 .putBidder()
-                                                .putBidderKeyValue("placementId", param.improvePlacementId))
+                                                .putBidderKeyValue("placementId", param.improvePlacementId)))
                                         .extRequestTargeting(getExtPrebidTargetingForGvast())
                                         .extRequestPrebidCache(getExtPrebidCacheForGvast())
                                         .build()
@@ -1496,9 +1527,9 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         .withRequestBody(equalToJson(getSSPBidRequestVideo(uniqueId,
                                 SSPBidRequestVideoTestData.builder()
                                         .currency("USD")
-                                        .impExt(new SSPBidRequestImpExt()
+                                        .impExts(Arrays.asList(new SSPBidRequestImpExt()
                                                 .putBidder()
-                                                .putBidderKeyValue("exampleProperty", "examplePropertyValue"))
+                                                .putBidderKeyValue("exampleProperty", "examplePropertyValue")))
                                         .extRequestTargeting(getExtPrebidTargetingForGvast())
                                         .extRequestPrebidCache(getExtPrebidCacheForGvast())
                                         .build()
@@ -1564,14 +1595,14 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         Response response = specWithPBSHeader(18080)
                 .body(getAuctionBidRequestVideo(uniqueId, AuctionBidRequestVideoTestData.builder()
                         .currency("USD")
-                        .impExt(new AuctionBidRequestImpExt()
+                        .impExts(Arrays.asList(new AuctionBidRequestImpExt()
                                 .putImprovedigitalPbs()
                                 .putImprovedigitalPbsKeyValue("responseType", param.responseType)
                                 .putImprovedigitalPbsKeyValue("waterfall", waterfalls)
                                 .putBidder("improvedigital")
                                 .putBidderKeyValue("improvedigital", "placementId", param.improvePlacementId)
                                 .putBidder("generic")
-                                .putBidderKeyValue("generic", "exampleProperty", "examplePropertyValue"))
+                                .putBidderKeyValue("generic", "exampleProperty", "examplePropertyValue")))
                         .build()
                 ))
                 .post(Endpoint.openrtb2_auction.value());
@@ -1579,7 +1610,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         JSONObject responseJson = new JSONObject(response.asString());
         assertBidCountIsOne(responseJson); /* As we are sending some bids from SSP, we will definitely get 1 bid. */
         assertBidIdExists(responseJson, 0, 0);
-        assertBidImpId(responseJson, 0, 0, "imp_id_" + uniqueId);
+        assertBidImpId(responseJson, 0, 0, "imp_id_0_" + uniqueId);
         assertBidPrice(responseJson, 0, 0, 0.0);
         assertSeat(responseJson, 0, "improvedigital");
         assertCurrency(responseJson, "USD");
@@ -1594,9 +1625,9 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         .withRequestBody(equalToJson(getSSPBidRequestVideo(uniqueId,
                                 SSPBidRequestVideoTestData.builder()
                                         .currency("USD")
-                                        .impExt(new SSPBidRequestImpExt()
+                                        .impExts(Arrays.asList(new SSPBidRequestImpExt()
                                                 .putBidder()
-                                                .putBidderKeyValue("placementId", placementId))
+                                                .putBidderKeyValue("placementId", placementId)))
                                         .extRequestTargeting(getExtPrebidTargetingForGvast())
                                         .extRequestPrebidCache(getExtPrebidCacheForGvast())
                                         .build()
@@ -1609,11 +1640,11 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         Response response = specWithPBSHeader(18080)
                 .body(getAuctionBidRequestVideo(uniqueId, AuctionBidRequestVideoTestData.builder()
                         .currency("USD")
-                        .impExt(new AuctionBidRequestImpExt()
+                        .impExts(Arrays.asList(new AuctionBidRequestImpExt()
                                 .putImprovedigitalPbs()
                                 .putImprovedigitalPbsKeyValue("responseType", responseType)
                                 .putBidder("improvedigital")
-                                .putBidderKeyValue("improvedigital", "placementId", placementId))
+                                .putBidderKeyValue("improvedigital", "placementId", placementId)))
                         .build()
                 ))
                 .post(Endpoint.openrtb2_auction.value());

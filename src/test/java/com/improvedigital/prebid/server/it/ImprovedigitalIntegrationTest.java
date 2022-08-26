@@ -63,14 +63,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -152,14 +153,16 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         );
 
         return getBidRequestWeb(uniqueId,
-                imp -> imp.toBuilder()
-                        .ext(bidRequestData.impExt == null ? null : bidRequestData.impExt.get())
-                        .banner(Banner.builder()
-                                .w(300)
-                                .h(250)
-                                .mimes(Arrays.asList("image/jpg"))
+                bidRequestData.impExts.stream()
+                        .map(impExt -> (Function<Imp, Imp>) imp -> imp.toBuilder()
+                                .ext(impExt.get())
+                                .banner(Banner.builder()
+                                        .w(300)
+                                        .h(250)
+                                        .mimes(Arrays.asList("image/jpg"))
+                                        .build())
                                 .build())
-                        .build(),
+                        .collect(Collectors.toList()),
                 bidRequest -> bidRequest.toBuilder()
                         .cur(Arrays.asList(bidRequestData.currency))
                         .user(User.builder()
@@ -188,16 +191,18 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         );
 
         return getBidRequestWeb(uniqueId,
-                imp -> imp.toBuilder()
-                        .ext(bidRequestData.impExt == null ? null : bidRequestData.impExt.get())
-                        .banner(Banner.builder()
-                                .w(300)
-                                .h(250)
-                                .mimes(Arrays.asList("image/jpg"))
+                bidRequestData.impExts.stream()
+                        .map(impExt -> (Function<Imp, Imp>) imp -> imp.toBuilder()
+                                .ext(impExt.get())
+                                .banner(Banner.builder()
+                                        .w(300)
+                                        .h(250)
+                                        .mimes(Arrays.asList("image/jpg"))
+                                        .build())
+                                .bidfloor(BigDecimal.ZERO)
+                                .bidfloorcur(bidRequestData.currency)
                                 .build())
-                        .bidfloor(BigDecimal.ZERO)
-                        .bidfloorcur(bidRequestData.currency)
-                        .build(),
+                        .collect(Collectors.toList()),
                 bidRequest -> bidRequest.toBuilder()
                         .site(Site.builder()
                                 .domain(IT_TEST_DOMAIN)
@@ -235,20 +240,24 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     }
 
     protected String getAuctionBidRequestVideo(String uniqueId, AuctionBidRequestVideoTestData bidRequestData) {
+        final AtomicInteger impIndex = new AtomicInteger(0);
+
         return getBidRequestWeb(uniqueId,
-                imp -> imp.toBuilder()
-                        .ext(bidRequestData.impExt == null ? null : bidRequestData.impExt.get())
-                        .video(Video.builder()
-                                .protocols(bidRequestData.getVideoProtocols(2))
-                                .w(640)
-                                .h(480)
-                                .mimes(Arrays.asList("video/mp4"))
-                                .minduration(1)
-                                .maxduration(60)
-                                .linearity(1)
-                                .placement(5)
+                bidRequestData.impExts.stream()
+                        .map(impExt -> (Function<Imp, Imp>) imp -> imp.toBuilder()
+                                .ext(impExt.get())
+                                .video(Video.builder()
+                                        .protocols(bidRequestData.getVideoProtocols(impIndex.getAndIncrement(), 2))
+                                        .w(640)
+                                        .h(480)
+                                        .mimes(Arrays.asList("video/mp4"))
+                                        .minduration(1)
+                                        .maxduration(60)
+                                        .linearity(1)
+                                        .placement(5)
+                                        .build())
                                 .build())
-                        .build(),
+                        .collect(Collectors.toList()),
                 bidRequest -> bidRequest.toBuilder()
                         .cur(Arrays.asList(bidRequestData.currency))
                         .site(Site.builder()
@@ -264,22 +273,26 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     }
 
     protected String getSSPBidRequestVideo(String uniqueId, SSPBidRequestVideoTestData bidRequestData) {
+        final AtomicInteger impIndex = new AtomicInteger(0);
+
         return getBidRequestWeb(uniqueId,
-                imp -> imp.toBuilder()
-                        .ext(bidRequestData.impExt == null ? null : bidRequestData.impExt.get())
-                        .video(Video.builder()
-                                .protocols(bidRequestData.getVideoProtocols(2))
-                                .w(640)
-                                .h(480)
-                                .mimes(Arrays.asList("video/mp4"))
-                                .minduration(1)
-                                .maxduration(60)
-                                .linearity(1)
-                                .placement(5)
+                bidRequestData.impExts.stream()
+                        .map(impExt -> (Function<Imp, Imp>) imp -> imp.toBuilder()
+                                .ext(impExt.get())
+                                .video(Video.builder()
+                                        .protocols(bidRequestData.getVideoProtocols(impIndex.getAndIncrement(), 2))
+                                        .w(640)
+                                        .h(480)
+                                        .mimes(Arrays.asList("video/mp4"))
+                                        .minduration(1)
+                                        .maxduration(60)
+                                        .linearity(1)
+                                        .placement(5)
+                                        .build())
+                                .bidfloor(BigDecimal.ZERO)
+                                .bidfloorcur(bidRequestData.currency)
                                 .build())
-                        .bidfloor(BigDecimal.ZERO)
-                        .bidfloorcur(bidRequestData.currency)
-                        .build(),
+                        .collect(Collectors.toList()),
                 bidRequest -> bidRequest.toBuilder()
                         .site(Site.builder()
                                 .domain(IT_TEST_DOMAIN)
@@ -316,15 +329,9 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     }
 
     protected String getBidRequestWeb(
-            String uniqueId, Function<Imp, Imp> impModifier, Function<BidRequest, BidRequest> bidModifier
+            String uniqueId, List<Function<Imp, Imp>> impModifiers, Function<BidRequest, BidRequest> bidModifier
     ) {
-        Imp imp = Imp.builder()
-                .id("imp_id_" + uniqueId)
-                .build();
-
-        if (impModifier != null) {
-            imp = impModifier.apply(imp);
-        }
+        final AtomicInteger impIndex = new AtomicInteger(0);
 
         BidRequest bidRequest = BidRequest.builder()
                 .id("request_id_" + uniqueId)
@@ -333,7 +340,11 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                         .build())
                 .tmax(5000L)
                 .regs(Regs.of(null, ExtRegs.of(0, null)))
-                .imp(Arrays.asList(imp))
+                .imp(impModifiers.stream()
+                        .map(m -> m.apply(Imp.builder()
+                                .id("imp_id_" + impIndex.getAndIncrement() + "_" + uniqueId)
+                                .build()))
+                        .collect(Collectors.toList()))
                 .build();
 
         if (bidModifier != null) {
@@ -354,22 +365,39 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
             String currency,
             BidResponseTestData... data
     ) {
+        return getBidResponse(bidderName, uniqueId, currency, Arrays.asList(
+                Arrays.stream(data).collect(Collectors.toList())
+        ));
+    }
+
+    protected String getBidResponse(
+            String bidderName,
+            String uniqueId,
+            String currency,
+            List<List<BidResponseTestData>> data
+    ) {
+        final AtomicInteger bidIndex = new AtomicInteger(0);
+        List<Bid> bids = new ArrayList<>();
+        for (final AtomicInteger i = new AtomicInteger(0); i.get() < data.size(); i.getAndIncrement()) {
+            bids.addAll(data.get(i.get()).stream()
+                    .map(d -> Bid.builder()
+                            .id("bid_id_" + bidderName + "_" + bidIndex.getAndIncrement() + "_" + uniqueId)
+                            .impid("imp_id_" + i + "_" + uniqueId) /* imp id is tied to the bid request. */
+                            .price(BigDecimal.valueOf(d.price).setScale(2, RoundingMode.HALF_EVEN))
+                            .adm(d.adm)
+                            .cid("campaign_id_" + i + "_" + uniqueId)
+                            .adid("ad_id_" + i + "_" + uniqueId)
+                            .crid("creative_id_" + i + "_" + uniqueId)
+                            .ext(d.bidExt == null ? null : d.bidExt.get())
+                            .build())
+                    .collect(Collectors.toList()));
+        }
+
         BidResponse bidResponse = BidResponse.builder()
                 .id("request_id_" + uniqueId) /* request id is tied to the bid request. */
                 .cur(currency)
                 .seatbid(Arrays.asList(SeatBid.builder()
-                        .bid(IntStream.range(0, data.length).mapToObj(i ->
-                                Bid.builder()
-                                        .id("bid_id_" + bidderName + "_" + i + "_" + uniqueId)
-                                        .impid("imp_id_" + uniqueId) /* imp id is tied to the bid request. */
-                                        .price(BigDecimal.valueOf(data[i].price).setScale(2, RoundingMode.HALF_EVEN))
-                                        .adm(data[i].adm)
-                                        .cid("campaign_id_" + i + "_" + uniqueId)
-                                        .adid("ad_id_" + i + "_" + uniqueId)
-                                        .crid("creative_id_" + i + "_" + uniqueId)
-                                        .ext(data[i].bidExt == null ? null : data[i].bidExt.get())
-                                        .build()
-                        ).collect(Collectors.toList()))
+                        .bid(bids)
                         .build()
                 ))
                 .build();
@@ -389,7 +417,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     public static class AuctionBidRequestBannerTestData {
         String currency;
 
-        AuctionBidRequestImpExt impExt;
+        List<AuctionBidRequestImpExt> impExts;
 
         String gdprConsent;
 
@@ -410,7 +438,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     public static class SSPBidRequestBannerTestData {
         String currency;
 
-        SSPBidRequestImpExt impExt;
+        List<SSPBidRequestImpExt> impExts;
 
         String gdprConsent;
 
@@ -429,17 +457,25 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     public static class AuctionBidRequestVideoTestData {
         String currency;
 
-        AuctionBidRequestImpExt impExt;
+        List<AuctionBidRequestImpExt> impExts;
 
-        List<Integer> videoProtocols;
+        List<List<Integer>> videoProtocols;
 
         List<String> siteIABCategories;
 
         String gdprConsent;
 
         @JsonIgnore
-        public List<Integer> getVideoProtocols(int defaultProtocol) {
-            return CollectionUtils.isEmpty(videoProtocols) ? Arrays.asList(defaultProtocol) : videoProtocols;
+        public List<Integer> getVideoProtocols(int impIndex, int defaultProtocol) {
+            if (CollectionUtils.isEmpty(videoProtocols) || impIndex < 0 || impIndex >= videoProtocols.size()) {
+                return Arrays.asList(defaultProtocol);
+            }
+
+            if (videoProtocols.get(impIndex) == null) {
+                return Arrays.asList(defaultProtocol);
+            }
+
+            return videoProtocols.get(impIndex);
         }
     }
 
@@ -451,21 +487,29 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     public static class SSPBidRequestVideoTestData {
         String currency;
 
-        SSPBidRequestImpExt impExt;
+        List<SSPBidRequestImpExt> impExts;
+
+        List<List<Integer>> videoProtocols;
 
         ExtRequestTargeting extRequestTargeting;
 
         ExtRequestPrebidCache extRequestPrebidCache;
-
-        List<Integer> videoProtocols;
 
         List<String> siteIABCategories;
 
         String gdprConsent;
 
         @JsonIgnore
-        public List<Integer> getVideoProtocols(int defaultProtocol) {
-            return CollectionUtils.isEmpty(videoProtocols) ? Arrays.asList(defaultProtocol) : videoProtocols;
+        public List<Integer> getVideoProtocols(int impIndex, int defaultProtocol) {
+            if (CollectionUtils.isEmpty(videoProtocols) || impIndex < 0 || impIndex >= videoProtocols.size()) {
+                return Arrays.asList(defaultProtocol);
+            }
+
+            if (videoProtocols.get(impIndex) == null) {
+                return Arrays.asList(defaultProtocol);
+            }
+
+            return videoProtocols.get(impIndex);
         }
     }
 

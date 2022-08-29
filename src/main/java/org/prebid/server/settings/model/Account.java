@@ -1,6 +1,7 @@
 package org.prebid.server.settings.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Builder;
 import lombok.Value;
 
@@ -25,7 +26,7 @@ public class Account {
 
     AccountHooksConfiguration hooks;
 
-    ExtAccount ext;
+    ObjectNode ext;
 
     public static Account empty(String id) {
         return Account.builder()

@@ -1,16 +1,21 @@
 accounts:
   - id: 2022081801
     ext:
-      bidPriceAdjustment: 0.95
-      bidPriceAdjustmentIncImprove: true
+      improvedigitalpbs:
+        bidPriceAdjustment: 0.95
+        bidPriceAdjustmentIncImprove: true
   - id: 2022081802
     ext:
-      bidPriceAdjustment: 1.15
-      bidPriceAdjustmentIncImprove: true
+      improvedigitalpbs:
+        bidPriceAdjustment: 1.15
+        bidPriceAdjustmentIncImprove: true
   - id: 2022081803
     ext:
-      bidPriceAdjustment: 0.90
-      bidPriceAdjustmentIncImprove: false
+      improvedigitalpbs:
+        bidPriceAdjustment: 0.90
+      b  idPriceAdjustmentIncImprove: false
   - id: 2022081804
     ext:
-      bidPriceAdjustment: 0.80
+      improvedigitalpbs:
+        bidPriceAdjustment: 0.80
+  - id: 2022081805

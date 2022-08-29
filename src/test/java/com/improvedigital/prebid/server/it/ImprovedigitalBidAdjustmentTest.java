@@ -159,10 +159,25 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
         );
     }
 
+    @Test
+    public void testBidAdjustmentWhenAccountHasNoValueInExt() throws Exception {
+        doAuctionRequestToImprovedigitalBidder(
+                /* This account has no "ext" */ "2022081805",
+                false,
+                null, /* No bidadjustment factors. */
+                "2022081502",
+                20220815,
+                BigDecimal.valueOf(0.5),
+                1.15,
+                BigDecimal.valueOf(0.5), /* Bidfloor intact. */
+                1.15 /* Bid intact. */
+        );
+    }
+
     private JSONObject doAuctionRequestToImprovedigitalBidder(
             String publisherId,
             boolean improveIsExpectedForAdjustment,
-            double expectedBidAdjustmentPct,
+            Double expectedBidAdjustmentPct,
             String storedImpId,
             int placementIdOfStoredImp,
             BigDecimal dspBidFloor,
@@ -182,9 +197,10 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                                                 .putStoredRequest(storedImpId)
                                                 .putBidder()
                                                 .putBidderKeyValue("placementId", placementIdOfStoredImp))
-                                        .reqExtBidAdjustmentFactors(getAllBiddersExpectedBidAdjustmentFactors(
-                                                expectedBidAdjustmentPct, improveIsExpectedForAdjustment
-                                        ))
+                                        .reqExtBidAdjustmentFactors(expectedBidAdjustmentPct == null
+                                                ? null : getAllBiddersExpectedBidAdjustmentFactors(
+                                                expectedBidAdjustmentPct, improveIsExpectedForAdjustment)
+                                        )
                                         .publisherId(publisherId)
                                         .floor(expectedPbsBidFloor == null ? null : Floor.of(
                                                 expectedPbsBidFloor.setScale(4, RoundingMode.HALF_EVEN), "USD"

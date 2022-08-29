@@ -11,10 +11,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
+import com.improvedigital.prebid.server.settings.model.ImprovedigitalPbsAccountExt;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.Tuple2;
 import org.prebid.server.json.JacksonMapper;
+import org.prebid.server.settings.model.Account;
 import org.prebid.server.util.ObjectUtil;
 
 import java.math.BigDecimal;
@@ -326,6 +328,19 @@ public class JsonUtils {
         try {
             return objectMapper.treeToValue(
                     imp.getExt().at("/prebid/improvedigitalpbs"), ImprovedigitalPbsImpExt.class
+            );
+        } catch (JsonProcessingException e) {
+            return null;
+        }
+    }
+
+    public ImprovedigitalPbsAccountExt getAccountExt(Account account) {
+        if (account == null || account.getExt() == null) {
+            return null;
+        }
+        try {
+            return objectMapper.treeToValue(
+                    account.getExt().at("/improvedigitalpbs"), ImprovedigitalPbsAccountExt.class
             );
         } catch (JsonProcessingException e) {
             return null;

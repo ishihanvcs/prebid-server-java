@@ -240,14 +240,12 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     }
 
     protected String getAuctionBidRequestVideo(String uniqueId, AuctionBidRequestVideoTestData bidRequestData) {
-        final AtomicInteger impIndex = new AtomicInteger(0);
-
         return getBidRequestWeb(uniqueId,
-                bidRequestData.impExts.stream()
-                        .map(impExt -> (Function<Imp, Imp>) imp -> imp.toBuilder()
-                                .ext(impExt.get())
+                bidRequestData.impData.stream()
+                        .map(simpleImp -> (Function<Imp, Imp>) imp -> imp.toBuilder()
+                                .ext(simpleImp.impExt.get())
                                 .video(Video.builder()
-                                        .protocols(bidRequestData.getVideoProtocols(impIndex.getAndIncrement(), 2))
+                                        .protocols(simpleImp.getVideoProtocols(2))
                                         .w(640)
                                         .h(480)
                                         .mimes(Arrays.asList("video/mp4"))
@@ -273,14 +271,12 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     }
 
     protected String getSSPBidRequestVideo(String uniqueId, SSPBidRequestVideoTestData bidRequestData) {
-        final AtomicInteger impIndex = new AtomicInteger(0);
-
         return getBidRequestWeb(uniqueId,
-                bidRequestData.impExts.stream()
-                        .map(impExt -> (Function<Imp, Imp>) imp -> imp.toBuilder()
-                                .ext(impExt.get())
+                bidRequestData.impData.stream()
+                        .map(singleImp -> (Function<Imp, Imp>) imp -> imp.toBuilder()
+                                .ext(singleImp.impExt.get())
                                 .video(Video.builder()
-                                        .protocols(bidRequestData.getVideoProtocols(impIndex.getAndIncrement(), 2))
+                                        .protocols(singleImp.getVideoProtocols(2))
                                         .w(640)
                                         .h(480)
                                         .mimes(Arrays.asList("video/mp4"))
@@ -366,6 +362,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
             BidResponseTestData... data
     ) {
         return getBidResponse(bidderName, uniqueId, currency, Arrays.asList(
+                // Behaving as simple imp response.
                 Arrays.stream(data).collect(Collectors.toList())
         ));
     }
@@ -374,7 +371,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
             String bidderName,
             String uniqueId,
             String currency,
-            List<List<BidResponseTestData>> data
+            /* List of bids for list of imps */ List<List<BidResponseTestData>> data
     ) {
         final AtomicInteger bidIndex = new AtomicInteger(0);
         List<Bid> bids = new ArrayList<>();
@@ -411,7 +408,6 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
 
     /**
      * This class contains full list of fields that we will use for IT test case.
-     * Some test case may set subset of the fields.
      */
     @Builder(toBuilder = true)
     public static class AuctionBidRequestBannerTestData {
@@ -432,7 +428,6 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
 
     /**
      * This class contains full list of fields that we will use for IT test case.
-     * Some test case may set subset of the fields.
      */
     @Builder(toBuilder = true)
     public static class SSPBidRequestBannerTestData {
@@ -451,45 +446,45 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
 
     /**
      * This class contains full list of fields that we will use for IT test case.
-     * Some test case may set subset of the fields.
      */
     @Builder(toBuilder = true)
     public static class AuctionBidRequestVideoTestData {
         String currency;
 
-        List<AuctionBidRequestImpExt> impExts;
-
-        List<List<Integer>> videoProtocols;
+        List<AuctionBidRequestImpVideoTestData> impData;
 
         List<String> siteIABCategories;
 
         String gdprConsent;
+    }
+
+    /**
+     * This class contains full list of fields that we will use for IT test case.
+     */
+    @Builder(toBuilder = true)
+    public static class AuctionBidRequestImpVideoTestData {
+        AuctionBidRequestImpExt impExt;
+
+        List<Integer> videoProtocols;
 
         @JsonIgnore
-        public List<Integer> getVideoProtocols(int impIndex, int defaultProtocol) {
-            if (CollectionUtils.isEmpty(videoProtocols) || impIndex < 0 || impIndex >= videoProtocols.size()) {
+        public List<Integer> getVideoProtocols(int defaultProtocol) {
+            if (CollectionUtils.isEmpty(videoProtocols)) {
                 return Arrays.asList(defaultProtocol);
             }
 
-            if (videoProtocols.get(impIndex) == null) {
-                return Arrays.asList(defaultProtocol);
-            }
-
-            return videoProtocols.get(impIndex);
+            return videoProtocols;
         }
     }
 
     /**
      * This class contains full list of fields that we will use for IT test case.
-     * Some test case may set subset of the fields.
      */
     @Builder(toBuilder = true)
     public static class SSPBidRequestVideoTestData {
         String currency;
 
-        List<SSPBidRequestImpExt> impExts;
-
-        List<List<Integer>> videoProtocols;
+        List<SSPBidRequestImpVideoTestData> impData;
 
         ExtRequestTargeting extRequestTargeting;
 
@@ -498,24 +493,29 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         List<String> siteIABCategories;
 
         String gdprConsent;
+    }
+
+    /**
+     * This class contains full list of fields that we will use for IT test case.
+     */
+    @Builder(toBuilder = true)
+    public static class SSPBidRequestImpVideoTestData {
+        SSPBidRequestImpExt impExt;
+
+        List<Integer> videoProtocols;
 
         @JsonIgnore
-        public List<Integer> getVideoProtocols(int impIndex, int defaultProtocol) {
-            if (CollectionUtils.isEmpty(videoProtocols) || impIndex < 0 || impIndex >= videoProtocols.size()) {
+        public List<Integer> getVideoProtocols(int defaultProtocol) {
+            if (CollectionUtils.isEmpty(videoProtocols)) {
                 return Arrays.asList(defaultProtocol);
             }
 
-            if (videoProtocols.get(impIndex) == null) {
-                return Arrays.asList(defaultProtocol);
-            }
-
-            return videoProtocols.get(impIndex);
+            return videoProtocols;
         }
     }
 
     /**
      * This class contains full list of fields for bid response that we will use for IT test case.
-     * Some test case may set subset of the fields.
      */
     @Builder(toBuilder = true)
     public static class BidResponseTestData {
@@ -746,7 +746,14 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
             String requestId,
             String... cacheContents
     ) throws IOException {
-        List<String> cachePutObjects = Arrays.stream(cacheContents).map(content -> "{"
+        return createCacheRequest(requestId, Arrays.stream(cacheContents).collect(Collectors.toList()));
+    }
+
+    protected String createCacheRequest(
+            String requestId,
+            List<String> cacheContents
+    ) throws IOException {
+        List<String> cachePutObjects = cacheContents.stream().map(content -> "{"
                 + "  \"aid\": \"" + requestId + "\","
                 + "  \"type\": \"xml\","
                 + "  \"value\": \"" + content + "\""

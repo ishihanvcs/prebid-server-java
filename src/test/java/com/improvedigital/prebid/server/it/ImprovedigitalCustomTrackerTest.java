@@ -1,7 +1,16 @@
 package com.improvedigital.prebid.server.it;
 
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
+import com.iab.openrtb.request.Request;
+import com.iab.openrtb.response.Asset;
+import com.iab.openrtb.response.DataObject;
+import com.iab.openrtb.response.EventTracker;
+import com.iab.openrtb.response.ImageObject;
+import com.iab.openrtb.response.Link;
+import com.iab.openrtb.response.TitleObject;
 import io.restassured.response.Response;
+import lombok.Builder;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
@@ -17,7 +26,12 @@ import org.xml.sax.InputSource;
 import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.io.StringReader;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
@@ -37,6 +51,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(SpringRunner.class)
 public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTest {
 
+    // The exchange rate is hard coded (src/test/resources/org/prebid/server/it/currency/latest.json).
+    private static final double IT_TEST_USD_TO_EUR_RATE = 0.8777319407;
+
     @Test
     public void shouldAddCustomTrackerOnBannerResponse() throws Exception {
         final Response response = doBannerRequestAndGetResponse(Map.of(
@@ -45,7 +62,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("banner");
+        assertBidExtPrebidType(responseJson, 0, 0, "banner");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -63,7 +80,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("banner");
+        assertBidExtPrebidType(responseJson, 0, 0, "banner");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -83,7 +100,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("banner");
+        assertBidExtPrebidType(responseJson, 0, 0, "banner");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -103,7 +120,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("banner");
+        assertBidExtPrebidType(responseJson, 0, 0, "banner");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -127,7 +144,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
+        assertBidExtPrebidType(responseJson, 0, 0, "video");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -155,7 +172,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
+        assertBidExtPrebidType(responseJson, 0, 0, "video");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -195,7 +212,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
+        assertBidExtPrebidType(responseJson, 0, 0, "video");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -217,7 +234,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
+        assertBidExtPrebidType(responseJson, 0, 0, "video");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -245,7 +262,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
+        assertBidExtPrebidType(responseJson, 0, 0, "video");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -285,7 +302,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
+        assertBidExtPrebidType(responseJson, 0, 0, "video");
         assertCurrency(responseJson, "USD");
 
         String adm = getAdm(responseJson, 0, 0);
@@ -310,8 +327,8 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         ));
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("video");
-        assertThat(getBidExtPrebidType(responseJson, 0, 1)).isEqualTo("video");
+        assertBidExtPrebidType(responseJson, 0, 0, "video");
+        assertBidExtPrebidType(responseJson, 0, 1, "video");
         assertCurrency(responseJson, "USD");
 
         String adm1 = getAdm(responseJson, 0, 0);
@@ -339,14 +356,22 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldNotAddCustomTrackerOnNativeResponseWhenNoTrackersReturnedFromBidder() throws Exception {
-        final Response response = doNativeRequestAndGetResponse(Map.of(
-                "IT_TEST_MACRO_EVENT_TRACKERS", "",
-                "IT_TEST_MACRO_IMP_TRACKERS", "",
-                "IT_TEST_MACRO_CURRENCY", "USD"
-        ));
+        JSONObject responseJson = doRequestAndGetResponse(CustomTrackerRequestTestParam.builder()
+                .improveAdm(toJsonString(
+                        // SSP returned no event trackers field and no imp trackers field.
+                        createNativeResponse(3000, 2250, null, null)
+                ))
+                .improvePrice("1.25")
+                .storedImpId("2022083003")
+                .improvePlacementId(20220830)
+                .nativeData(NativeTestParam.builder()
+                        // This native data is what we had in the stored imp.
+                        .request(createNativeRequest("1.2", 90, 128, 128, 120))
+                        .build())
+                .nativeDataIsInStoredImp(true)
+                .build());
 
-        JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("native");
+        assertBidExtPrebidType(responseJson, 0, 0, "native");
         assertCurrency(responseJson, "USD");
 
         JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
@@ -358,14 +383,22 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldNotAddCustomTrackerOnNativeResponseWhenEmptyTrackersReturnedFromBidder() throws Exception {
-        final Response response = doNativeRequestAndGetResponse(Map.of(
-                "IT_TEST_MACRO_EVENT_TRACKERS", ",\\\"eventtrackers\\\":[]",
-                "IT_TEST_MACRO_IMP_TRACKERS", ",\\\"imptrackers\\\":[]",
-                "IT_TEST_MACRO_CURRENCY", "USD"
-        ));
+        JSONObject responseJson = doRequestAndGetResponse(CustomTrackerRequestTestParam.builder()
+                .improveAdm(toJsonString(
+                        // SSP returned empty event trackers and empty imp trackers.
+                        createNativeResponse(3000, 2250, Arrays.asList(), Arrays.asList())
+                ))
+                .improvePrice("1.25")
+                .storedImpId("2022083003")
+                .improvePlacementId(20220830)
+                .nativeData(NativeTestParam.builder()
+                        // This native data is what we had in the stored imp.
+                        .request(createNativeRequest("1.2", 90, 128, 128, 120))
+                        .build())
+                .nativeDataIsInStoredImp(true)
+                .build());
 
-        JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("native");
+        assertBidExtPrebidType(responseJson, 0, 0, "native");
         assertCurrency(responseJson, "USD");
 
         JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
@@ -379,21 +412,35 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldNotAddCustomTrackerOnNativeResponseWhenOnlyEventTrackersReturnedFromBidder() throws Exception {
-        final Response response = doNativeRequestAndGetResponse(Map.of(
-                "IT_TEST_MACRO_EVENT_TRACKERS", ",\\\"eventtrackers\\\":[{\\\"event\\\": 1, \\\"method\\\": 1, \\\"url\\\": \\\"https://existingtrakcer.bidder.com/event\\\"}]",
-                "IT_TEST_MACRO_IMP_TRACKERS", "",
-                "IT_TEST_MACRO_CURRENCY", "USD"
-        ));
+        JSONObject responseJson = doRequestAndGetResponse(CustomTrackerRequestTestParam.builder()
+                .improveAdm(toJsonString(
+                        // SSP returned 1 event tracker and no imp trackers field.
+                        createNativeResponse(3000, 2250, Arrays.asList(
+                                EventTracker.builder()
+                                        .event(1)
+                                        .method(1)
+                                        .url("https://existingtrakcer.bidder.com/event")
+                                        .build()
+                        ), null)
+                ))
+                .improvePrice("1.25")
+                .storedImpId("2022083003")
+                .improvePlacementId(20220830)
+                .nativeData(NativeTestParam.builder()
+                        // This native data is what we had in the stored imp.
+                        .request(createNativeRequest("1.2", 90, 128, 128, 120))
+                        .build())
+                .nativeDataIsInStoredImp(true)
+                .build());
 
-        JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("native");
+        assertBidExtPrebidType(responseJson, 0, 0, "native");
         assertCurrency(responseJson, "USD");
 
         JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
 
         // Check we placed the tracker in "eventtrackers" properly.
         JSONObject customTrackerEvent = findATrackerInEventTrackers(adm, "/ssp_bid");
-        assertThatCustomTrackerExistsInEventTrackers(customTrackerEvent, "1.25", "13245");
+        assertThatCustomTrackerExistsInEventTrackers(customTrackerEvent, "1.25", "20220830");
 
         // Check we didn't place the tracker in "imptrackers".
         assertThat(adm.has("imptrackers")).isFalse();
@@ -404,14 +451,24 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldAddCustomTrackerOnNativeResponseWhenOnlyImpTrackersReturnedFromBidder() throws Exception {
-        final Response response = doNativeRequestAndGetResponse(Map.of(
-                "IT_TEST_MACRO_EVENT_TRACKERS", "",
-                "IT_TEST_MACRO_IMP_TRACKERS", ",\\\"imptrackers\\\":[\\\"https://existingtrakcer.bidder.com/imp\\\"]",
-                "IT_TEST_MACRO_CURRENCY", "USD"
-        ));
+        JSONObject responseJson = doRequestAndGetResponse(CustomTrackerRequestTestParam.builder()
+                .improveAdm(toJsonString(
+                        // SSP returned no event trackers field and 1 imp tracker.
+                        createNativeResponse(3000, 2250, null, Arrays.asList(
+                                "https://existingtrakcer.bidder.com/imp"
+                        ))
+                ))
+                .improvePrice("1.25")
+                .storedImpId("2022083003")
+                .improvePlacementId(20220830)
+                .nativeData(NativeTestParam.builder()
+                        // This native data is what we had in the stored imp.
+                        .request(createNativeRequest("1.2", 90, 128, 128, 120))
+                        .build())
+                .nativeDataIsInStoredImp(true)
+                .build());
 
-        JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("native");
+        assertBidExtPrebidType(responseJson, 0, 0, "native");
         assertCurrency(responseJson, "USD");
 
         JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
@@ -421,7 +478,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
         // Check we placed the tracker in "imptrackers" properly.
         String customTrackerUrl = findATrackerInImpTrackers(adm, "/ssp_bid");
-        assertThatCustomTrackerExistsInImpTrackers(customTrackerUrl, "1.25", "13245");
+        assertThatCustomTrackerExistsInImpTrackers(customTrackerUrl, "1.25", "20220830");
 
         // Make sure, we didn't wipe out existing trackers.
         assertThat(findATrackerInImpTrackers(adm, "https://existingtrakcer.bidder.com/imp")).isNotNull();
@@ -429,25 +486,41 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldAddCustomTrackerOnNativeResponseWhenBothTrackersReturnedFromBidder() throws Exception {
-        final Response response = doNativeRequestAndGetResponse(Map.of(
-                "IT_TEST_MACRO_EVENT_TRACKERS", ",\\\"eventtrackers\\\":[{\\\"event\\\": 1, \\\"method\\\": 1, \\\"url\\\": \\\"https://existingtrakcer.bidder.com/event\\\"}]",
-                "IT_TEST_MACRO_IMP_TRACKERS", ",\\\"imptrackers\\\":[\\\"https://existingtrakcer.bidder.com/imp\\\"]",
-                "IT_TEST_MACRO_CURRENCY", "USD"
-        ));
+        JSONObject responseJson = doRequestAndGetResponse(CustomTrackerRequestTestParam.builder()
+                .improveAdm(toJsonString(
+                        // SSP returned 1 event tracker and 1 imp tracker.
+                        createNativeResponse(3000, 2250, Arrays.asList(
+                                EventTracker.builder()
+                                        .event(1)
+                                        .method(1)
+                                        .url("https://existingtrakcer.bidder.com/event")
+                                        .build()
+                        ), Arrays.asList(
+                                "https://existingtrakcer.bidder.com/imp"
+                        ))
+                ))
+                .improvePrice("1.25")
+                .storedImpId("2022083003")
+                .improvePlacementId(20220830)
+                .nativeData(NativeTestParam.builder()
+                        // This native data is what we had in the stored imp.
+                        .request(createNativeRequest("1.2", 90, 128, 128, 120))
+                        .build())
+                .nativeDataIsInStoredImp(true)
+                .build());
 
-        JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("native");
+        assertBidExtPrebidType(responseJson, 0, 0, "native");
         assertCurrency(responseJson, "USD");
 
         JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
 
         // Check we placed the tracker in "eventtrackers" properly.
         JSONObject customTrackerEvent = findATrackerInEventTrackers(adm, "/ssp_bid");
-        assertThatCustomTrackerExistsInEventTrackers(customTrackerEvent, "1.25", "13245");
+        assertThatCustomTrackerExistsInEventTrackers(customTrackerEvent, "1.25", "20220830");
 
         // Check we placed the tracker in "imptrackers" properly.
         String customTrackerUrl = findATrackerInImpTrackers(adm, "/ssp_bid");
-        assertThatCustomTrackerExistsInImpTrackers(customTrackerUrl, "1.25", "13245");
+        assertThatCustomTrackerExistsInImpTrackers(customTrackerUrl, "1.25", "20220830");
 
         // Make sure, we didn't wipe out existing trackers.
         assertThat(findATrackerInEventTrackers(adm, "https://existingtrakcer.bidder.com/event")).isNotNull();
@@ -456,28 +529,48 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldAddCustomTrackerWithCorrectCurrencyValueOnNativeResponse() throws Exception {
-        final Response response = doNativeRequestAndGetResponse(Map.of(
-                "IT_TEST_MACRO_EVENT_TRACKERS", ",\\\"eventtrackers\\\":[{\\\"event\\\": 1, \\\"method\\\": 1, \\\"url\\\": \\\"https://existingtrakcer.bidder.com/event\\\"}]",
-                "IT_TEST_MACRO_IMP_TRACKERS", ",\\\"imptrackers\\\":[\\\"https://existingtrakcer.bidder.com/imp\\\"]",
-                "IT_TEST_MACRO_CURRENCY", "EUR"
-        ));
+        JSONObject responseJson = doRequestAndGetResponse(CustomTrackerRequestTestParam.builder()
+                .improveAdm(toJsonString(
+                        // SSP returned 1 event tracker and 1 imp tracker.
+                        createNativeResponse(3000, 2250, Arrays.asList(
+                                EventTracker.builder()
+                                        .event(1)
+                                        .method(1)
+                                        .url("https://existingtrakcer.bidder.com/event")
+                                        .build()
+                        ), Arrays.asList(
+                                "https://existingtrakcer.bidder.com/imp"
+                        ))
+                ))
+                .improvePrice("1.25")
+                .improveCurrency("EUR")
+                .storedImpId("2022083003")
+                .improvePlacementId(20220830)
+                .nativeData(NativeTestParam.builder()
+                        // This native data is what we had in the stored imp.
+                        .request(createNativeRequest("1.2", 90, 128, 128, 120))
+                        .build())
+                .nativeDataIsInStoredImp(true)
+                .build());
 
-        JSONObject responseJson = new JSONObject(response.asString());
-        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("native");
+        assertBidExtPrebidType(responseJson, 0, 0, "native");
         assertCurrency(responseJson, "USD"); /* PBS responds in request currency */
 
         JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
 
-        // Bid request was made with USD and bidder returned 1.25 EUR. Hence, we will get ~1.424 USD finally.
         // The exchange rate is hard coded (src/test/resources/org/prebid/server/it/currency/latest.json).
 
         // Check we placed the correct currency value in "eventtrackers" properly.
         JSONObject customTrackerEvent = findATrackerInEventTrackers(adm, "/ssp_bid");
-        assertThatCustomTrackerExistsInEventTrackers(customTrackerEvent, "1.424", "13245");
+        assertThatCustomTrackerExistsInEventTrackers(
+                customTrackerEvent, Double.toString(usdToEur(1.25)), "20220830"
+        );
 
         // Check we placed the tracker in "imptrackers" properly.
         String customTrackerUrl = findATrackerInImpTrackers(adm, "/ssp_bid");
-        assertThatCustomTrackerExistsInImpTrackers(customTrackerUrl, "1.424", "13245");
+        assertThatCustomTrackerExistsInImpTrackers(
+                customTrackerUrl, Double.toString(usdToEur(1.25)), "20220830"
+        );
     }
 
     @Test
@@ -515,6 +608,52 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .getJSONArray("improvedigital-custom-vast-hooks-processed-auction-request")
                 .getString(0)
         ).isEqualTo("improvedigital placementId is not defined for one or more imp(s)");
+    }
+
+    @Test
+    public void testTrackerIsAddedOnMultiformatRequestWhenNativeIsReturned() throws Exception {
+        JSONObject responseJson = doRequestAndGetResponse(CustomTrackerRequestTestParam.builder()
+                // Send request of both banner and native and we get response of native.
+                .improveAdm(toJsonString(createNativeResponse(3000, 2250,
+                        Arrays.asList(
+                                EventTracker.builder()
+                                        .event(1)
+                                        .method(1)
+                                        .url("https://existingtrakcer.bidder.com/event")
+                                        .build()
+                        ),
+                        Arrays.asList(
+                                "https://existingtrakcer.bidder.com/imp"
+                        )
+                )))
+                .improvePrice("2.25")
+                .storedImpId("2022083002")
+                .improvePlacementId(20220830)
+                .nativeData(NativeTestParam.builder()
+                        // This native data is what we had in the stored imp.
+                        .request(createNativeRequest("1.2", 90, 128, 128, 120))
+                        .build())
+                .bannerData(BannerTestParam.builder()
+                        // This banner data is what we had in the stored imp.
+                        .w(320)
+                        .h(320)
+                        .build())
+                .bannerDataIsInStoredImp(true)
+                .nativeDataIsInStoredImp(true)
+                .build());
+
+        assertBidExtPrebidType(responseJson, 0, 0, "native");
+        assertCurrency(responseJson, "USD");
+
+        JSONObject adm = new JSONObject(getAdm(responseJson, 0, 0));
+
+        // Check we placed the correct currency value in "eventtrackers" properly.
+        JSONObject customTrackerEvent = findATrackerInEventTrackers(adm, "/ssp_bid");
+        assertThatCustomTrackerExistsInEventTrackers(customTrackerEvent, "2.25", "20220830");
+
+        // Check we placed the tracker in "imptrackers" properly.
+        String customTrackerUrl = findATrackerInImpTrackers(adm, "/ssp_bid");
+        assertThatCustomTrackerExistsInImpTrackers(customTrackerUrl, "2.25", "20220830");
     }
 
     private Response doBannerRequestAndGetResponse(Map<String, String> responseMacroReplacers) throws IOException {
@@ -594,25 +733,59 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .post(Endpoint.openrtb2_auction.value());
     }
 
-    private Response doNativeRequestAndGetResponse(Map<String, String> responseMacroReplacers) throws IOException {
+    private JSONObject doRequestAndGetResponse(CustomTrackerRequestTestParam param) throws JSONException {
+        String uniqueId = UUID.randomUUID().toString();
+
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/test-native-improvedigital-bid-request.json",
-                                null
+                        .withRequestBody(equalToJson(getSSPBidRequestBanner(uniqueId,
+                                SSPBidRequestBannerTestData.builder()
+                                        .currency("USD")
+                                        .impExt(new SSPBidRequestImpExt()
+                                                .putStoredRequest(param.storedImpId)
+                                                .putBidder()
+                                                .putBidderKeyValue("placementId", param.improvePlacementId)
+                                                .putBidderKeyValue("size", param.toBannerDimension()))
+                                        .bannerData(param.bannerData)
+                                        .nativeData(param.nativeData)
+                                        .build()
                         )))
-                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/test-native-improvedigital-bid-response.json",
-                                responseMacroReplacers
+                        .willReturn(aResponse().withBody(getBidResponse(
+                                "improvedigital",
+                                uniqueId,
+                                StringUtils.defaultString(param.improveCurrency, "USD"),
+                                BidResponseTestData.builder()
+                                        .price(Double.parseDouble(param.improvePrice))
+                                        .adm(param.improveAdm)
+                                        .build()
                         )))
         );
 
-        return specWithPBSHeader(18081)
-                .body(jsonFromFileWithMacro(
-                        "/com/improvedigital/prebid/server/it/test-native-auction-improvedigital-request.json",
-                        null
+        Response response = specWithPBSHeader(18081)
+                .body(getAuctionBidRequestBanner(uniqueId, AuctionBidRequestBannerTestData.builder()
+                        .currency("USD")
+                        .impExt(new AuctionBidRequestImpExt()
+                                .putStoredRequest(param.storedImpId)
+                                .putBidder("improvedigital")
+                                .putBidderKeyValue("improvedigital", "placementId", param.improvePlacementId))
+                        .bannerData(param.bannerDataIsInStoredImp ? null : param.bannerData)
+                        .nativeData(param.nativeDataIsInStoredImp ? null : param.nativeData)
+                        .build()
                 ))
                 .post(Endpoint.openrtb2_auction.value());
+
+        JSONObject responseJson = new JSONObject(response.asString());
+        assertBidCountIsOneOrMore(responseJson);
+        assertBidIdExists(responseJson, 0, 0);
+        assertBidImpId(responseJson, 0, 0, "imp_id_" + uniqueId);
+        if ("EUR".equalsIgnoreCase(param.improveCurrency)) {
+            assertBidPrice(responseJson, 0, 0, usdToEur(Double.parseDouble(param.improvePrice)));
+        } else {
+            assertBidPrice(responseJson, 0, 0, Double.parseDouble(param.improvePrice));
+        }
+        assertSeat(responseJson, 0, "improvedigital");
+        assertCurrency(responseJson, "USD");
+        return responseJson;
     }
 
     private void assertThatCustomTrackerExistsInEventTrackers(
@@ -663,5 +836,99 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         }
 
         return null;
+    }
+
+    protected Request createNativeRequest(String nativeVersion, int titleLen, int wMin, int hMin, int dataLen) {
+        return Request.builder()
+                .context(1)
+                .plcmttype(4)
+                .plcmtcnt(1)
+                .ver(nativeVersion)
+                .assets(Arrays.asList(
+                        com.iab.openrtb.request.Asset.builder()
+                                .id(1)
+                                .required(1)
+                                .title(com.iab.openrtb.request.TitleObject.builder()
+                                        .len(titleLen)
+                                        .build())
+                                .build(),
+                        com.iab.openrtb.request.Asset.builder()
+                                .id(2)
+                                .required(1)
+                                .img(com.iab.openrtb.request.ImageObject.builder()
+                                        .type(3)
+                                        .wmin(wMin)
+                                        .hmin(hMin)
+                                        .mimes(Arrays.asList("image/jpg", "image/jpeg", "image/png"))
+                                        .build())
+                                .build(),
+                        com.iab.openrtb.request.Asset.builder()
+                                .id(3)
+                                .required(1)
+                                .data(com.iab.openrtb.request.DataObject.builder()
+                                        .type(2)
+                                        .len(dataLen)
+                                        .build())
+                                .build()
+                ))
+                .build();
+    }
+
+    protected com.iab.openrtb.response.Response createNativeResponse(
+            int w, int h, List<EventTracker> nativeEventTrackers, List<String> impTrackers
+    ) {
+        return com.iab.openrtb.response.Response.builder()
+                .assets(Arrays.asList(
+                        Asset.builder()
+                                .id(1)
+                                .title(TitleObject.builder()
+                                        .text("Response title for native request")
+                                        .build())
+                                .build(),
+                        Asset.builder()
+                                .id(2)
+                                .img(ImageObject.builder()
+                                        .url("http://cdn.pbs.com/creative-1.jpg")
+                                        .w(w)
+                                        .h(h)
+                                        .build())
+                                .build(),
+                        Asset.builder()
+                                .id(3)
+                                .data(DataObject.builder()
+                                        .value("Response description for native request")
+                                        .build())
+                                .build()
+                ))
+                .link(Link.of("http://integrationtest.pbs.com/click?pp=${AUCTION_PRICE}", null, null, null))
+                .eventtrackers(nativeEventTrackers)
+                .imptrackers(impTrackers)
+                .build();
+    }
+
+    private double usdToEur(double val) {
+        return BigDecimal.valueOf(val / IT_TEST_USD_TO_EUR_RATE)
+                .setScale(3, RoundingMode.HALF_EVEN)
+                .doubleValue();
+    }
+
+    @Builder(toBuilder = true)
+    public static class CustomTrackerRequestTestParam {
+        NativeTestParam nativeData;
+        BannerTestParam bannerData;
+        boolean bannerDataIsInStoredImp;
+        boolean nativeDataIsInStoredImp;
+        String storedImpId;
+        int improvePlacementId;
+        String improveAdm;
+        String improvePrice;
+        String improveCurrency;
+
+        public Map<String, ?> toBannerDimension() {
+            return bannerData == null ? null : Map.of(
+                    "w", bannerData.w,
+                    "h", bannerData.h
+            );
+        }
     }
 }

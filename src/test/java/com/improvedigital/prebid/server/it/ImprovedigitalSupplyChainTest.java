@@ -251,6 +251,10 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                         .schainVer("1.0")
                                         .schainComplete(1)
                                         .schainNodes(expectedSchainNodes)
+                                        .bannerData(BannerTestParam.builder()
+                                                .w(300)
+                                                .h(250)
+                                                .build())
                                         .build()
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(
@@ -323,6 +327,10 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                                         null
                                                 )
                                         ))
+                                        .bannerData(BannerTestParam.builder()
+                                                .w(300)
+                                                .h(250)
+                                                .build())
                                         .build()
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(
@@ -360,6 +368,10 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                                         null
                                                 )
                                         ))
+                                        .bannerData(BannerTestParam.builder()
+                                                .w(300)
+                                                .h(250)
+                                                .build())
                                         .build()
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(

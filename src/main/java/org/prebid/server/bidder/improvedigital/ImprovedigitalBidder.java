@@ -179,7 +179,7 @@ public class ImprovedigitalBidder implements Bidder<BidRequest> {
                 .map(SeatBid::getBid)
                 .filter(Objects::nonNull)
                 .flatMap(Collection::stream)
-                .map(bid -> BidderBid.of(bidWithDealId(bid), getBidType(bid.getImpid(), bidRequest.getImp()),
+                .map(bid -> BidderBid.of(bidWithDealId(bid), getBidType(bid, bidRequest.getImp()),
                         bidResponse.getCur()))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
@@ -210,21 +210,49 @@ public class ImprovedigitalBidder implements Bidder<BidRequest> {
         return bid;
     }
 
-    private static BidType getBidType(String impId, List<Imp> imps) {
-        for (Imp imp : imps) {
-            if (imp.getId().equals(impId)) {
-                if (imp.getBanner() != null) {
-                    return BidType.banner;
-                }
-                if (imp.getVideo() != null) {
-                    return BidType.video;
-                }
-                if (imp.getXNative() != null) {
-                    return BidType.xNative;
-                }
-                throw new PreBidException(String.format("Unknown impression type for ID: \"%s\"", impId));
-            }
+    private static BidType getBidType(Bid bid, List<Imp> imps) {
+        Imp imp = findImpById(imps, bid.getImpid());
+        if (imp == null) {
+            throw new PreBidException(String.format("Failed to find impression for ID: \"%s\"", bid.getImpid()));
         }
-        throw new PreBidException(String.format("Failed to find impression for ID: \"%s\"", impId));
+        if (isMultiFormat(imp)) {
+            return determineBidType(bid.getAdm());
+        }
+        if (imp.getBanner() != null) {
+            return BidType.banner;
+        }
+        if (imp.getVideo() != null) {
+            return BidType.video;
+        }
+        if (imp.getXNative() != null) {
+            return BidType.xNative;
+        }
+
+        throw new PreBidException(String.format("Unknown impression type for ID: \"%s\"", bid.getImpid()));
+    }
+
+    private static Imp findImpById(List<Imp> imps, String impId) {
+        return imps.stream().filter(i -> i.getId().equals(impId)).findFirst().orElse(null);
+    }
+
+    private static boolean isMultiFormat(Imp imp) {
+        int formatCount = 0;
+        formatCount += imp.getBanner() == null ? 0 : 1;
+        formatCount += imp.getVideo() == null ? 0 : 1;
+        formatCount += imp.getXNative() == null ? 0 : 1;
+        return formatCount > 1;
+    }
+
+    private static BidType determineBidType(String adm) {
+        if (StringUtils.startsWithIgnoreCase(adm, "<?xml")
+                || StringUtils.startsWithIgnoreCase(adm, "<vast")) {
+            return BidType.video;
+        }
+
+        if (StringUtils.startsWith(adm, "{")) {
+            return BidType.xNative;
+        }
+
+        return BidType.banner;
     }
 }

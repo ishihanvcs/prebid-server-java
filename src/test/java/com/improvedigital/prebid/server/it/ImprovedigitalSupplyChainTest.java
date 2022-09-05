@@ -241,20 +241,22 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
 
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(getSSPBidRequestBanner(uniqueId,
-                                SSPBidRequestBannerTestData.builder()
+                        .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
+                                SSPBidRequestTestData.builder()
                                         .currency("USD")
-                                        .impExts(Arrays.asList(new SSPBidRequestImpExt()
-                                                .putStoredRequest(storedImpId)
-                                                .putBidder()
-                                                .putBidderKeyValue("placementId", placementIdOfStoredImp)))
+                                        .impData(Arrays.asList(SingleImpTestData.builder()
+                                                .impExt(new SSPBidRequestImpExt()
+                                                        .putStoredRequest(storedImpId)
+                                                        .putBidder()
+                                                        .putBidderKeyValue("placementId", placementIdOfStoredImp))
+                                                .bannerData(BannerTestParam.builder()
+                                                        .w(300)
+                                                        .h(250)
+                                                        .build())
+                                                .build()))
                                         .schainVer("1.0")
                                         .schainComplete(1)
                                         .schainNodes(expectedSchainNodes)
-                                        .bannerData(BannerTestParam.builder()
-                                                .w(300)
-                                                .h(250)
-                                                .build())
                                         .build()
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(
@@ -307,13 +309,19 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
 
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(getSSPBidRequestBanner(param.auctionRequestId,
-                                SSPBidRequestBannerTestData.builder()
+                        .withRequestBody(equalToJson(getSSPBidRequest(param.auctionRequestId,
+                                SSPBidRequestTestData.builder()
                                         .currency("USD")
-                                        .impExts(Arrays.asList(new SSPBidRequestImpExt()
-                                                .putStoredRequest(param.storedImpId)
-                                                .putBidder()
-                                                .putBidderKeyValue("placementId", param.improvePlacementId)))
+                                        .impData(Arrays.asList(SingleImpTestData.builder()
+                                                .impExt(new SSPBidRequestImpExt()
+                                                        .putStoredRequest(param.storedImpId)
+                                                        .putBidder()
+                                                        .putBidderKeyValue("placementId", param.improvePlacementId))
+                                                .bannerData(BannerTestParam.builder()
+                                                        .w(300)
+                                                        .h(250)
+                                                        .build())
+                                                .build()))
                                         .schainVer("1.0")
                                         .schainComplete(1)
                                         .schainNodes(Arrays.asList(
@@ -327,10 +335,6 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                                         null
                                                 )
                                         ))
-                                        .bannerData(BannerTestParam.builder()
-                                                .w(300)
-                                                .h(250)
-                                                .build())
                                         .build()
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(
@@ -348,13 +352,19 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
 
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/generic-exchange"))
-                        .withRequestBody(equalToJson(getSSPBidRequestBanner(param.auctionRequestId,
-                                SSPBidRequestBannerTestData.builder()
+                        .withRequestBody(equalToJson(getSSPBidRequest(param.auctionRequestId,
+                                SSPBidRequestTestData.builder()
                                         .currency("USD")
-                                        .impExts(Arrays.asList(new SSPBidRequestImpExt()
-                                                .putStoredRequest(param.storedImpId)
-                                                .putBidder()
-                                                .putBidderKeyValue("exampleProperty", "examplePropertyValue")))
+                                        .impData(Arrays.asList(SingleImpTestData.builder()
+                                                .impExt(new SSPBidRequestImpExt()
+                                                        .putStoredRequest(param.storedImpId)
+                                                        .putBidder()
+                                                        .putBidderKeyValue("exampleProperty", "examplePropertyValue"))
+                                                .bannerData(BannerTestParam.builder()
+                                                        .w(300)
+                                                        .h(250)
+                                                        .build())
+                                                .build()))
                                         .schainVer("1.0")
                                         .schainComplete(1)
                                         .schainNodes(Arrays.asList(
@@ -368,10 +378,6 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                                         null
                                                 )
                                         ))
-                                        .bannerData(BannerTestParam.builder()
-                                                .w(300)
-                                                .h(250)
-                                                .build())
                                         .build()
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(

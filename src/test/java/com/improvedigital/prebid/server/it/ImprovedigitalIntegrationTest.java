@@ -186,7 +186,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         );
     }
 
-    protected String getSSPBidRequestBanner(String uniqueId, SSPBidRequestBannerTestData bidRequestData) {
+    protected String getSSPBidRequest(String uniqueId, SSPBidRequestTestData bidRequestData) {
         // We do not want version, complete when no nodes are there.
         final ExtSource reqSourceExt = CollectionUtils.isEmpty(bidRequestData.schainNodes) ? null : ExtSource.of(
                 ExtSourceSchain.of(
@@ -198,17 +198,27 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         );
 
         return getBidRequestWeb(uniqueId,
-                bidRequestData.impExts.stream()
-                        .map(impExt -> (Function<Imp, Imp>) imp -> imp.toBuilder()
-                                .ext(impExt.get())
-                                .banner(bidRequestData.bannerData == null ? null : Banner.builder()
-                                        .w(bidRequestData.bannerData == null ? 300 : bidRequestData.bannerData.w)
-                                        .h(bidRequestData.bannerData == null ? 250 : bidRequestData.bannerData.h)
-                                        .mimes(bidRequestData.bannerData.mimes)
+                bidRequestData.impData.stream()
+                        .map(impData -> (Function<Imp, Imp>) imp -> imp.toBuilder()
+                                .ext(impData.impExt.get())
+                                .banner(impData.bannerData == null ? null : Banner.builder()
+                                        .w(impData.bannerData.w)
+                                        .h(impData.bannerData.h)
+                                        .mimes(impData.bannerData.mimes)
                                         .build())
-                                .xNative(bidRequestData.nativeData == null ? null : Native.builder()
-                                        .request(toJsonString(mapper, bidRequestData.nativeData.request))
-                                        .ver(StringUtils.defaultString(bidRequestData.nativeData.ver, "1.2"))
+                                .xNative(impData.nativeData == null ? null : Native.builder()
+                                        .request(toJsonString(mapper, impData.nativeData.request))
+                                        .ver(StringUtils.defaultString(impData.nativeData.ver, "1.2"))
+                                        .build())
+                                .video(impData.videoData == null ? null : Video.builder()
+                                        .protocols(impData.videoData.getVideoProtocols(2))
+                                        .w(impData.videoData.w)
+                                        .h(impData.videoData.h)
+                                        .mimes(impData.videoData.mimes)
+                                        .minduration(1)
+                                        .maxduration(60)
+                                        .linearity(1)
+                                        .placement(5)
                                         .build())
                                 .bidfloor(BigDecimal.ZERO)
                                 .bidfloorcur(bidRequestData.currency)
@@ -241,6 +251,9 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                                 .server(ExtRequestPrebidServer.of(
                                         "http://localhost:8080", 1, "local"
                                 ))
+                                .channel(bidRequestData.channel)
+                                .targeting(bidRequestData.extRequestTargeting)
+                                .cache(bidRequestData.extRequestPrebidCache)
                                 .build()))
                         .source(Source.builder()
                                 .tid("source_tid_" + uniqueId)
@@ -277,60 +290,6 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                                         .consent(bidRequestData.gdprConsent)
                                         .build())
                                 .build())
-                        .build()
-        );
-    }
-
-    protected String getSSPBidRequestVideo(String uniqueId, SSPBidRequestVideoTestData bidRequestData) {
-        return getBidRequestWeb(uniqueId,
-                bidRequestData.impData.stream()
-                        .map(singleImp -> (Function<Imp, Imp>) imp -> imp.toBuilder()
-                                .ext(singleImp.impExt.get())
-                                .video(Video.builder()
-                                        .protocols(singleImp.getVideoProtocols(2))
-                                        .w(640)
-                                        .h(480)
-                                        .mimes(Arrays.asList("video/mp4"))
-                                        .minduration(1)
-                                        .maxduration(60)
-                                        .linearity(1)
-                                        .placement(5)
-                                        .build())
-                                .bidfloor(BigDecimal.ZERO)
-                                .bidfloorcur(bidRequestData.currency)
-                                .build())
-                        .collect(Collectors.toList()),
-                bidRequest -> bidRequest.toBuilder()
-                        .site(Site.builder()
-                                .domain(IT_TEST_DOMAIN)
-                                .page("http://" + IT_TEST_DOMAIN)
-                                .publisher(Publisher.builder()
-                                        .domain(IT_TEST_MAIN_DOMAIN)
-                                        .build())
-                                .ext(ExtSite.of(0, null))
-                                .cat(bidRequestData.siteIABCategories)
-                                .build())
-                        .device(Device.builder()
-                                .ua(IT_TEST_USER_AGENT)
-                                .ip(IT_TEST_IP)
-                                .build())
-                        .user(User.builder()
-                                .ext(ExtUser.builder()
-                                        .consent(bidRequestData.gdprConsent)
-                                        .build())
-                                .build())
-                        .at(1)
-                        .tmax(5000L)
-                        .cur(Arrays.asList(bidRequestData.currency))
-                        .regs(Regs.of(null, ExtRegs.of(0, null)))
-                        .ext(ExtRequest.of(ExtRequestPrebid.builder()
-                                .channel(ExtRequestPrebidChannel.of("web"))
-                                .pbs(ExtRequestPrebidPbs.of("/openrtb2/auction"))
-                                .server(ExtRequestPrebidServer.of(
-                                        "http://localhost:8080", 1, "local"
-                                ))
-                                .targeting(bidRequestData.extRequestTargeting)
-                                .cache(bidRequestData.extRequestPrebidCache).build()))
                         .build()
         );
     }
@@ -420,9 +379,6 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         }
     }
 
-    /**
-     * This class contains full list of fields that we will use for IT test case.
-     */
     @Builder(toBuilder = true)
     public static class AuctionBidRequestBannerTestData {
         String currency;
@@ -444,18 +400,13 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         Integer test;
     }
 
-    /**
-     * This class contains full list of fields that we will use for IT test case.
-     */
     @Builder(toBuilder = true)
-    public static class SSPBidRequestBannerTestData {
+    public static class SSPBidRequestTestData {
         String currency;
 
-        List<SSPBidRequestImpExt> impExts;
+        List<SingleImpTestData> impData;
 
-        BannerTestParam bannerData;
-
-        NativeTestParam nativeData;
+        List<String> siteIABCategories;
 
         String gdprConsent;
 
@@ -464,11 +415,14 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         Integer schainComplete;
 
         List<ExtRequestPrebidSchainSchainNode> schainNodes;
+
+        ExtRequestPrebidChannel channel;
+
+        ExtRequestTargeting extRequestTargeting;
+
+        ExtRequestPrebidCache extRequestPrebidCache;
     }
 
-    /**
-     * This class contains full list of fields that we will use for IT test case.
-     */
     @Builder(toBuilder = true)
     public static class AuctionBidRequestVideoTestData {
         String currency;
@@ -480,9 +434,17 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         String gdprConsent;
     }
 
-    /**
-     * This class contains full list of fields that we will use for IT test case.
-     */
+    @Builder(toBuilder = true)
+    public static class SingleImpTestData {
+        SSPBidRequestImpExt impExt;
+
+        BannerTestParam bannerData;
+
+        NativeTestParam nativeData;
+
+        VideoTestParam videoData;
+    }
+
     @Builder(toBuilder = true)
     public static class AuctionBidRequestImpVideoTestData {
         AuctionBidRequestImpExt impExt;
@@ -499,46 +461,6 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         }
     }
 
-    /**
-     * This class contains full list of fields that we will use for IT test case.
-     */
-    @Builder(toBuilder = true)
-    public static class SSPBidRequestVideoTestData {
-        String currency;
-
-        List<SSPBidRequestImpVideoTestData> impData;
-
-        ExtRequestTargeting extRequestTargeting;
-
-        ExtRequestPrebidCache extRequestPrebidCache;
-
-        List<String> siteIABCategories;
-
-        String gdprConsent;
-    }
-
-    /**
-     * This class contains full list of fields that we will use for IT test case.
-     */
-    @Builder(toBuilder = true)
-    public static class SSPBidRequestImpVideoTestData {
-        SSPBidRequestImpExt impExt;
-
-        List<Integer> videoProtocols;
-
-        @JsonIgnore
-        public List<Integer> getVideoProtocols(int defaultProtocol) {
-            if (CollectionUtils.isEmpty(videoProtocols)) {
-                return Arrays.asList(defaultProtocol);
-            }
-
-            return videoProtocols;
-        }
-    }
-
-    /**
-     * This class contains full list of fields for bid response that we will use for IT test case.
-     */
     @Builder(toBuilder = true)
     public static class BidResponseTestData {
         double price;
@@ -559,6 +481,23 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         int w;
         int h;
         List<String> mimes;
+    }
+
+    @Builder(toBuilder = true)
+    public static class VideoTestParam {
+        int w;
+        int h;
+        List<String> mimes;
+        List<Integer> protocols;
+
+        @JsonIgnore
+        public List<Integer> getVideoProtocols(int defaultProtocol) {
+            if (CollectionUtils.isEmpty(protocols)) {
+                return Arrays.asList(defaultProtocol);
+            }
+
+            return protocols;
+        }
     }
 
     /**

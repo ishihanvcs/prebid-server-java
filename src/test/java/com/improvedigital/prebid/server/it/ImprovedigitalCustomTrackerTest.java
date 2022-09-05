@@ -738,16 +738,18 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(getSSPBidRequestBanner(uniqueId,
-                                SSPBidRequestBannerTestData.builder()
+                        .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
+                                SSPBidRequestTestData.builder()
                                         .currency("USD")
-                                        .impExt(new SSPBidRequestImpExt()
-                                                .putStoredRequest(param.storedImpId)
-                                                .putBidder()
-                                                .putBidderKeyValue("placementId", param.improvePlacementId)
-                                                .putBidderKeyValue("size", param.toBannerDimension()))
-                                        .bannerData(param.bannerData)
-                                        .nativeData(param.nativeData)
+                                        .impData(Arrays.asList(SingleImpTestData.builder()
+                                                .impExt(new SSPBidRequestImpExt()
+                                                        .putStoredRequest(param.storedImpId)
+                                                        .putBidder()
+                                                        .putBidderKeyValue("placementId", param.improvePlacementId)
+                                                        .putBidderKeyValue("size", param.toBannerDimension()))
+                                                .bannerData(param.bannerData)
+                                                .nativeData(param.nativeData)
+                                                .build()))
                                         .build()
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(
@@ -764,10 +766,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         Response response = specWithPBSHeader(18081)
                 .body(getAuctionBidRequestBanner(uniqueId, AuctionBidRequestBannerTestData.builder()
                         .currency("USD")
-                        .impExt(new AuctionBidRequestImpExt()
+                        .impExts(Arrays.asList(new AuctionBidRequestImpExt()
                                 .putStoredRequest(param.storedImpId)
                                 .putBidder("improvedigital")
-                                .putBidderKeyValue("improvedigital", "placementId", param.improvePlacementId))
+                                .putBidderKeyValue("improvedigital", "placementId", param.improvePlacementId)))
                         .bannerData(param.bannerDataIsInStoredImp ? null : param.bannerData)
                         .nativeData(param.nativeDataIsInStoredImp ? null : param.nativeData)
                         .build()
@@ -777,7 +779,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         JSONObject responseJson = new JSONObject(response.asString());
         assertBidCountIsOneOrMore(responseJson);
         assertBidIdExists(responseJson, 0, 0);
-        assertBidImpId(responseJson, 0, 0, "imp_id_" + uniqueId);
+        assertBidImpId(responseJson, 0, 0, "imp_id_0_" + uniqueId);
         if ("EUR".equalsIgnoreCase(param.improveCurrency)) {
             assertBidPrice(responseJson, 0, 0, usdToEur(Double.parseDouble(param.improvePrice)));
         } else {

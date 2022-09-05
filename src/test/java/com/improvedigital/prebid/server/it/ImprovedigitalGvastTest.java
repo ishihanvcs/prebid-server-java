@@ -17,6 +17,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtGranularityRange;
 import org.prebid.server.proto.openrtb.ext.request.ExtPriceGranularity;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCache;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCacheVastxml;
+import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidChannel;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestTargeting;
 import org.prebid.server.util.HttpUtil;
 import org.springframework.test.context.TestPropertySource;
@@ -1336,15 +1337,21 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(getSSPBidRequestVideo(uniqueId,
-                                SSPBidRequestVideoTestData.builder()
+                        .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
+                                SSPBidRequestTestData.builder()
                                         .currency("USD")
-                                        .impData(Arrays.asList(SSPBidRequestImpVideoTestData.builder()
+                                        .impData(Arrays.asList(SingleImpTestData.builder()
                                                 .impExt(new SSPBidRequestImpExt()
                                                         .putStoredRequest(storedImpId)
                                                         .putBidder()
                                                         .putBidderKeyValue("placementId", placementIdOfStoredImp))
+                                                .videoData(VideoTestParam.builder()
+                                                        .w(640)
+                                                        .h(480)
+                                                        .mimes(Arrays.asList("video/mp4"))
+                                                        .build())
                                                 .build()))
+                                        .channel(getExtPrebidChannelForGvast())
                                         .build()
                         )))
                         .willReturn(aResponse().withBody(getBidResponse(
@@ -1395,13 +1402,14 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(getSSPBidRequestVideo(uniqueId,
-                                SSPBidRequestVideoTestData.builder()
+                        .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
+                                SSPBidRequestTestData.builder()
                                         .currency("USD")
-                                        .impData(Arrays.asList(SSPBidRequestImpVideoTestData.builder()
+                                        .impData(Arrays.asList(SingleImpTestData.builder()
                                                 .impExt(param.toSSPBidRequestImpExt())
-                                                .videoProtocols(param.videoProtocols)
+                                                .videoData(param.toVideoData())
                                                 .build()))
+                                        .channel(getExtPrebidChannelForGvast())
                                         .extRequestTargeting(getExtPrebidTargetingForGvast())
                                         .extRequestPrebidCache(getExtPrebidCacheForGvast())
                                         .siteIABCategories(param.siteIabCategories)
@@ -1466,14 +1474,16 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(getSSPBidRequestVideo(uniqueId,
-                                SSPBidRequestVideoTestData.builder()
+                        .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
+                                SSPBidRequestTestData.builder()
                                         .currency("USD")
                                         .impData(Arrays.stream(params)
-                                                .map(param -> SSPBidRequestImpVideoTestData.builder()
+                                                .map(param -> SingleImpTestData.builder()
                                                         .impExt(param.toSSPBidRequestImpExt())
+                                                        .videoData(param.toVideoData())
                                                         .build())
                                                 .collect(Collectors.toList()))
+                                        .channel(getExtPrebidChannelForGvast())
                                         .extRequestTargeting(getExtPrebidTargetingForGvast())
                                         .extRequestPrebidCache(getExtPrebidCacheForGvast())
                                         .build()
@@ -1562,14 +1572,14 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String uniqueId = UUID.randomUUID().toString();
 
         WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
-                .withRequestBody(equalToJson(getSSPBidRequestVideo(uniqueId,
-                        SSPBidRequestVideoTestData.builder()
+                .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
+                        SSPBidRequestTestData.builder()
                                 .currency("USD")
-                                .impData(Arrays.asList(SSPBidRequestImpVideoTestData.builder()
-                                        .impExt(new SSPBidRequestImpExt()
-                                                .putBidder()
-                                                .putBidderKeyValue("placementId", param.improvePlacementId))
+                                .impData(Arrays.asList(SingleImpTestData.builder()
+                                        .impExt(param.toImproveSSPBidRequestImpExt())
+                                        .videoData(param.toVideoData())
                                         .build()))
+                                .channel(getExtPrebidChannelForGvast())
                                 .extRequestTargeting(getExtPrebidTargetingForGvast())
                                 .extRequestPrebidCache(getExtPrebidCacheForGvast())
                                 .build()
@@ -1594,14 +1604,14 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         );
 
         WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/generic-exchange"))
-                .withRequestBody(equalToJson(getSSPBidRequestVideo(uniqueId,
-                        SSPBidRequestVideoTestData.builder()
+                .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
+                        SSPBidRequestTestData.builder()
                                 .currency("USD")
-                                .impData(Arrays.asList(SSPBidRequestImpVideoTestData.builder()
-                                        .impExt(new SSPBidRequestImpExt()
-                                                .putBidder()
-                                                .putBidderKeyValue("exampleProperty", "examplePropertyValue"))
+                                .impData(Arrays.asList(SingleImpTestData.builder()
+                                        .impExt(param.toGenericSSPBidRequestImpExt())
+                                        .videoData(param.toVideoData())
                                         .build()))
+                                .channel(getExtPrebidChannelForGvast())
                                 .extRequestTargeting(getExtPrebidTargetingForGvast())
                                 .extRequestPrebidCache(getExtPrebidCacheForGvast())
                                 .build()
@@ -1693,14 +1703,20 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     ) throws JSONException {
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(getSSPBidRequestVideo(uniqueId,
-                                SSPBidRequestVideoTestData.builder()
+                        .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
+                                SSPBidRequestTestData.builder()
                                         .currency("USD")
-                                        .impData(Arrays.asList(SSPBidRequestImpVideoTestData.builder()
+                                        .impData(Arrays.asList(SingleImpTestData.builder()
                                                 .impExt(new SSPBidRequestImpExt()
                                                         .putBidder()
                                                         .putBidderKeyValue("placementId", placementId))
+                                                .videoData(VideoTestParam.builder()
+                                                        .w(640)
+                                                        .h(480)
+                                                        .mimes(Arrays.asList("video/mp4"))
+                                                        .build())
                                                 .build()))
+                                        .channel(getExtPrebidChannelForGvast())
                                         .extRequestTargeting(getExtPrebidTargetingForGvast())
                                         .extRequestPrebidCache(getExtPrebidCacheForGvast())
                                         .build()
@@ -1733,6 +1749,10 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 ExtRequestPrebidCacheVastxml.of(null, true),
                 false
         );
+    }
+
+    private ExtRequestPrebidChannel getExtPrebidChannelForGvast() {
+        return ExtRequestPrebidChannel.of("web");
     }
 
     private ExtRequestTargeting getExtPrebidTargetingForGvast() {
@@ -1836,6 +1856,15 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
             return auctionImpExt;
         }
+
+        VideoTestParam toVideoData() {
+            return VideoTestParam.builder()
+                    .w(640)
+                    .h(480)
+                    .mimes(Arrays.asList("video/mp4"))
+                    .protocols(videoProtocols)
+                    .build();
+        }
     }
 
     /**
@@ -1851,14 +1880,14 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String improvePrice;
         String improveCacheId;
 
-        public SSPBidRequestImpExt toSSPBidRequestImpExt() {
+        SSPBidRequestImpExt toSSPBidRequestImpExt() {
             return new SSPBidRequestImpExt()
                     .putStoredRequest(storedImpId)
                     .putBidder()
                     .putBidderKeyValue("placementId", improvePlacementId);
         }
 
-        public AuctionBidRequestImpExt toAuctionBidRequestImpExt() {
+        AuctionBidRequestImpExt toAuctionBidRequestImpExt() {
             AuctionBidRequestImpExt auctionImpExt = new AuctionBidRequestImpExt()
                     .putImprovedigitalPbs()
                     .putImprovedigitalPbsKeyValue("responseType", responseType);
@@ -1874,17 +1903,25 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
             return auctionImpExt;
         }
 
-        public BidResponseTestData toBidResponseTestData() {
+        BidResponseTestData toBidResponseTestData() {
             return BidResponseTestData.builder()
                     .price(Double.parseDouble(improvePrice))
                     .adm(improveAdm)
                     .build();
         }
 
-        public String toVastXmlToCache(String bidderName) {
+        String toVastXmlToCache(String bidderName) {
             return getVastXmlToCache(
                     improveAdm, bidderName, improvePrice, improvePlacementId
             );
+        }
+
+        VideoTestParam toVideoData() {
+            return VideoTestParam.builder()
+                    .w(640)
+                    .h(480)
+                    .mimes(Arrays.asList("video/mp4"))
+                    .build();
         }
     }
 
@@ -1909,5 +1946,25 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String genericPrice2;
         String genericCacheId;
         boolean isCacheFailForImprove;
+
+        SSPBidRequestImpExt toImproveSSPBidRequestImpExt() {
+            return new SSPBidRequestImpExt()
+                    .putBidder()
+                    .putBidderKeyValue("placementId", improvePlacementId);
+        }
+
+        VideoTestParam toVideoData() {
+            return VideoTestParam.builder()
+                    .w(640)
+                    .h(480)
+                    .mimes(Arrays.asList("video/mp4"))
+                    .build();
+        }
+
+        public SSPBidRequestImpExt toGenericSSPBidRequestImpExt() {
+            return new SSPBidRequestImpExt()
+                    .putBidder()
+                    .putBidderKeyValue("exampleProperty", "examplePropertyValue");
+        }
     }
 }

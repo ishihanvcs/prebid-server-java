@@ -1,8 +1,9 @@
 package com.improvedigital.prebid.server.hooks.v1.customtracker;
 
+import com.improvedigital.prebid.server.customtracker.model.AuctionRequestModuleContext;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
-import com.improvedigital.prebid.server.customtracker.model.AuctionRequestModuleContext;
+import com.improvedigital.prebid.server.utils.LogMessage;
 import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -40,7 +41,10 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
                             payload -> entrypointPayload,
                             context));
                 }, t -> {
-                        logger.warn("custom tracker setting loading error:" + t.getMessage());
+                        logger.warn(
+                                LogMessage.from(t)
+                                        .withMessage("custom tracker setting loading error")
+                        );
                         return Future.succeededFuture(InvocationResultImpl.succeeded(payload -> entrypointPayload));
                     });
     }

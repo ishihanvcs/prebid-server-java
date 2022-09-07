@@ -575,16 +575,15 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldGetErrorWhenNoPlacementIdIsProvidedInBidRequest() throws Exception {
-        WIRE_MOCK_RULE.stubFor(
-                post(urlPathEqualTo("/generic-exchange"))
-                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/test-no-placementid-bid-request.json",
-                                null
-                        )))
-                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/test-no-placementid-bid-response.json",
-                                null
-                        )))
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/generic-exchange"))
+                .withRequestBody(equalToJson(jsonFromFileWithMacro(
+                        "/com/improvedigital/prebid/server/it/test-no-placementid-bid-request.json",
+                        null
+                )))
+                .willReturn(aResponse().withBody(jsonFromFileWithMacro(
+                        "/com/improvedigital/prebid/server/it/test-no-placementid-bid-response.json",
+                        null
+                )))
         );
 
         final Response response = specWithPBSHeader(18081)
@@ -657,16 +656,15 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
     }
 
     private Response doBannerRequestAndGetResponse(Map<String, String> responseMacroReplacers) throws IOException {
-        WIRE_MOCK_RULE.stubFor(
-                post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/test-banner-improvedigital-bid-request.json",
-                                null
-                        )))
-                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/test-banner-improvedigital-bid-response.json",
-                                responseMacroReplacers
-                        )))
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
+                .withRequestBody(equalToJson(jsonFromFileWithMacro(
+                        "/com/improvedigital/prebid/server/it/test-banner-improvedigital-bid-request.json",
+                        null
+                )))
+                .willReturn(aResponse().withBody(jsonFromFileWithMacro(
+                        "/com/improvedigital/prebid/server/it/test-banner-improvedigital-bid-response.json",
+                        responseMacroReplacers
+                )))
         );
 
         return specWithPBSHeader(18081)
@@ -678,16 +676,15 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
     }
 
     private Response doVideoRequestAndGetResponse(Map<String, String> responseMacroReplacers) throws IOException {
-        WIRE_MOCK_RULE.stubFor(
-                post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/test-video-improvedigital-bid-request.json",
-                                null
-                        )))
-                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/test-video-improvedigital-bid-response.json",
-                                responseMacroReplacers
-                        )))
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
+                .withRequestBody(equalToJson(jsonFromFileWithMacro(
+                        "/com/improvedigital/prebid/server/it/test-video-improvedigital-bid-request.json",
+                        null
+                )))
+                .willReturn(aResponse().withBody(jsonFromFileWithMacro(
+                        "/com/improvedigital/prebid/server/it/test-video-improvedigital-bid-response.json",
+                        responseMacroReplacers
+                )))
         );
 
         return specWithPBSHeader(18081)
@@ -702,27 +699,25 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
             Map<String, String> responseMacroReplacers) throws IOException {
         final String stubScenario = "Multi imp";
         final String stubStateNextImp = "Next imp";
-        WIRE_MOCK_RULE.stubFor(
-                post(urlPathEqualTo("/improvedigital-exchange"))
-                        .inScenario(stubScenario)
-                        .whenScenarioStateIs(Scenario.STARTED)
-                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/"
-                                        + "test-video-multiimp-improvedigital-bid-response-1.json",
-                                responseMacroReplacers
-                        )))
-                        .willSetStateTo(stubStateNextImp)
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
+                .inScenario(stubScenario)
+                .whenScenarioStateIs(Scenario.STARTED)
+                .willReturn(aResponse().withBody(jsonFromFileWithMacro(
+                        "/com/improvedigital/prebid/server/it/"
+                                + "test-video-multiimp-improvedigital-bid-response-1.json",
+                        responseMacroReplacers
+                )))
+                .willSetStateTo(stubStateNextImp)
         );
-        WIRE_MOCK_RULE.stubFor(
-                post(urlPathEqualTo("/improvedigital-exchange"))
-                        .inScenario(stubScenario)
-                        .whenScenarioStateIs(stubStateNextImp)
-                        .willReturn(aResponse().withBody(jsonFromFileWithMacro(
-                                "/com/improvedigital/prebid/server/it/"
-                                        + "test-video-multiimp-improvedigital-bid-response-2.json",
-                                responseMacroReplacers
-                        )))
-                        .willSetStateTo(Scenario.STARTED)
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
+                .inScenario(stubScenario)
+                .whenScenarioStateIs(stubStateNextImp)
+                .willReturn(aResponse().withBody(jsonFromFileWithMacro(
+                        "/com/improvedigital/prebid/server/it/"
+                                + "test-video-multiimp-improvedigital-bid-response-2.json",
+                        responseMacroReplacers
+                )))
+                .willSetStateTo(Scenario.STARTED)
         );
 
         return specWithPBSHeader(18081)
@@ -736,31 +731,30 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
     private JSONObject doRequestAndGetResponse(CustomTrackerRequestTestParam param) throws JSONException {
         String uniqueId = UUID.randomUUID().toString();
 
-        WIRE_MOCK_RULE.stubFor(
-                post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
-                                SSPBidRequestTestData.builder()
-                                        .currency("USD")
-                                        .impData(Arrays.asList(SingleImpTestData.builder()
-                                                .impExt(new SSPBidRequestImpExt()
-                                                        .putStoredRequest(param.storedImpId)
-                                                        .putBidder()
-                                                        .putBidderKeyValue("placementId", param.improvePlacementId)
-                                                        .putBidderKeyValue("size", param.toBannerDimension()))
-                                                .bannerData(param.bannerData)
-                                                .nativeData(param.nativeData)
-                                                .build()))
-                                        .build()
-                        )))
-                        .willReturn(aResponse().withBody(getBidResponse(
-                                "improvedigital",
-                                uniqueId,
-                                StringUtils.defaultString(param.improveCurrency, "USD"),
-                                BidResponseTestData.builder()
-                                        .price(Double.parseDouble(param.improvePrice))
-                                        .adm(param.improveAdm)
-                                        .build()
-                        )))
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
+                .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
+                        SSPBidRequestTestData.builder()
+                                .currency("USD")
+                                .impData(SingleImpTestData.builder()
+                                        .impExt(new SSPBidRequestImpExt()
+                                                .putStoredRequest(param.storedImpId)
+                                                .putBidder()
+                                                .putBidderKeyValue("placementId", param.improvePlacementId)
+                                                .putBidderKeyValue("size", param.toBannerDimension()))
+                                        .bannerData(param.bannerData)
+                                        .nativeData(param.nativeData)
+                                        .build())
+                                .build()
+                )))
+                .willReturn(aResponse().withBody(getBidResponse(
+                        "improvedigital",
+                        uniqueId,
+                        StringUtils.defaultString(param.improveCurrency, "USD"),
+                        BidResponseTestData.builder()
+                                .price(Double.parseDouble(param.improvePrice))
+                                .adm(param.improveAdm)
+                                .build()
+                )))
         );
 
         Response response = specWithPBSHeader(18081)

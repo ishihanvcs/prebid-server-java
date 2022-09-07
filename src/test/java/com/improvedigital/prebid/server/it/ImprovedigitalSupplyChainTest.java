@@ -239,33 +239,32 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
             List<ExtRequestPrebidSchainSchainNode> expectedSchainNodes
     ) throws JSONException {
 
-        WIRE_MOCK_RULE.stubFor(
-                post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
-                                SSPBidRequestTestData.builder()
-                                        .currency("USD")
-                                        .impData(Arrays.asList(SingleImpTestData.builder()
-                                                .impExt(new SSPBidRequestImpExt()
-                                                        .putStoredRequest(storedImpId)
-                                                        .putBidder()
-                                                        .putBidderKeyValue("placementId", placementIdOfStoredImp))
-                                                .bannerData(BannerTestParam.builder()
-                                                        .w(300)
-                                                        .h(250)
-                                                        .build())
-                                                .build()))
-                                        .schainVer("1.0")
-                                        .schainComplete(1)
-                                        .schainNodes(expectedSchainNodes)
-                                        .build()
-                        )))
-                        .willReturn(aResponse().withBody(getBidResponse(
-                                "improvedigital", uniqueId, "USD",
-                                BidResponseTestData.builder()
-                                        .price(1.15)
-                                        .adm("<img src='banner-1.jpg' />")
-                                        .build()
-                        )))
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
+                .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
+                        SSPBidRequestTestData.builder()
+                                .currency("USD")
+                                .impData(SingleImpTestData.builder()
+                                        .impExt(new SSPBidRequestImpExt()
+                                                .putStoredRequest(storedImpId)
+                                                .putBidder()
+                                                .putBidderKeyValue("placementId", placementIdOfStoredImp))
+                                        .bannerData(BannerTestParam.builder()
+                                                .w(300)
+                                                .h(250)
+                                                .build())
+                                        .build())
+                                .schainVer("1.0")
+                                .schainComplete(1)
+                                .schainNodes(expectedSchainNodes)
+                                .build()
+                )))
+                .willReturn(aResponse().withBody(getBidResponse(
+                        "improvedigital", uniqueId, "USD",
+                        BidResponseTestData.builder()
+                                .price(1.15)
+                                .adm("<img src='banner-1.jpg' />")
+                                .build()
+                )))
         );
 
         Response response = specWithPBSHeader(18082)
@@ -307,90 +306,88 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
         double genericPrice1Value = Double.parseDouble(param.genericPrice1);
         double genericPrice2Value = Double.parseDouble(param.genericPrice2);
 
-        WIRE_MOCK_RULE.stubFor(
-                post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(getSSPBidRequest(param.auctionRequestId,
-                                SSPBidRequestTestData.builder()
-                                        .currency("USD")
-                                        .impData(Arrays.asList(SingleImpTestData.builder()
-                                                .impExt(new SSPBidRequestImpExt()
-                                                        .putStoredRequest(param.storedImpId)
-                                                        .putBidder()
-                                                        .putBidderKeyValue("placementId", param.improvePlacementId))
-                                                .bannerData(BannerTestParam.builder()
-                                                        .w(300)
-                                                        .h(250)
-                                                        .build())
-                                                .build()))
-                                        .schainVer("1.0")
-                                        .schainComplete(1)
-                                        .schainNodes(Arrays.asList(
-                                                ExtRequestPrebidSchainSchainNode.of(
-                                                        "headerlift.com",
-                                                        "hl-2022072201",
-                                                        1,
-                                                        "request_id_" + param.auctionRequestId,
-                                                        null,
-                                                        null,
-                                                        null
-                                                )
-                                        ))
-                                        .build()
-                        )))
-                        .willReturn(aResponse().withBody(getBidResponse(
-                                "improvedigital", param.auctionRequestId, "USD",
-                                BidResponseTestData.builder()
-                                        .price(improvePrice1Value)
-                                        .adm(param.improveAdm1)
-                                        .build(),
-                                BidResponseTestData.builder()
-                                        .price(improvePrice2Value)
-                                        .adm(param.improveAdm2)
-                                        .build()
-                        )))
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
+                .withRequestBody(equalToJson(getSSPBidRequest(param.auctionRequestId,
+                        SSPBidRequestTestData.builder()
+                                .currency("USD")
+                                .impData(SingleImpTestData.builder()
+                                        .impExt(new SSPBidRequestImpExt()
+                                                .putStoredRequest(param.storedImpId)
+                                                .putBidder()
+                                                .putBidderKeyValue("placementId", param.improvePlacementId))
+                                        .bannerData(BannerTestParam.builder()
+                                                .w(300)
+                                                .h(250)
+                                                .build())
+                                        .build())
+                                .schainVer("1.0")
+                                .schainComplete(1)
+                                .schainNodes(Arrays.asList(
+                                        ExtRequestPrebidSchainSchainNode.of(
+                                                "headerlift.com",
+                                                "hl-2022072201",
+                                                1,
+                                                "request_id_" + param.auctionRequestId,
+                                                null,
+                                                null,
+                                                null
+                                        )
+                                ))
+                                .build()
+                )))
+                .willReturn(aResponse().withBody(getBidResponse(
+                        "improvedigital", param.auctionRequestId, "USD",
+                        BidResponseTestData.builder()
+                                .price(improvePrice1Value)
+                                .adm(param.improveAdm1)
+                                .build(),
+                        BidResponseTestData.builder()
+                                .price(improvePrice2Value)
+                                .adm(param.improveAdm2)
+                                .build()
+                )))
         );
 
-        WIRE_MOCK_RULE.stubFor(
-                post(urlPathEqualTo("/generic-exchange"))
-                        .withRequestBody(equalToJson(getSSPBidRequest(param.auctionRequestId,
-                                SSPBidRequestTestData.builder()
-                                        .currency("USD")
-                                        .impData(Arrays.asList(SingleImpTestData.builder()
-                                                .impExt(new SSPBidRequestImpExt()
-                                                        .putStoredRequest(param.storedImpId)
-                                                        .putBidder()
-                                                        .putBidderKeyValue("exampleProperty", "examplePropertyValue"))
-                                                .bannerData(BannerTestParam.builder()
-                                                        .w(300)
-                                                        .h(250)
-                                                        .build())
-                                                .build()))
-                                        .schainVer("1.0")
-                                        .schainComplete(1)
-                                        .schainNodes(Arrays.asList(
-                                                ExtRequestPrebidSchainSchainNode.of(
-                                                        "headerlift.com",
-                                                        "hl-2022072201",
-                                                        1,
-                                                        "request_id_" + param.auctionRequestId,
-                                                        null,
-                                                        null,
-                                                        null
-                                                )
-                                        ))
-                                        .build()
-                        )))
-                        .willReturn(aResponse().withBody(getBidResponse(
-                                "generic", param.auctionRequestId, "USD",
-                                BidResponseTestData.builder()
-                                        .price(genericPrice1Value)
-                                        .adm(param.genericAdm1)
-                                        .build(),
-                                BidResponseTestData.builder()
-                                        .price(genericPrice2Value)
-                                        .adm(param.genericAdm2)
-                                        .build()
-                        )))
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/generic-exchange"))
+                .withRequestBody(equalToJson(getSSPBidRequest(param.auctionRequestId,
+                        SSPBidRequestTestData.builder()
+                                .currency("USD")
+                                .impData(SingleImpTestData.builder()
+                                        .impExt(new SSPBidRequestImpExt()
+                                                .putStoredRequest(param.storedImpId)
+                                                .putBidder()
+                                                .putBidderKeyValue("exampleProperty", "examplePropertyValue"))
+                                        .bannerData(BannerTestParam.builder()
+                                                .w(300)
+                                                .h(250)
+                                                .build())
+                                        .build())
+                                .schainVer("1.0")
+                                .schainComplete(1)
+                                .schainNodes(Arrays.asList(
+                                        ExtRequestPrebidSchainSchainNode.of(
+                                                "headerlift.com",
+                                                "hl-2022072201",
+                                                1,
+                                                "request_id_" + param.auctionRequestId,
+                                                null,
+                                                null,
+                                                null
+                                        )
+                                ))
+                                .build()
+                )))
+                .willReturn(aResponse().withBody(getBidResponse(
+                        "generic", param.auctionRequestId, "USD",
+                        BidResponseTestData.builder()
+                                .price(genericPrice1Value)
+                                .adm(param.genericAdm1)
+                                .build(),
+                        BidResponseTestData.builder()
+                                .price(genericPrice2Value)
+                                .adm(param.genericAdm2)
+                                .build()
+                )))
         );
 
         Response response = specWithPBSHeader(18082)

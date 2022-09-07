@@ -198,32 +198,31 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         );
 
         return getBidRequestWeb(uniqueId,
-                bidRequestData.impData.stream()
-                        .map(impData -> (Function<Imp, Imp>) imp -> imp.toBuilder()
-                                .ext(impData.impExt.get())
-                                .banner(impData.bannerData == null ? null : Banner.builder()
-                                        .w(impData.bannerData.w)
-                                        .h(impData.bannerData.h)
-                                        .mimes(impData.bannerData.mimes)
-                                        .build())
-                                .xNative(impData.nativeData == null ? null : Native.builder()
-                                        .request(toJsonString(mapper, impData.nativeData.request))
-                                        .ver(StringUtils.defaultString(impData.nativeData.ver, "1.2"))
-                                        .build())
-                                .video(impData.videoData == null ? null : Video.builder()
-                                        .protocols(impData.videoData.getVideoProtocols(2))
-                                        .w(impData.videoData.w)
-                                        .h(impData.videoData.h)
-                                        .mimes(impData.videoData.mimes)
-                                        .minduration(1)
-                                        .maxduration(60)
-                                        .linearity(1)
-                                        .placement(5)
-                                        .build())
-                                .bidfloor(BigDecimal.ZERO)
-                                .bidfloorcur(bidRequestData.currency)
+                Arrays.asList(imp -> imp.toBuilder()
+                        .id(bidRequestData.impData.id == null ? imp.getId() : bidRequestData.impData.id)
+                        .ext(bidRequestData.impData.impExt.get())
+                        .banner(bidRequestData.impData.bannerData == null ? null : Banner.builder()
+                                .w(bidRequestData.impData.bannerData.w)
+                                .h(bidRequestData.impData.bannerData.h)
+                                .mimes(bidRequestData.impData.bannerData.mimes)
                                 .build())
-                        .collect(Collectors.toList()),
+                        .xNative(bidRequestData.impData.nativeData == null ? null : Native.builder()
+                                .request(toJsonString(mapper, bidRequestData.impData.nativeData.request))
+                                .ver(StringUtils.defaultString(bidRequestData.impData.nativeData.ver, "1.2"))
+                                .build())
+                        .video(bidRequestData.impData.videoData == null ? null : Video.builder()
+                                .protocols(bidRequestData.impData.videoData.getVideoProtocols(2))
+                                .w(bidRequestData.impData.videoData.w)
+                                .h(bidRequestData.impData.videoData.h)
+                                .mimes(bidRequestData.impData.videoData.mimes)
+                                .minduration(1)
+                                .maxduration(60)
+                                .linearity(1)
+                                .placement(5)
+                                .build())
+                        .bidfloor(BigDecimal.ZERO)
+                        .bidfloorcur(bidRequestData.currency)
+                        .build()),
                 bidRequest -> bidRequest.toBuilder()
                         .site(Site.builder()
                                 .domain(IT_TEST_DOMAIN)
@@ -317,7 +316,9 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
             bidRequest = bidModifier.apply(bidRequest);
         }
 
-        return toJsonString(BID_REQUEST_MAPPER, bidRequest);
+        String s = toJsonString(BID_REQUEST_MAPPER, bidRequest);
+        System.out.println("=======> " + s);
+        return s;
     }
 
     protected String getBidResponse(
@@ -404,7 +405,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     public static class SSPBidRequestTestData {
         String currency;
 
-        List<SingleImpTestData> impData;
+        SingleImpTestData impData;
 
         List<String> siteIABCategories;
 
@@ -436,6 +437,8 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
 
     @Builder(toBuilder = true)
     public static class SingleImpTestData {
+        String id; /* Optional. If not set, test case will generate one. */
+
         SSPBidRequestImpExt impExt;
 
         BannerTestParam bannerData;

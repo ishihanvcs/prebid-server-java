@@ -2,8 +2,11 @@ package com.improvedigital.prebid.server.hooks.v1.revshare;
 
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.settings.model.ImprovedigitalPbsAccountExt;
+import com.improvedigital.prebid.server.utils.LogMessage;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.Future;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.bidder.BidderCatalog;
 import org.prebid.server.hooks.execution.v1.auction.AuctionRequestPayloadImpl;
@@ -16,6 +19,8 @@ import org.prebid.server.settings.ApplicationSettings;
 import org.prebid.server.settings.model.Account;
 
 public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.auction.ProcessedAuctionRequestHook {
+
+    private static final Logger logger = LoggerFactory.getLogger(ProcessedAuctionRequestHook.class);
 
     private final RequestUtils requestUtils;
 
@@ -48,7 +53,13 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
 
         return applicationSettings.getAccountById(accountId, invocationContext.timeout()).map(account -> {
             if (!hasPriceFloorsTurnedOn(account)) {
-                // TODO: Log it.
+                logger.warn(LogMessage
+                        .from(auctionRequestPayload.bidRequest())
+                        .withFrequency(1000)
+                        .withMessage(String.format("Account %s has auction.price-floors.enabled=false."
+                                + " Not applying bid adjustment factors", account.getId()))
+                );
+
                 return InvocationResultImpl.succeeded(
                         payload -> auctionRequestPayload, invocationContext.moduleContext()
                 );

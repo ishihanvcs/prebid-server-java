@@ -44,7 +44,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
         String uniqueId = UUID.randomUUID().toString();
 
         final JSONObject responseJson = doAuctionRequestToMultipleBidder(
-                /* This account has "bidPriceAdjustmentIncImprove=true" */ "2022081801",
+                /* This account has "bidPriceAdjustment=0.95, bidPriceAdjustmentIncImprove=true" */ "2022081801",
                 true,
                 0.95,
                 BidAdjustmentMultipleBidderAuctionTestParam.builder()
@@ -70,9 +70,9 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
     }
 
     @Test
-    public void testBidIsIncreasedWhenBidfloorIsNotSpecified() throws Exception {
+    public void testBidIsIncreasedWhenBidfloorIsNotSpecifiedInRequest() throws Exception {
         doAuctionRequestToImprovedigitalBidder(
-                /* This account has "bidPriceAdjustmentIncImprove=true" */ "2022081802",
+                /* This account has "bidPriceAdjustment=1.15, bidPriceAdjustmentIncImprove=true" */ "2022081802",
                 true,
                 1.15,
                 "2022081502",
@@ -80,14 +80,15 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                 null,
                 2.25,
                 null,
-                2.25 * 1.15 /* Bid is increased: 2.5875. */
+                2.25 * 1.15, /* Bid is increased: 2.5875. */
+                true
         );
     }
 
     @Test
     public void testBidfloorIsDecreased() throws Exception {
         doAuctionRequestToImprovedigitalBidder(
-                /* This account has "bidPriceAdjustmentIncImprove=true" */ "2022081802",
+                /* This account has "bidPriceAdjustment=1.15, bidPriceAdjustmentIncImprove=true" */ "2022081802",
                 true,
                 1.15,
                 "2022081502",
@@ -95,14 +96,15 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                 BigDecimal.valueOf(0.5),
                 2.25,
                 BigDecimal.valueOf(0.5 / 1.15), /* Bidfloor is decreased. 0.4348. */
-                2.25 * 1.15 /* Bid is increased: 2.5875. */
+                2.25 * 1.15, /* Bid is increased: 2.5875. */
+                true
         );
     }
 
     @Test
     public void testBidfloorIsIncreased() throws Exception {
         doAuctionRequestToImprovedigitalBidder(
-                /* This account has "bidPriceAdjustmentIncImprove=true" */ "2022081801",
+                /* This account has "bidPriceAdjustment=0.95, bidPriceAdjustmentIncImprove=true" */ "2022081801",
                 true,
                 0.95,
                 "2022081502",
@@ -110,7 +112,8 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                 BigDecimal.valueOf(0.5),
                 1.15,
                 BigDecimal.valueOf(0.5 / 0.95), /* Bidfloor is increased. 0.5263. */
-                1.15 * 0.95 /* Bid is decreased. 1.0925. */
+                1.15 * 0.95, /* Bid is decreased. 1.0925. */
+                true
         );
     }
 
@@ -119,7 +122,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
         String uniqueId = UUID.randomUUID().toString();
 
         final JSONObject responseJson = doAuctionRequestToMultipleBidder(
-                /* This account has "bidPriceAdjustmentIncImprove=false" */ "2022081803",
+                /* This account has "bidPriceAdjustment=0.90, bidPriceAdjustmentIncImprove=false" */ "2022081803",
                 false,
                 0.90,
                 BidAdjustmentMultipleBidderAuctionTestParam.builder()
@@ -147,7 +150,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
     @Test
     public void testBidAdjustmentWhenImprovedigitalIsNotEnabledByDefault() throws Exception {
         doAuctionRequestToImprovedigitalBidder(
-                /* This account has no "bidPriceAdjustmentIncImprove" */ "2022081804",
+                /* This account has "bidPriceAdjustment=0.80" and no "bidPriceAdjustmentIncImprove" */ "2022081804",
                 false,
                 0.8,
                 "2022081502",
@@ -155,7 +158,8 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                 BigDecimal.valueOf(0.5),
                 1.15,
                 BigDecimal.valueOf(0.5), /* Bidfloor intact. */
-                1.15 /* Bid intact. */
+                1.15, /* Bid intact. */
+                true
         );
     }
 
@@ -170,7 +174,24 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                 BigDecimal.valueOf(0.5),
                 1.15,
                 BigDecimal.valueOf(0.5), /* Bidfloor intact. */
-                1.15 /* Bid intact. */
+                1.15, /* Bid intact. */
+                true
+        );
+    }
+
+    @Test
+    public void testBidAdjustmentWhenAccountHasPriceFloorsModuleTurnedOff() throws Exception {
+        doAuctionRequestToImprovedigitalBidder(
+                /* This account has "auction.price-floors.enabled=false, bidPriceAdjustment=0.85" */ "2022081806",
+                false,
+                null, /* No bidadjustment factors. */
+                "2022081502",
+                20220815,
+                BigDecimal.valueOf(0.4),
+                1.12,
+                BigDecimal.valueOf(0.4), /* Bidfloor intact. */
+                1.12, /* Bid intact. */
+                false
         );
     }
 
@@ -183,7 +204,8 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
             BigDecimal dspBidFloor,
             double dspBid,
             BigDecimal expectedPbsBidFloor,
-            double expectedPbsBid
+            double expectedPbsBid,
+            boolean priceFloorEnabled
     ) throws JSONException {
 
         String uniqueId = UUID.randomUUID().toString();
@@ -197,6 +219,10 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                                                 .putStoredRequest(storedImpId)
                                                 .putBidder()
                                                 .putBidderKeyValue("placementId", placementIdOfStoredImp))
+                                        .bannerData(BannerTestParam.builder()
+                                                .w(300)
+                                                .h(250)
+                                                .build())
                                         .reqExtBidAdjustmentFactors(expectedBidAdjustmentPct == null
                                                 ? null : getAllBiddersExpectedBidAdjustmentFactors(
                                                 expectedBidAdjustmentPct, improveIsExpectedForAdjustment)
@@ -209,9 +235,9 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                                 bidRequest -> bidRequest.toBuilder()
                                         .ext(ExtRequest.of(bidRequest.getExt().getPrebid().toBuilder()
                                                 .floors(PriceFloorRules.builder()
-                                                        .enabled(true)
-                                                        .fetchStatus(FetchStatus.none)
-                                                        .location(PriceFloorLocation.noData)
+                                                        .enabled(priceFloorEnabled)
+                                                        .fetchStatus(priceFloorEnabled ? FetchStatus.none : null)
+                                                        .location(priceFloorEnabled ? PriceFloorLocation.noData : null)
                                                         .build())
                                                 .build()))
                                         .build()
@@ -269,6 +295,10 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                                                 .putStoredRequest(param.storedImpId)
                                                 .putBidder()
                                                 .putBidderKeyValue("placementId", param.improvePlacementId))
+                                        .bannerData(BannerTestParam.builder()
+                                                .w(300)
+                                                .h(250)
+                                                .build())
                                         .reqExtBidAdjustmentFactors(getAllBiddersExpectedBidAdjustmentFactors(
                                                 expectedBidAdjustmentPct, improveIsExpectedForAdjustment
                                         ))
@@ -306,6 +336,10 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                                                 .putStoredRequest(param.storedImpId)
                                                 .putBidder()
                                                 .putBidderKeyValue("exampleProperty", "examplePropertyValue"))
+                                        .bannerData(BannerTestParam.builder()
+                                                .w(300)
+                                                .h(250)
+                                                .build())
                                         .reqExtBidAdjustmentFactors(getAllBiddersExpectedBidAdjustmentFactors(
                                                 expectedBidAdjustmentPct, improveIsExpectedForAdjustment
                                         ))

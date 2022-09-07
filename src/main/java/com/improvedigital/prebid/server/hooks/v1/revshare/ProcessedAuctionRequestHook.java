@@ -13,6 +13,7 @@ import org.prebid.server.hooks.v1.auction.AuctionRequestPayload;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestBidAdjustmentFactors;
 import org.prebid.server.settings.ApplicationSettings;
+import org.prebid.server.settings.model.Account;
 
 public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.auction.ProcessedAuctionRequestHook {
 
@@ -46,6 +47,13 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         }
 
         return applicationSettings.getAccountById(accountId, invocationContext.timeout()).map(account -> {
+            if (!hasPriceFloorsTurnedOn(account)) {
+                // TODO: Log it.
+                return InvocationResultImpl.succeeded(
+                        payload -> auctionRequestPayload, invocationContext.moduleContext()
+                );
+            }
+
             ImprovedigitalPbsAccountExt accExt = requestUtils.getJsonUtils().getAccountExt(account);
             if (accExt == null || accExt.getBidPriceAdjustment() == null) {
                 return InvocationResultImpl.succeeded(
@@ -79,6 +87,15 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         }
 
         return true;
+    }
+
+    public boolean hasPriceFloorsTurnedOn(Account account) {
+        // We treat missing value as true.
+        if (account == null || account.getAuction() == null || account.getAuction().getPriceFloors() == null) {
+            return true;
+        }
+        Boolean isEnabled = account.getAuction().getPriceFloors().getEnabled();
+        return isEnabled == null ? true : isEnabled.booleanValue();
     }
 }
 

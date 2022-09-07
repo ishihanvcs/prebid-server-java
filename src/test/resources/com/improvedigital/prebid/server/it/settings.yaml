@@ -13,9 +13,17 @@ accounts:
     ext:
       improvedigitalpbs:
         bidPriceAdjustment: 0.90
-      b  idPriceAdjustmentIncImprove: false
+        bidPriceAdjustmentIncImprove: false
   - id: 2022081804
     ext:
       improvedigitalpbs:
         bidPriceAdjustment: 0.80
   - id: 2022081805
+  - id: 2022081806
+    auction:
+      price-floors:
+        enabled: false
+    ext:
+      improvedigitalpbs:
+        bidPriceAdjustment: 0.85
+        bidPriceAdjustmentIncImprove: true

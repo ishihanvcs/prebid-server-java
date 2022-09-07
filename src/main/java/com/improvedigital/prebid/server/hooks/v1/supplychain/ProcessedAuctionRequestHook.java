@@ -17,7 +17,6 @@ import org.prebid.server.proto.openrtb.ext.request.ExtSource;
 import org.prebid.server.proto.openrtb.ext.request.ExtSourceSchain;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -74,7 +73,7 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
             AuctionRequestPayload auctionRequestPayload, ImprovedigitalPbsImpExt improvedigitalPbsImpExt) {
 
         List<String> schainNodesToAdd = improvedigitalPbsImpExt.getSchainNodes() == null
-                ? Arrays.asList(DEFAULT_SCHAIN_DOMAIN) : improvedigitalPbsImpExt.getSchainNodes();
+                ? List.of(DEFAULT_SCHAIN_DOMAIN) : improvedigitalPbsImpExt.getSchainNodes();
 
         if (CollectionUtils.isEmpty(schainNodesToAdd)) {
             return null;
@@ -90,7 +89,7 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         return addSupplyChainNodes(
                 auctionRequestPayload,
                 improvedigitalPbsImpExt.getHeaderliftPartnerId(),
-                Arrays.asList(DEFAULT_SCHAIN_DOMAIN)
+                List.of(DEFAULT_SCHAIN_DOMAIN)
         );
     }
 
@@ -137,9 +136,7 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
 
     private boolean containsSchainNode(ExtSourceSchain schain, String nodeAsiToCheck) {
         return schain.getNodes().stream()
-                .filter(existingNode -> existingNode.getAsi().equalsIgnoreCase(nodeAsiToCheck))
-                .findFirst()
-                .isPresent();
+                .anyMatch(existingNode -> existingNode.getAsi().equalsIgnoreCase(nodeAsiToCheck));
     }
 }
 

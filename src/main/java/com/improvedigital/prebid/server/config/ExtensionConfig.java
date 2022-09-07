@@ -55,9 +55,6 @@ public class ExtensionConfig {
     @Autowired
     private ApplicationContext applicationContext;
 
-    @Autowired
-    private ApplicationSettings applicationSettings;
-
     @PostConstruct
     public void postConfigure() {
         final String pbsVersion = applicationContext.getEnvironment().getProperty("app.version.core");
@@ -210,7 +207,7 @@ public class ExtensionConfig {
 
     @Bean
     ImprovedigitalBidAdjustmentModule improvedigitalBidAdjustmentModule(
-            RequestUtils requestUtils, BidderCatalog bidderCatalog) {
+            RequestUtils requestUtils, BidderCatalog bidderCatalog, ApplicationSettings applicationSettings) {
         return new ImprovedigitalBidAdjustmentModule(requestUtils, bidderCatalog, applicationSettings);
     }
 }

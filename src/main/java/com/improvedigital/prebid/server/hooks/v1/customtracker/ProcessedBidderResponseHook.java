@@ -1,8 +1,9 @@
 package com.improvedigital.prebid.server.hooks.v1.customtracker;
 
-import com.improvedigital.prebid.server.customtracker.model.AuctionRequestModuleContext;
 import com.improvedigital.prebid.server.customtracker.BidderBidModifier;
+import com.improvedigital.prebid.server.customtracker.model.AuctionRequestModuleContext;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
+import com.improvedigital.prebid.server.utils.LogMessage;
 import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -59,7 +60,10 @@ public class ProcessedBidderResponseHook implements org.prebid.server.hooks.v1.b
                     ))
                     .collect(Collectors.toList());
         } catch (Throwable t) {
-            logger.warn(((AuctionRequestModuleContext) moduleContext).getBidRequest(), t);
+            logger.warn(
+                    LogMessage.from(((AuctionRequestModuleContext) moduleContext).getBidRequest())
+                            .with(t)
+            );
         }
         return originalBids;
     }

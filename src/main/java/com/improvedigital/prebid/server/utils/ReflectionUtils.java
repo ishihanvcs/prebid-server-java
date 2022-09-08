@@ -31,6 +31,19 @@ public class ReflectionUtils {
         return castValue(getDeclaredFieldValue(instance, propertyName));
     }
 
+    public static <T, R> R getPrivateProperty(String staticPropertyName, Class<T> clazz) {
+        if (clazz == null) {
+            return null;
+        }
+        try {
+            Field field = clazz.getDeclaredField(staticPropertyName);
+            field.setAccessible(true);
+            return castValue(field.get(clazz));
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
     public static <T> T resolveActualInstanceWrappedInBean(T instance, Class<T> clazz) {
         if (instance == null) {
             return null;

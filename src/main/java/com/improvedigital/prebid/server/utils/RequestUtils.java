@@ -18,6 +18,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtPublisherPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
+import org.prebid.server.spring.config.bidder.ImprovedigitalConfiguration;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -25,7 +26,13 @@ import java.util.Optional;
 
 public class RequestUtils {
 
-    public static final String IMPROVE_BIDDER_NAME = "improvedigital";
+    public static final String IMPROVE_BIDDER_NAME;
+
+    static {
+        IMPROVE_BIDDER_NAME = ReflectionUtils.getPrivateProperty(
+                "BIDDER_NAME", ImprovedigitalConfiguration.class
+        );
+    }
 
     private final JsonUtils jsonUtils;
 

@@ -395,7 +395,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
     private ExtRequestBidAdjustmentFactors getAllBiddersExpectedBidAdjustmentFactors(
             double expectedBidAdjustmentPct, boolean includeImprove) {
         ExtRequestBidAdjustmentFactors expectedFactors = ExtRequestBidAdjustmentFactors.builder().build();
-        IT_TEST_ALL_BIDDERS.stream().filter(b -> !"improvedigital".equalsIgnoreCase(b) || includeImprove).forEach(
+        getAllActiveBidders().stream().filter(b -> !"improvedigital".equalsIgnoreCase(b) || includeImprove).forEach(
                 b -> expectedFactors.addFactor(
                         b, BigDecimal.valueOf(expectedBidAdjustmentPct)
                 )

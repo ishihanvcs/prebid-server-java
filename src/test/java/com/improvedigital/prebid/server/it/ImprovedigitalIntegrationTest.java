@@ -36,6 +36,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.prebid.server.bidder.BidderCatalog;
 import org.prebid.server.bidder.improvedigital.proto.ImprovedigitalBidExt;
 import org.prebid.server.bidder.improvedigital.proto.ImprovedigitalBidExtImprovedigital;
 import org.prebid.server.it.IntegrationTest;
@@ -56,6 +57,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtSource;
 import org.prebid.server.proto.openrtb.ext.request.ExtSourceSchain;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
 import org.prebid.server.util.ObjectUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.test.context.TestPropertySource;
 
@@ -73,6 +75,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -96,6 +99,9 @@ import static org.assertj.core.api.Assertions.fail;
 })
 public class ImprovedigitalIntegrationTest extends IntegrationTest {
 
+    @Autowired
+    protected BidderCatalog bidderCatalog;
+
     protected static final String IT_TEST_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
             + "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.60 Safari/537.36";
     protected static final String IT_TEST_IP = "193.168.244.1";
@@ -103,26 +109,6 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     protected static final String IT_TEST_MAIN_DOMAIN = "improvedigital.com";
     protected static final String IT_TEST_CACHE_URL = "http://localhost:8090/cache";
 
-    protected static final List<String> IT_TEST_ALL_BIDDERS = Arrays.asList(
-            "33across", "aax", "aceex", "acuityads", "adf", "adform", "adgeneration", "adhese", "adkernel",
-            "adkernelAdn", "adman", "admixer", "adnuntius", "adocean", "adoppler", "adot", "adpone", "adprime",
-            "adtarget", "adtelligent", "advangelists", "adview", "adxcg", "adyoulike", "aja", "algorix", "alkimi",
-            "amx", "apacdex", "applogy", "appnexus", "audienceNetwork", "avocet", "axonix", "beachfront", "beintoo",
-            "between", "bidmachine", "bidmyadz", "bidscube", "bizzclick", "bmtm", "brightroll", "coinzilla",
-            "colossus", "colossusssp", "compass", "connectad", "consumable", "conversant", "cpmstar", "criteo",
-            "datablocks", "decenterads", "deepintent", "districtm", "dmx", "e_volution", "emx_digital", "engagebdr",
-            "eplanning", "epom", "gamma", "gamoshi", "generic", "grid", "groupm", "gumgum", "impactify",
-            "improvedigital", "inmobi", "interactiveoffers", "invibes", "iqzone", "ix", "janet", "jixie", "kayzen",
-            "kidoz", "krushmedia", "kubient", "lockerdome", "logicad", "loopme", "lunamedia", "madvertise",
-            "marsmedia", "mediafuse", "medianet", "mgid", "mobfoxpb", "mobilefuse", "nanointeractive",
-            "nextmillenium", "ninthdecimal", "nobid", "onetag", "openweb", "openx", "operaads", "orbidder",
-            "outbrain", "pangle", "pgam", "pubmatic", "pubnative", "pulsepoint", "quantumdex", "revcontent",
-            "rhythmone", "richaudience", "rtbhouse", "rubicon", "sa_lunamedia", "sharethrough", "silvermob",
-            "smaato", "smartadserver", "smarthub", "smartrtb", "smartyads", "smilewanted", "sonobi", "sovrn",
-            "streamkey", "synacormedia", "tappx", "telaria", "thirtythreeacross", "triplelift", "triplelift_native",
-            "ttx", "ucfunnel", "unicorn", "unruly", "valueimpression", "videobyte", "vidoomy", "viewdeos", "visx",
-            "vrtcal", "yahoossp", "yeahmobi", "yieldlab", "yieldmo", "yieldone", "zeroclickfraud"
-    );
     protected static final String GAM_NETWORK_CODE = "1015413";
 
     protected static final ObjectMapper BID_REQUEST_MAPPER = new ObjectMapper()
@@ -165,6 +151,12 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 .setConfig(RestAssuredConfig.config()
                         .objectMapperConfig(new ObjectMapperConfig(new Jackson2Mapper((aClass, s) -> mapper))))
                 .build();
+    }
+
+    protected Set<String> getAllActiveBidders() {
+        return bidderCatalog.names().stream()
+                .filter(n -> bidderCatalog.isActive(n))
+                .collect(Collectors.toSet());
     }
 
     protected String getAuctionBidRequestBanner(String uniqueId, AuctionBidRequestBannerTestData bidRequestData) {

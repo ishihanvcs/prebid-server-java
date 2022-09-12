@@ -26,10 +26,10 @@ import java.util.Optional;
 
 public class RequestUtils {
 
-    public static final String IMPROVE_BIDDER_NAME;
+    public static final String IMPROVE_DIGITAL_BIDDER_NAME;
 
     static {
-        IMPROVE_BIDDER_NAME = ReflectionUtils.getPrivateProperty(
+        IMPROVE_DIGITAL_BIDDER_NAME = ReflectionUtils.getPrivateProperty(
                 "BIDDER_NAME", ImprovedigitalConfiguration.class
         );
     }
@@ -169,7 +169,7 @@ public class RequestUtils {
     }
 
     public Integer getImprovePlacementId(Imp imp) {
-        JsonNode node = extractBidderInfo(imp, IMPROVE_BIDDER_NAME, "/placementId");
+        JsonNode node = extractBidderInfo(imp, IMPROVE_DIGITAL_BIDDER_NAME, "/placementId");
         if (!node.isMissingNode() && node.isInt()) {
             return node.asInt();
         }

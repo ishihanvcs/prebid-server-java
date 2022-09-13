@@ -10,8 +10,10 @@ import com.iab.openrtb.request.Banner;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Device;
 import com.iab.openrtb.request.Imp;
+import com.iab.openrtb.request.Native;
 import com.iab.openrtb.request.Publisher;
 import com.iab.openrtb.request.Regs;
+import com.iab.openrtb.request.Request;
 import com.iab.openrtb.request.Site;
 import com.iab.openrtb.request.Source;
 import com.iab.openrtb.request.User;
@@ -27,6 +29,7 @@ import io.restassured.specification.RequestSpecification;
 import lombok.Builder;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.jetbrains.annotations.NotNull;
@@ -154,10 +157,14 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         return getBidRequestWeb(uniqueId,
                 imp -> imp.toBuilder()
                         .ext(bidRequestData.impExt == null ? null : bidRequestData.impExt.get())
-                        .banner(Banner.builder()
-                                .w(300)
-                                .h(250)
-                                .mimes(Arrays.asList("image/jpg"))
+                        .banner(bidRequestData.bannerData == null ? null : Banner.builder()
+                                .w(bidRequestData.bannerData.w)
+                                .h(bidRequestData.bannerData.h)
+                                .mimes(bidRequestData.bannerData.mimes)
+                                .build())
+                        .xNative(bidRequestData.nativeData == null ? null : Native.builder()
+                                .request(toJsonString(mapper, bidRequestData.nativeData.request))
+                                .ver(StringUtils.defaultString(bidRequestData.nativeData.ver, "1.2"))
                                 .build())
                         .build(),
                 bidRequest -> bidRequest.toBuilder()
@@ -190,10 +197,14 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         return getBidRequestWeb(uniqueId,
                 imp -> imp.toBuilder()
                         .ext(bidRequestData.impExt == null ? null : bidRequestData.impExt.get())
-                        .banner(Banner.builder()
-                                .w(300)
-                                .h(250)
-                                .mimes(Arrays.asList("image/jpg"))
+                        .banner(bidRequestData.bannerData == null ? null : Banner.builder()
+                                .w(bidRequestData.bannerData == null ? 300 : bidRequestData.bannerData.w)
+                                .h(bidRequestData.bannerData == null ? 250 : bidRequestData.bannerData.h)
+                                .mimes(bidRequestData.bannerData.mimes)
+                                .build())
+                        .xNative(bidRequestData.nativeData == null ? null : Native.builder()
+                                .request(toJsonString(mapper, bidRequestData.nativeData.request))
+                                .ver(StringUtils.defaultString(bidRequestData.nativeData.ver, "1.2"))
                                 .build())
                         .build(),
                 bidRequest -> bidRequest.toBuilder()
@@ -336,12 +347,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
             bidRequest = bidModifier.apply(bidRequest);
         }
 
-        try {
-            return BID_REQUEST_MAPPER.writeValueAsString(bidRequest);
-        } catch (JsonProcessingException e) {
-            fail("Not expecting any exception while building bid request but got: " + e.getMessage());
-            return null;
-        }
+        return toJsonString(BID_REQUEST_MAPPER, bidRequest);
     }
 
     protected String getBidResponse(
@@ -369,10 +375,18 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                         .build()
                 ))
                 .build();
+        return toJsonString(BID_RESPONSE_MAPPER, bidResponse);
+    }
+
+    protected String toJsonString(Object obj) {
+        return toJsonString(mapper, obj);
+    }
+
+    protected String toJsonString(ObjectMapper mapper, Object obj) {
         try {
-            return BID_RESPONSE_MAPPER.writeValueAsString(bidResponse);
+            return mapper.writeValueAsString(obj);
         } catch (JsonProcessingException e) {
-            fail("Not expecting any exception while building bid response but got: " + e.getMessage());
+            fail("Not expecting any exception while converting to json string but got: " + e.getMessage());
             return null;
         }
     }
@@ -386,6 +400,10 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         String currency;
 
         AuctionBidRequestImpExt impExt;
+
+        BannerTestParam bannerData;
+
+        NativeTestParam nativeData;
 
         String gdprConsent;
 
@@ -407,6 +425,10 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         String currency;
 
         SSPBidRequestImpExt impExt;
+
+        BannerTestParam bannerData;
+
+        NativeTestParam nativeData;
 
         String gdprConsent;
 
@@ -476,6 +498,19 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         String adm;
 
         BidResponseBidExt bidExt;
+    }
+
+    @Builder(toBuilder = true)
+    public static class NativeTestParam {
+        Request request;
+        String ver;
+    }
+
+    @Builder(toBuilder = true)
+    public static class BannerTestParam {
+        int w;
+        int h;
+        List<String> mimes;
     }
 
     /**

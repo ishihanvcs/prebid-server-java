@@ -12,6 +12,7 @@ import com.improvedigital.prebid.server.customvast.model.CustomVast;
 import com.improvedigital.prebid.server.customvast.model.HooksModuleContext;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.utils.JsonUtils;
+import com.improvedigital.prebid.server.utils.LogMessage;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import com.improvedigital.prebid.server.utils.ResponseUtils;
 import io.vertx.core.Future;
@@ -86,7 +87,7 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
                     improveSeatBid = ObjectUtils.defaultIfNull(
                             improveSeatBid,
                             ResponseUtils.findOrCreateSeatBid(
-                                    RequestUtils.IMPROVE_BIDDER_NAME,
+                                    RequestUtils.IMPROVE_DIGITAL_BIDDER_NAME,
                                     seatBidsForImp
                             )
                     );
@@ -109,7 +110,11 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
                     new ArrayList<>(resultSeatBids.values())
             ).build();
         } catch (Throwable t) {
-            logger.error(context, t);
+            logger.error(
+                    LogMessage.from(bidRequest)
+                            .with(bidResponse)
+                            .with(t)
+            );
         }
         return bidResponse;
     }

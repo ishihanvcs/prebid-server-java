@@ -27,7 +27,7 @@ public class ImprovedigitalPbsAccountExt {
     }
 
     @JsonIgnore
-    public boolean shouldIncludeImproveForAdjustment() {
+    public boolean shouldIncludeImprovedigitalForAdjustment() {
         return bidPriceAdjustmentIncImprove == null ? false : bidPriceAdjustmentIncImprove;
     }
 }

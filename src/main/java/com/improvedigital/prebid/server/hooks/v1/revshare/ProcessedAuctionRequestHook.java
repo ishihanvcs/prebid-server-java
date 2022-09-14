@@ -93,7 +93,7 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
             return false;
         }
 
-        if (RequestUtils.IMPROVE_BIDDER_NAME.equalsIgnoreCase(bidderName)) {
+        if (RequestUtils.IMPROVE_DIGITAL_BIDDER_NAME.equalsIgnoreCase(bidderName)) {
             return accExt.shouldIncludeImprovedigitalForAdjustment();
         }
 

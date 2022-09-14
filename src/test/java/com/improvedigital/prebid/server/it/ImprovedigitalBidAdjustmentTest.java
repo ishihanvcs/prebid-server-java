@@ -395,11 +395,11 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
     private ExtRequestBidAdjustmentFactors getAllBiddersExpectedBidAdjustmentFactors(
             double expectedBidAdjustmentPct, boolean includeImprovedigital) {
         ExtRequestBidAdjustmentFactors expectedFactors = ExtRequestBidAdjustmentFactors.builder().build();
-        getAllActiveBidders().stream().filter(b -> !"improvedigital".equalsIgnoreCase(b) || includeImprovedigital).forEach(
-                b -> expectedFactors.addFactor(
+        getAllActiveBidders().stream()
+                .filter(b -> !"improvedigital".equalsIgnoreCase(b) || includeImprovedigital)
+                .forEach(b -> expectedFactors.addFactor(
                         b, BigDecimal.valueOf(expectedBidAdjustmentPct)
-                )
-        );
+                ));
         return expectedFactors;
     }
 

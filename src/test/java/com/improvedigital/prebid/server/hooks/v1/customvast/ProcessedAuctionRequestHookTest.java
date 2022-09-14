@@ -394,7 +394,7 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
             }
             bidRequest.getImp().replaceAll(imp -> setImpBidderProperties(
                     imp,
-                    RequestUtils.IMPROVE_BIDDER_NAME,
+                    RequestUtils.IMPROVE_DIGITAL_BIDDER_NAME,
                     bidderNode -> bidderNode.put(
                             "placementId",
                             improvePlacementId

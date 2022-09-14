@@ -87,7 +87,7 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
                     improveSeatBid = ObjectUtils.defaultIfNull(
                             improveSeatBid,
                             ResponseUtils.findOrCreateSeatBid(
-                                    RequestUtils.IMPROVE_BIDDER_NAME,
+                                    RequestUtils.IMPROVE_DIGITAL_BIDDER_NAME,
                                     seatBidsForImp
                             )
                     );

@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
+import com.iab.openrtb.response.Bid;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.settings.model.ImprovedigitalPbsAccountExt;
 import org.apache.commons.lang3.ObjectUtils;
@@ -17,6 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.Tuple2;
 import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.settings.model.Account;
+import org.prebid.server.proto.openrtb.ext.response.BidType;
 import org.prebid.server.util.ObjectUtil;
 
 import java.math.BigDecimal;
@@ -345,6 +347,22 @@ public class JsonUtils {
         } catch (JsonProcessingException e) {
             return null;
         }
+    }
+
+    public BidType getBidType(Bid bid) {
+        if (bid == null || bid.getExt() == null) {
+            return null;
+        }
+        String bidType = getStringAt(bid.getExt(), "/prebid/type");
+        return ObjectUtil.getIfNotNull(bidType, BidType::fromString);
+    }
+
+    public boolean isBidWithVideoType(Bid bid) {
+        return getBidType(bid) == BidType.video;
+    }
+
+    public boolean isBidWithNonVideoType(Bid bid) {
+        return !isBidWithVideoType(bid);
     }
 
     public BidRequest parseBidRequest(String body) {

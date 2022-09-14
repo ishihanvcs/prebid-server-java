@@ -19,17 +19,17 @@ import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.collections4.map.HashedMap;
-import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.hooks.execution.v1.auction.AuctionResponsePayloadImpl;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.auction.AuctionInvocationContext;
 import org.prebid.server.hooks.v1.auction.AuctionResponsePayload;
-import org.prebid.server.util.ObjectUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.AuctionResponseHook {
 
@@ -70,44 +70,68 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
         final CreatorContext commonContext = CreatorContext.from(context, jsonUtils);
         final CustomVastCreator customVastCreator = new CustomVastCreator(customVastUtils);
         try {
-            final Map<String, SeatBid> resultSeatBids = new HashedMap<>();
-            SeatBid improveSeatBid = null;
+            final Map<String, SeatBid> resultSeatBids = createResultSeatBidsMap(bidResponse);
+
             for (final Imp imp : bidRequest.getImp()) {
                 final List<SeatBid> seatBidsForImp = ResponseUtils.findSeatBidsForImp(
                         bidResponse, imp
                 );
-                if (!requestUtils.isCustomVastVideo(imp)) {
+
+                if (requestUtils.isCustomVastVideo(imp)) { // imp is configured for custom vast
+                    final List<Bid> allBids = ResponseUtils.getBidsForImp(seatBidsForImp, imp);
+                    final List<Bid> videoBids = allBids.parallelStream()
+                            .filter(jsonUtils::isBidWithVideoType)
+                            .collect(Collectors.toList());
+
+                    if (!videoBids.isEmpty() || allBids.isEmpty()) {
+                        // we'll create a Bid with custom vast only if:
+                        // 1. there is at least one bid with video type or
+                        // 2. no SSP has bid for this imp
+                        final CreatorContext creatorContext = commonContext.with(
+                                imp, new ArrayList<>(videoBids),
+                                jsonUtils
+                        );
+
+                        final CustomVast customVast = customVastCreator.create(creatorContext);
+                        final Bid customVastBid = customVastUtils.createBidFromCustomVast(creatorContext, customVast);
+                        if (customVastBid != null) {
+                            resultSeatBids.get(RequestUtils.IMPROVE_DIGITAL_BIDDER_NAME)
+                                    .getBid()
+                                    .add(customVastBid);
+                        }
+                    }
+
+                    if (allBids.size() != videoBids.size()) {
+                        // Even though the imp is configured for custom vast,
+                        // there are Bids with non-video BidTypes, so we'll
+                        // simply copy those Bids into respective SeatBid
+                        for (final Bid bid : allBids) {
+                            if (!videoBids.contains(bid)) {
+                                String seatName = seatBidsForImp.stream()
+                                        .filter(seatBid -> seatBid.getBid().contains(bid))
+                                        .map(SeatBid::getSeat)
+                                        .findFirst().orElse(null);
+                                if (StringUtils.isNotBlank(seatName)) {
+                                    resultSeatBids.get(seatName).getBid().add(bid);
+                                }
+                            }
+                        }
+                    }
+                } else { // imp is not configured for custom vast
+                    // So, we'll simply copy all Bids into respective SeatBid
                     for (final SeatBid seatBid : seatBidsForImp) {
-                        final SeatBid resultSeatBid = copyEmptySeatBidIntoResultMapIfNotExist(resultSeatBids, seatBid);
-                        resultSeatBid.getBid().addAll(
+                        resultSeatBids.get(seatBid.getSeat()).getBid().addAll(
                                 ResponseUtils.getBidsForImp(seatBid, imp)
                         );
-                    }
-                } else {
-                    improveSeatBid = ObjectUtils.defaultIfNull(
-                            improveSeatBid,
-                            ResponseUtils.findOrCreateSeatBid(
-                                    RequestUtils.IMPROVE_DIGITAL_BIDDER_NAME,
-                                    seatBidsForImp
-                            )
-                    );
-                    final CreatorContext creatorContext = commonContext.with(
-                            imp,
-                            ResponseUtils.getBidsForImp(seatBidsForImp, imp),
-                            jsonUtils
-                    );
-
-                    final CustomVast customVast = customVastCreator.create(creatorContext);
-                    final Bid bid = customVastUtils.createBidFromCustomVast(creatorContext, customVast);
-
-                    if (bid != null) {
-                        copyEmptySeatBidIntoResultMapIfNotExist(resultSeatBids, improveSeatBid)
-                                .getBid().add(bid);
                     }
                 }
             }
             return bidResponse.toBuilder().seatbid(
-                    new ArrayList<>(resultSeatBids.values())
+                    new ArrayList<>(resultSeatBids.values()
+                            .stream()
+                            .filter(sb -> !sb.getBid().isEmpty()) // skip SeatBids with no bids
+                            .collect(Collectors.toList())
+                    )
             ).build();
         } catch (Throwable t) {
             logger.error(
@@ -119,15 +143,23 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
         return bidResponse;
     }
 
-    private SeatBid copyEmptySeatBidIntoResultMapIfNotExist(Map<String, SeatBid> resultMap, SeatBid srcSeatBid) {
-        final SeatBid seatBid = ObjectUtil.getIfNotNullOrDefault(
-                resultMap.get(srcSeatBid.getSeat()),
-                sb -> sb,
-                () -> srcSeatBid.toBuilder().bid(new ArrayList<>()).build()
-        );
+    private Map<String, SeatBid> createResultSeatBidsMap(BidResponse bidResponse) {
+        final Map<String, SeatBid> resultMap = new HashedMap<>();
+        for (final SeatBid seatBid : bidResponse.getSeatbid()) {
+            resultMap.put(
+                    seatBid.getSeat(),
+                    seatBid.toBuilder().bid(new ArrayList<>()).build()
+            );
+        }
 
-        resultMap.put(seatBid.getSeat(), seatBid);
-        return seatBid;
+        resultMap.putIfAbsent(
+                RequestUtils.IMPROVE_DIGITAL_BIDDER_NAME,
+                SeatBid.builder()
+                        .seat(RequestUtils.IMPROVE_DIGITAL_BIDDER_NAME)
+                        .bid(new ArrayList<>())
+                        .build()
+        );
+        return resultMap;
     }
 
     @Override

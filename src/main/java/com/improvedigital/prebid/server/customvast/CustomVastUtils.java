@@ -2,6 +2,7 @@ package com.improvedigital.prebid.server.customvast;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Device;
 import com.iab.openrtb.request.Geo;
@@ -36,6 +37,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCache;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCacheVastxml;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestTargeting;
+import org.prebid.server.proto.openrtb.ext.response.BidType;
 import org.prebid.server.util.ObjectUtil;
 
 import java.io.IOException;
@@ -139,10 +141,13 @@ public class CustomVastUtils {
         if (StringUtils.isEmpty(adm)) {
             return null;
         }
+        ObjectNode extNode = jsonUtils.getObjectMapper().createObjectNode();
+        extNode.putObject("prebid").put("type", BidType.video.getName());
         return Bid.builder()
                 .id(UUID.randomUUID().toString())
                 .impid(context.getImp().getId())
                 .adm(adm)
+                .ext(extNode)
                 .price(BigDecimal.ZERO) // TODO: set price as per imp configuration
                 .build();
     }

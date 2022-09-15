@@ -66,7 +66,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -144,7 +143,15 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 .build();
     }
 
-    protected String getAuctionBidRequestBanner(String uniqueId, AuctionBidRequestBannerTestData bidRequestData) {
+    protected String getAuctionBidRequest(String uniqueId, AuctionBidRequestTestData bidRequestData) {
+        return getAuctionBidRequest(uniqueId, bidRequestData, null);
+    }
+
+    protected String getAuctionBidRequest(
+            String uniqueId,
+            AuctionBidRequestTestData bidRequestData,
+            Function<BidRequest, BidRequest> bidReqModifier
+    ) {
         // We do not want version, complete when no nodes are there.
         final ExtSource reqSourceExt = CollectionUtils.isEmpty(bidRequestData.schainNodes) ? null : ExtSource.of(
                 ExtSourceSchain.of(
@@ -155,38 +162,69 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 )
         );
 
-        return getBidRequestWeb(uniqueId,
-                bidRequestData.impExts.stream()
-                        .map(impExt -> (Function<Imp, Imp>) imp -> imp.toBuilder()
-                                .ext(impExt.get())
-                                .banner(bidRequestData.bannerData == null ? null : Banner.builder()
-                                        .w(bidRequestData.bannerData.w)
-                                        .h(bidRequestData.bannerData.h)
-                                        .mimes(bidRequestData.bannerData.mimes)
+        BidRequest bidRequest = BidRequest.builder()
+                .id("request_id_" + uniqueId)
+                .imp(bidRequestData.imps.stream()
+                        .map(anImp -> Imp.builder()
+                                .id(anImp.impData.id)
+                                .ext(anImp.impExt.get())
+                                .banner(anImp.impData.bannerData == null ? null : Banner.builder()
+                                        .w(anImp.impData.bannerData.w)
+                                        .h(anImp.impData.bannerData.h)
+                                        .mimes(anImp.impData.bannerData.mimes)
                                         .build())
-                                .xNative(bidRequestData.nativeData == null ? null : Native.builder()
-                                        .request(toJsonString(mapper, bidRequestData.nativeData.request))
-                                        .ver(StringUtils.defaultString(bidRequestData.nativeData.ver, "1.2"))
+                                .xNative(anImp.impData.nativeData == null ? null : Native.builder()
+                                        .request(toJsonString(mapper, anImp.impData.nativeData.request))
+                                        .ver(StringUtils.defaultString(anImp.impData.nativeData.ver, "1.2"))
+                                        .build())
+                                .video(anImp.impData.videoData == null ? null : Video.builder()
+                                        .protocols(anImp.impData.videoData.getVideoProtocols(2))
+                                        .w(anImp.impData.videoData.w)
+                                        .h(anImp.impData.videoData.h)
+                                        .mimes(anImp.impData.videoData.mimes)
+                                        .minduration(1)
+                                        .maxduration(60)
+                                        .linearity(1)
+                                        .placement(5)
                                         .build())
                                 .build())
-                        .collect(Collectors.toList()),
-                bidRequest -> bidRequest.toBuilder()
-                        .cur(Arrays.asList(bidRequestData.currency))
-                        .user(User.builder()
-                                .ext(ExtUser.builder()
-                                        .consent(bidRequestData.gdprConsent)
-                                        .build())
+                        .collect(Collectors.toList()))
+                .tmax(5000L)
+                .regs(Regs.of(null, ExtRegs.of(0, null)))
+                .cur(Arrays.asList(bidRequestData.currency))
+                .site(Site.builder()
+                        .cat(bidRequestData.siteIABCategories)
+                        .build())
+                .user(User.builder()
+                        .ext(ExtUser.builder()
+                                .consent(bidRequestData.gdprConsent)
                                 .build())
-                        .source(Source.builder()
-                                .tid("source_tid_" + uniqueId)
-                                .ext(reqSourceExt)
-                                .build())
-                        .test(bidRequestData.test)
-                        .build()
-        );
+                        .build())
+                .source(Source.builder()
+                        .tid("source_tid_" + uniqueId)
+                        .ext(reqSourceExt)
+                        .build())
+                .test(bidRequestData.test)
+                .build();
+
+        if (bidReqModifier != null) {
+            bidRequest = bidReqModifier.apply(bidRequest);
+        }
+
+        String s = toJsonString(BID_REQUEST_MAPPER, bidRequest);
+        System.out.println("=======> " + s);
+        return s;
     }
 
     protected String getSSPBidRequest(String uniqueId, SSPBidRequestTestData bidRequestData) {
+        return getSSPBidRequest(uniqueId, bidRequestData, null);
+    }
+
+    protected String getSSPBidRequest(
+            String uniqueId,
+            SSPBidRequestTestData bidRequestData,
+            Function<BidRequest, BidRequest> bidReqModifier
+    ) {
         // We do not want version, complete when no nodes are there.
         final ExtSource reqSourceExt = CollectionUtils.isEmpty(bidRequestData.schainNodes) ? null : ExtSource.of(
                 ExtSourceSchain.of(
@@ -197,9 +235,12 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 )
         );
 
-        return getBidRequestWeb(uniqueId,
-                Arrays.asList(imp -> imp.toBuilder()
-                        .id(bidRequestData.impData.id == null ? imp.getId() : bidRequestData.impData.id)
+        final AtomicInteger impIndex = new AtomicInteger(0);
+
+        BidRequest bidRequest = BidRequest.builder()
+                .id("request_id_" + uniqueId)
+                .imp(Arrays.asList(Imp.builder()
+                        .id(bidRequestData.impData.id)
                         .ext(bidRequestData.impData.impExt.get())
                         .banner(bidRequestData.impData.bannerData == null ? null : Banner.builder()
                                 .w(bidRequestData.impData.bannerData.w)
@@ -220,100 +261,47 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                                 .linearity(1)
                                 .placement(5)
                                 .build())
-                        .bidfloor(BigDecimal.ZERO)
-                        .bidfloorcur(bidRequestData.currency)
-                        .build()),
-                bidRequest -> bidRequest.toBuilder()
-                        .site(Site.builder()
-                                .domain(IT_TEST_DOMAIN)
-                                .page("http://" + IT_TEST_DOMAIN)
-                                .publisher(Publisher.builder()
-                                        .domain(IT_TEST_MAIN_DOMAIN)
-                                        .build())
-                                .ext(ExtSite.of(0, null))
+                        .bidfloor(bidRequestData.hasDefaultBidfloor() ? BigDecimal.ZERO : null)
+                        .bidfloorcur(bidRequestData.hasDefaultBidfloor() ? bidRequestData.currency : null)
+                        .build()))
+                .site(Site.builder()
+                        .domain(IT_TEST_DOMAIN)
+                        .page("http://" + IT_TEST_DOMAIN)
+                        .publisher(Publisher.builder()
+                                .domain(IT_TEST_MAIN_DOMAIN)
                                 .build())
-                        .device(Device.builder()
-                                .ua(IT_TEST_USER_AGENT)
-                                .ip(IT_TEST_IP)
+                        .ext(ExtSite.of(0, null))
+                        .build())
+                .device(Device.builder()
+                        .ua(IT_TEST_USER_AGENT)
+                        .ip(IT_TEST_IP)
+                        .build())
+                .user(User.builder()
+                        .ext(ExtUser.builder()
+                                .consent(bidRequestData.gdprConsent)
                                 .build())
-                        .user(User.builder()
-                                .ext(ExtUser.builder()
-                                        .consent(bidRequestData.gdprConsent)
-                                        .build())
-                                .build())
-                        .at(1)
-                        .tmax(5000L)
-                        .cur(Arrays.asList(bidRequestData.currency))
-                        .regs(Regs.of(null, ExtRegs.of(0, null)))
-                        .ext(ExtRequest.of(ExtRequestPrebid.builder()
-                                .pbs(ExtRequestPrebidPbs.of("/openrtb2/auction"))
-                                .server(ExtRequestPrebidServer.of(
-                                        "http://localhost:8080", 1, "local"
-                                ))
-                                .channel(bidRequestData.channel)
-                                .targeting(bidRequestData.extRequestTargeting)
-                                .cache(bidRequestData.extRequestPrebidCache)
-                                .build()))
-                        .source(Source.builder()
-                                .tid("source_tid_" + uniqueId)
-                                .ext(reqSourceExt)
-                                .build())
-                        .build()
-        );
-    }
-
-    protected String getAuctionBidRequestVideo(String uniqueId, AuctionBidRequestVideoTestData bidRequestData) {
-        return getBidRequestWeb(uniqueId,
-                bidRequestData.impData.stream()
-                        .map(simpleImp -> (Function<Imp, Imp>) imp -> imp.toBuilder()
-                                .ext(simpleImp.impExt.get())
-                                .video(Video.builder()
-                                        .protocols(simpleImp.getVideoProtocols(2))
-                                        .w(640)
-                                        .h(480)
-                                        .mimes(Arrays.asList("video/mp4"))
-                                        .minduration(1)
-                                        .maxduration(60)
-                                        .linearity(1)
-                                        .placement(5)
-                                        .build())
-                                .build())
-                        .collect(Collectors.toList()),
-                bidRequest -> bidRequest.toBuilder()
-                        .cur(Arrays.asList(bidRequestData.currency))
-                        .site(Site.builder()
-                                .cat(bidRequestData.siteIABCategories)
-                                .build())
-                        .user(User.builder()
-                                .ext(ExtUser.builder()
-                                        .consent(bidRequestData.gdprConsent)
-                                        .build())
-                                .build())
-                        .build()
-        );
-    }
-
-    protected String getBidRequestWeb(
-            String uniqueId, List<Function<Imp, Imp>> impModifiers, Function<BidRequest, BidRequest> bidModifier
-    ) {
-        final AtomicInteger impIndex = new AtomicInteger(0);
-
-        BidRequest bidRequest = BidRequest.builder()
-                .id("request_id_" + uniqueId)
+                        .build())
+                .at(1)
+                .tmax(5000L)
+                .cur(Arrays.asList(bidRequestData.currency))
+                .regs(Regs.of(null, ExtRegs.of(0, null)))
+                .ext(ExtRequest.of(ExtRequestPrebid.builder()
+                        .pbs(ExtRequestPrebidPbs.of("/openrtb2/auction"))
+                        .server(ExtRequestPrebidServer.of(
+                                "http://localhost:8080", 1, "local"
+                        ))
+                        .channel(bidRequestData.channel)
+                        .targeting(bidRequestData.extRequestTargeting)
+                        .cache(bidRequestData.extRequestPrebidCache)
+                        .build()))
                 .source(Source.builder()
                         .tid("source_tid_" + uniqueId)
+                        .ext(reqSourceExt)
                         .build())
-                .tmax(5000L)
-                .regs(Regs.of(null, ExtRegs.of(0, null)))
-                .imp(impModifiers.stream()
-                        .map(m -> m.apply(Imp.builder()
-                                .id("imp_id_" + impIndex.getAndIncrement() + "_" + uniqueId)
-                                .build()))
-                        .collect(Collectors.toList()))
                 .build();
 
-        if (bidModifier != null) {
-            bidRequest = bidModifier.apply(bidRequest);
+        if (bidReqModifier != null) {
+            bidRequest = bidReqModifier.apply(bidRequest);
         }
 
         String s = toJsonString(BID_REQUEST_MAPPER, bidRequest);
@@ -321,50 +309,37 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         return s;
     }
 
-    protected String getBidResponse(
+    protected String getSSPBidResponse(
             String bidderName,
             String uniqueId,
             String currency,
             BidResponseTestData... data
     ) {
-        return getBidResponse(bidderName, uniqueId, currency, Arrays.asList(
-                // Behaving as simple imp response.
-                Arrays.stream(data).collect(Collectors.toList())
-        ));
-    }
-
-    protected String getBidResponse(
-            String bidderName,
-            String uniqueId,
-            String currency,
-            /* List of bids for list of imps */ List<List<BidResponseTestData>> data
-    ) {
         final AtomicInteger bidIndex = new AtomicInteger(0);
-        List<Bid> bids = new ArrayList<>();
-        for (final AtomicInteger i = new AtomicInteger(0); i.get() < data.size(); i.getAndIncrement()) {
-            bids.addAll(data.get(i.get()).stream()
-                    .map(d -> Bid.builder()
-                            .id("bid_id_" + bidderName + "_" + bidIndex.getAndIncrement() + "_" + uniqueId)
-                            .impid("imp_id_" + i + "_" + uniqueId) /* imp id is tied to the bid request. */
-                            .price(BigDecimal.valueOf(d.price).setScale(2, RoundingMode.HALF_EVEN))
-                            .adm(d.adm)
-                            .cid("campaign_id_" + i + "_" + uniqueId)
-                            .adid("ad_id_" + i + "_" + uniqueId)
-                            .crid("creative_id_" + i + "_" + uniqueId)
-                            .ext(d.bidExt == null ? null : d.bidExt.get())
-                            .build())
-                    .collect(Collectors.toList()));
-        }
-
         BidResponse bidResponse = BidResponse.builder()
-                .id("request_id_" + uniqueId) /* request id is tied to the bid request. */
+                .id("request_id_" + uniqueId) /* request id is tied to the bid request. See above. */
                 .cur(currency)
                 .seatbid(Arrays.asList(SeatBid.builder()
-                        .bid(bids)
+                        .bid(Arrays.stream(data)
+                                .map(d -> toBid(bidIndex.getAndIncrement(), bidderName, d))
+                                .collect(Collectors.toList()))
                         .build()
                 ))
                 .build();
         return toJsonString(BID_RESPONSE_MAPPER, bidResponse);
+    }
+
+    private Bid toBid(int bidIndex, String bidderName, BidResponseTestData d) {
+        return Bid.builder()
+                .id("b_" + bidIndex + "_" + bidderName + "_" + d.impId)
+                .impid(d.impId)
+                .price(BigDecimal.valueOf(d.price).setScale(2, RoundingMode.HALF_EVEN))
+                .adm(d.adm)
+                .cid("cid_" + bidIndex + "_" + d.impId)
+                .adid("adid_" + bidIndex + "_" + d.impId)
+                .crid("crid_" + bidIndex + "_" + d.impId)
+                .ext(d.bidExt == null ? null : d.bidExt.get())
+                .build();
     }
 
     protected String toJsonString(Object obj) {
@@ -381,14 +356,12 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     }
 
     @Builder(toBuilder = true)
-    public static class AuctionBidRequestBannerTestData {
+    public static class AuctionBidRequestTestData {
         String currency;
 
-        List<AuctionBidRequestImpExt> impExts;
+        List<AuctionBidRequestImpTestData> imps;
 
-        BannerTestParam bannerData;
-
-        NativeTestParam nativeData;
+        List<String> siteIABCategories;
 
         String gdprConsent;
 
@@ -402,9 +375,17 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     }
 
     @Builder(toBuilder = true)
+    public static class AuctionBidRequestImpTestData {
+        AuctionBidRequestImpExt impExt;
+
+        SingleImpTestData impData;
+    }
+
+    @Builder(toBuilder = true)
     public static class SSPBidRequestTestData {
         String currency;
 
+        /* SSP request is always single-imp even though auction is multi-imp. */
         SingleImpTestData impData;
 
         List<String> siteIABCategories;
@@ -417,22 +398,18 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
 
         List<ExtRequestPrebidSchainSchainNode> schainNodes;
 
+        Boolean useDefaultBidfloor;
+
         ExtRequestPrebidChannel channel;
 
         ExtRequestTargeting extRequestTargeting;
 
         ExtRequestPrebidCache extRequestPrebidCache;
-    }
 
-    @Builder(toBuilder = true)
-    public static class AuctionBidRequestVideoTestData {
-        String currency;
-
-        List<AuctionBidRequestImpVideoTestData> impData;
-
-        List<String> siteIABCategories;
-
-        String gdprConsent;
+        @JsonIgnore
+        public boolean hasDefaultBidfloor() {
+            return useDefaultBidfloor == null || useDefaultBidfloor.booleanValue();
+        }
     }
 
     @Builder(toBuilder = true)
@@ -449,23 +426,9 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     }
 
     @Builder(toBuilder = true)
-    public static class AuctionBidRequestImpVideoTestData {
-        AuctionBidRequestImpExt impExt;
-
-        List<Integer> videoProtocols;
-
-        @JsonIgnore
-        public List<Integer> getVideoProtocols(int defaultProtocol) {
-            if (CollectionUtils.isEmpty(videoProtocols)) {
-                return Arrays.asList(defaultProtocol);
-            }
-
-            return videoProtocols;
-        }
-    }
-
-    @Builder(toBuilder = true)
     public static class BidResponseTestData {
+        String impId;
+
         double price;
 
         String adm;
@@ -501,6 +464,14 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
 
             return protocols;
         }
+
+        public static VideoTestParam getDefault() {
+            return VideoTestParam.builder()
+                    .w(640)
+                    .h(480)
+                    .mimes(Arrays.asList("video/mp4"))
+                    .build();
+        }
     }
 
     /**
@@ -522,8 +493,12 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         private ObjectNode impExt;
 
         public SSPBidRequestImpExt() {
+            this(true);
+        }
+
+        public SSPBidRequestImpExt(boolean initWithPrebid) {
             this.impExt = BID_REQUEST_MAPPER.valueToTree(
-                    ExtImp.of(ExtImpPrebid.builder().build(), null)
+                    initWithPrebid ? ExtImp.of(ExtImpPrebid.builder().build(), null) : ExtImp.of(null, null)
             );
         }
 
@@ -952,6 +927,18 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
 
         assertThat(responseJson.getJSONArray("seatbid").getJSONObject(0).getJSONArray("bid").length())
                 .isGreaterThanOrEqualTo(1);
+    }
+
+    protected void assertBidCount(
+            JSONObject responseJson, int expectedSeatbidCount, int... expectedBidCounts
+    ) throws JSONException {
+        assertThat(responseJson.getJSONArray("seatbid").length())
+                .isEqualTo(expectedSeatbidCount);
+
+        for (int i = 0; i < expectedSeatbidCount; i++) {
+            assertThat(responseJson.getJSONArray("seatbid").getJSONObject(i).getJSONArray("bid").length())
+                    .isEqualTo(expectedBidCounts[i]);
+        }
     }
 
     @NotNull

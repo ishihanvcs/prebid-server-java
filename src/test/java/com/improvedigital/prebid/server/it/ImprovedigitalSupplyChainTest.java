@@ -7,6 +7,7 @@ import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.prebid.server.model.Endpoint;
+import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidChannel;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidSchainSchainNode;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -54,14 +55,14 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
         );
 
         assertBidIdExists(responseJson, 0, 0);
-        assertBidImpId(responseJson, 0, 0, "imp_id_0_" + uniqueId);
+        assertBidImpId(responseJson, 0, 0, "imp_id_1");
         assertBidPrice(responseJson, 0, 0, 1.25);
         assertSeat(responseJson, 0, "generic");
         assertThat(getAdm(responseJson, 0, 0)).contains("<img src='banner-4.png'/>");
         assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("banner");
 
         assertBidIdExists(responseJson, 1, 0);
-        assertBidImpId(responseJson, 1, 0, "imp_id_0_" + uniqueId);
+        assertBidImpId(responseJson, 1, 0, "imp_id_1");
         assertBidPrice(responseJson, 1, 0, 1.15);
         assertSeat(responseJson, 1, "improvedigital");
         assertThat(getAdm(responseJson, 1, 0)).contains("<img src='banner-2.png'/>");
@@ -244,6 +245,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                         SSPBidRequestTestData.builder()
                                 .currency("USD")
                                 .impData(SingleImpTestData.builder()
+                                        .id("imp_id_1")
                                         .impExt(new SSPBidRequestImpExt()
                                                 .putStoredRequest(storedImpId)
                                                 .putBidder()
@@ -256,11 +258,13 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                 .schainVer("1.0")
                                 .schainComplete(1)
                                 .schainNodes(expectedSchainNodes)
+                                .channel(ExtRequestPrebidChannel.of("web"))
                                 .build()
                 )))
-                .willReturn(aResponse().withBody(getBidResponse(
+                .willReturn(aResponse().withBody(getSSPBidResponse(
                         "improvedigital", uniqueId, "USD",
                         BidResponseTestData.builder()
+                                .impId("imp_id_1")
                                 .price(1.15)
                                 .adm("<img src='banner-1.jpg' />")
                                 .build()
@@ -268,11 +272,15 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
         );
 
         Response response = specWithPBSHeader(18082)
-                .body(getAuctionBidRequestBanner(uniqueId, AuctionBidRequestBannerTestData.builder()
+                .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
                         .currency("USD")
-                        .impExts(Arrays.asList(new AuctionBidRequestImpExt()
-                                .putStoredRequest(storedImpId)
-                        ))
+                        .imps(Arrays.asList(AuctionBidRequestImpTestData.builder()
+                                .impExt(new AuctionBidRequestImpExt()
+                                        .putStoredRequest(storedImpId))
+                                .impData(SingleImpTestData.builder()
+                                        .id("imp_id_1")
+                                        .build())
+                                .build()))
                         .schainVer("1.0")
                         .schainComplete(1)
                         .schainNodes(existingSchainNodes)
@@ -288,7 +296,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
         assertThat(responseJson.getJSONArray("seatbid").getJSONObject(0).getJSONArray("bid").length())
                 .isEqualTo(1);
         assertBidIdExists(responseJson, 0, 0);
-        assertBidImpId(responseJson, 0, 0, "imp_id_0_" + uniqueId);
+        assertBidImpId(responseJson, 0, 0, "imp_id_1");
         assertBidPrice(responseJson, 0, 0, 1.15);
         assertSeat(responseJson, 0, "improvedigital");
         assertThat(getAdm(responseJson, 0, 0)).contains("<img src='banner-1.jpg' />");
@@ -311,6 +319,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                         SSPBidRequestTestData.builder()
                                 .currency("USD")
                                 .impData(SingleImpTestData.builder()
+                                        .id("imp_id_1")
                                         .impExt(new SSPBidRequestImpExt()
                                                 .putStoredRequest(param.storedImpId)
                                                 .putBidder()
@@ -333,15 +342,18 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                                 null
                                         )
                                 ))
+                                .channel(ExtRequestPrebidChannel.of("web"))
                                 .build()
                 )))
-                .willReturn(aResponse().withBody(getBidResponse(
+                .willReturn(aResponse().withBody(getSSPBidResponse(
                         "improvedigital", param.auctionRequestId, "USD",
                         BidResponseTestData.builder()
+                                .impId("imp_id_1")
                                 .price(improvePrice1Value)
                                 .adm(param.improveAdm1)
                                 .build(),
                         BidResponseTestData.builder()
+                                .impId("imp_id_1")
                                 .price(improvePrice2Value)
                                 .adm(param.improveAdm2)
                                 .build()
@@ -353,6 +365,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                         SSPBidRequestTestData.builder()
                                 .currency("USD")
                                 .impData(SingleImpTestData.builder()
+                                        .id("imp_id_1")
                                         .impExt(new SSPBidRequestImpExt()
                                                 .putStoredRequest(param.storedImpId)
                                                 .putBidder()
@@ -375,15 +388,18 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                                 null
                                         )
                                 ))
+                                .channel(ExtRequestPrebidChannel.of("web"))
                                 .build()
                 )))
-                .willReturn(aResponse().withBody(getBidResponse(
+                .willReturn(aResponse().withBody(getSSPBidResponse(
                         "generic", param.auctionRequestId, "USD",
                         BidResponseTestData.builder()
+                                .impId("imp_id_1")
                                 .price(genericPrice1Value)
                                 .adm(param.genericAdm1)
                                 .build(),
                         BidResponseTestData.builder()
+                                .impId("imp_id_1")
                                 .price(genericPrice2Value)
                                 .adm(param.genericAdm2)
                                 .build()
@@ -391,11 +407,15 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
         );
 
         Response response = specWithPBSHeader(18082)
-                .body(getAuctionBidRequestBanner(param.auctionRequestId, AuctionBidRequestBannerTestData.builder()
+                .body(getAuctionBidRequest(param.auctionRequestId, AuctionBidRequestTestData.builder()
                         .currency("USD")
-                        .impExts(Arrays.asList(new AuctionBidRequestImpExt()
-                                .putStoredRequest(param.storedImpId)
-                        ))
+                        .imps(Arrays.asList(AuctionBidRequestImpTestData.builder()
+                                .impExt(new AuctionBidRequestImpExt()
+                                        .putStoredRequest(param.storedImpId))
+                                .impData(SingleImpTestData.builder()
+                                        .id("imp_id_1")
+                                        .build())
+                                .build()))
                         .build()
                 ))
                 .post(Endpoint.openrtb2_auction.value());

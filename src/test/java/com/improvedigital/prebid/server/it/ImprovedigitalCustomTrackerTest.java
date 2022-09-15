@@ -19,6 +19,7 @@ import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.prebid.server.model.Endpoint;
+import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidChannel;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.xml.sax.InputSource;
@@ -316,15 +317,9 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void shouldAddCorrectPlacementIdInCustomTrackerOnVideoResponse() throws Exception {
-        String vastXmlResponse1 = getVastXmlWrapper("20220601_1", false)
-                .replace("\"", "\\\"");
-        String vastXmlResponse2 = getVastXmlInline("20220601_2", false)
-                .replace("\"", "\\\"");
-        final Response response = doVideoMultiImpRequestAndGetResponse(Map.of(
-                "IT_TEST_MACRO_ADM_1", vastXmlResponse1,
-                "IT_TEST_MACRO_ADM_2", vastXmlResponse2,
-                "IT_TEST_MACRO_CURRENCY", "USD"
-        ));
+        String vastXmlResponse1 = getVastXmlWrapper("20220601_1", false);
+        String vastXmlResponse2 = getVastXmlInline("20220601_2", false);
+        final Response response = doVideoMultiImpRequestAndGetResponse(vastXmlResponse1, vastXmlResponse2);
 
         JSONObject responseJson = new JSONObject(response.asString());
         assertBidExtPrebidType(responseJson, 0, 0, "video");
@@ -695,35 +690,60 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .post(Endpoint.openrtb2_auction.value());
     }
 
-    private Response doVideoMultiImpRequestAndGetResponse(
-            Map<String, String> responseMacroReplacers) throws IOException {
-        final String stubScenario = "Multi imp";
-        final String stubStateNextImp = "Next imp";
+    private Response doVideoMultiImpRequestAndGetResponse(String vastXml1, String vastXml2) {
+        String uniqueId = UUID.randomUUID().toString();
+
+        final String stubScenario = "request:improvedigital";
+        final String stubStateNextImp = "ssp_improvedigital_1";
         WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
                 .inScenario(stubScenario)
                 .whenScenarioStateIs(Scenario.STARTED)
-                .willReturn(aResponse().withBody(jsonFromFileWithMacro(
-                        "/com/improvedigital/prebid/server/it/"
-                                + "test-video-multiimp-improvedigital-bid-response-1.json",
-                        responseMacroReplacers
+                .willReturn(aResponse().withBody(getSSPBidResponse(
+                        "improvedigital", uniqueId, "USD", BidResponseTestData.builder()
+                                .impId("imp_id_1")
+                                .price(1.25)
+                                .adm(vastXml1)
+                                .build()
                 )))
                 .willSetStateTo(stubStateNextImp)
         );
         WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
                 .inScenario(stubScenario)
                 .whenScenarioStateIs(stubStateNextImp)
-                .willReturn(aResponse().withBody(jsonFromFileWithMacro(
-                        "/com/improvedigital/prebid/server/it/"
-                                + "test-video-multiimp-improvedigital-bid-response-2.json",
-                        responseMacroReplacers
+                .willReturn(aResponse().withBody(getSSPBidResponse(
+                        "improvedigital", uniqueId, "USD", BidResponseTestData.builder()
+                                .impId("imp_id_2")
+                                .price(2.15)
+                                .adm(vastXml2)
+                                .build()
                 )))
                 .willSetStateTo(Scenario.STARTED)
         );
 
         return specWithPBSHeader(18081)
-                .body(jsonFromFileWithMacro(
-                        "/com/improvedigital/prebid/server/it/test-video-multiimp-auction-improvedigital-request.json",
-                        null
+                .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
+                        .currency("USD")
+                        .imps(Arrays.asList(
+                                AuctionBidRequestImpTestData.builder()
+                                        .impData(SingleImpTestData.builder()
+                                                .id("imp_id_1")
+                                                .videoData(VideoTestParam.getDefault())
+                                                .build())
+                                        .impExt(new AuctionBidRequestImpExt()
+                                                .putBidder("improvedigital")
+                                                .putBidderKeyValue("improvedigital", "placementId", 12345))
+                                        .build(),
+                                AuctionBidRequestImpTestData.builder()
+                                        .impData(SingleImpTestData.builder()
+                                                .id("imp_id_2")
+                                                .videoData(VideoTestParam.getDefault())
+                                                .build())
+                                        .impExt(new AuctionBidRequestImpExt()
+                                                .putBidder("improvedigital")
+                                                .putBidderKeyValue("improvedigital", "placementId", 54321))
+                                        .build()
+                        ))
+                        .build()
                 ))
                 .post(Endpoint.openrtb2_auction.value());
     }
@@ -736,6 +756,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                         SSPBidRequestTestData.builder()
                                 .currency("USD")
                                 .impData(SingleImpTestData.builder()
+                                        .id("imp_id_1")
                                         .impExt(new SSPBidRequestImpExt()
                                                 .putStoredRequest(param.storedImpId)
                                                 .putBidder()
@@ -744,13 +765,15 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                                         .bannerData(param.bannerData)
                                         .nativeData(param.nativeData)
                                         .build())
+                                .channel(ExtRequestPrebidChannel.of("web"))
                                 .build()
                 )))
-                .willReturn(aResponse().withBody(getBidResponse(
+                .willReturn(aResponse().withBody(getSSPBidResponse(
                         "improvedigital",
                         uniqueId,
                         StringUtils.defaultString(param.improveCurrency, "USD"),
                         BidResponseTestData.builder()
+                                .impId("imp_id_1")
                                 .price(Double.parseDouble(param.improvePrice))
                                 .adm(param.improveAdm)
                                 .build()
@@ -758,14 +781,19 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         );
 
         Response response = specWithPBSHeader(18081)
-                .body(getAuctionBidRequestBanner(uniqueId, AuctionBidRequestBannerTestData.builder()
+                .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
                         .currency("USD")
-                        .impExts(Arrays.asList(new AuctionBidRequestImpExt()
-                                .putStoredRequest(param.storedImpId)
-                                .putBidder("improvedigital")
-                                .putBidderKeyValue("improvedigital", "placementId", param.improvePlacementId)))
-                        .bannerData(param.bannerDataIsInStoredImp ? null : param.bannerData)
-                        .nativeData(param.nativeDataIsInStoredImp ? null : param.nativeData)
+                        .imps(Arrays.asList(AuctionBidRequestImpTestData.builder()
+                                .impExt(new AuctionBidRequestImpExt()
+                                        .putStoredRequest(param.storedImpId)
+                                        .putBidder("improvedigital")
+                                        .putBidderKeyValue("improvedigital", "placementId", param.improvePlacementId))
+                                .impData(SingleImpTestData.builder()
+                                        .id("imp_id_1")
+                                        .bannerData(param.bannerDataIsInStoredImp ? null : param.bannerData)
+                                        .nativeData(param.nativeDataIsInStoredImp ? null : param.nativeData)
+                                        .build())
+                                .build()))
                         .build()
                 ))
                 .post(Endpoint.openrtb2_auction.value());
@@ -773,7 +801,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         JSONObject responseJson = new JSONObject(response.asString());
         assertBidCountIsOneOrMore(responseJson);
         assertBidIdExists(responseJson, 0, 0);
-        assertBidImpId(responseJson, 0, 0, "imp_id_0_" + uniqueId);
+        assertBidImpId(responseJson, 0, 0, "imp_id_1");
         if ("EUR".equalsIgnoreCase(param.improveCurrency)) {
             assertBidPrice(responseJson, 0, 0, usdToEur(Double.parseDouble(param.improvePrice)));
         } else {

@@ -9,6 +9,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.prebid.server.it.util.BidCacheRequestPattern;
@@ -887,22 +888,22 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
     // FIXME: Afsar will fix this.
     //@Test
-    public void testCustomVastResponseWithMultipleImpsInRequest()
+    public void testCustomVastResponseWithMultiImpsInRequest()
             throws XPathExpressionException, IOException, JSONException {
         String vastXml1 = getVastXmlInline("ad_1", true);
         String vastXml2 = getVastXmlInline("ad_2", false);
         String cacheId1 = getCacheIdRandom();
         String cacheId2 = getCacheIdRandom();
 
-        JSONObject responseJson = doCustomVastAuctionRequestWithMultipleImp(
-                GvastMultipleImpAuctionTestParam.builder()
+        JSONObject responseJson = doCustomVastAuctionRequestWithMultiImps(
+                GvastMultiImpAuctionTestParam.builder()
                         .responseType("gvast")
                         .improvePlacementId(2022091301)
                         .improveAdm(vastXml1)
                         .improvePrice("1.12")
                         .improveCacheId(cacheId1)
                         .build(),
-                GvastMultipleImpAuctionTestParam.builder()
+                GvastMultiImpAuctionTestParam.builder()
                         .responseType("waterfall")
                         .improvePlacementId(2022091302)
                         .improveAdm(vastXml2)
@@ -931,6 +932,22 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertNoCreative(adm, "1");
         assertNoExtensions(adm, "0");
         assertNoExtensions(adm, "1");
+    }
+
+    @Test
+    public void testCustomVastResponseWithMultiFormatInRequest()
+            throws XPathExpressionException, IOException, JSONException {
+        JSONObject responseJson = doCustomVastAuctionRequestWithMultiFormat(
+                GvastAuctionTestParam.builder()
+                        .responseType("gvast")
+                        .improvePlacementId(2022091501)
+                        .improveAdm("<img src='banner-1.png' />")
+                        .improvePrice("1.12")
+                        .build()
+        );
+
+        String adm = getAdm(responseJson, 0, 0);
+        Assert.fail("What to test???");
     }
 
     private String getVastTagUri(String adm, String adId) throws XPathExpressionException {
@@ -1482,7 +1499,96 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         return responseJson;
     }
 
-    private JSONObject doCustomVastAuctionRequestWithMultipleImp(GvastMultipleImpAuctionTestParam... params)
+    private JSONObject doCustomVastAuctionRequestWithMultiFormat(GvastAuctionTestParam param)
+            throws IOException, JSONException {
+        String uniqueId = UUID.randomUUID().toString();
+
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
+                .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
+                        SSPBidRequestTestData.builder()
+                                .currency("USD")
+                                .impData(SingleImpTestData.builder()
+                                        .id("imp_id_1")
+                                        .impExt(param.toSSPBidRequestImpExt())
+                                        .bannerData(BannerTestParam.getDefault())
+                                        .nativeData(NativeTestParam.builder()
+                                                .request(createNativeRequest("1.2", 90, 128, 128, 120))
+                                                .build())
+                                        .videoData(VideoTestParam.getDefault().toBuilder()
+                                                .protocols(param.videoProtocols)
+                                                .build())
+                                        .build())
+                                .channel(getExtPrebidChannelForGvast())
+                                .extRequestTargeting(getExtPrebidTargetingForGvast())
+                                .extRequestPrebidCache(getExtPrebidCacheForGvast())
+                                .siteIABCategories(param.siteIabCategories)
+                                .gdprConsent(param.gdprConsent)
+                                .build()
+                )))
+                .willReturn(aResponse().withBody(getSSPBidResponse(
+                        "improvedigital", uniqueId, "USD", BidResponseTestData.builder()
+                                .impId("imp_id_1")
+                                .price(Double.parseDouble(param.improvePrice))
+                                .adm(param.improveAdm)
+                                .build()
+                )))
+        );
+
+        // FIXME: Anything to cache?
+        /*
+        String cachedContent = getVastXmlToCache(
+                param.improveAdm, "improvedigital", param.improvePrice, param.improvePlacementId
+        );
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/cache"))
+                .withRequestBody(equalToJson(createCacheRequest(
+                        "request_id_" + uniqueId,
+                        cachedContent
+                )))
+                .willReturn(aResponse().withBody(createCacheResponse(
+                        param.improveCacheId
+                )))
+        );
+
+        WIRE_MOCK_RULE.stubFor(get(urlPathEqualTo("/cache"))
+                .withQueryParam("uuid", equalToIgnoreCase(param.improveCacheId))
+                .willReturn(aResponse()
+                        .withBody(cachedContent))
+        );
+        */
+
+        Response response = specWithPBSHeader(18080)
+                .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
+                        .currency("USD")
+                        .imps(Arrays.asList(AuctionBidRequestImpTestData.builder()
+                                .impExt(param.toAuctionBidRequestImpExt())
+                                .impData(SingleImpTestData.builder()
+                                        .id("imp_id_1")
+                                        .bannerData(BannerTestParam.getDefault())
+                                        .nativeData(NativeTestParam.builder()
+                                                .request(createNativeRequest("1.2", 90, 128, 128, 120))
+                                                .build())
+                                        .videoData(VideoTestParam.getDefault().toBuilder()
+                                                .protocols(param.videoProtocols)
+                                                .build())
+                                        .build())
+                                .build()))
+                        .siteIABCategories(param.siteIabCategories)
+                        .gdprConsent(param.gdprConsent)
+                        .build()
+                ))
+                .post(Endpoint.openrtb2_auction.value());
+
+        JSONObject responseJson = new JSONObject(response.asString());
+        assertBidCountIsOne(responseJson); /* As we are sending some bids from SSP, we will definitely get 1 bid. */
+        assertBidIdExists(responseJson, 0, 0);
+        assertBidImpId(responseJson, 0, 0, "imp_id_1");
+        assertBidPrice(responseJson, 0, 0, 0.0);
+        assertSeat(responseJson, 0, "improvedigital");
+        assertCurrency(responseJson, "USD");
+        return responseJson;
+    }
+
+    private JSONObject doCustomVastAuctionRequestWithMultiImps(GvastMultiImpAuctionTestParam... params)
             throws IOException, JSONException {
         String uniqueId = UUID.randomUUID().toString();
 
@@ -1941,7 +2047,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
      * This is to avoid long method parameter names code smell.
      */
     @Builder(toBuilder = true)
-    public static class GvastMultipleImpAuctionTestParam {
+    public static class GvastMultiImpAuctionTestParam {
         String responseType;
         int improvePlacementId;
         String improveAdm;

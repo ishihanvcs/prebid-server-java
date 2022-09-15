@@ -18,9 +18,15 @@ import com.iab.openrtb.request.Site;
 import com.iab.openrtb.request.Source;
 import com.iab.openrtb.request.User;
 import com.iab.openrtb.request.Video;
+import com.iab.openrtb.response.Asset;
 import com.iab.openrtb.response.Bid;
 import com.iab.openrtb.response.BidResponse;
+import com.iab.openrtb.response.DataObject;
+import com.iab.openrtb.response.EventTracker;
+import com.iab.openrtb.response.ImageObject;
+import com.iab.openrtb.response.Link;
 import com.iab.openrtb.response.SeatBid;
+import com.iab.openrtb.response.TitleObject;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.config.ObjectMapperConfig;
 import io.restassured.config.RestAssuredConfig;
@@ -355,6 +361,74 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         }
     }
 
+    protected Request createNativeRequest(String nativeVersion, int titleLen, int wMin, int hMin, int dataLen) {
+        return Request.builder()
+                .context(1)
+                .plcmttype(4)
+                .plcmtcnt(1)
+                .ver(nativeVersion)
+                .assets(Arrays.asList(
+                        com.iab.openrtb.request.Asset.builder()
+                                .id(1)
+                                .required(1)
+                                .title(com.iab.openrtb.request.TitleObject.builder()
+                                        .len(titleLen)
+                                        .build())
+                                .build(),
+                        com.iab.openrtb.request.Asset.builder()
+                                .id(2)
+                                .required(1)
+                                .img(com.iab.openrtb.request.ImageObject.builder()
+                                        .type(3)
+                                        .wmin(wMin)
+                                        .hmin(hMin)
+                                        .mimes(Arrays.asList("image/jpg", "image/jpeg", "image/png"))
+                                        .build())
+                                .build(),
+                        com.iab.openrtb.request.Asset.builder()
+                                .id(3)
+                                .required(1)
+                                .data(com.iab.openrtb.request.DataObject.builder()
+                                        .type(2)
+                                        .len(dataLen)
+                                        .build())
+                                .build()
+                ))
+                .build();
+    }
+
+    protected com.iab.openrtb.response.Response createNativeResponse(
+            int w, int h, List<EventTracker> nativeEventTrackers, List<String> impTrackers
+    ) {
+        return com.iab.openrtb.response.Response.builder()
+                .assets(Arrays.asList(
+                        Asset.builder()
+                                .id(1)
+                                .title(TitleObject.builder()
+                                        .text("Response title for native request")
+                                        .build())
+                                .build(),
+                        Asset.builder()
+                                .id(2)
+                                .img(ImageObject.builder()
+                                        .url("http://cdn.pbs.com/creative-1.jpg")
+                                        .w(w)
+                                        .h(h)
+                                        .build())
+                                .build(),
+                        Asset.builder()
+                                .id(3)
+                                .data(DataObject.builder()
+                                        .value("Response description for native request")
+                                        .build())
+                                .build()
+                ))
+                .link(Link.of("http://integrationtest.pbs.com/click?pp=${AUCTION_PRICE}", null, null, null))
+                .eventtrackers(nativeEventTrackers)
+                .imptrackers(impTrackers)
+                .build();
+    }
+
     @Builder(toBuilder = true)
     public static class AuctionBidRequestTestData {
         String currency;
@@ -447,6 +521,14 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         int w;
         int h;
         List<String> mimes;
+
+        public static BannerTestParam getDefault() {
+            return BannerTestParam.builder()
+                    .w(300)
+                    .h(250)
+                    .mimes(Arrays.asList("image/jpg", "image/jpeg", "image/png"))
+                    .build();
+        }
     }
 
     @Builder(toBuilder = true)

@@ -1,13 +1,7 @@
 package com.improvedigital.prebid.server.it;
 
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
-import com.iab.openrtb.request.Request;
-import com.iab.openrtb.response.Asset;
-import com.iab.openrtb.response.DataObject;
 import com.iab.openrtb.response.EventTracker;
-import com.iab.openrtb.response.ImageObject;
-import com.iab.openrtb.response.Link;
-import com.iab.openrtb.response.TitleObject;
 import io.restassured.response.Response;
 import lombok.Builder;
 import org.apache.commons.lang3.StringUtils;
@@ -30,7 +24,6 @@ import java.io.StringReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -150,7 +143,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
         String adm = getAdm(responseJson, 0, 0);
 
-        // 1st pixel is what we had on creative.
+        // 1st pixel is what we have on creative.
         String existingImpPixel = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='20220406']/InLine/Impression[1]")
                 .evaluate(new InputSource(new StringReader(adm)));
@@ -178,7 +171,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
         String adm = getAdm(responseJson, 0, 0);
 
-        // Ad-1: 1st pixel is what we had on creative.
+        // Ad-1: 1st pixel is what we have on creative.
         String existingImpPixel = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='20220406-1']/InLine/Impression[1]")
                 .evaluate(new InputSource(new StringReader(adm)));
@@ -190,7 +183,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .evaluate(new InputSource(new StringReader(adm)));
         assertThat(trackingImpPixel).isEqualTo(getCustomTrackerUrl("1.25", "13245"));
 
-        // Ad-2: 1st pixel is what we had on creative.
+        // Ad-2: 1st pixel is what we have on creative.
         String existingImpPixel2 = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='20220406-2']/InLine/Impression[1]")
                 .evaluate(new InputSource(new StringReader(adm)));
@@ -240,7 +233,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
         String adm = getAdm(responseJson, 0, 0);
 
-        // 1st pixel is what we had on creative.
+        // 1st pixel is what we have on creative.
         String existingImpPixel = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='20220406']/Wrapper/Impression[1]")
                 .evaluate(new InputSource(new StringReader(adm)));
@@ -268,7 +261,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
         String adm = getAdm(responseJson, 0, 0);
 
-        // Ad-1: 1st pixel is what we had on creative.
+        // Ad-1: 1st pixel is what we have on creative.
         String existingImpPixel = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='20220406-1']/Wrapper/Impression[1]")
                 .evaluate(new InputSource(new StringReader(adm)));
@@ -280,7 +273,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .evaluate(new InputSource(new StringReader(adm)));
         assertThat(trackingImpPixel).isEqualTo(getCustomTrackerUrl("1.25", "13245"));
 
-        // Ad-2: 1st pixel is what we had on creative.
+        // Ad-2: 1st pixel is what we have on creative.
         String existingImpPixel2 = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='20220406-2']/Wrapper/Impression[1]")
                 .evaluate(new InputSource(new StringReader(adm)));
@@ -360,7 +353,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .storedImpId("2022083003")
                 .improvePlacementId(20220830)
                 .nativeData(NativeTestParam.builder()
-                        // This native data is what we had in the stored imp.
+                        // This native data is what we have in the stored imp.
                         .request(createNativeRequest("1.2", 90, 128, 128, 120))
                         .build())
                 .nativeDataIsInStoredImp(true)
@@ -387,7 +380,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .storedImpId("2022083003")
                 .improvePlacementId(20220830)
                 .nativeData(NativeTestParam.builder()
-                        // This native data is what we had in the stored imp.
+                        // This native data is what we have in the stored imp.
                         .request(createNativeRequest("1.2", 90, 128, 128, 120))
                         .build())
                 .nativeDataIsInStoredImp(true)
@@ -422,7 +415,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .storedImpId("2022083003")
                 .improvePlacementId(20220830)
                 .nativeData(NativeTestParam.builder()
-                        // This native data is what we had in the stored imp.
+                        // This native data is what we have in the stored imp.
                         .request(createNativeRequest("1.2", 90, 128, 128, 120))
                         .build())
                 .nativeDataIsInStoredImp(true)
@@ -457,7 +450,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .storedImpId("2022083003")
                 .improvePlacementId(20220830)
                 .nativeData(NativeTestParam.builder()
-                        // This native data is what we had in the stored imp.
+                        // This native data is what we have in the stored imp.
                         .request(createNativeRequest("1.2", 90, 128, 128, 120))
                         .build())
                 .nativeDataIsInStoredImp(true)
@@ -498,7 +491,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .storedImpId("2022083003")
                 .improvePlacementId(20220830)
                 .nativeData(NativeTestParam.builder()
-                        // This native data is what we had in the stored imp.
+                        // This native data is what we have in the stored imp.
                         .request(createNativeRequest("1.2", 90, 128, 128, 120))
                         .build())
                 .nativeDataIsInStoredImp(true)
@@ -542,7 +535,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .storedImpId("2022083003")
                 .improvePlacementId(20220830)
                 .nativeData(NativeTestParam.builder()
-                        // This native data is what we had in the stored imp.
+                        // This native data is what we have in the stored imp.
                         .request(createNativeRequest("1.2", 90, 128, 128, 120))
                         .build())
                 .nativeDataIsInStoredImp(true)
@@ -624,11 +617,11 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .storedImpId("2022083002")
                 .improvePlacementId(20220830)
                 .nativeData(NativeTestParam.builder()
-                        // This native data is what we had in the stored imp.
+                        // This native data is what we have in the stored imp.
                         .request(createNativeRequest("1.2", 90, 128, 128, 120))
                         .build())
                 .bannerData(BannerTestParam.builder()
-                        // This banner data is what we had in the stored imp.
+                        // This banner data is what we have in the stored imp.
                         .w(320)
                         .h(320)
                         .build())
@@ -860,74 +853,6 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         }
 
         return null;
-    }
-
-    protected Request createNativeRequest(String nativeVersion, int titleLen, int wMin, int hMin, int dataLen) {
-        return Request.builder()
-                .context(1)
-                .plcmttype(4)
-                .plcmtcnt(1)
-                .ver(nativeVersion)
-                .assets(Arrays.asList(
-                        com.iab.openrtb.request.Asset.builder()
-                                .id(1)
-                                .required(1)
-                                .title(com.iab.openrtb.request.TitleObject.builder()
-                                        .len(titleLen)
-                                        .build())
-                                .build(),
-                        com.iab.openrtb.request.Asset.builder()
-                                .id(2)
-                                .required(1)
-                                .img(com.iab.openrtb.request.ImageObject.builder()
-                                        .type(3)
-                                        .wmin(wMin)
-                                        .hmin(hMin)
-                                        .mimes(Arrays.asList("image/jpg", "image/jpeg", "image/png"))
-                                        .build())
-                                .build(),
-                        com.iab.openrtb.request.Asset.builder()
-                                .id(3)
-                                .required(1)
-                                .data(com.iab.openrtb.request.DataObject.builder()
-                                        .type(2)
-                                        .len(dataLen)
-                                        .build())
-                                .build()
-                ))
-                .build();
-    }
-
-    protected com.iab.openrtb.response.Response createNativeResponse(
-            int w, int h, List<EventTracker> nativeEventTrackers, List<String> impTrackers
-    ) {
-        return com.iab.openrtb.response.Response.builder()
-                .assets(Arrays.asList(
-                        Asset.builder()
-                                .id(1)
-                                .title(TitleObject.builder()
-                                        .text("Response title for native request")
-                                        .build())
-                                .build(),
-                        Asset.builder()
-                                .id(2)
-                                .img(ImageObject.builder()
-                                        .url("http://cdn.pbs.com/creative-1.jpg")
-                                        .w(w)
-                                        .h(h)
-                                        .build())
-                                .build(),
-                        Asset.builder()
-                                .id(3)
-                                .data(DataObject.builder()
-                                        .value("Response description for native request")
-                                        .build())
-                                .build()
-                ))
-                .link(Link.of("http://integrationtest.pbs.com/click?pp=${AUCTION_PRICE}", null, null, null))
-                .eventtrackers(nativeEventTrackers)
-                .imptrackers(impTrackers)
-                .build();
     }
 
     private double usdToEur(double val) {

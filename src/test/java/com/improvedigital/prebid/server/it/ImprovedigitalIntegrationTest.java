@@ -261,9 +261,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
             bidRequest = bidReqModifier.apply(bidRequest);
         }
 
-        String s = toJsonString(BID_REQUEST_MAPPER, bidRequest);
-        System.out.println("=======> AUC: " + s);
-        return s;
+        return toJsonString(BID_REQUEST_MAPPER, bidRequest);
     }
 
     protected String getSSPBidRequest(String uniqueId, SSPBidRequestTestData bidRequestData) {
@@ -354,9 +352,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
             bidRequest = bidReqModifier.apply(bidRequest);
         }
 
-        String s = toJsonString(BID_REQUEST_MAPPER, bidRequest);
-        System.out.println("=======> SSP-Req: " + s);
-        return s;
+        return toJsonString(BID_REQUEST_MAPPER, bidRequest);
     }
 
     protected String getSSPBidResponse(
@@ -376,9 +372,8 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                         .build()
                 ))
                 .build();
-        String s = toJsonString(BID_RESPONSE_MAPPER, bidResponse);
-        System.out.println("=======> SSP-Resp: " + s);
-        return s;
+
+        return toJsonString(BID_RESPONSE_MAPPER, bidResponse);
     }
 
     private Bid toBid(int bidIndex, String bidderName, BidResponseTestData d) {

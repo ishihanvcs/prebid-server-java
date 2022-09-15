@@ -834,7 +834,6 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                 FileSource fileSource,
                 Parameters parameters) {
             try {
-                System.out.println("---> Aise");
                 BidRequest bidRequest = new ObjectMapper().readValue(request.getBodyAsString(), BidRequest.class);
                 if (bidRequest.getImp().size() != 1) {
                     throw new IllegalArgumentException("SSP can deal only 1 imp");

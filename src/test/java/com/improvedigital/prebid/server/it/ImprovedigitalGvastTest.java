@@ -907,26 +907,27 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         .build()
         );
 
-        String adm = getAdm(responseJson, 0, 0);
-
+        // 1st imp's ad. responseType=gvast
+        String adm1 = getAdm(responseJson, 0, 0);
         assertGamUrlWithImprovedigitalAsSingleBidder(
-                getVastTagUri(adm, "0"), cacheId1, "2022091301", "1.12"
-        );
-        assertGamUrlWithImprovedigitalAsSingleBidder(
-                getVastTagUri(adm, "1"), cacheId2, "2022091302", "1.23"
+                getVastTagUri(adm1, "0"), cacheId1, "2022091301", "1.12"
         );
         assertCachedContentFromCacheId(cacheId1, getVastXmlToCache(
                 vastXml1, "improvedigital", "1.12", 2022091301
         ));
+        assertSSPSyncPixels(adm1, "0");
+        assertNoCreative(adm1, "0");
+        assertNoExtensions(adm1, "0");
+
+        // 2nd imp's ad. responseType=waterfall
+        String adm2 = getAdm(responseJson, 0, 1);
+        assertThat(getVastTagUri(adm2, "0").trim()).isEqualTo(IT_TEST_CACHE_URL + "?uuid=" + cacheId2);
         assertCachedContentFromCacheId(cacheId2, getVastXmlToCache(
                 vastXml2, "improvedigital", "1.23", 2022091302
         ));
-        assertSSPSyncPixels(adm, "0");
-        assertSSPSyncPixels(adm, "1");
-        assertNoCreative(adm, "0");
-        assertNoCreative(adm, "1");
-        assertNoExtensions(adm, "0");
-        assertNoExtensions(adm, "1");
+        assertSSPSyncPixels(adm2, "0");
+        assertNoCreative(adm2, "0");
+        assertNoExtensions(adm2, "0");
     }
 
     @Test
@@ -1614,83 +1615,24 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                         )))
         );
 
-        // String sspStubScenario = "request::improvedigital";
-        // String sspNextRequest = "ssp_improvedigital_1";
-        // WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
-        //         .inScenario(sspStubScenario)
-        //         .whenScenarioStateIs(Scenario.STARTED)
-        //         // FIXME: Why can't I assert request body?
-        //         /*
-        //         .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
-        //                 SSPBidRequestTestData.builder()
-        //                         .currency("USD")
-        //                         .impData(SingleImpTestData.builder()
-        //                                 .id("imp_id_1")
-        //                                 .impExt(params[0].toSSPBidRequestImpExt())
-        //                                 .videoData(VideoTestParam.getDefault())
-        //                                 .build())
-        //                         .channel(getExtPrebidChannelForGvast())
-        //                         .extRequestTargeting(getExtPrebidTargetingForGvast())
-        //                         .extRequestPrebidCache(getExtPrebidCacheForGvast())
-        //                         .build()
-        //         )))
-        //          */
-        //         .willReturn(aResponse().withBody(getSSPBidResponse(
-        //                 "improvedigital", uniqueId, "USD", params[0].toBidResponseTestData("imp_id_1")
-        //         )))
-        //         .willSetStateTo(sspNextRequest)
-        // );
-        // WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
-        //         .inScenario(sspStubScenario)
-        //         .whenScenarioStateIs(sspNextRequest)
-        //         // FIXME: Why can't I assert request body?
-        //         /*
-        //         .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
-        //                 SSPBidRequestTestData.builder()
-        //                         .currency("USD")
-        //                         .impData(SingleImpTestData.builder()
-        //                                 .id("imp_id_2")
-        //                                 .impExt(params[1].toSSPBidRequestImpExt())
-        //                                 .videoData(VideoTestParam.getDefault())
-        //                                 .build())
-        //                         .channel(getExtPrebidChannelForGvast())
-        //                         .extRequestTargeting(getExtPrebidTargetingForGvast())
-        //                         .extRequestPrebidCache(getExtPrebidCacheForGvast())
-        //                         .build()
-        //         )))
-        //          */
-        //         .willReturn(aResponse().withBody(getSSPBidResponse(
-        //                 "improvedigital", uniqueId, "USD", params[1].toBidResponseTestData("imp_id_2")
-        //         )))
-        //         .willSetStateTo(Scenario.STARTED)
-        // );
-
-        String cacheSetStubScenario = "caching::set";
-        String cacheSetNextRequest = "cache_set_1";
-        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/cache"))
-                .inScenario(cacheSetStubScenario)
-                .whenScenarioStateIs(Scenario.STARTED)
-                .withRequestBody(equalToJson(createCacheRequest(
-                        "request_id_" + uniqueId,
-                        params[0].toVastXmlToCache("improvedigital")
-                )))
-                .willReturn(aResponse().withBody(createCacheResponse(
-                        params[0].improveCacheId
-                )))
-                .willSetStateTo(cacheSetNextRequest)
-        );
+        List<String> cacheResponses = new ArrayList<>();
+        cacheResponses.add("\"" + params[0].toVastXmlToCache("improvedigital") + "\":\"" + params[0].improveCacheId + "\"");
+        cacheResponses.add("\"" + params[1].toVastXmlToCache("improvedigital") + "\":\"" + params[1].improveCacheId + "\"");
 
         WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/cache"))
-                .inScenario(cacheSetStubScenario)
-                .whenScenarioStateIs(cacheSetNextRequest)
-                .withRequestBody(equalToJson(createCacheRequest(
+                .withRequestBody(new BidCacheRequestPattern(createCacheRequest(
                         "request_id_" + uniqueId,
+                        params[0].toVastXmlToCache("improvedigital"),
                         params[1].toVastXmlToCache("improvedigital")
                 )))
-                .willReturn(aResponse().withBody(createCacheResponse(
-                        params[1].improveCacheId
-                )))
-                .willSetStateTo(Scenario.STARTED)
+                .willReturn(aResponse()
+                        .withTransformers("cache-response-transformer")
+                        .withTransformerParameter("matcherName", createResourceFile(
+                                "com/improvedigital/prebid/server/it/"
+                                        + "test-custom-vast-multiimps-cache-response.json",
+                                "{" + String.join(",", cacheResponses) + "}"
+                        ))
+                )
         );
 
         String cacheGetStubScenario = "caching::get";

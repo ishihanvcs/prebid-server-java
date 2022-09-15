@@ -22,15 +22,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@TestPropertySource(
-        locations = {
-                "/com/improvedigital/prebid/server/it/test-application-improvedigital-hooks.properties"
-        },
-        properties = {
-                "admin.port=18062",
-                "http.port=18082",
-        }
-)
+@TestPropertySource(properties = {
+        "admin.port=18062",
+        "http.port=18082",
+})
 @RunWith(SpringRunner.class)
 public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest {
 

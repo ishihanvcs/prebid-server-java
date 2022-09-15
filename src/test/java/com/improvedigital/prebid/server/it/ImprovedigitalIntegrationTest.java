@@ -6,6 +6,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.tomakehurst.wiremock.common.FileSource;
+import com.github.tomakehurst.wiremock.extension.Parameters;
+import com.github.tomakehurst.wiremock.extension.ResponseTransformer;
+import com.github.tomakehurst.wiremock.http.Response;
+import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.iab.openrtb.request.Banner;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Device;
@@ -41,6 +46,9 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.prebid.server.VertxTest;
 import org.prebid.server.bidder.improvedigital.proto.ImprovedigitalBidExt;
 import org.prebid.server.bidder.improvedigital.proto.ImprovedigitalBidExtImprovedigital;
 import org.prebid.server.it.IntegrationTest;
@@ -60,6 +68,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtSource;
 import org.prebid.server.proto.openrtb.ext.request.ExtSourceSchain;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
 import java.io.IOException;
@@ -81,6 +90,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -92,11 +105,12 @@ import static org.assertj.core.api.Assertions.fail;
                 "com.improvedigital.prebid.server"
         }
 )
-@TestPropertySource(properties = {
-        "settings.filesystem.stored-imps-dir=src/test/resources/com/improvedigital/prebid/server/it/storedimps",
-        "settings.targeting.truncate-attr-chars=20"
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@TestPropertySource({
+        "/com/improvedigital/prebid/server/it/config/improvedigital-it-application.properties",
+        "/com/improvedigital/prebid/server/it/config/test-application-improvedigital-hooks.properties"
 })
-public class ImprovedigitalIntegrationTest extends IntegrationTest {
+public class ImprovedigitalIntegrationTest extends VertxTest {
 
     protected static final String IT_TEST_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
             + "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.60 Safari/537.36";
@@ -115,21 +129,28 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
             .setNodeFactory(JsonNodeFactory.withExactBigDecimals(true))
             .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
-    protected String jsonFromFileWithMacro(String file, Map<String, String> macrosInFileContent)
-            throws IOException {
-        String fileContent = mapper.writeValueAsString(
-                mapper.readTree(this.getClass().getResourceAsStream(file))
-        );
+    private static final int WIREMOCK_PORT = 8090;
 
-        // Replace all occurrences of <key>s by it's <value> of map.
-        if (macrosInFileContent != null) {
-            return macrosInFileContent.entrySet().stream()
-                    .map(m -> (Function<String, String>) s -> s.replace(m.getKey(), m.getValue()))
-                    .reduce(Function.identity(), Function::andThen)
-                    .apply(fileContent);
-        }
+    @ClassRule
+    public static final WireMockClassRule WIRE_MOCK_RULE = new WireMockClassRule(options()
+            .port(WIREMOCK_PORT)
+            .gzipDisabled(true)
+            .jettyStopTimeout(5000L)
+            .extensions(
+                    IntegrationTest.CacheResponseTransformer.class,
+                    BidRequestResponseByImpidTransformer.class
+            ));
 
-        return fileContent;
+    @BeforeClass
+    public static void setUp() throws IOException {
+        WIRE_MOCK_RULE.stubFor(get(urlPathEqualTo("/periodic-update"))
+                .willReturn(aResponse().withBody(jsonFrom(
+                        "/com/improvedigital/prebid/server/it/storedrequests/test-periodic-refresh.json"
+                ))));
+        WIRE_MOCK_RULE.stubFor(get(urlPathEqualTo("/currency-rates"))
+                .willReturn(aResponse().withBody(jsonFrom(
+                        "/com/improvedigital/prebid/server/it/currency/latest.json"
+                ))));
     }
 
     protected static RequestSpecification specWithPBSHeader(int port) {
@@ -147,6 +168,29 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 .setConfig(RestAssuredConfig.config()
                         .objectMapperConfig(new ObjectMapperConfig(new Jackson2Mapper((aClass, s) -> mapper))))
                 .build();
+    }
+
+    protected static String jsonFrom(String file) throws IOException {
+        return mapper.writeValueAsString(mapper.readTree(
+                ImprovedigitalIntegrationTest.class.getResourceAsStream(file)
+        ));
+    }
+
+    protected String jsonFromFileWithMacro(String file, Map<String, String> macrosInFileContent)
+            throws IOException {
+        String fileContent = mapper.writeValueAsString(
+                mapper.readTree(this.getClass().getResourceAsStream(file))
+        );
+
+        // Replace all occurrences of <key>s by it's <value> of map.
+        if (macrosInFileContent != null) {
+            return macrosInFileContent.entrySet().stream()
+                    .map(m -> (Function<String, String>) s -> s.replace(m.getKey(), m.getValue()))
+                    .reduce(Function.identity(), Function::andThen)
+                    .apply(fileContent);
+        }
+
+        return fileContent;
     }
 
     protected String getAuctionBidRequest(String uniqueId, AuctionBidRequestTestData bidRequestData) {
@@ -218,7 +262,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         }
 
         String s = toJsonString(BID_REQUEST_MAPPER, bidRequest);
-        System.out.println("=======> " + s);
+        System.out.println("=======> AUC: " + s);
         return s;
     }
 
@@ -311,7 +355,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         }
 
         String s = toJsonString(BID_REQUEST_MAPPER, bidRequest);
-        System.out.println("=======> " + s);
+        System.out.println("=======> SSP-Req: " + s);
         return s;
     }
 
@@ -332,7 +376,9 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                         .build()
                 ))
                 .build();
-        return toJsonString(BID_RESPONSE_MAPPER, bidResponse);
+        String s = toJsonString(BID_RESPONSE_MAPPER, bidResponse);
+        System.out.println("=======> SSP-Resp: " + s);
+        return s;
     }
 
     private Bid toBid(int bidIndex, String bidderName, BidResponseTestData d) {
@@ -769,6 +815,46 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 ((ObjectNode) bidExt.at("/improvedigital")).put("line_item_id", lineItemId);
             }
             return this;
+        }
+    }
+
+    /**
+     * This WireMock transformer expects parameters as key=impid, value=response-for-that-impid
+     */
+    public static class BidRequestResponseByImpidTransformer extends ResponseTransformer {
+        @Override
+        public String getName() {
+            return "it-test-request-response-by-impid";
+        }
+
+        @Override
+        public Response transform(
+                com.github.tomakehurst.wiremock.http.Request request,
+                Response response,
+                FileSource fileSource,
+                Parameters parameters) {
+            try {
+                System.out.println("---> Aise");
+                BidRequest bidRequest = new ObjectMapper().readValue(request.getBodyAsString(), BidRequest.class);
+                if (bidRequest.getImp().size() != 1) {
+                    throw new IllegalArgumentException("SSP can deal only 1 imp");
+                }
+
+                return Response.response()
+                        .status(200)
+                        .body(parameters.get(bidRequest.getImp().get(0).getId()).toString())
+                        .build();
+            } catch (Exception e) {
+                return Response.response()
+                        .status(400)
+                        .body("Cannot parse bid request: " + e.getMessage())
+                        .build();
+            }
+        }
+
+        @Override
+        public boolean applyGlobally() {
+            return false;
         }
     }
 

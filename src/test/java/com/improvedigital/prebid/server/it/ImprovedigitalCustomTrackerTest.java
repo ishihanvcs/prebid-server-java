@@ -33,15 +33,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@TestPropertySource(
-        locations = {
-                "/com/improvedigital/prebid/server/it/test-application-improvedigital-hooks.properties"
-        },
-        properties = {
-                "admin.port=18061",
-                "http.port=18081",
-        }
-)
+@TestPropertySource(properties = {
+        "admin.port=18061",
+        "http.port=18081",
+})
 @RunWith(SpringRunner.class)
 public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTest {
 

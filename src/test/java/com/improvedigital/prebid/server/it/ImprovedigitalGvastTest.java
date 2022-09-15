@@ -52,16 +52,11 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@TestPropertySource(
-        locations = {
-                "/com/improvedigital/prebid/server/it/test-application-improvedigital-hooks.properties"
-        },
-        properties = {
-                "auction.generate-source-tid=true",
-                "admin.port=18060",
-                "http.port=18080",
-        }
-)
+@TestPropertySource(properties = {
+        "auction.generate-source-tid=true",
+        "admin.port=18060",
+        "http.port=18080",
+})
 @RunWith(SpringRunner.class)
 public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
@@ -887,7 +882,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     // FIXME: Afsar will fix this.
-    //@Test
+    @Test
     public void testCustomVastResponseWithMultiImpsInRequest()
             throws XPathExpressionException, IOException, JSONException {
         String vastXml1 = getVastXmlInline("ad_1", true);
@@ -1475,7 +1470,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
                         .currency("USD")
                         .imps(Arrays.asList(AuctionBidRequestImpTestData.builder()
-                                .impExt(param.toAuctionBidRequestImpExt())
+                                .impExt(param.toCustomVastAuctionBidRequestImpExt())
                                 .impData(SingleImpTestData.builder()
                                         .id("imp_id_1")
                                         .videoData(VideoTestParam.getDefault().toBuilder()
@@ -1559,19 +1554,33 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         Response response = specWithPBSHeader(18080)
                 .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
                         .currency("USD")
-                        .imps(Arrays.asList(AuctionBidRequestImpTestData.builder()
-                                .impExt(param.toAuctionBidRequestImpExt())
-                                .impData(SingleImpTestData.builder()
-                                        .id("imp_id_1")
-                                        .bannerData(BannerTestParam.getDefault())
-                                        .nativeData(NativeTestParam.builder()
-                                                .request(createNativeRequest("1.2", 90, 128, 128, 120))
+                        .imps(Arrays.asList(
+                                AuctionBidRequestImpTestData.builder()
+                                        .impData(SingleImpTestData.builder()
+                                                .id("imp_id_1")
+                                                .bannerData(BannerTestParam.getDefault())
                                                 .build())
-                                        .videoData(VideoTestParam.getDefault().toBuilder()
-                                                .protocols(param.videoProtocols)
+                                        .build(),
+                                AuctionBidRequestImpTestData.builder()
+                                        .impData(SingleImpTestData.builder()
+                                                .id("imp_id_2")
+                                                .nativeData(NativeTestParam.builder()
+                                                        .request(createNativeRequest(
+                                                                "1.2", 90, 128, 128, 120
+                                                        ))
+                                                        .build())
                                                 .build())
-                                        .build())
-                                .build()))
+                                        .build(),
+                                AuctionBidRequestImpTestData.builder()
+                                        .impExt(param.toCustomVastAuctionBidRequestImpExt())
+                                        .impData(SingleImpTestData.builder()
+                                                .id("imp_id_3")
+                                                .videoData(VideoTestParam.getDefault().toBuilder()
+                                                        .protocols(param.videoProtocols)
+                                                        .build())
+                                                .build())
+                                        .build()
+                        ))
                         .siteIABCategories(param.siteIabCategories)
                         .gdprConsent(param.gdprConsent)
                         .build()
@@ -1592,56 +1601,69 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
             throws IOException, JSONException {
         String uniqueId = UUID.randomUUID().toString();
 
-        String sspStubScenario = "request::improvedigital";
-        String sspNextRequest = "ssp_improvedigital_1";
         WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
-                .inScenario(sspStubScenario)
-                .whenScenarioStateIs(Scenario.STARTED)
-                // FIXME: Why can't I assert request body?
-                /*
-                .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
-                        SSPBidRequestTestData.builder()
-                                .currency("USD")
-                                .impData(SingleImpTestData.builder()
-                                        .id("imp_id_1")
-                                        .impExt(params[0].toSSPBidRequestImpExt())
-                                        .videoData(VideoTestParam.getDefault())
-                                        .build())
-                                .channel(getExtPrebidChannelForGvast())
-                                .extRequestTargeting(getExtPrebidTargetingForGvast())
-                                .extRequestPrebidCache(getExtPrebidCacheForGvast())
-                                .build()
-                )))
-                 */
-                .willReturn(aResponse().withBody(getSSPBidResponse(
-                        "improvedigital", uniqueId, "USD", params[0].toBidResponseTestData("imp_id_1")
-                )))
-                .willSetStateTo(sspNextRequest)
+                .willReturn(aResponse()
+                        .withTransformers("it-test-request-response-by-impid")
+                        .withTransformerParameters(Map.of(
+                                "imp_id_1", getSSPBidResponse(
+                                        "improvedigital", uniqueId, "USD", params[0].toBidResponseTestData("imp_id_1")
+                                ),
+                                "imp_id_2", getSSPBidResponse(
+                                        "improvedigital", uniqueId, "USD", params[1].toBidResponseTestData("imp_id_2")
+                                )
+                        )))
         );
-        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
-                .inScenario(sspStubScenario)
-                .whenScenarioStateIs(sspNextRequest)
-                // FIXME: Why can't I assert request body?
-                /*
-                .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
-                        SSPBidRequestTestData.builder()
-                                .currency("USD")
-                                .impData(SingleImpTestData.builder()
-                                        .id("imp_id_2")
-                                        .impExt(params[1].toSSPBidRequestImpExt())
-                                        .videoData(VideoTestParam.getDefault())
-                                        .build())
-                                .channel(getExtPrebidChannelForGvast())
-                                .extRequestTargeting(getExtPrebidTargetingForGvast())
-                                .extRequestPrebidCache(getExtPrebidCacheForGvast())
-                                .build()
-                )))
-                 */
-                .willReturn(aResponse().withBody(getSSPBidResponse(
-                        "improvedigital", uniqueId, "USD", params[1].toBidResponseTestData("imp_id_2")
-                )))
-                .willSetStateTo(Scenario.STARTED)
-        );
+
+        // String sspStubScenario = "request::improvedigital";
+        // String sspNextRequest = "ssp_improvedigital_1";
+        // WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
+        //         .inScenario(sspStubScenario)
+        //         .whenScenarioStateIs(Scenario.STARTED)
+        //         // FIXME: Why can't I assert request body?
+        //         /*
+        //         .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
+        //                 SSPBidRequestTestData.builder()
+        //                         .currency("USD")
+        //                         .impData(SingleImpTestData.builder()
+        //                                 .id("imp_id_1")
+        //                                 .impExt(params[0].toSSPBidRequestImpExt())
+        //                                 .videoData(VideoTestParam.getDefault())
+        //                                 .build())
+        //                         .channel(getExtPrebidChannelForGvast())
+        //                         .extRequestTargeting(getExtPrebidTargetingForGvast())
+        //                         .extRequestPrebidCache(getExtPrebidCacheForGvast())
+        //                         .build()
+        //         )))
+        //          */
+        //         .willReturn(aResponse().withBody(getSSPBidResponse(
+        //                 "improvedigital", uniqueId, "USD", params[0].toBidResponseTestData("imp_id_1")
+        //         )))
+        //         .willSetStateTo(sspNextRequest)
+        // );
+        // WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
+        //         .inScenario(sspStubScenario)
+        //         .whenScenarioStateIs(sspNextRequest)
+        //         // FIXME: Why can't I assert request body?
+        //         /*
+        //         .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
+        //                 SSPBidRequestTestData.builder()
+        //                         .currency("USD")
+        //                         .impData(SingleImpTestData.builder()
+        //                                 .id("imp_id_2")
+        //                                 .impExt(params[1].toSSPBidRequestImpExt())
+        //                                 .videoData(VideoTestParam.getDefault())
+        //                                 .build())
+        //                         .channel(getExtPrebidChannelForGvast())
+        //                         .extRequestTargeting(getExtPrebidTargetingForGvast())
+        //                         .extRequestPrebidCache(getExtPrebidCacheForGvast())
+        //                         .build()
+        //         )))
+        //          */
+        //         .willReturn(aResponse().withBody(getSSPBidResponse(
+        //                 "improvedigital", uniqueId, "USD", params[1].toBidResponseTestData("imp_id_2")
+        //         )))
+        //         .willSetStateTo(Scenario.STARTED)
+        // );
 
         String cacheSetStubScenario = "caching::set";
         String cacheSetNextRequest = "cache_set_1";
@@ -2021,7 +2043,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                     .putBidderKeyValue("keyValues", improveCustomKeyValues);
         }
 
-        public AuctionBidRequestImpExt toAuctionBidRequestImpExt() {
+        public AuctionBidRequestImpExt toCustomVastAuctionBidRequestImpExt() {
             AuctionBidRequestImpExt auctionImpExt = new AuctionBidRequestImpExt()
                     .putImprovedigitalPbs()
                     .putImprovedigitalPbsKeyValue("responseType", responseType)

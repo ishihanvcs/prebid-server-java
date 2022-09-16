@@ -284,7 +284,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .improveAdm(vastXml)
                 .improvePrice("1.09")
                 .improveCacheId(cacheId)
-                .defaultWaterfalls(Arrays.asList(
+                .defaultWaterfalls(List.of(
                         "gam_first_look",
                         "gam",
                         "gam_first_look",
@@ -350,7 +350,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .improvePrice("1.11")
                 .improveCacheId(cacheId)
                 .gdprConsent("BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA")
-                .defaultWaterfalls(Arrays.asList(
+                .defaultWaterfalls(List.of(
                         "gam", "https://my.customvast.xml"
                                 + "?gdpr={{gdpr}}"
                                 + "&gdpr_consent={{gdpr_consent}}"
@@ -397,7 +397,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         JSONObject responseJson = doCustomVastAuctionRequestToMultipleBidder(
                 GvastMultipleBidderAuctionTestParam.builder()
                         .responseType("gvast")
-                        .defaultWaterfalls(Arrays.asList("gam_first_look", "gam"))
+                        .defaultWaterfalls(List.of("gam_first_look", "gam"))
                         .improvePlacementId(20220617)
                         .improveAdm1(improveVastXml1)
                         .improvePrice1("1.65")
@@ -458,7 +458,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         JSONObject responseJson = doCustomVastAuctionRequestToMultipleBidder(
                 GvastMultipleBidderAuctionTestParam.builder()
                         .responseType("gvast")
-                        .defaultWaterfalls(Arrays.asList("gam_first_look", "gam"))
+                        .defaultWaterfalls(List.of("gam_first_look", "gam"))
                         .improvePlacementId(20220617)
                         .improveAdm1(improveVastXml1)
                         .improvePrice1("1.65")
@@ -673,27 +673,27 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         assertThat(doCustomVastRequestWithProtocolAndGetOutputParam(
                 getVastXmlInline("ad_1", true), "0.97", 20220620,
-                Arrays.asList(2, 3, 7)
+                List.of(2, 3, 7)
         )).isEqualTo("xml_vast4");
 
         assertThat(doCustomVastRequestWithProtocolAndGetOutputParam(
                 getVastXmlInline("ad_1", true), "0.97", 20220620,
-                Arrays.asList(2, 3)
+                List.of(2, 3)
         )).isEqualTo("xml_vast3");
 
         assertThat(doCustomVastRequestWithProtocolAndGetOutputParam(
                 getVastXmlInline("ad_1", true), "0.97", 20220620,
-                Arrays.asList(2)
+                List.of(2)
         )).isEqualTo("xml_vast2");
 
         assertThat(doCustomVastRequestWithProtocolAndGetOutputParam(
                 getVastXmlInline("ad_1", true), "0.97", 20220620,
-                Arrays.asList(1)
+                List.of(1)
         )).isEqualTo("vast");
 
         assertThat(doCustomVastRequestWithProtocolAndGetOutputParam(
                 getVastXmlInline("ad_1", true), "0.97", 20220620,
-                Arrays.asList(1, 4, 5, 6, 8, 9, 10)
+                List.of(1, 4, 5, 6, 8, 9, 10)
         )).isEqualTo("vast");
     }
 
@@ -722,17 +722,17 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     public void testGvastResponseWithSiteCategory() throws XPathExpressionException, IOException, JSONException {
         assertThat(doCustomVastRequestWithSiteCategoryAndGetCategoryOfCustParam(
                 getVastXmlInline("ad_1", true), "0.85", 20220620,
-                Arrays.asList()
+                List.of()
         )).isNull();
 
         assertThat(doCustomVastRequestWithSiteCategoryAndGetCategoryOfCustParam(
                 getVastXmlInline("ad_1", true), "0.85", 20220620,
-                Arrays.asList("IAB1")
+                List.of("IAB1")
         )).isEqualTo("IAB1");
 
         assertThat(doCustomVastRequestWithSiteCategoryAndGetCategoryOfCustParam(
                 getVastXmlInline("ad_1", true), "0.85", 20220620,
-                Arrays.asList("IAB1", "IAB2")
+                List.of("IAB1", "IAB2")
         )).isEqualTo("IAB1,IAB2");
     }
 
@@ -889,7 +889,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String vastXml2 = getVastXmlInline("ad_2", false);
         String vastXml3 = getVastXmlInline("ad_3", false);
         String bannerAd = "<img src='banner-1.png' />";
-        String nativeAd = toJsonString(createNativeResponse(3000, 2250, Arrays.asList(), Arrays.asList()));
+        String nativeAd = toJsonString(createNativeResponse(3000, 2250, List.of(), List.of()));
         String cacheId1 = getCacheIdRandom();
         String cacheId2 = getCacheIdRandom();
         String cacheId3 = getCacheIdRandom();
@@ -996,14 +996,13 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
-    public void testCustomVastResponseWithMultiFormatInRequest() throws JSONException {
+    public void testCustomVastResponseWithMultiFormatToMultipleBidders() throws Exception {
+        String cacheId = getCacheIdRandom();
         JSONObject responseJson = doCustomVastAuctionRequestWithMultiFormat(
-                GvastAuctionTestParam.builder()
-                        .responseType("gvast")
-                        .improvePlacementId(2022091501)
-                        .improveAdm("<img src='banner-1.png' />")
-                        .improvePrice("1.12")
-                        .build()
+                1.12, getVastXmlInline("ad_1", false), cacheId,
+                1.23, getVastXmlInline("ad_2", true),
+                1.34, toJsonString(createNativeResponse(300, 250, List.of(), List.of())),
+                1.45, "<img src='banner-1.png' />"
         );
 
         String adm = getAdm(responseJson, 0, 0);
@@ -1053,25 +1052,25 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         Map<String, List<String>> custParams = TestUtils.splitQuery(vastQueryParams.get("cust_params").get(0));
         assertQuerySingleValue(custParams.get("hb_bidder"), "improvedigital");
         assertQuerySingleValue(custParams.get("hb_bidder_improvedig"), "improvedigital");
-        assertNoOtherKeysExcept(custParams, "hb_bidder", Arrays.asList(
+        assertNoOtherKeysExcept(custParams, "hb_bidder", List.of(
                 "hb_bidder", "hb_bidder_improvedig"
         ));
 
         assertQuerySingleValue(custParams.get("hb_uuid"), uniqueId);
         assertQuerySingleValue(custParams.get("hb_uuid_improvedigit"), uniqueId);
-        assertNoOtherKeysExcept(custParams, "hb_uuid", Arrays.asList(
+        assertNoOtherKeysExcept(custParams, "hb_uuid", List.of(
                 "hb_uuid", "hb_uuid_improvedigit"
         ));
 
         assertQuerySingleValue(custParams.get("hb_format"), "video");
         assertQuerySingleValue(custParams.get("hb_format_improvedig"), "video");
-        assertNoOtherKeysExcept(custParams, "hb_format", Arrays.asList(
+        assertNoOtherKeysExcept(custParams, "hb_format", List.of(
                 "hb_format", "hb_format_improvedig"
         ));
 
         assertQuerySingleValue(custParams.get("hb_pb"), price);
         assertQuerySingleValue(custParams.get("hb_pb_improvedigital"), price);
-        assertNoOtherKeysExcept(custParams, "hb_pb", Arrays.asList(
+        assertNoOtherKeysExcept(custParams, "hb_pb", List.of(
                 "hb_pb", "hb_pb_improvedigital"
         ));
 
@@ -1109,25 +1108,25 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         Map<String, List<String>> custParams = TestUtils.splitQuery(vastQueryParams.get("cust_params").get(0));
         assertQuerySingleValue(custParams.get("hb_bidder"), "generic");
         assertQuerySingleValue(custParams.get("hb_bidder_generic"), "generic");
-        assertNoOtherKeysExcept(custParams, "hb_bidder", Arrays.asList(
+        assertNoOtherKeysExcept(custParams, "hb_bidder", List.of(
                 "hb_bidder", "hb_bidder_generic"
         ));
 
         assertQuerySingleValue(custParams.get("hb_uuid"), uniqueId);
         assertQuerySingleValue(custParams.get("hb_uuid_generic"), uniqueId);
-        assertNoOtherKeysExcept(custParams, "hb_uuid", Arrays.asList(
+        assertNoOtherKeysExcept(custParams, "hb_uuid", List.of(
                 "hb_uuid", "hb_uuid_generic"
         ));
 
         assertQuerySingleValue(custParams.get("hb_format"), "video");
         assertQuerySingleValue(custParams.get("hb_format_generic"), "video");
-        assertNoOtherKeysExcept(custParams, "hb_format", Arrays.asList(
+        assertNoOtherKeysExcept(custParams, "hb_format", List.of(
                 "hb_format", "hb_format_generic"
         ));
 
         assertQuerySingleValue(custParams.get("hb_pb"), price);
         assertQuerySingleValue(custParams.get("hb_pb_generic"), price);
-        assertNoOtherKeysExcept(custParams, "hb_pb", Arrays.asList(
+        assertNoOtherKeysExcept(custParams, "hb_pb", List.of(
                 "hb_pb", "hb_pb_generic"
         ));
 
@@ -1162,28 +1161,28 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertQuerySingleValue(custParams.get("hb_bidder"), "generic");
         assertQuerySingleValue(custParams.get("hb_bidder_generic"), "generic");
         assertQuerySingleValue(custParams.get("hb_bidder_improvedig"), "improvedigital");
-        assertNoOtherKeysExcept(custParams, "hb_bidder", Arrays.asList(
+        assertNoOtherKeysExcept(custParams, "hb_bidder", List.of(
                 "hb_bidder", "hb_bidder_generic", "hb_bidder_improvedig"
         ));
 
         assertQuerySingleValue(custParams.get("hb_uuid"), genericCacheId);
         assertQuerySingleValue(custParams.get("hb_uuid_generic"), genericCacheId);
         assertQuerySingleValue(custParams.get("hb_uuid_improvedigit"), improveCacheId);
-        assertNoOtherKeysExcept(custParams, "hb_uuid", Arrays.asList(
+        assertNoOtherKeysExcept(custParams, "hb_uuid", List.of(
                 "hb_uuid", "hb_uuid_generic", "hb_uuid_improvedigit"
         ));
 
         assertQuerySingleValue(custParams.get("hb_format"), "video");
         assertQuerySingleValue(custParams.get("hb_format_generic"), "video");
         assertQuerySingleValue(custParams.get("hb_format_improvedig"), "video");
-        assertNoOtherKeysExcept(custParams, "hb_format", Arrays.asList(
+        assertNoOtherKeysExcept(custParams, "hb_format", List.of(
                 "hb_format", "hb_format_generic", "hb_format_improvedig"
         ));
 
         assertQuerySingleValue(custParams.get("hb_pb"), genericPrice);
         assertQuerySingleValue(custParams.get("hb_pb_generic"), genericPrice);
         assertQuerySingleValue(custParams.get("hb_pb_improvedigital"), improvePrice);
-        assertNoOtherKeysExcept(custParams, "hb_pb", Arrays.asList(
+        assertNoOtherKeysExcept(custParams, "hb_pb", List.of(
                 "hb_pb", "hb_pb_generic", "hb_pb_improvedigital"
         ));
 
@@ -1458,7 +1457,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         Response response = specWithPBSHeader(18080)
                 .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
                         .currency("USD")
-                        .imps(Arrays.asList(AuctionBidRequestImpTestData.builder()
+                        .imps(List.of(AuctionBidRequestImpTestData.builder()
                                 .impData(SingleImpTestData.builder()
                                         .id("imp_id_1")
                                         /* Nothing here. All are defined in stored imp. */
@@ -1535,7 +1534,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         Response response = specWithPBSHeader(18080)
                 .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
                         .currency("USD")
-                        .imps(Arrays.asList(AuctionBidRequestImpTestData.builder()
+                        .imps(List.of(AuctionBidRequestImpTestData.builder()
                                 .impExt(param.toCustomVastAuctionBidRequestImpExt())
                                 .impData(SingleImpTestData.builder()
                                         .id("imp_id_1")
@@ -1560,78 +1559,97 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         return responseJson;
     }
 
-    private JSONObject doCustomVastAuctionRequestWithMultiFormat(GvastAuctionTestParam param) throws JSONException {
+    private JSONObject doCustomVastAuctionRequestWithMultiFormat(
+            double gvastPrice, String gvastAdm, String gvastCacheId,
+            double videoPrice, String videoAdm,
+            double nativePrice, String nativeAdm,
+            double bannerPrice, String bannerAdm
+    ) throws JSONException, IOException {
         String uniqueId = UUID.randomUUID().toString();
 
         WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
-                .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
-                        SSPBidRequestTestData.builder()
-                                .currency("USD")
-                                .impData(SingleImpTestData.builder()
-                                        .id("imp_id_1")
-                                        .impExt(param.toSSPBidRequestImpExt())
-                                        .bannerData(BannerTestParam.getDefault())
-                                        .nativeData(NativeTestParam.builder()
-                                                .request(createNativeRequest("1.2", 90, 128, 128, 120))
-                                                .build())
-                                        .videoData(VideoTestParam.getDefault().toBuilder()
-                                                .protocols(param.videoProtocols)
-                                                .build())
-                                        .build())
-                                .channel(getExtPrebidChannelForGvast())
-                                .extRequestTargeting(getExtPrebidTargetingForGvast())
-                                .extRequestPrebidCache(getExtPrebidCacheForGvast())
-                                .siteIABCategories(param.siteIabCategories)
-                                .gdprConsent(param.gdprConsent)
-                                .build()
-                )))
                 .willReturn(aResponse().withBody(getSSPBidResponse(
                         "improvedigital", uniqueId, "USD", BidResponseTestData.builder()
                                 .impId("imp_id_1")
-                                .price(Double.parseDouble(param.improvePrice))
-                                .adm(param.improveAdm)
+                                .price(gvastPrice)
+                                .adm(gvastAdm)
                                 .build()
                 )))
+        );
+
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("generic"))
+                .willReturn(aResponse().withBody(getSSPBidResponse(
+                        "generic", uniqueId, "USD", BidResponseTestData.builder()
+                                .impId("imp_id_1")
+                                .price(videoPrice)
+                                .adm(videoAdm)
+                                .build()
+                )))
+        );
+
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("aceex"))
+                .willReturn(aResponse().withBody(getSSPBidResponse(
+                        "aceex", uniqueId, "USD", BidResponseTestData.builder()
+                                .impId("imp_id_1")
+                                .price(nativePrice)
+                                .adm(nativeAdm)
+                                .build()
+                )))
+        );
+
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("acuityads"))
+                .willReturn(aResponse().withBody(getSSPBidResponse(
+                        "acuityads", uniqueId, "USD", BidResponseTestData.builder()
+                                .impId("imp_id_1")
+                                .price(bannerPrice)
+                                .adm(bannerAdm)
+                                .build()
+                )))
+        );
+
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/cache"))
+                .withRequestBody(equalToJson(createCacheRequest(
+                        "request_id_" + uniqueId,
+                        getVastXmlToCache(gvastAdm, "improvedigital", String.format("%.2f", gvastPrice), 2022091601)
+                                .replace("\"", "\\\"")
+                )))
+                .willReturn(aResponse().withBody(createCacheResponse(
+                        gvastCacheId
+                )))
+        );
+
+        WIRE_MOCK_RULE.stubFor(get(urlPathEqualTo("/cache"))
+                .withQueryParam("uuid", equalToIgnoreCase(gvastCacheId))
+                .willReturn(aResponse()
+                        .withBody(gvastAdm))
         );
 
         Response response = specWithPBSHeader(18080)
                 .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
                         .currency("USD")
-                        .imps(Arrays.asList(
-                                AuctionBidRequestImpTestData.builder()
-                                        .impExt(param.toDefaultAuctionBidRequestImpExt())
-                                        .impData(SingleImpTestData.builder()
-                                                .id("imp_id_1")
-                                                .bannerData(BannerTestParam.getDefault())
+                        .imps(List.of(AuctionBidRequestImpTestData.builder()
+                                .impExt(new AuctionBidRequestImpExt()
+                                        .putImprovedigitalPbs()
+                                        .putImprovedigitalPbsKeyValue("responseType", "gvast")
+                                        .putBidder("improvedigital")
+                                        .putBidderKeyValue("improvedigital", "placementId", 2022091601))
+                                .impData(SingleImpTestData.builder()
+                                        .id("imp_id_1")
+                                        .bannerData(BannerTestParam.getDefault())
+                                        .videoData(VideoTestParam.getDefault())
+                                        .nativeData(NativeTestParam.builder()
+                                                .request(createNativeRequest(
+                                                        "1.2", 90, 128, 128, 120
+                                                ))
                                                 .build())
-                                        .build(),
-                                AuctionBidRequestImpTestData.builder()
-                                        .impExt(param.toDefaultAuctionBidRequestImpExt())
-                                        .impData(SingleImpTestData.builder()
-                                                .id("imp_id_2")
-                                                .nativeData(NativeTestParam.builder()
-                                                        .request(createNativeRequest(
-                                                                "1.2", 90, 128, 128, 120
-                                                        ))
-                                                        .build())
-                                                .build())
-                                        .build(),
-                                AuctionBidRequestImpTestData.builder()
-                                        .impExt(param.toCustomVastAuctionBidRequestImpExt())
-                                        .impData(SingleImpTestData.builder()
-                                                .id("imp_id_3")
-                                                .videoData(VideoTestParam.getDefault().toBuilder()
-                                                        .protocols(param.videoProtocols)
-                                                        .build())
-                                                .build())
-                                        .build()
+                                        .build())
+                                .build()
                         ))
-                        .siteIABCategories(param.siteIabCategories)
-                        .gdprConsent(param.gdprConsent)
                         .build()
                 ))
                 .post(Endpoint.openrtb2_auction.value());
 
+        System.out.println("=======> " + response.asString());
         JSONObject responseJson = new JSONObject(response.asString());
         assertBidCountIsOne(responseJson); /* As we are sending some bids from SSP, we will definitely get 1 bid. */
         assertBidIdExists(responseJson, 0, 0);
@@ -1819,7 +1837,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         Response response = specWithPBSHeader(18080)
                 .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
                         .currency("USD")
-                        .imps(Arrays.asList(AuctionBidRequestImpTestData.builder()
+                        .imps(List.of(AuctionBidRequestImpTestData.builder()
                                 .impData(SingleImpTestData.builder()
                                         .id("imp_id_1")
                                         .videoData(VideoTestParam.getDefault())
@@ -1875,7 +1893,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         Response response = specWithPBSHeader(18080)
                 .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
                         .currency("USD")
-                        .imps(Arrays.asList(AuctionBidRequestImpTestData.builder()
+                        .imps(List.of(AuctionBidRequestImpTestData.builder()
                                 .impData(SingleImpTestData.builder()
                                         .id("imp_id_1")
                                         .videoData(VideoTestParam.getDefault())
@@ -1911,7 +1929,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .includebidderkeys(true)
                 .includeformat(true)
                 .pricegranularity(BID_REQUEST_MAPPER.valueToTree(
-                        ExtPriceGranularity.of(2, Arrays.asList(
+                        ExtPriceGranularity.of(2, List.of(
                                 ExtGranularityRange.of(BigDecimal.valueOf(2), BigDecimal.valueOf(0.01)),
                                 ExtGranularityRange.of(BigDecimal.valueOf(5), BigDecimal.valueOf(0.05)),
                                 ExtGranularityRange.of(BigDecimal.valueOf(10), BigDecimal.valueOf(0.1)),

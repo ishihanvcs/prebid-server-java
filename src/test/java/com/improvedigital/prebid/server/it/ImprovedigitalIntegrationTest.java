@@ -236,7 +236,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                         .collect(Collectors.toList()))
                 .tmax(5000L)
                 .regs(Regs.of(null, ExtRegs.of(0, null)))
-                .cur(Arrays.asList(bidRequestData.currency))
+                .cur(List.of(bidRequestData.currency))
                 .site(Site.builder()
                         .cat(bidRequestData.siteIABCategories)
                         .build())
@@ -282,7 +282,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
 
         BidRequest bidRequest = BidRequest.builder()
                 .id("request_id_" + uniqueId)
-                .imp(Arrays.asList(Imp.builder()
+                .imp(List.of(Imp.builder()
                         .id(bidRequestData.impData.id)
                         .ext(bidRequestData.impData.impExt.get())
                         .banner(bidRequestData.impData.bannerData == null ? null : Banner.builder()
@@ -326,7 +326,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                         .build())
                 .at(1)
                 .tmax(5000L)
-                .cur(Arrays.asList(bidRequestData.currency))
+                .cur(List.of(bidRequestData.currency))
                 .regs(Regs.of(null, ExtRegs.of(0, null)))
                 .ext(ExtRequest.of(ExtRequestPrebid.builder()
                         .pbs(ExtRequestPrebidPbs.of("/openrtb2/auction"))
@@ -360,7 +360,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
         BidResponse bidResponse = BidResponse.builder()
                 .id("request_id_" + uniqueId) /* request id is tied to the bid request. See above. */
                 .cur(currency)
-                .seatbid(Arrays.asList(SeatBid.builder()
+                .seatbid(List.of(SeatBid.builder()
                         .bid(Arrays.stream(data)
                                 .map(d -> toBid(bidIndex.getAndIncrement(), bidderName, d))
                                 .collect(Collectors.toList()))
@@ -403,7 +403,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                 .plcmttype(4)
                 .plcmtcnt(1)
                 .ver(nativeVersion)
-                .assets(Arrays.asList(
+                .assets(List.of(
                         com.iab.openrtb.request.Asset.builder()
                                 .id(1)
                                 .required(1)
@@ -418,7 +418,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                                         .type(3)
                                         .wmin(wMin)
                                         .hmin(hMin)
-                                        .mimes(Arrays.asList("image/jpg", "image/jpeg", "image/png"))
+                                        .mimes(List.of("image/jpg", "image/jpeg", "image/png"))
                                         .build())
                                 .build(),
                         com.iab.openrtb.request.Asset.builder()
@@ -437,7 +437,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
             int w, int h, List<EventTracker> nativeEventTrackers, List<String> impTrackers
     ) {
         return com.iab.openrtb.response.Response.builder()
-                .assets(Arrays.asList(
+                .assets(List.of(
                         Asset.builder()
                                 .id(1)
                                 .title(TitleObject.builder()
@@ -564,7 +564,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
             return BannerTestParam.builder()
                     .w(300)
                     .h(250)
-                    .mimes(Arrays.asList("image/jpg", "image/jpeg", "image/png"))
+                    .mimes(List.of("image/jpg", "image/jpeg", "image/png"))
                     .build();
         }
     }
@@ -579,7 +579,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
         @JsonIgnore
         public List<Integer> getVideoProtocols(int defaultProtocol) {
             if (CollectionUtils.isEmpty(protocols)) {
-                return Arrays.asList(defaultProtocol);
+                return List.of(defaultProtocol);
             }
 
             return protocols;
@@ -589,7 +589,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
             return VideoTestParam.builder()
                     .w(640)
                     .h(480)
-                    .mimes(Arrays.asList("video/mp4"))
+                    .mimes(List.of("video/mp4"))
                     .build();
         }
     }

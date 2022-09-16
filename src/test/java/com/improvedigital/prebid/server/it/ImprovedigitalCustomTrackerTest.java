@@ -24,6 +24,7 @@ import java.io.StringReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -369,7 +370,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         JSONObject responseJson = doRequestAndGetResponse(CustomTrackerRequestTestParam.builder()
                 .improveAdm(toJsonString(
                         // SSP returned empty event trackers and empty imp trackers.
-                        createNativeResponse(3000, 2250, Arrays.asList(), Arrays.asList())
+                        createNativeResponse(3000, 2250, List.of(), List.of())
                 ))
                 .improvePrice("1.25")
                 .storedImpId("2022083003")
@@ -398,7 +399,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         JSONObject responseJson = doRequestAndGetResponse(CustomTrackerRequestTestParam.builder()
                 .improveAdm(toJsonString(
                         // SSP returned 1 event tracker and no imp trackers field.
-                        createNativeResponse(3000, 2250, Arrays.asList(
+                        createNativeResponse(3000, 2250, List.of(
                                 EventTracker.builder()
                                         .event(1)
                                         .method(1)
@@ -437,7 +438,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         JSONObject responseJson = doRequestAndGetResponse(CustomTrackerRequestTestParam.builder()
                 .improveAdm(toJsonString(
                         // SSP returned no event trackers field and 1 imp tracker.
-                        createNativeResponse(3000, 2250, null, Arrays.asList(
+                        createNativeResponse(3000, 2250, null, List.of(
                                 "https://existingtrakcer.bidder.com/imp"
                         ))
                 ))
@@ -472,13 +473,13 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         JSONObject responseJson = doRequestAndGetResponse(CustomTrackerRequestTestParam.builder()
                 .improveAdm(toJsonString(
                         // SSP returned 1 event tracker and 1 imp tracker.
-                        createNativeResponse(3000, 2250, Arrays.asList(
+                        createNativeResponse(3000, 2250, List.of(
                                 EventTracker.builder()
                                         .event(1)
                                         .method(1)
                                         .url("https://existingtrakcer.bidder.com/event")
                                         .build()
-                        ), Arrays.asList(
+                        ), List.of(
                                 "https://existingtrakcer.bidder.com/imp"
                         ))
                 ))
@@ -515,13 +516,13 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         JSONObject responseJson = doRequestAndGetResponse(CustomTrackerRequestTestParam.builder()
                 .improveAdm(toJsonString(
                         // SSP returned 1 event tracker and 1 imp tracker.
-                        createNativeResponse(3000, 2250, Arrays.asList(
+                        createNativeResponse(3000, 2250, List.of(
                                 EventTracker.builder()
                                         .event(1)
                                         .method(1)
                                         .url("https://existingtrakcer.bidder.com/event")
                                         .build()
-                        ), Arrays.asList(
+                        ), List.of(
                                 "https://existingtrakcer.bidder.com/imp"
                         ))
                 ))
@@ -597,14 +598,14 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         JSONObject responseJson = doRequestAndGetResponse(CustomTrackerRequestTestParam.builder()
                 // Send request of both banner and native and we get response of native.
                 .improveAdm(toJsonString(createNativeResponse(3000, 2250,
-                        Arrays.asList(
+                        List.of(
                                 EventTracker.builder()
                                         .event(1)
                                         .method(1)
                                         .url("https://existingtrakcer.bidder.com/event")
                                         .build()
                         ),
-                        Arrays.asList(
+                        List.of(
                                 "https://existingtrakcer.bidder.com/imp"
                         )
                 )))
@@ -711,7 +712,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         return specWithPBSHeader(18081)
                 .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
                         .currency("USD")
-                        .imps(Arrays.asList(
+                        .imps(List.of(
                                 AuctionBidRequestImpTestData.builder()
                                         .impData(SingleImpTestData.builder()
                                                 .id("imp_id_1")
@@ -771,7 +772,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         Response response = specWithPBSHeader(18081)
                 .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
                         .currency("USD")
-                        .imps(Arrays.asList(AuctionBidRequestImpTestData.builder()
+                        .imps(List.of(AuctionBidRequestImpTestData.builder()
                                 .impExt(new AuctionBidRequestImpExt()
                                         .putStoredRequest(param.storedImpId)
                                         .putBidder("improvedigital")

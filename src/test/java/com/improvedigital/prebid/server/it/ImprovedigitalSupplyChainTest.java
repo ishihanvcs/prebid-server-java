@@ -73,8 +73,8 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                 /* This stored imp has only partner id. */
                 "2022072202",
                 20220722,
-                Arrays.asList(),
-                Arrays.asList(
+                List.of(),
+                List.of(
                         ExtRequestPrebidSchainSchainNode.of(
                                 "headerlift.com", /* We expect this to be default. */
                                 "hl-2022072202",
@@ -95,8 +95,8 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                 /* This stored imp has partner id and empty schain nodes. */
                 "2022072203",
                 20220722,
-                Arrays.asList(),
-                Arrays.asList() /* Expecting no schain added. */
+                List.of(),
+                List.of() /* Expecting no schain added. */
         );
     }
 
@@ -107,8 +107,8 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                 /* This stored imp has no partner id and some schain nodes. */
                 "2022072204",
                 20220722,
-                Arrays.asList(),
-                Arrays.asList() /* Expecting no schain added. */
+                List.of(),
+                List.of() /* Expecting no schain added. */
         );
     }
 
@@ -122,7 +122,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                 "2022072205",
                 20220722,
                 /* Incoming request has these schain nodes already */
-                Arrays.asList(
+                List.of(
                         ExtRequestPrebidSchainSchainNode.of(
                                 "firstsite.com",
                                 "firstsite-1",
@@ -142,7 +142,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                 null
                         )
                 ),
-                Arrays.asList(
+                List.of(
                         ExtRequestPrebidSchainSchainNode.of(
                                 "firstsite.com",
                                 "firstsite-1",
@@ -184,7 +184,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                 "2022072205",
                 20220722,
                 /* Incoming request has these schain nodes already */
-                Arrays.asList(
+                List.of(
                         ExtRequestPrebidSchainSchainNode.of(
                                 "headerlift.com",
                                 "firstsite-1",
@@ -204,7 +204,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                 null
                         )
                 ),
-                Arrays.asList(
+                List.of(
                         ExtRequestPrebidSchainSchainNode.of(
                                 "headerlift.com",
                                 "firstsite-1",
@@ -269,7 +269,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
         Response response = specWithPBSHeader(18082)
                 .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
                         .currency("USD")
-                        .imps(Arrays.asList(AuctionBidRequestImpTestData.builder()
+                        .imps(List.of(AuctionBidRequestImpTestData.builder()
                                 .impExt(new AuctionBidRequestImpExt()
                                         .putStoredRequest(storedImpId))
                                 .impData(SingleImpTestData.builder()
@@ -326,7 +326,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                         .build())
                                 .schainVer("1.0")
                                 .schainComplete(1)
-                                .schainNodes(Arrays.asList(
+                                .schainNodes(List.of(
                                         ExtRequestPrebidSchainSchainNode.of(
                                                 "headerlift.com",
                                                 "hl-2022072201",
@@ -372,7 +372,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                         .build())
                                 .schainVer("1.0")
                                 .schainComplete(1)
-                                .schainNodes(Arrays.asList(
+                                .schainNodes(List.of(
                                         ExtRequestPrebidSchainSchainNode.of(
                                                 "headerlift.com",
                                                 "hl-2022072201",
@@ -404,7 +404,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
         Response response = specWithPBSHeader(18082)
                 .body(getAuctionBidRequest(param.auctionRequestId, AuctionBidRequestTestData.builder()
                         .currency("USD")
-                        .imps(Arrays.asList(AuctionBidRequestImpTestData.builder()
+                        .imps(List.of(AuctionBidRequestImpTestData.builder()
                                 .impExt(new AuctionBidRequestImpExt()
                                         .putStoredRequest(param.storedImpId))
                                 .impData(SingleImpTestData.builder()

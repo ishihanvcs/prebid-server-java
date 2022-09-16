@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -639,6 +638,82 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         assertThatCustomTrackerExistsInImpTrackers(customTrackerUrl, "2.25", "20220830");
     }
 
+    @Test
+    public void testTrackerIsAddedOnMultiformatRequestWhenVideoIsReturned() throws Exception {
+        JSONObject responseJson = doRequestAndGetResponse(CustomTrackerRequestTestParam.builder()
+                // Send request of both banner and native and we get response of native.
+                .improveAdm(getVastXmlInline("ad_1", true))
+                .improvePrice("2.15")
+                .storedImpId("2022083004")
+                .improvePlacementId(20220830)
+                .nativeData(NativeTestParam.builder()
+                        // This native data is what we have in the stored imp.
+                        .request(createNativeRequest("1.2", 90, 128, 128, 120))
+                        .build())
+                .bannerData(BannerTestParam.builder()
+                        // This banner data is what we have in the stored imp.
+                        .w(320)
+                        .h(320)
+                        .build())
+                .videoData(VideoTestParam.builder()
+                        // This video data is what we have in the stored imp.
+                        .w(640)
+                        .h(480)
+                        .mimes(List.of("video/mp4"))
+                        .build())
+                .bannerDataIsInStoredImp(true)
+                .nativeDataIsInStoredImp(true)
+                .videoDataIsInStoredImp(true)
+                .build());
+
+        assertBidExtPrebidType(responseJson, 0, 0, "video");
+        assertCurrency(responseJson, "USD");
+
+        String adm = getAdm(responseJson, 0, 0);
+
+        String trackingImpPixel = XPathFactory.newInstance().newXPath()
+                .compile("/VAST/Ad[@id='ad_1']/InLine/Impression[2]")
+                .evaluate(new InputSource(new StringReader(adm)));
+        assertThat(trackingImpPixel).isEqualTo(getCustomTrackerUrl("2.15", "20220830"));
+    }
+
+    @Test
+    public void testTrackerIsAddedOnMultiformatRequestWhenBannerIsReturned() throws Exception {
+        JSONObject responseJson = doRequestAndGetResponse(CustomTrackerRequestTestParam.builder()
+                // Send request of both banner and native and we get response of native.
+                .improveAdm("<img src='banner-1.png' />")
+                .improvePrice("1.45")
+                .storedImpId("2022083004")
+                .improvePlacementId(20220830)
+                .nativeData(NativeTestParam.builder()
+                        // This native data is what we have in the stored imp.
+                        .request(createNativeRequest("1.2", 90, 128, 128, 120))
+                        .build())
+                .bannerData(BannerTestParam.builder()
+                        // This banner data is what we have in the stored imp.
+                        .w(320)
+                        .h(320)
+                        .build())
+                .videoData(VideoTestParam.builder()
+                        // This video data is what we have in the stored imp.
+                        .w(640)
+                        .h(480)
+                        .mimes(List.of("video/mp4"))
+                        .build())
+                .bannerDataIsInStoredImp(true)
+                .nativeDataIsInStoredImp(true)
+                .videoDataIsInStoredImp(true)
+                .build());
+
+        assertBidExtPrebidType(responseJson, 0, 0, "banner");
+        assertCurrency(responseJson, "USD");
+
+        String adm = getAdm(responseJson, 0, 0);
+        assertThat(adm).isEqualTo("<img src='banner-1.png' />"
+                + "<img src=\"" + getCustomTrackerUrl("1.45", "20220830") + "\">"
+        );
+    }
+
     private Response doBannerRequestAndGetResponse(Map<String, String> responseMacroReplacers) throws IOException {
         WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
                 .withRequestBody(equalToJson(jsonFromFileWithMacro(
@@ -753,6 +828,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                                                 .putBidderKeyValue("size", param.toBannerDimension()))
                                         .bannerData(param.bannerData)
                                         .nativeData(param.nativeData)
+                                        .videoData(param.videoData)
                                         .build())
                                 .channel(ExtRequestPrebidChannel.of("web"))
                                 .build()
@@ -861,8 +937,10 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
     public static class CustomTrackerRequestTestParam {
         NativeTestParam nativeData;
         BannerTestParam bannerData;
+        VideoTestParam videoData;
         boolean bannerDataIsInStoredImp;
         boolean nativeDataIsInStoredImp;
+        boolean videoDataIsInStoredImp;
         String storedImpId;
         int improvePlacementId;
         String improveAdm;

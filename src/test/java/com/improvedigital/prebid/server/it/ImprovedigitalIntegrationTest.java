@@ -6,10 +6,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.tomakehurst.wiremock.common.FileSource;
-import com.github.tomakehurst.wiremock.extension.Parameters;
-import com.github.tomakehurst.wiremock.extension.ResponseTransformer;
-import com.github.tomakehurst.wiremock.http.Response;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.iab.openrtb.request.Banner;
 import com.iab.openrtb.request.BidRequest;
@@ -32,6 +28,9 @@ import com.iab.openrtb.response.ImageObject;
 import com.iab.openrtb.response.Link;
 import com.iab.openrtb.response.SeatBid;
 import com.iab.openrtb.response.TitleObject;
+import com.improvedigital.prebid.server.it.transformers.BidResponseByImpidTransformer;
+import com.improvedigital.prebid.server.it.transformers.CacheGetByUuidTransformer;
+import com.improvedigital.prebid.server.it.transformers.CacheSetByContentTransformer;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.config.ObjectMapperConfig;
 import io.restassured.config.RestAssuredConfig;
@@ -51,7 +50,6 @@ import org.junit.ClassRule;
 import org.prebid.server.VertxTest;
 import org.prebid.server.bidder.improvedigital.proto.ImprovedigitalBidExt;
 import org.prebid.server.bidder.improvedigital.proto.ImprovedigitalBidExtImprovedigital;
-import org.prebid.server.it.IntegrationTest;
 import org.prebid.server.proto.openrtb.ext.request.ExtImp;
 import org.prebid.server.proto.openrtb.ext.request.ExtImpPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRegs;
@@ -72,17 +70,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.AbstractMap;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -137,8 +131,9 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
             .gzipDisabled(true)
             .jettyStopTimeout(5000L)
             .extensions(
-                    IntegrationTest.CacheResponseTransformer.class,
-                    BidRequestResponseByImpidTransformer.class
+                    BidResponseByImpidTransformer.class,
+                    CacheSetByContentTransformer.class,
+                    CacheGetByUuidTransformer.class
             ));
 
     @BeforeClass
@@ -813,45 +808,6 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
         }
     }
 
-    /**
-     * This WireMock transformer expects parameters as key=impid, value=response-for-that-impid
-     */
-    public static class BidRequestResponseByImpidTransformer extends ResponseTransformer {
-        @Override
-        public String getName() {
-            return "it-test-request-response-by-impid";
-        }
-
-        @Override
-        public Response transform(
-                com.github.tomakehurst.wiremock.http.Request request,
-                Response response,
-                FileSource fileSource,
-                Parameters parameters) {
-            try {
-                BidRequest bidRequest = new ObjectMapper().readValue(request.getBodyAsString(), BidRequest.class);
-                if (bidRequest.getImp().size() != 1) {
-                    throw new IllegalArgumentException("SSP can deal only 1 imp");
-                }
-
-                return Response.response()
-                        .status(200)
-                        .body(parameters.get(bidRequest.getImp().get(0).getId()).toString())
-                        .build();
-            } catch (Exception e) {
-                return Response.response()
-                        .status(400)
-                        .body("Cannot parse bid request: " + e.getMessage())
-                        .build();
-            }
-        }
-
-        @Override
-        public boolean applyGlobally() {
-            return false;
-        }
-    }
-
     protected String getCacheIdRandom() {
         return UUID.randomUUID().toString().replaceAll("[^a-zA-Z0-9]", "_");
     }
@@ -914,28 +870,6 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
         Files.writeString(cacheResponseFile, fileContent, StandardOpenOption.WRITE);
 
         return "/" + resourceFilePathFromSlash;
-    }
-
-    protected Map<String, List<String>> splitQuery(String queryParam) {
-        return Arrays.stream(queryParam.split("&"))
-                .map(this::splitQueryParameter)
-                .collect(Collectors.groupingBy(
-                        AbstractMap.SimpleImmutableEntry::getKey,
-                        LinkedHashMap::new,
-                        Collectors.mapping(Map.Entry::getValue, Collectors.toList()))
-                );
-    }
-
-    protected AbstractMap.SimpleImmutableEntry<String, String> splitQueryParameter(String it) {
-        try {
-            final String[] idx = it.split("=");
-            return new AbstractMap.SimpleImmutableEntry<>(
-                    URLDecoder.decode(idx[0], "UTF-8"),
-                    URLDecoder.decode(idx.length > 1 ? idx[1] : "", "UTF-8")
-            );
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalArgumentException(e);
-        }
     }
 
     protected void assertQuerySingleValue(List<String> paramValues, String expectedValue) {

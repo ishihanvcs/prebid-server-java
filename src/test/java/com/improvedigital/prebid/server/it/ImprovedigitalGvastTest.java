@@ -1,5 +1,6 @@
 package com.improvedigital.prebid.server.it;
 
+import com.iab.openrtb.request.Request;
 import com.improvedigital.prebid.server.customvast.handler.GVastHandler;
 import com.improvedigital.prebid.server.utils.TestUtils;
 import io.restassured.response.Response;
@@ -881,53 +882,117 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertFallbackOnNoAd(adm, false, "0");
     }
 
-    // FIXME: Afsar will fix this.
     @Test
     public void testCustomVastResponseWithMultiImpsInRequest()
             throws XPathExpressionException, IOException, JSONException {
         String vastXml1 = getVastXmlInline("ad_1", true);
         String vastXml2 = getVastXmlInline("ad_2", false);
+        String vastXml3 = getVastXmlInline("ad_3", false);
+        String bannerAd = "<img src='banner-1.png' />";
+        String nativeAd = toJsonString(createNativeResponse(3000, 2250, Arrays.asList(), Arrays.asList()));
         String cacheId1 = getCacheIdRandom();
         String cacheId2 = getCacheIdRandom();
+        String cacheId3 = getCacheIdRandom();
 
         JSONObject responseJson = doCustomVastAuctionRequestWithMultiImps(
                 GvastMultiImpAuctionTestParam.builder()
-                        .responseType("gvast")
+                        .impId("imp_id_1")
+                        .responseType("vast")
                         .improvePlacementId(2022091301)
                         .improveAdm(vastXml1)
                         .improvePrice("1.12")
                         .improveCacheId(cacheId1)
                         .build(),
                 GvastMultiImpAuctionTestParam.builder()
-                        .responseType("waterfall")
+                        .impId("imp_id_2")
+                        .responseType("gvast")
                         .improvePlacementId(2022091302)
                         .improveAdm(vastXml2)
                         .improvePrice("1.23")
                         .improveCacheId(cacheId2)
+                        .build(),
+                GvastMultiImpAuctionTestParam.builder()
+                        .impId("imp_id_3")
+                        .responseType("waterfall")
+                        .improvePlacementId(2022091303)
+                        .improveAdm(vastXml3)
+                        .improvePrice("1.34")
+                        .improveCacheId(cacheId3)
+                        .build(),
+                GvastMultiImpAuctionTestParam.builder()
+                        .impId("imp_id_4")
+                        .improvePlacementId(2022091304)
+                        .improveAdm(bannerAd)
+                        .improvePrice("1.45")
+                        .build(),
+                GvastMultiImpAuctionTestParam.builder()
+                        .impId("imp_id_5")
+                        .nativeRequest(createNativeRequest("1.2", 90, 128, 128, 120))
+                        .improvePlacementId(2022091305)
+                        .improveAdm(nativeAd)
+                        .improvePrice("1.56")
                         .build()
         );
 
-        // 1st imp's ad. responseType=gvast
+        assertBidCount(responseJson, 1, 5);
+        assertBidIdExists(responseJson, 0, 0);
+        assertBidIdExists(responseJson, 0, 1);
+        assertBidIdExists(responseJson, 0, 2);
+        assertBidIdExists(responseJson, 0, 3);
+        assertBidIdExists(responseJson, 0, 4);
+        assertBidImpId(responseJson, 0, 0, "imp_id_1");
+        assertBidImpId(responseJson, 0, 1, "imp_id_2");
+        assertBidImpId(responseJson, 0, 2, "imp_id_3");
+        assertBidImpId(responseJson, 0, 3, "imp_id_4");
+        assertBidImpId(responseJson, 0, 4, "imp_id_5");
+        assertBidPrice(responseJson, 0, 0, 1.12);
+        assertBidPrice(responseJson, 0, 1, 0.0);
+        assertBidPrice(responseJson, 0, 2, 0.0);
+        assertBidPrice(responseJson, 0, 3, 1.45);
+        assertBidPrice(responseJson, 0, 4, 1.56);
+        assertSeat(responseJson, 0, "improvedigital");
+
+        // 1st imp's ad. responseType=vast
         String adm1 = getAdm(responseJson, 0, 0);
-        assertGamUrlWithImprovedigitalAsSingleBidder(
-                getVastTagUri(adm1, "0"), cacheId1, "2022091301", "1.12"
-        );
+        assertBidExtPrebidType(responseJson, 0, 0, "video");
+        String mediaUrl = XPathFactory.newInstance().newXPath()
+                .compile("/VAST/Ad[@id='ad_1']/InLine/Creatives"
+                        + "/Creative[@AdID='ad_1']/Linear/MediaFiles/MediaFile[1]")
+                .evaluate(new InputSource(new StringReader(adm1)));
+        assertThat(mediaUrl.trim()).isEqualTo("https://media.pbs.improvedigital.com/ad_1.mp4");
         assertCachedContentFromCacheId(cacheId1, getVastXmlToCache(
                 vastXml1, "improvedigital", "1.12", 2022091301
         ));
-        assertSSPSyncPixels(adm1, "0");
-        assertNoCreative(adm1, "0");
-        assertNoExtensions(adm1, "0");
 
-        // 2nd imp's ad. responseType=waterfall
+        // 2nd imp's ad. responseType=gvast
         String adm2 = getAdm(responseJson, 0, 1);
-        assertThat(getVastTagUri(adm2, "0").trim()).isEqualTo(IT_TEST_CACHE_URL + "?uuid=" + cacheId2);
+        assertGamUrlWithImprovedigitalAsSingleBidder(
+                getVastTagUri(adm2, "0"), cacheId2, "2022091302", "1.23"
+        );
         assertCachedContentFromCacheId(cacheId2, getVastXmlToCache(
                 vastXml2, "improvedigital", "1.23", 2022091302
         ));
         assertSSPSyncPixels(adm2, "0");
         assertNoCreative(adm2, "0");
         assertNoExtensions(adm2, "0");
+
+        // 3rd imp's ad. responseType=waterfall
+        String adm3 = getAdm(responseJson, 0, 2);
+        assertThat(getVastTagUri(adm3, "0").trim()).isEqualTo(IT_TEST_CACHE_URL + "?uuid=" + cacheId3);
+        assertCachedContentFromCacheId(cacheId3, getVastXmlToCache(
+                vastXml3, "improvedigital", "1.34", 2022091303
+        ));
+        assertSSPSyncPixels(adm3, "0");
+        assertNoCreative(adm3, "0");
+        assertNoExtensions(adm3, "0");
+
+        // 4th imp's ad. <img />
+        String adm4 = getAdm(responseJson, 0, 3);
+        assertThat(adm4).startsWith(bannerAd);
+
+        // 5th imp's ad. {{"assets":[{"id":1...
+        String adm5 = getAdm(responseJson, 0, 4);
+        assertThat(adm5).isEqualTo(nativeAd);
     }
 
     @Test
@@ -1584,70 +1649,65 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
                 .willReturn(aResponse()
                         .withTransformers("it-test-bid-response-by-impid")
-                        .withTransformerParameters(Map.of(
-                                "imp_id_1", getSSPBidResponse(
-                                        "improvedigital", uniqueId, "USD", params[0].toBidResponseTestData("imp_id_1")
-                                ),
-                                "imp_id_2", getSSPBidResponse(
-                                        "improvedigital", uniqueId, "USD", params[1].toBidResponseTestData("imp_id_2")
-                                )
-                        )))
+                        .withTransformerParameters(Arrays.stream(params)
+                                .collect(Collectors.toMap(
+                                        p -> p.impId,
+                                        p -> getSSPBidResponse(
+                                                "improvedigital", uniqueId, "USD", p.toBidResponseTestData()
+                                        ))))
+                )
         );
 
         WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/cache"))
                 .withRequestBody(new BidCacheRequestPattern(createCacheRequest(
                         "request_id_" + uniqueId,
-                        params[0].toVastXmlToCache("improvedigital")
-                                .replace("\"", "\\\""),
-                        params[1].toVastXmlToCache("improvedigital")
-                                .replace("\"", "\\\"")
+                        Arrays.stream(params)
+                                .filter(p -> StringUtils.isNotEmpty(p.improveCacheId))
+                                .map(p -> p.toVastXmlToCache("improvedigital")
+                                        .replace("\"", "\\\""))
+                                .collect(Collectors.toList())
                 )))
                 .willReturn(aResponse()
                         .withTransformers("it-test-cache-set-by-content")
-                        .withTransformerParameter(params[0].toVastXmlToCache("improvedigital"), params[0].improveCacheId)
-                        .withTransformerParameter(params[1].toVastXmlToCache("improvedigital"), params[1].improveCacheId)
+                        .withTransformerParameters(Arrays.stream(params)
+                                .filter(p -> StringUtils.isNotEmpty(p.improveCacheId))
+                                .collect(Collectors.toMap(
+                                        p -> p.toVastXmlToCache("improvedigital"),
+                                        p -> p.improveCacheId)))
                 )
         );
 
         WIRE_MOCK_RULE.stubFor(get(urlPathEqualTo("/cache"))
                 .willReturn(aResponse()
                         .withTransformers("it-test-cache-get-by-uuid")
-                        .withTransformerParameter(params[0].improveCacheId, params[0].toVastXmlToCache("improvedigital"))
-                        .withTransformerParameter(params[1].improveCacheId, params[1].toVastXmlToCache("improvedigital")))
+                        .withTransformerParameters(Arrays.stream(params)
+                                .filter(p -> StringUtils.isNotEmpty(p.improveCacheId))
+                                .collect(Collectors.toMap(
+                                        p -> p.improveCacheId,
+                                        p -> p.toVastXmlToCache("improvedigital"))))
+                )
         );
 
         Response response = specWithPBSHeader(18080)
                 .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
                         .currency("USD")
-                        .imps(Arrays.asList(
-                                AuctionBidRequestImpTestData.builder()
+                        .imps(Arrays.stream(params)
+                                .map(p -> AuctionBidRequestImpTestData.builder()
                                         .impData(SingleImpTestData.builder()
-                                                .id("imp_id_1")
-                                                .videoData(VideoTestParam.getDefault())
+                                                .id(p.impId)
+                                                .bannerData(p.toBannerTestData())
+                                                .videoData(p.toVideoTestData())
+                                                .nativeData(p.toNativeTestData())
                                                 .build())
-                                        .impExt(params[0].toAuctionBidRequestImpExt())
-                                        .build(),
-                                AuctionBidRequestImpTestData.builder()
-                                        .impData(SingleImpTestData.builder()
-                                                .id("imp_id_2")
-                                                .videoData(VideoTestParam.getDefault())
-                                                .build())
-                                        .impExt(params[1].toAuctionBidRequestImpExt())
+                                        .impExt(p.toAuctionBidRequestImpExt())
                                         .build()
-                        ))
+                                )
+                                .collect(Collectors.toList()))
                         .build()
                 ))
                 .post(Endpoint.openrtb2_auction.value());
 
         JSONObject responseJson = new JSONObject(response.asString());
-        assertBidCount(responseJson, 1, 2);
-        assertBidIdExists(responseJson, 0, 0);
-        assertBidIdExists(responseJson, 0, 1);
-        assertBidImpId(responseJson, 0, 0, "imp_id_1");
-        assertBidImpId(responseJson, 0, 1, "imp_id_2");
-        assertBidPrice(responseJson, 0, 0, 0.0);
-        assertBidPrice(responseJson, 0, 1, 0.0);
-        assertSeat(responseJson, 0, "improvedigital");
         assertCurrency(responseJson, "USD");
         return responseJson;
     }
@@ -1954,17 +2014,13 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
      */
     @Builder(toBuilder = true)
     public static class GvastMultiImpAuctionTestParam {
+        String impId;
         String responseType;
+        Request nativeRequest;
         int improvePlacementId;
         String improveAdm;
         String improvePrice;
         String improveCacheId;
-
-        SSPBidRequestImpExt toSSPBidRequestImpExt() {
-            return new SSPBidRequestImpExt()
-                    .putBidder()
-                    .putBidderKeyValue("placementId", improvePlacementId);
-        }
 
         AuctionBidRequestImpExt toAuctionBidRequestImpExt() {
             return new AuctionBidRequestImpExt()
@@ -1974,7 +2030,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                     .putBidderKeyValue("improvedigital", "placementId", improvePlacementId);
         }
 
-        BidResponseTestData toBidResponseTestData(String impId) {
+        BidResponseTestData toBidResponseTestData() {
             return BidResponseTestData.builder()
                     .impId(impId)
                     .price(Double.parseDouble(improvePrice))
@@ -1988,6 +2044,19 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
             );
         }
 
+        public BannerTestParam toBannerTestData() {
+            return !StringUtils.containsIgnoreCase(improveAdm, "<img") ? null : BannerTestParam.getDefault();
+        }
+
+        public VideoTestParam toVideoTestData() {
+            return !StringUtils.containsIgnoreCase(improveAdm, "<vast") ? null : VideoTestParam.getDefault();
+        }
+
+        public NativeTestParam toNativeTestData() {
+            return !StringUtils.startsWith(improveAdm, "{") ? null : NativeTestParam.builder()
+                    .request(nativeRequest)
+                    .build();
+        }
     }
 
     /**

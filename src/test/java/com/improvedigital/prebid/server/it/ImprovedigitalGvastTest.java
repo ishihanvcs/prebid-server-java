@@ -997,9 +997,8 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
     @Test
     public void testCustomVastResponseWithMultiFormatToMultipleBidders() throws Exception {
-        String cacheId = getCacheIdRandom();
         JSONObject responseJson = doCustomVastAuctionRequestWithMultiFormat(
-                1.12, getVastXmlInline("ad_1", false), cacheId,
+                1.12, getVastXmlInline("ad_1", false),
                 1.23, getVastXmlInline("ad_2", true),
                 1.34, toJsonString(createNativeResponse(300, 250, List.of(), List.of())),
                 1.45, "<img src='banner-1.png' />"
@@ -1560,7 +1559,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     private JSONObject doCustomVastAuctionRequestWithMultiFormat(
-            double gvastPrice, String gvastAdm, String gvastCacheId,
+            double gvastPrice, String gvastAdm,
             double videoPrice, String videoAdm,
             double nativePrice, String nativeAdm,
             double bannerPrice, String bannerAdm
@@ -1607,6 +1606,8 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 )))
         );
 
+        String gvastCacheId = getCacheIdRandom();
+
         WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/cache"))
                 .withRequestBody(equalToJson(createCacheRequest(
                         "request_id_" + uniqueId,
@@ -1649,7 +1650,6 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 ))
                 .post(Endpoint.openrtb2_auction.value());
 
-        System.out.println("=======> " + response.asString());
         JSONObject responseJson = new JSONObject(response.asString());
         assertBidCountIsOne(responseJson); /* As we are sending some bids from SSP, we will definitely get 1 bid. */
         assertBidIdExists(responseJson, 0, 0);

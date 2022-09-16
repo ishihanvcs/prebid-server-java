@@ -45,12 +45,7 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
     public Future<InvocationResult<AuctionRequestPayload>> call(
             AuctionRequestPayload auctionRequestPayload, AuctionInvocationContext invocationContext) {
 
-        ImprovedigitalPbsImpExt improvedigitalPbsImpExt = jsonUtils.getImprovedigitalPbsImpExt(
-                auctionRequestPayload.bidRequest().getImp().get(0)
-        );
-
-        final ExtSourceSchain newSchain = makeNewSupplyChain(auctionRequestPayload, improvedigitalPbsImpExt);
-
+        final ExtSourceSchain newSchain = makeNewSupplyChain(auctionRequestPayload);
         if (newSchain == null) {
             return Future.succeededFuture(InvocationResultImpl.succeeded(
                     payload -> auctionRequestPayload, invocationContext.moduleContext()
@@ -69,8 +64,14 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         ));
     }
 
-    private ExtSourceSchain makeNewSupplyChain(
-            AuctionRequestPayload auctionRequestPayload, ImprovedigitalPbsImpExt improvedigitalPbsImpExt) {
+    private ExtSourceSchain makeNewSupplyChain(AuctionRequestPayload auctionRequestPayload) {
+        ImprovedigitalPbsImpExt improvedigitalPbsImpExt = jsonUtils.getImprovedigitalPbsImpExt(
+                auctionRequestPayload.bidRequest().getImp().get(0)
+        );
+
+        if (improvedigitalPbsImpExt == null) {
+            return null;
+        }
 
         List<String> schainNodesToAdd = improvedigitalPbsImpExt.getSchainNodes() == null
                 ? List.of(DEFAULT_SCHAIN_DOMAIN) : improvedigitalPbsImpExt.getSchainNodes();

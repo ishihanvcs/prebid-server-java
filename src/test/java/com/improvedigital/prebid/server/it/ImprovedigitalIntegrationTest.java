@@ -58,7 +58,6 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCache;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidChannel;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidPbs;
-import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidSchainSchainNode;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidServer;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestTargeting;
 import org.prebid.server.proto.openrtb.ext.request.ExtSite;
@@ -197,16 +196,6 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
             AuctionBidRequestTestData bidRequestData,
             Function<BidRequest, BidRequest> bidReqModifier
     ) {
-        // We do not want version, complete when no nodes are there.
-        final ExtSource reqSourceExt = CollectionUtils.isEmpty(bidRequestData.schainNodes) ? null : ExtSource.of(
-                ExtSourceSchain.of(
-                        bidRequestData.schainVer,
-                        bidRequestData.schainComplete,
-                        bidRequestData.schainNodes,
-                        null
-                )
-        );
-
         BidRequest bidRequest = BidRequest.builder()
                 .id("request_id_" + uniqueId)
                 .imp(bidRequestData.imps.stream()
@@ -247,7 +236,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                         .build())
                 .source(Source.builder()
                         .tid("source_tid_" + uniqueId)
-                        .ext(reqSourceExt)
+                        .ext(!bidRequestData.hasSchainNodes() ? null : ExtSource.of(bidRequestData.schain))
                         .build())
                 .test(bidRequestData.test)
                 .build();
@@ -268,18 +257,6 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
             SSPBidRequestTestData bidRequestData,
             Function<BidRequest, BidRequest> bidReqModifier
     ) {
-        // We do not want version, complete when no nodes are there.
-        final ExtSource reqSourceExt = CollectionUtils.isEmpty(bidRequestData.schainNodes) ? null : ExtSource.of(
-                ExtSourceSchain.of(
-                        bidRequestData.schainVer,
-                        bidRequestData.schainComplete,
-                        bidRequestData.schainNodes,
-                        null
-                )
-        );
-
-        final AtomicInteger impIndex = new AtomicInteger(0);
-
         BidRequest bidRequest = BidRequest.builder()
                 .id("request_id_" + uniqueId)
                 .imp(List.of(Imp.builder()
@@ -339,7 +316,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                         .build()))
                 .source(Source.builder()
                         .tid("source_tid_" + uniqueId)
-                        .ext(reqSourceExt)
+                        .ext(!bidRequestData.hasSchainNodes() ? null : ExtSource.of(bidRequestData.schain))
                         .build())
                 .build();
 
@@ -382,19 +359,6 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                 .crid("crid_" + bidIndex + "_" + d.impId)
                 .ext(d.bidExt == null ? null : d.bidExt.get())
                 .build();
-    }
-
-    protected String toJsonString(Object obj) {
-        return toJsonString(mapper, obj);
-    }
-
-    protected String toJsonString(ObjectMapper mapper, Object obj) {
-        try {
-            return mapper.writeValueAsString(obj);
-        } catch (JsonProcessingException e) {
-            fail("Not expecting any exception while converting to json string but got: " + e.getMessage());
-            return null;
-        }
     }
 
     protected Request createNativeRequest(String nativeVersion, int titleLen, int wMin, int hMin, int dataLen) {
@@ -467,6 +431,19 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                 .build();
     }
 
+    protected String toJsonString(Object obj) {
+        return toJsonString(mapper, obj);
+    }
+
+    protected String toJsonString(ObjectMapper mapper, Object obj) {
+        try {
+            return mapper.writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            fail("Not expecting any exception while converting to json string but got: " + e.getMessage());
+            return null;
+        }
+    }
+
     @Builder(toBuilder = true)
     public static class AuctionBidRequestTestData {
         String currency;
@@ -477,13 +454,14 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
 
         String gdprConsent;
 
-        String schainVer;
-
-        Integer schainComplete;
-
-        List<ExtRequestPrebidSchainSchainNode> schainNodes;
+        ExtSourceSchain schain;
 
         Integer test;
+
+        @JsonIgnore
+        public boolean hasSchainNodes() {
+            return schain != null && CollectionUtils.isNotEmpty(schain.getNodes());
+        }
     }
 
     @Builder(toBuilder = true)
@@ -504,11 +482,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
 
         String gdprConsent;
 
-        String schainVer;
-
-        Integer schainComplete;
-
-        List<ExtRequestPrebidSchainSchainNode> schainNodes;
+        ExtSourceSchain schain;
 
         Boolean useDefaultBidfloor;
 
@@ -521,6 +495,11 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
         @JsonIgnore
         public boolean hasDefaultBidfloor() {
             return useDefaultBidfloor == null || useDefaultBidfloor.booleanValue();
+        }
+
+        @JsonIgnore
+        public boolean hasSchainNodes() {
+            return schain != null && CollectionUtils.isNotEmpty(schain.getNodes());
         }
     }
 
@@ -560,6 +539,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
         int h;
         List<String> mimes;
 
+        @JsonIgnore
         public static BannerTestParam getDefault() {
             return BannerTestParam.builder()
                     .w(300)
@@ -585,6 +565,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
             return protocols;
         }
 
+        @JsonIgnore
         public static VideoTestParam getDefault() {
             return VideoTestParam.builder()
                     .w(640)

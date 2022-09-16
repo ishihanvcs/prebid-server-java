@@ -9,10 +9,10 @@ import org.junit.runner.RunWith;
 import org.prebid.server.model.Endpoint;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidChannel;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidSchainSchainNode;
+import org.prebid.server.proto.openrtb.ext.request.ExtSourceSchain;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -250,9 +250,9 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                                 .h(250)
                                                 .build())
                                         .build())
-                                .schainVer("1.0")
-                                .schainComplete(1)
-                                .schainNodes(expectedSchainNodes)
+                                .schain(ExtSourceSchain.of(
+                                        "1.0", 1, expectedSchainNodes, null
+                                ))
                                 .channel(ExtRequestPrebidChannel.of("web"))
                                 .build()
                 )))
@@ -276,9 +276,9 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                         .id("imp_id_1")
                                         .build())
                                 .build()))
-                        .schainVer("1.0")
-                        .schainComplete(1)
-                        .schainNodes(existingSchainNodes)
+                        .schain(ExtSourceSchain.of(
+                                "1.0", 1, existingSchainNodes, null
+                        ))
                         .build()
                 ))
                 .post(Endpoint.openrtb2_auction.value());
@@ -324,18 +324,18 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                                 .h(250)
                                                 .build())
                                         .build())
-                                .schainVer("1.0")
-                                .schainComplete(1)
-                                .schainNodes(List.of(
-                                        ExtRequestPrebidSchainSchainNode.of(
-                                                "headerlift.com",
-                                                "hl-2022072201",
-                                                1,
-                                                "request_id_" + param.auctionRequestId,
-                                                null,
-                                                null,
-                                                null
-                                        )
+                                .schain(ExtSourceSchain.of(
+                                        "1.0", 1, List.of(
+                                                ExtRequestPrebidSchainSchainNode.of(
+                                                        "headerlift.com",
+                                                        "hl-2022072201",
+                                                        1,
+                                                        "request_id_" + param.auctionRequestId,
+                                                        null,
+                                                        null,
+                                                        null
+                                                )
+                                        ), null
                                 ))
                                 .channel(ExtRequestPrebidChannel.of("web"))
                                 .build()
@@ -370,18 +370,18 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                                 .h(250)
                                                 .build())
                                         .build())
-                                .schainVer("1.0")
-                                .schainComplete(1)
-                                .schainNodes(List.of(
-                                        ExtRequestPrebidSchainSchainNode.of(
-                                                "headerlift.com",
-                                                "hl-2022072201",
-                                                1,
-                                                "request_id_" + param.auctionRequestId,
-                                                null,
-                                                null,
-                                                null
-                                        )
+                                .schain(ExtSourceSchain.of(
+                                        "1.0", 1, List.of(
+                                                ExtRequestPrebidSchainSchainNode.of(
+                                                        "headerlift.com",
+                                                        "hl-2022072201",
+                                                        1,
+                                                        "request_id_" + param.auctionRequestId,
+                                                        null,
+                                                        null,
+                                                        null
+                                                )
+                                        ), null
                                 ))
                                 .channel(ExtRequestPrebidChannel.of("web"))
                                 .build()

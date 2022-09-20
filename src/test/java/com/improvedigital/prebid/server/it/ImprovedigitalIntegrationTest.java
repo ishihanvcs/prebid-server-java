@@ -48,7 +48,6 @@ import org.json.JSONObject;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.prebid.server.VertxTest;
-import org.prebid.server.bidder.improvedigital.proto.ImprovedigitalBidExt;
 import org.prebid.server.bidder.improvedigital.proto.ImprovedigitalBidExtImprovedigital;
 import org.prebid.server.proto.openrtb.ext.request.ExtImp;
 import org.prebid.server.proto.openrtb.ext.request.ExtImpPrebid;
@@ -361,6 +360,10 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                 .build();
     }
 
+    protected String toMoneyFormat(double value) {
+        return String.format("%.2f", value);
+    }
+
     protected Request createNativeRequest(String nativeVersion, int titleLen, int wMin, int hMin, int dataLen) {
         return Request.builder()
                 .context(1)
@@ -442,6 +445,14 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
             fail("Not expecting any exception while converting to json string but got: " + e.getMessage());
             return null;
         }
+    }
+
+    protected String getCustomTrackerUrl(String bidderName, String cpmInUsd, String pid) {
+        return "https://it.pbs.com/ssp_bids?bidder=" + bidderName + "&cpm=" + cpmInUsd + "&pid=" + pid;
+    }
+
+    protected String getCustomTrackerPixel(String bidderName, String cpmInUsd, String pid) {
+        return "<img src=\"" + getCustomTrackerUrl(bidderName, cpmInUsd, pid) + "\">";
     }
 
     @Builder(toBuilder = true)
@@ -767,26 +778,35 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
         private ObjectNode bidExt;
 
         public BidResponseBidExt() {
-            this.bidExt = BID_REQUEST_MAPPER.valueToTree(
-                    ImprovedigitalBidExt.of(ImprovedigitalBidExtImprovedigital.builder().build())
-            );
+            this.bidExt = BID_REQUEST_MAPPER.getNodeFactory().objectNode();
         }
 
         public ObjectNode get() {
             return bidExt;
         }
 
-        public BidResponseBidExt putBuyingType(String buyingType) {
-            if (buyingType != null) {
-                ((ObjectNode) bidExt.at("/improvedigital")).put("buying_type", buyingType);
-            }
+        public BidResponseBidExt putImprovedigitalBidExt(String buyingType, Integer lineItemId) {
+            bidExt.putIfAbsent("improvedigital", BID_REQUEST_MAPPER.valueToTree(
+                    ImprovedigitalBidExtImprovedigital.builder()
+                            .buyingType(buyingType)
+                            .lineItemId(lineItemId)
+                            .build()
+            ));
             return this;
         }
 
-        public BidResponseBidExt putLineItemId(Integer lineItemId) {
-            if (lineItemId != null) {
-                ((ObjectNode) bidExt.at("/improvedigital")).put("line_item_id", lineItemId);
-            }
+        public BidResponseBidExt putSmarthubBidExt(String mediaType) {
+            bidExt.put("mediaType", mediaType);
+            return this;
+        }
+
+        public BidResponseBidExt putSalunamediaBidExt(String mediaType) {
+            bidExt.put("mediaType", mediaType);
+            return this;
+        }
+
+        public BidResponseBidExt putEvolutionBidExt(String mediaType) {
+            bidExt.put("mediaType", mediaType);
             return this;
         }
     }

@@ -4,7 +4,6 @@ import com.iab.openrtb.response.EventTracker;
 import io.restassured.response.Response;
 import lombok.Builder;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -55,7 +54,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         String adm = getAdm(responseJson, 0, 0);
 
         assertThat(adm).isEqualTo("<img src='banner.png'/>"
-                + "<img src=\"" + getCustomTrackerUrl("1.25", "13245") + "\">"
+                + getCustomTrackerPixel("improvedigital", "1.25", "13245")
         );
     }
 
@@ -74,7 +73,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
         assertThat(adm).isEqualTo("<body>"
                 + "<img src='banner.png'/>"
-                + "<img src=\"" + getCustomTrackerUrl("1.25", "13245") + "\">"
+                + getCustomTrackerPixel("improvedigital", "1.25", "13245")
                 + "</body>"
         );
     }
@@ -94,7 +93,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
         assertThat(adm).isEqualTo("<   body   >"
                 + "<img src='banner.png'/>"
-                + "<img src=\"" + getCustomTrackerUrl("1.25", "13245") + "\">"
+                + getCustomTrackerPixel("improvedigital", "1.25", "13245")
                 + "</body>"
         );
     }
@@ -115,7 +114,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         assertThat(adm).isEqualTo("<html>"
                 + "< body >"
                 + "<img src='banner.png'/>"
-                + "<img src=\"" + getCustomTrackerUrl("1.25", "13245") + "\">"
+                + getCustomTrackerPixel("improvedigital", "1.25", "13245")
                 + "</body>"
                 + "</html>"
         );
@@ -144,7 +143,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         String trackingImpPixel = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='20220406']/InLine/Impression[2]")
                 .evaluate(new InputSource(new StringReader(adm)));
-        assertThat(trackingImpPixel).isEqualTo(getCustomTrackerUrl("1.25", "13245"));
+        assertThat(trackingImpPixel).isEqualTo(getCustomTrackerUrl("improvedigital", "1.25", "13245"));
     }
 
     @Test
@@ -170,7 +169,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         String trackingImpPixel = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='20220406-1']/InLine/Impression[2]")
                 .evaluate(new InputSource(new StringReader(adm)));
-        assertThat(trackingImpPixel).isEqualTo(getCustomTrackerUrl("1.25", "13245"));
+        assertThat(trackingImpPixel).isEqualTo(getCustomTrackerUrl("improvedigital", "1.25", "13245"));
 
         // Ad-2: 1st pixel is what we have on creative.
         String existingImpPixel2 = XPathFactory.newInstance().newXPath()
@@ -182,7 +181,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         String trackingImpPixel2 = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='20220406-2']/InLine/Impression[2]")
                 .evaluate(new InputSource(new StringReader(adm)));
-        assertThat(trackingImpPixel2).isEqualTo(getCustomTrackerUrl("1.25", "13245"));
+        assertThat(trackingImpPixel2).isEqualTo(getCustomTrackerUrl("improvedigital", "1.25", "13245"));
     }
 
     @Test
@@ -202,7 +201,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         String trackingImpPixel = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='20220406']/InLine/Impression[1]")
                 .evaluate(new InputSource(new StringReader(adm)));
-        assertThat(trackingImpPixel).isEqualTo(getCustomTrackerUrl("1.25", "13245"));
+        assertThat(trackingImpPixel).isEqualTo(getCustomTrackerUrl("improvedigital", "1.25", "13245"));
     }
 
     @Test
@@ -228,7 +227,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         String trackingImpPixel = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='20220406']/Wrapper/Impression[2]")
                 .evaluate(new InputSource(new StringReader(adm)));
-        assertThat(trackingImpPixel).isEqualTo(getCustomTrackerUrl("1.25", "13245"));
+        assertThat(trackingImpPixel).isEqualTo(getCustomTrackerUrl("improvedigital", "1.25", "13245"));
     }
 
     @Test
@@ -254,7 +253,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         String trackingImpPixel = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='20220406-1']/Wrapper/Impression[2]")
                 .evaluate(new InputSource(new StringReader(adm)));
-        assertThat(trackingImpPixel).isEqualTo(getCustomTrackerUrl("1.25", "13245"));
+        assertThat(trackingImpPixel).isEqualTo(getCustomTrackerUrl("improvedigital", "1.25", "13245"));
 
         // Ad-2: 1st pixel is what we have on creative.
         String existingImpPixel2 = XPathFactory.newInstance().newXPath()
@@ -266,7 +265,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         String trackingImpPixel2 = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='20220406-2']/Wrapper/Impression[2]")
                 .evaluate(new InputSource(new StringReader(adm)));
-        assertThat(trackingImpPixel2).isEqualTo(getCustomTrackerUrl("1.25", "13245"));
+        assertThat(trackingImpPixel2).isEqualTo(getCustomTrackerUrl("improvedigital", "1.25", "13245"));
     }
 
     @Test
@@ -286,7 +285,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         String trackingImpPixel = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='20220406']/Wrapper/Impression[1]")
                 .evaluate(new InputSource(new StringReader(adm)));
-        assertThat(trackingImpPixel).isEqualTo(getCustomTrackerUrl("1.25", "13245"));
+        assertThat(trackingImpPixel).isEqualTo(getCustomTrackerUrl("improvedigital", "1.25", "13245"));
     }
 
     @Test
@@ -315,13 +314,13 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         String trackingImpPixel1 = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='20220601_1']/Wrapper/Impression[1]")
                 .evaluate(new InputSource(new StringReader(adm1)));
-        assertThat(trackingImpPixel1).isEqualTo(getCustomTrackerUrl("1.25", "12345"));
+        assertThat(trackingImpPixel1).isEqualTo(getCustomTrackerUrl("improvedigital", "1.25", "12345"));
 
         // 2nd imp's tracker.
         String trackingImpPixel2 = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='20220601_2']/InLine/Impression[1]")
                 .evaluate(new InputSource(new StringReader(adm2)));
-        assertThat(trackingImpPixel2).isEqualTo(getCustomTrackerUrl("2.15", "54321"));
+        assertThat(trackingImpPixel2).isEqualTo(getCustomTrackerUrl("improvedigital", "2.15", "54321"));
     }
 
     @Test
@@ -686,7 +685,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         String trackingImpPixel = XPathFactory.newInstance().newXPath()
                 .compile("/VAST/Ad[@id='ad_1']/InLine/Impression[2]")
                 .evaluate(new InputSource(new StringReader(adm)));
-        assertThat(trackingImpPixel).isEqualTo(getCustomTrackerUrl("2.15", "20220830"));
+        assertThat(trackingImpPixel).isEqualTo(getCustomTrackerUrl("improvedigital", "2.15", "20220830"));
     }
 
     @Test
@@ -722,7 +721,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
         String adm = getAdm(responseJson, 0, 0);
         assertThat(adm).isEqualTo("<img src='banner-1.png' />"
-                + "<img src=\"" + getCustomTrackerUrl("1.45", "20220830") + "\">"
+                + getCustomTrackerUrl("improvedigital", "1.45", "20220830")
         );
     }
 
@@ -937,18 +936,13 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         assertThat(customTrackerEvent.getInt("event")).isEqualTo(1);
         assertThat(customTrackerEvent.getInt("method")).isEqualTo(1);
         assertThat(customTrackerEvent.getString("url"))
-                .isEqualTo(getCustomTrackerUrl(cpmInUsd, pid));
+                .isEqualTo(getCustomTrackerUrl("improvedigital", cpmInUsd, pid));
     }
 
     private void assertThatCustomTrackerExistsInImpTrackers(String customTrackerUrl, String cpmInUsd, String pid) {
         assertThat(customTrackerUrl).isNotNull();
         assertThat(customTrackerUrl)
-                .isEqualTo(getCustomTrackerUrl(cpmInUsd, pid));
-    }
-
-    @NotNull
-    private String getCustomTrackerUrl(String cpmInUsd, String pid) {
-        return "https://it.pbs.com/ssp_bids?bidder=improvedigital&cpm=" + cpmInUsd + "&pid=" + pid;
+                .isEqualTo(getCustomTrackerUrl("improvedigital", cpmInUsd, pid));
     }
 
     @Nullable

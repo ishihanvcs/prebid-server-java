@@ -5,6 +5,12 @@ const path = require('path')
 const fs = require('fs')
 const yaml = require('js-yaml')
 const colors = require('colors')
+const _ = require('lodash')
+
+const bidderConfigDir = path.resolve(
+  __dirname,
+  '../../src/main/resources/bidder-config',
+)
 
 const bidderParamsDir = path.resolve(
   __dirname,
@@ -27,34 +33,99 @@ const requestSchemaOutputPath = path.resolve(outputPath, 'request.json')
 
 const ansibleTagsRe = /^\s*\{%\s*.+\s*%\}\s*$/gm
 
-function getEnabledBidders() {
-  const content = fs.readFileSync(applicationConfigPath, 'utf8').replace(ansibleTagsRe, '');
+function readBidderConfig(configPath, contentModifier) {
+  let content = fs.readFileSync(configPath, 'utf8');
+  if (_.isFunction(contentModifier)) {
+    content = contentModifier(content);
+  }
   const config = yaml.load(content)
-  return Object.keys(config.adapters)
+  return config.adapters
+}
+
+function resolveSupportedBidders() {
+  const files = fs.readdirSync(bidderConfigDir);
+  const aliasToBidderMap = {};
+  const supportedBidders = {};
+  files.forEach(file => {
+    const adapters = readBidderConfig(path.resolve(bidderConfigDir, file));
+    if (adapters) {
+      _.each(adapters, (config, bidderName) => {
+        supportedBidders[bidderName] = config;
+        if (config.aliases) {
+          Object.keys(config.aliases).forEach(alias => {
+            aliasToBidderMap[alias] = bidderName;
+          });
+        }
+      })
+    }
+  })
+  return { supportedBidders, aliasToBidderMap }
+}
+
+const { supportedBidders, aliasToBidderMap } = resolveSupportedBidders();
+
+function getEnabledBidders() {
+  const adapters = readBidderConfig(applicationConfigPath, content => content.replace(ansibleTagsRe, ''));
+  return Object.keys(adapters)
+}
+
+
+function resolveSchema(bidderOrAlias) {
+  const actualBidder = aliasToBidderMap[bidderOrAlias] ? aliasToBidderMap[bidderOrAlias] : bidderOrAlias;
+  const possibleNames = [actualBidder];
+
+  if (supportedBidders[actualBidder].usersync['cookie-family-name']) {
+    possibleNames.push(supportedBidders[actualBidder].usersync['cookie-family-name']);
+  }
+
+  if (actualBidder !== bidderOrAlias) {
+    possibleNames.push(bidderOrAlias);
+  }
+
+  for (let i = 0; i < possibleNames.length; i++) {
+    const schemaPath = path.resolve(bidderParamsDir, `${possibleNames[i]}.json`)
+    if (fs.existsSync(schemaPath)) {
+      try {
+        const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'))
+        delete schema.$schema
+        return schema;
+      } catch (e) {
+        console.log(`JSON could not be parsed for bidder: ${possibleNames[i].red}`)
+      }
+    }
+  }
+  return null;
 }
 
 async function run() {
   const enabledBidders = getEnabledBidders()
   const bidderRefs = {}
+  const bidderDefinitions = {}
   enabledBidders.forEach((bidder) => {
-    const schemaPath = path.resolve(bidderParamsDir, `${bidder}.json`)
-    if (fs.existsSync(schemaPath)) {
-      try {
-        const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'))
-        delete schema.$schema
-        bidderRefs[bidder] = schema
-        console.log(`Schema found for bidder: ${bidder.green}`)
-      } catch (e) {
-        console.log(`JSON could not be parsed for bidder: ${bidder.red}`)
+    const isAlias = !!aliasToBidderMap[bidder];
+    const actualBidder = isAlias ? aliasToBidderMap[bidder] : bidder;
+    const refName = `bidder_config_${actualBidder}`;
+    if (!bidderDefinitions[refName]) {
+      const schema = resolveSchema(bidder)
+      if (schema) {
+        bidderDefinitions[refName] = schema
+      } else {
+        console.log(`Bidder not supported by PBS: ${bidder.brightRed}`)
       }
-    } else {
-      console.log(`Bidder not supported by PBS: ${bidder.brightRed}`)
+    }
+
+    if (bidderDefinitions[refName]) {
+      bidderRefs[bidder] = {
+        "$ref": `#/definitions/${refName}`
+      };
+      console.log(`Schema found for bidder: ${bidder.green}`)
     }
   })
 
   const impSchema = JSON.parse(fs.readFileSync(impSchemaTplPath))
 
   impSchema.definitions.imp_ext_prebid_bidder.properties = bidderRefs
+  impSchema.definitions = _.extend(impSchema.definitions, bidderDefinitions)
 
   fs.writeFileSync(impSchemaOutputPath, JSON.stringify(impSchema, null, 2))
   console.log(`imp schema successfully updated with latest bidder params`.green)

@@ -55,16 +55,16 @@ adapters:
     enabled: true
   yieldlab:
     enabled: true
-#  adform:
-#    enabled: true
-#  verizonmedia:
-#    enabled: true
-#  emxdigital:
-#    enabled: true
+  adform:
+    enabled: true
+  verizonmedia:
+    enabled: true
+  emxdigital:
+    enabled: true
   eplanning:
     enabled: true
-#  ttx:
-#    enabled: true
+  ttx:
+    enabled: true
   gumgum:
     enabled: true
   between:

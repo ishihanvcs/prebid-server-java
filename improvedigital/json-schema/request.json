@@ -1927,1052 +1927,103 @@
       "minProperties": 1,
       "properties": {
         "adf": {
-          "title": "Adf Adapter Params",
-          "description": "A schema which validates params accepted by the adf adapter",
-          "type": "object",
-          "properties": {
-            "mid": {
-              "type": [
-                "integer",
-                "string"
-              ],
-              "pattern": "^\\d+$",
-              "description": "An ID which identifies the placement selling the impression"
-            },
-            "inv": {
-              "type": [
-                "integer"
-              ],
-              "description": "An ID which identifies the Adform inventory source id"
-            },
-            "mname": {
-              "type": [
-                "string"
-              ],
-              "description": "A Name which identifies the placement selling the impression"
-            },
-            "priceType": {
-              "type": [
-                "string"
-              ],
-              "description": "gross or net. Default is net.",
-              "pattern": "gross|net"
-            }
-          },
-          "anyOf": [
-            {
-              "required": [
-                "mid"
-              ]
-            },
-            {
-              "required": [
-                "inv",
-                "mname"
-              ]
-            }
-          ]
+          "$ref": "#/definitions/bidder_config_adf"
         },
         "adpone": {
-          "title": "Adpone Adapter Params",
-          "description": "A schema which validates params accepted by the adpone adapter",
-          "type": "object",
-          "properties": {
-            "placementId": {
-              "type": "string",
-              "description": "Placement Id"
-            }
-          },
-          "required": []
+          "$ref": "#/definitions/bidder_config_adpone"
         },
         "amx": {
-          "title": "AMX RTB Adapter Params",
-          "description": "A schema to validate params accepted by the AMX adapter",
-          "type": "object",
-          "properties": {
-            "tagId": {
-              "type": "string",
-              "description": "Set a tagId (overrides site.publisher.id, or app.publisher.id)"
-            },
-            "adUnitId": {
-              "type": "string",
-              "description": "Override imp.tagid value to provide a custom value in AMX ad unit ID reporting"
-            }
-          }
+          "$ref": "#/definitions/bidder_config_amx"
         },
         "appnexus": {
-          "title": "Appnexus Adapter Params",
-          "description": "A schema which validates params accepted by the AppNexus adapter",
-          "type": "object",
-          "properties": {
-            "placement_id": {
-              "type": "integer",
-              "description": "An ID which identifies this placement of the impression"
-            },
-            "placementId": {
-              "type": "integer",
-              "description": "Deprecated, use placement_id instead."
-            },
-            "inv_code": {
-              "type": "string",
-              "description": "A code identifying the inventory of this placement."
-            },
-            "invCode": {
-              "type": "string",
-              "description": "Deprecated, use inv_code instead."
-            },
-            "member": {
-              "type": "string",
-              "description": "An ID which identifies the member selling the impression."
-            },
-            "keywords": {
-              "type": "array",
-              "minItems": 1,
-              "items": {
-                "type": "object",
-                "description": "A key with one or more values associated with it. These are used in buy-side segment targeting.",
-                "properties": {
-                  "key": {
-                    "type": "string"
-                  },
-                  "value": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "required": [
-                  "key"
-                ]
-              }
-            },
-            "traffic_source_code": {
-              "type": "string",
-              "description": "Specifies the third-party source of this impression."
-            },
-            "trafficSourceCode": {
-              "type": "string",
-              "description": "Deprecated, use traffic_source_code instead."
-            },
-            "reserve": {
-              "type": "number",
-              "description": "The minimium acceptable bid, in CPM, using US Dollars"
-            },
-            "position": {
-              "type": "string",
-              "enum": [
-                "above",
-                "below"
-              ],
-              "description": "Specifies the ad unit as above or below the fold"
-            },
-            "use_pmt_rule": {
-              "type": "boolean",
-              "description": "Boolean to signal AppNexus to apply the relevant payment rule"
-            },
-            "generate_ad_pod_id": {
-              "type": "boolean",
-              "description": "Boolean to signal AppNexus to add ad pod id to each request"
-            },
-            "private_sizes": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "w": {
-                    "type": "integer"
-                  },
-                  "h": {
-                    "type": "integer"
-                  }
-                },
-                "required": [
-                  "w",
-                  "h"
-                ]
-              },
-              "description": "Private sizes (ex: [{\"w\": 300, \"h\": 250},{...}]), experimental, may not be supported."
-            }
-          },
-          "oneOf": [
-            {
-              "oneOf": [
-                {
-                  "required": [
-                    "placementId"
-                  ]
-                },
-                {
-                  "required": [
-                    "placement_id"
-                  ]
-                }
-              ]
-            },
-            {
-              "oneOf": [
-                {
-                  "required": [
-                    "invCode",
-                    "member"
-                  ]
-                },
-                {
-                  "required": [
-                    "inv_code",
-                    "member"
-                  ]
-                }
-              ]
-            }
-          ],
-          "not": {
-            "required": [
-              "placementId",
-              "invCode",
-              "member"
-            ]
-          }
+          "$ref": "#/definitions/bidder_config_appnexus"
         },
         "connectad": {
-          "title": "ConnectAd S2S dapter Params",
-          "description": "A schema which validates params accepted by the ConnectAd Adapter",
-          "type": "object",
-          "properties": {
-            "networkId": {
-              "type": "integer",
-              "description": "NetworkId"
-            },
-            "siteId": {
-              "type": "integer",
-              "description": "SiteId"
-            },
-            "bidfloor": {
-              "type": "number",
-              "description": "Requests Floorprice"
-            }
-          },
-          "required": [
-            "networkId",
-            "siteId"
-          ]
+          "$ref": "#/definitions/bidder_config_connectad"
         },
         "criteo": {
-          "title": "Criteo adapter params",
-          "description": "The schema to validate Criteo specific params accepted by Criteo adapter",
-          "type": "object",
-          "properties": {
-            "zoneid": {
-              "type": "integer",
-              "description": "Impression's zone ID.",
-              "minimum": 0
-            },
-            "zoneId": {
-              "type": "integer",
-              "description": "Impression's zone ID, preferred.",
-              "minimum": 0
-            },
-            "networkid": {
-              "type": "integer",
-              "description": "Impression's network ID.",
-              "minimum": 0
-            },
-            "networkId": {
-              "type": "integer",
-              "description": "Impression's network ID, preferred.",
-              "minimum": 0
-            }
-          },
-          "anyOf": [
-            {
-              "required": [
-                "zoneid"
-              ]
-            },
-            {
-              "required": [
-                "zoneId"
-              ]
-            },
-            {
-              "required": [
-                "networkid"
-              ]
-            },
-            {
-              "required": [
-                "networkId"
-              ]
-            }
-          ]
+          "$ref": "#/definitions/bidder_config_criteo"
         },
         "improvedigital": {
-          "title": "Improve Digital Adapter Params",
-          "description": "A schema which validates params accepted by Improve Digital adapter",
-          "type": "object",
-          "properties": {
-            "placementId": {
-              "type": "integer",
-              "minimum": 1,
-              "description": "An ID which identifies this placement of the impression"
-            },
-            "keyValues": {
-              "type": "object",
-              "description": "Contains one or more key-value pairings for key-value targeting"
-            },
-            "size": {
-              "type": "object",
-              "properties": {
-                "w": {
-                  "type": "integer"
-                },
-                "h": {
-                  "type": "integer"
-                }
-              },
-              "required": [
-                "w",
-                "h"
-              ],
-              "description": "Placement size"
-            }
-          },
-          "required": [
-            "placementId"
-          ]
+          "$ref": "#/definitions/bidder_config_improvedigital"
         },
         "ix": {
-          "title": "ix Adapter Params",
-          "description": "A schema which validates params accepted by the ix adapter",
-          "type": "object",
-          "properties": {
-            "siteId": {
-              "type": "string",
-              "description": "An ID which identifies the site selling the impression"
-            },
-            "size": {
-              "type": "array",
-              "items": {
-                "type": "integer"
-              },
-              "minItems": 2,
-              "maxItems": 2,
-              "description": "An array of two integer containing the dimension"
-            }
-          },
-          "oneOf": [
-            {
-              "required": [
-                "siteid"
-              ]
-            },
-            {
-              "required": [
-                "siteId"
-              ]
-            },
-            {
-              "required": [
-                "siteID"
-              ]
-            }
-          ]
+          "$ref": "#/definitions/bidder_config_ix"
         },
         "onetag": {
-          "title": "Onetag Adapter Params",
-          "description": "A schema which validates params accepted by the Onetag adapter",
-          "type": "object",
-          "properties": {
-            "pubId": {
-              "type": "string",
-              "minLength": 1,
-              "description": "The publisher's ID provided by OneTag"
-            },
-            "ext": {
-              "type": "object",
-              "description": "A set of custom key-value pairs"
-            }
-          },
-          "required": [
-            "pubId"
-          ]
+          "$ref": "#/definitions/bidder_config_onetag"
         },
         "openx": {
-          "title": "Openx Adapter Params",
-          "description": "A schema which validates params accepted by the Openx adapter",
-          "type": "object",
-          "properties": {
-            "unit": {
-              "type": "string",
-              "description": "The ad unit id.",
-              "pattern": "^[0-9]+$"
-            },
-            "delDomain": {
-              "type": "string",
-              "description": "The delivery domain for the customer.",
-              "pattern": "\\.[a-zA-Z]{2,3}$",
-              "format": "hostname"
-            },
-            "platform": {
-              "type": "string",
-              "description": "The platform id for the customer.",
-              "format": "uuid"
-            },
-            "customFloor": {
-              "type": "number",
-              "description": "The minimum CPM price in USD.",
-              "minimum": 0
-            },
-            "customParams": {
-              "type": "object",
-              "description": "User-defined targeting key-value pairs."
-            }
-          },
-          "required": [
-            "unit"
-          ],
-          "anyOf": [
-            {
-              "required": [
-                "delDomain"
-              ]
-            },
-            {
-              "required": [
-                "platform"
-              ]
-            }
-          ]
+          "$ref": "#/definitions/bidder_config_openx"
         },
         "outbrain": {
-          "title": "Outbrain Adapter Params",
-          "description": "A schema which validates params accepted by the Outbrain adapter",
-          "type": "object",
-          "properties": {
-            "publisher": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "name": {
-                  "type": "string"
-                },
-                "domain": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "id"
-              ]
-            },
-            "tagid": {
-              "type": "string"
-            },
-            "bcat": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "badv": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          "required": [
-            "publisher"
-          ]
+          "$ref": "#/definitions/bidder_config_outbrain"
         },
         "pubmatic": {
-          "title": "Pubmatic Adapter Params",
-          "description": "A schema which validates params accepted by the Pubmatic adapter",
-          "type": "object",
-          "properties": {
-            "publisherId": {
-              "type": "string",
-              "description": "An ID which identifies the publisher"
-            },
-            "adSlot": {
-              "type": "string",
-              "description": "An ID which identifies the ad slot"
-            },
-            "pmzoneid": {
-              "type": "string",
-              "description": "Comma separated zone id. Used im deal targeting & site section targeting. e.g drama,sport"
-            },
-            "kadfloor": {
-              "type": "string",
-              "description": "bid floor value set to imp.bidfloor"
-            },
-            "dctr": {
-              "type": "string",
-              "description": "Deals Custom Targeting, pipe separated key-value pairs e.g key1=V1,V2,V3|key2=v1|key3=v3,v5"
-            },
-            "acat": {
-              "type": "array",
-              "description": "List of allowed categories for a given auction to be sent in request.ext",
-              "items": {
-                "type": "string"
-              }
-            },
-            "wrapper": {
-              "type": "object",
-              "description": "Specifies pubmatic openwrap configuration for a publisher",
-              "properties": {
-                "profile": {
-                  "type": "integer",
-                  "description": "An ID which identifies the openwrap profile of publisher"
-                },
-                "version": {
-                  "type": "integer",
-                  "description": "An ID which identifies version of the openwrap profile"
-                }
-              },
-              "required": [
-                "profile"
-              ]
-            },
-            "keywords": {
-              "type": "array",
-              "minItems": 1,
-              "items": {
-                "type": "object",
-                "description": "A key with one or more values associated with it. These are used in buy-side segment targeting.",
-                "properties": {
-                  "key": {
-                    "type": "string"
-                  },
-                  "value": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "required": [
-                  "key",
-                  "value"
-                ]
-              }
-            }
-          },
-          "required": [
-            "publisherId"
-          ]
+          "$ref": "#/definitions/bidder_config_pubmatic"
         },
         "rubicon": {
-          "title": "Rubicon Adapter Params",
-          "description": "A schema which validates params accepted by the Rubicon adapter",
-          "type": "object",
-          "properties": {
-            "accountId": {
-              "type": [
-                "integer",
-                "string"
-              ],
-              "pattern": "^\\d+$",
-              "minimum": 1,
-              "description": "An ID which identifies the publisher's account"
-            },
-            "siteId": {
-              "type": [
-                "integer",
-                "string"
-              ],
-              "pattern": "^\\d+$",
-              "minimum": 1,
-              "description": "An ID which identifies the site selling the impression"
-            },
-            "zoneId": {
-              "type": [
-                "integer",
-                "string"
-              ],
-              "pattern": "^\\d+$",
-              "minimum": 1,
-              "description": "An ID which identifies the sub-section of the site where the impression is located"
-            },
-            "inventory": {
-              "type": "object",
-              "description": "An object defining arbitrary targeting key/value pairs related to the page",
-              "additionalProperties": {
-                "type": "array"
-              }
-            },
-            "visitor": {
-              "type": "object",
-              "description": "An object defining arbitrary targeting key/value pairs related to the visitor",
-              "additionalProperties": {
-                "type": "array"
-              }
-            },
-            "pchain": {
-              "type": "string",
-              "description": "A payment ID chain string"
-            },
-            "video": {
-              "type": "object",
-              "description": "An object defining additional Rubicon video parameters",
-              "properties": {
-                "language": {
-                  "type": "string",
-                  "description": "Language of the ad - should match content video"
-                },
-                "playerHeight": {
-                  "type": [
-                    "integer",
-                    "string"
-                  ],
-                  "description": "Height in pixels of the video player"
-                },
-                "playerWidth": {
-                  "type": [
-                    "integer",
-                    "string"
-                  ],
-                  "description": "Width in pixels of the video player"
-                },
-                "size_id": {
-                  "type": "integer",
-                  "description": "Rubicon size_id, used to describe type of video ad (preroll, postroll, etc)"
-                },
-                "skip": {
-                  "type": "integer",
-                  "description": "Can this ad be skipped ( 0 = no, 1 = yes)"
-                },
-                "skipdelay": {
-                  "type": "integer",
-                  "description": "number of seconds until the ad can be skipped"
-                }
-              }
-            }
-          },
-          "required": [
-            "accountId",
-            "siteId",
-            "zoneId"
-          ]
+          "$ref": "#/definitions/bidder_config_rubicon"
         },
         "sharethrough": {
-          "title": "Sharethrough Adapter Params",
-          "description": "A schema which validates params accepted by the Sharethrough adapter",
-          "type": "object",
-          "properties": {
-            "pkey": {
-              "type": "string",
-              "description": "Placement Key"
-            },
-            "badv": {
-              "type": "array",
-              "minItems": 0,
-              "items": {
-                "type": "string"
-              },
-              "description": "Blocked Advertiser Domains"
-            },
-            "bcat": {
-              "type": "array",
-              "minItems": 0,
-              "items": {
-                "type": "string"
-              },
-              "description": "Blocked IAB Categories"
-            }
-          },
-          "required": [
-            "pkey"
-          ]
+          "$ref": "#/definitions/bidder_config_sharethrough"
         },
         "smartadserver": {
-          "title": "Smartadserver Adapter Params",
-          "description": "A schema which validates params accepted by the Smartadserver adapter",
-          "type": "object",
-          "properties": {
-            "siteId": {
-              "type": "integer",
-              "description": "The site id.",
-              "minimum": 1
-            },
-            "pageId": {
-              "type": "integer",
-              "description": "The page id.",
-              "minimum": 1
-            },
-            "formatId": {
-              "type": "integer",
-              "description": "The format id.",
-              "minimum": 1
-            },
-            "networkId": {
-              "type": "integer",
-              "description": "The network id.",
-              "minimum": 1
-            }
-          },
-          "dependencies": {
-            "siteId": {
-              "required": [
-                "pageId",
-                "formatId"
-              ]
-            },
-            "pageId": {
-              "required": [
-                "siteId",
-                "formatId"
-              ]
-            },
-            "formatId": {
-              "required": [
-                "siteId",
-                "pageId"
-              ]
-            }
-          },
-          "required": [
-            "networkId"
-          ]
+          "$ref": "#/definitions/bidder_config_smartadserver"
         },
         "smilewanted": {
-          "title": "SmileWanted Adapter Params",
-          "description": "A schema which validates params accepted by the SmileWanted adapter",
-          "type": "object",
-          "properties": {
-            "zoneId": {
-              "type": "string",
-              "description": "An ID which identifies the SmileWanted zone code",
-              "minLength": 1
-            }
-          },
-          "required": [
-            "zoneId"
-          ]
+          "$ref": "#/definitions/bidder_config_smilewanted"
         },
         "sovrn": {
-          "title": "Sovrn Adapter Params",
-          "description": "A schema which validates params accepted by the Sovrn adapter",
-          "type": "object",
-          "properties": {
-            "tagid": {
-              "type": "string",
-              "description": "An ID which identifies the sovrn ad tag"
-            },
-            "tagId": {
-              "type": "string",
-              "description": "An ID which identifies the sovrn ad tag (DEPRECATED, use \"tagid\" instead)"
-            },
-            "bidfloor": {
-              "type": "number",
-              "description": "The minimum acceptable bid, in CPM, using US Dollars"
-            }
-          },
-          "oneOf": [
-            {
-              "required": [
-                "tagid"
-              ]
-            },
-            {
-              "required": [
-                "tagId"
-              ]
-            }
-          ]
+          "$ref": "#/definitions/bidder_config_sovrn"
         },
         "synacormedia": {
-          "title": "Synacormedia Adapter Params",
-          "description": "A schema which validates params accepted by the Synacormedia adapter",
-          "type": "object",
-          "properties": {
-            "seatId": {
-              "type": "string",
-              "description": "The seat id."
-            },
-            "tagId": {
-              "type": "string",
-              "description": "The tag id."
-            }
-          },
-          "required": [
-            "seatId"
-          ]
+          "$ref": "#/definitions/bidder_config_synacormedia"
         },
         "triplelift": {
-          "title": "Triplelift Adapter Params",
-          "description": "A schema which validates params accepted by the Triplelift adapter",
-          "type": "object",
-          "properties": {
-            "inventoryCode": {
-              "type": "string",
-              "description": "TripleLift inventory code for this ad unit (provided to you by your partner manager)"
-            },
-            "floor": {
-              "type": "number",
-              "description": "the bid floor"
-            }
-          },
-          "required": [
-            "inventoryCode"
-          ]
+          "$ref": "#/definitions/bidder_config_triplelift"
         },
         "unruly": {
-          "title": "Unruly Adapter Params",
-          "description": "A schema which validates params accepted by the Unruly adapter",
-          "type": "object",
-          "properties": {
-            "siteid": {
-              "type": "integer",
-              "description": "ID for publisher site"
-            }
-          },
-          "required": [
-            "siteid"
-          ]
+          "$ref": "#/definitions/bidder_config_unruly"
         },
         "yahoossp": {
-          "title": "YahooSSP Adapter Params",
-          "description": "A schema which validates params accepted by the YahooSSP adapter",
-          "type": "object",
-          "properties": {
-            "dcn": {
-              "type": "string",
-              "description": "Site ID provided by One Mobile"
-            },
-            "pos": {
-              "type": "string",
-              "description": "Placement ID"
-            }
-          },
-          "required": [
-            "dcn",
-            "pos"
-          ]
+          "$ref": "#/definitions/bidder_config_yahoossp"
         },
         "yieldlab": {
-          "title": "Yieldlab Adapter Params",
-          "description": "A schema which validates params accepted by the Yieldlab adapter",
-          "type": "object",
-          "properties": {
-            "adslotId": {
-              "type": "string",
-              "description": "Yieldlab ID of the ad slot"
-            },
-            "supplyId": {
-              "type": "string",
-              "description": "Yieldlab ID of the supply"
-            },
-            "adSize": {
-              "type": "string",
-              "description": "Size of the adslot in pixel, e.g. 200x50"
-            },
-            "extId": {
-              "type": "string",
-              "description": "External ID used for reporting"
-            },
-            "targeting": {
-              "type": "object",
-              "description": "Targeting information in key value pairs"
-            }
-          },
-          "required": [
-            "adslotId",
-            "supplyId",
-            "adSize"
-          ]
+          "$ref": "#/definitions/bidder_config_yieldlab"
+        },
+        "adform": {
+          "$ref": "#/definitions/bidder_config_adf"
+        },
+        "verizonmedia": {
+          "$ref": "#/definitions/bidder_config_yahoossp"
+        },
+        "emxdigital": {
+          "$ref": "#/definitions/bidder_config_emxdigital"
         },
         "eplanning": {
-          "title": "EPlanning Adapter Params",
-          "description": "A schema which validates params accepted by the EPlanning adapter",
-          "type": "object",
-          "properties": {
-            "ci": {
-              "type": [
-                "string"
-              ],
-              "description": "Client ID to use."
-            },
-            "adunit_code": {
-              "type": [
-                "string"
-              ],
-              "description": "Adunit Code."
-            }
-          },
-          "required": [
-            "ci"
-          ]
+          "$ref": "#/definitions/bidder_config_eplanning"
+        },
+        "ttx": {
+          "$ref": "#/definitions/bidder_config_thirtythreeacross"
         },
         "gumgum": {
-          "title": "GumGum Adapter Params",
-          "description": "A schema which validates params accepted by the GumGum adapter",
-          "type": "object",
-          "properties": {
-            "zone": {
-              "type": "string",
-              "description": "A tracking id used to identify GumGum zone.",
-              "minLength": 8
-            },
-            "pubId": {
-              "type": "integer",
-              "description": "A tracking id used to identify GumGum publisher"
-            },
-            "irisid": {
-              "type": "string",
-              "description": "A hashed IRIS.TV Content ID"
-            },
-            "slot": {
-              "type": "integer",
-              "description": "A slot id used to identify a slot placement mapped to a GumGum zone or publisher"
-            }
-          },
-          "anyOf": [
-            {
-              "required": [
-                "zone"
-              ]
-            },
-            {
-              "required": [
-                "pubId"
-              ]
-            }
-          ]
+          "$ref": "#/definitions/bidder_config_gumgum"
         },
         "between": {
-          "title": "BetweenDigital Adapter Params",
-          "description": "A schema which validates params accepted by the BetweenDigital adapter",
-          "type": "object",
-          "properties": {
-            "host": {
-              "type": "string",
-              "description": "Network Host to request from",
-              "enum": [
-                "lbs-eu1.ads",
-                "lbs-ru1.ads",
-                "lbs-us-east1.ads",
-                "lbs-asia1.ads"
-              ]
-            },
-            "publisher_id": {
-              "type": "string",
-              "description": "Publisher ID from Between Exchange control panel"
-            }
-          },
-          "required": [
-            "host",
-            "publisher_id"
-          ]
+          "$ref": "#/definitions/bidder_config_between"
         },
         "sonobi": {
-          "title": "Sonobi Adapter Params",
-          "description": "A schema which validates params accepted by the Sonobi adapter",
-          "type": "object",
-          "properties": {
-            "TagID": {
-              "type": "string",
-              "description": "An ID which identifies /ad/unit/code or the sonobi placement_id"
-            }
-          },
-          "required": [
-            "TagID"
-          ]
+          "$ref": "#/definitions/bidder_config_sonobi"
         },
         "conversant": {
-          "title": "Conversant Adapter Params",
-          "description": "A schema which validates params accepted by the Conversant adapter.",
-          "type": "object",
-          "properties": {
-            "site_id": {
-              "type": "string",
-              "description": "A Conversant specific ID which identifies the site."
-            },
-            "secure": {
-              "type": "integer",
-              "description": "Override http/https context on ad markup."
-            },
-            "bidfloor": {
-              "type": "number",
-              "description": "Minimum bid price that will be considered."
-            },
-            "tag_id": {
-              "type": "string",
-              "description": "Identifies specific ad placement."
-            },
-            "position": {
-              "type": "integer",
-              "description": "Ad position on screen."
-            },
-            "mimes": {
-              "type": "array",
-              "description": "Array of content MIME types.  For videos only.",
-              "items": {
-                "type": "string"
-              }
-            },
-            "maxduration": {
-              "type": "integer",
-              "description": "Maximum duration in seconds.  For videos only."
-            },
-            "api": {
-              "type": "array",
-              "description": "Array of supported API frameworks.  For videos only.",
-              "items": {
-                "type": "integer"
-              }
-            },
-            "protocols": {
-              "type": "array",
-              "description": "Array of supported video protocols.  For videos only.",
-              "items": {
-                "type": "integer"
-              }
-            }
-          },
-          "required": []
+          "$ref": "#/definitions/bidder_config_conversant"
         },
         "grid": {
-          "title": "TheMediaGrid Adapter Params",
-          "description": "A schema which validates params accepted by TheMediaGrid adapter",
-          "type": "object",
-          "properties": {
-            "uid": {
-              "type": "integer",
-              "description": "An ID which identifies this placement of the impression"
-            },
-            "keywords": {
-              "type": "object",
-              "description": "Keywords",
-              "properties": {
-                "site": {
-                  "type": "object"
-                },
-                "user": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "required": []
+          "$ref": "#/definitions/bidder_config_grid"
         },
         "yieldmo": {
-          "title": "Yieldmo Adapter Params",
-          "description": "A schema which validates params accepted by the Yieldmo adapter",
-          "type": "object",
-          "properties": {
-            "placementId": {
-              "type": "string",
-              "description": "Internal Yieldmo Placement ID"
-            }
-          },
-          "required": [
-            "placementId"
-          ]
+          "$ref": "#/definitions/bidder_config_yieldmo"
         }
       }
     },
@@ -3001,6 +2052,1095 @@
     "floor_price": {
       "type": "number",
       "minimum": 0
+    },
+    "bidder_config_adf": {
+      "title": "Adf Adapter Params",
+      "description": "A schema which validates params accepted by the adf adapter",
+      "type": "object",
+      "properties": {
+        "mid": {
+          "type": [
+            "integer",
+            "string"
+          ],
+          "pattern": "^\\d+$",
+          "description": "An ID which identifies the placement selling the impression"
+        },
+        "inv": {
+          "type": [
+            "integer"
+          ],
+          "description": "An ID which identifies the Adform inventory source id"
+        },
+        "mname": {
+          "type": [
+            "string"
+          ],
+          "description": "A Name which identifies the placement selling the impression"
+        },
+        "priceType": {
+          "type": [
+            "string"
+          ],
+          "description": "gross or net. Default is net.",
+          "pattern": "gross|net"
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "mid"
+          ]
+        },
+        {
+          "required": [
+            "inv",
+            "mname"
+          ]
+        }
+      ]
+    },
+    "bidder_config_adpone": {
+      "title": "Adpone Adapter Params",
+      "description": "A schema which validates params accepted by the adpone adapter",
+      "type": "object",
+      "properties": {
+        "placementId": {
+          "type": "string",
+          "description": "Placement Id"
+        }
+      },
+      "required": []
+    },
+    "bidder_config_amx": {
+      "title": "AMX RTB Adapter Params",
+      "description": "A schema to validate params accepted by the AMX adapter",
+      "type": "object",
+      "properties": {
+        "tagId": {
+          "type": "string",
+          "description": "Set a tagId (overrides site.publisher.id, or app.publisher.id)"
+        },
+        "adUnitId": {
+          "type": "string",
+          "description": "Override imp.tagid value to provide a custom value in AMX ad unit ID reporting"
+        }
+      }
+    },
+    "bidder_config_appnexus": {
+      "title": "Appnexus Adapter Params",
+      "description": "A schema which validates params accepted by the AppNexus adapter",
+      "type": "object",
+      "properties": {
+        "placement_id": {
+          "type": "integer",
+          "description": "An ID which identifies this placement of the impression"
+        },
+        "placementId": {
+          "type": "integer",
+          "description": "Deprecated, use placement_id instead."
+        },
+        "inv_code": {
+          "type": "string",
+          "description": "A code identifying the inventory of this placement."
+        },
+        "invCode": {
+          "type": "string",
+          "description": "Deprecated, use inv_code instead."
+        },
+        "member": {
+          "type": "string",
+          "description": "An ID which identifies the member selling the impression."
+        },
+        "keywords": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "description": "A key with one or more values associated with it. These are used in buy-side segment targeting.",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "key"
+            ]
+          }
+        },
+        "traffic_source_code": {
+          "type": "string",
+          "description": "Specifies the third-party source of this impression."
+        },
+        "trafficSourceCode": {
+          "type": "string",
+          "description": "Deprecated, use traffic_source_code instead."
+        },
+        "reserve": {
+          "type": "number",
+          "description": "The minimium acceptable bid, in CPM, using US Dollars"
+        },
+        "position": {
+          "type": "string",
+          "enum": [
+            "above",
+            "below"
+          ],
+          "description": "Specifies the ad unit as above or below the fold"
+        },
+        "use_pmt_rule": {
+          "type": "boolean",
+          "description": "Boolean to signal AppNexus to apply the relevant payment rule"
+        },
+        "generate_ad_pod_id": {
+          "type": "boolean",
+          "description": "Boolean to signal AppNexus to add ad pod id to each request"
+        },
+        "private_sizes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "w": {
+                "type": "integer"
+              },
+              "h": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "w",
+              "h"
+            ]
+          },
+          "description": "Private sizes (ex: [{\"w\": 300, \"h\": 250},{...}]), experimental, may not be supported."
+        }
+      },
+      "oneOf": [
+        {
+          "oneOf": [
+            {
+              "required": [
+                "placementId"
+              ]
+            },
+            {
+              "required": [
+                "placement_id"
+              ]
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "invCode",
+                "member"
+              ]
+            },
+            {
+              "required": [
+                "inv_code",
+                "member"
+              ]
+            }
+          ]
+        }
+      ],
+      "not": {
+        "required": [
+          "placementId",
+          "invCode",
+          "member"
+        ]
+      }
+    },
+    "bidder_config_connectad": {
+      "title": "ConnectAd S2S dapter Params",
+      "description": "A schema which validates params accepted by the ConnectAd Adapter",
+      "type": "object",
+      "properties": {
+        "networkId": {
+          "type": "integer",
+          "description": "NetworkId"
+        },
+        "siteId": {
+          "type": "integer",
+          "description": "SiteId"
+        },
+        "bidfloor": {
+          "type": "number",
+          "description": "Requests Floorprice"
+        }
+      },
+      "required": [
+        "networkId",
+        "siteId"
+      ]
+    },
+    "bidder_config_criteo": {
+      "title": "Criteo adapter params",
+      "description": "The schema to validate Criteo specific params accepted by Criteo adapter",
+      "type": "object",
+      "properties": {
+        "zoneid": {
+          "type": "integer",
+          "description": "Impression's zone ID.",
+          "minimum": 0
+        },
+        "zoneId": {
+          "type": "integer",
+          "description": "Impression's zone ID, preferred.",
+          "minimum": 0
+        },
+        "networkid": {
+          "type": "integer",
+          "description": "Impression's network ID.",
+          "minimum": 0
+        },
+        "networkId": {
+          "type": "integer",
+          "description": "Impression's network ID, preferred.",
+          "minimum": 0
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "zoneid"
+          ]
+        },
+        {
+          "required": [
+            "zoneId"
+          ]
+        },
+        {
+          "required": [
+            "networkid"
+          ]
+        },
+        {
+          "required": [
+            "networkId"
+          ]
+        }
+      ]
+    },
+    "bidder_config_improvedigital": {
+      "title": "Improve Digital Adapter Params",
+      "description": "A schema which validates params accepted by Improve Digital adapter",
+      "type": "object",
+      "properties": {
+        "placementId": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "An ID which identifies this placement of the impression"
+        },
+        "keyValues": {
+          "type": "object",
+          "description": "Contains one or more key-value pairings for key-value targeting"
+        },
+        "size": {
+          "type": "object",
+          "properties": {
+            "w": {
+              "type": "integer"
+            },
+            "h": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "w",
+            "h"
+          ],
+          "description": "Placement size"
+        }
+      },
+      "required": [
+        "placementId"
+      ]
+    },
+    "bidder_config_ix": {
+      "title": "ix Adapter Params",
+      "description": "A schema which validates params accepted by the ix adapter",
+      "type": "object",
+      "properties": {
+        "siteId": {
+          "type": "string",
+          "description": "An ID which identifies the site selling the impression"
+        },
+        "size": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "An array of two integer containing the dimension"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "siteid"
+          ]
+        },
+        {
+          "required": [
+            "siteId"
+          ]
+        },
+        {
+          "required": [
+            "siteID"
+          ]
+        }
+      ]
+    },
+    "bidder_config_onetag": {
+      "title": "Onetag Adapter Params",
+      "description": "A schema which validates params accepted by the Onetag adapter",
+      "type": "object",
+      "properties": {
+        "pubId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The publisher's ID provided by OneTag"
+        },
+        "ext": {
+          "type": "object",
+          "description": "A set of custom key-value pairs"
+        }
+      },
+      "required": [
+        "pubId"
+      ]
+    },
+    "bidder_config_openx": {
+      "title": "Openx Adapter Params",
+      "description": "A schema which validates params accepted by the Openx adapter",
+      "type": "object",
+      "properties": {
+        "unit": {
+          "type": "string",
+          "description": "The ad unit id.",
+          "pattern": "^[0-9]+$"
+        },
+        "delDomain": {
+          "type": "string",
+          "description": "The delivery domain for the customer.",
+          "pattern": "\\.[a-zA-Z]{2,3}$",
+          "format": "hostname"
+        },
+        "platform": {
+          "type": "string",
+          "description": "The platform id for the customer.",
+          "format": "uuid"
+        },
+        "customFloor": {
+          "type": "number",
+          "description": "The minimum CPM price in USD.",
+          "minimum": 0
+        },
+        "customParams": {
+          "type": "object",
+          "description": "User-defined targeting key-value pairs."
+        }
+      },
+      "required": [
+        "unit"
+      ],
+      "anyOf": [
+        {
+          "required": [
+            "delDomain"
+          ]
+        },
+        {
+          "required": [
+            "platform"
+          ]
+        }
+      ]
+    },
+    "bidder_config_outbrain": {
+      "title": "Outbrain Adapter Params",
+      "description": "A schema which validates params accepted by the Outbrain adapter",
+      "type": "object",
+      "properties": {
+        "publisher": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "domain": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "tagid": {
+          "type": "string"
+        },
+        "bcat": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "badv": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "publisher"
+      ]
+    },
+    "bidder_config_pubmatic": {
+      "title": "Pubmatic Adapter Params",
+      "description": "A schema which validates params accepted by the Pubmatic adapter",
+      "type": "object",
+      "properties": {
+        "publisherId": {
+          "type": "string",
+          "description": "An ID which identifies the publisher"
+        },
+        "adSlot": {
+          "type": "string",
+          "description": "An ID which identifies the ad slot"
+        },
+        "pmzoneid": {
+          "type": "string",
+          "description": "Comma separated zone id. Used im deal targeting & site section targeting. e.g drama,sport"
+        },
+        "kadfloor": {
+          "type": "string",
+          "description": "bid floor value set to imp.bidfloor"
+        },
+        "dctr": {
+          "type": "string",
+          "description": "Deals Custom Targeting, pipe separated key-value pairs e.g key1=V1,V2,V3|key2=v1|key3=v3,v5"
+        },
+        "acat": {
+          "type": "array",
+          "description": "List of allowed categories for a given auction to be sent in request.ext",
+          "items": {
+            "type": "string"
+          }
+        },
+        "wrapper": {
+          "type": "object",
+          "description": "Specifies pubmatic openwrap configuration for a publisher",
+          "properties": {
+            "profile": {
+              "type": "integer",
+              "description": "An ID which identifies the openwrap profile of publisher"
+            },
+            "version": {
+              "type": "integer",
+              "description": "An ID which identifies version of the openwrap profile"
+            }
+          },
+          "required": [
+            "profile"
+          ]
+        },
+        "keywords": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "description": "A key with one or more values associated with it. These are used in buy-side segment targeting.",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "key",
+              "value"
+            ]
+          }
+        }
+      },
+      "required": [
+        "publisherId"
+      ]
+    },
+    "bidder_config_rubicon": {
+      "title": "Rubicon Adapter Params",
+      "description": "A schema which validates params accepted by the Rubicon adapter",
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "type": [
+            "integer",
+            "string"
+          ],
+          "pattern": "^\\d+$",
+          "minimum": 1,
+          "description": "An ID which identifies the publisher's account"
+        },
+        "siteId": {
+          "type": [
+            "integer",
+            "string"
+          ],
+          "pattern": "^\\d+$",
+          "minimum": 1,
+          "description": "An ID which identifies the site selling the impression"
+        },
+        "zoneId": {
+          "type": [
+            "integer",
+            "string"
+          ],
+          "pattern": "^\\d+$",
+          "minimum": 1,
+          "description": "An ID which identifies the sub-section of the site where the impression is located"
+        },
+        "inventory": {
+          "type": "object",
+          "description": "An object defining arbitrary targeting key/value pairs related to the page",
+          "additionalProperties": {
+            "type": "array"
+          }
+        },
+        "visitor": {
+          "type": "object",
+          "description": "An object defining arbitrary targeting key/value pairs related to the visitor",
+          "additionalProperties": {
+            "type": "array"
+          }
+        },
+        "pchain": {
+          "type": "string",
+          "description": "A payment ID chain string"
+        },
+        "video": {
+          "type": "object",
+          "description": "An object defining additional Rubicon video parameters",
+          "properties": {
+            "language": {
+              "type": "string",
+              "description": "Language of the ad - should match content video"
+            },
+            "playerHeight": {
+              "type": [
+                "integer",
+                "string"
+              ],
+              "description": "Height in pixels of the video player"
+            },
+            "playerWidth": {
+              "type": [
+                "integer",
+                "string"
+              ],
+              "description": "Width in pixels of the video player"
+            },
+            "size_id": {
+              "type": "integer",
+              "description": "Rubicon size_id, used to describe type of video ad (preroll, postroll, etc)"
+            },
+            "skip": {
+              "type": "integer",
+              "description": "Can this ad be skipped ( 0 = no, 1 = yes)"
+            },
+            "skipdelay": {
+              "type": "integer",
+              "description": "number of seconds until the ad can be skipped"
+            }
+          }
+        }
+      },
+      "required": [
+        "accountId",
+        "siteId",
+        "zoneId"
+      ]
+    },
+    "bidder_config_sharethrough": {
+      "title": "Sharethrough Adapter Params",
+      "description": "A schema which validates params accepted by the Sharethrough adapter",
+      "type": "object",
+      "properties": {
+        "pkey": {
+          "type": "string",
+          "description": "Placement Key"
+        },
+        "badv": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "string"
+          },
+          "description": "Blocked Advertiser Domains"
+        },
+        "bcat": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "string"
+          },
+          "description": "Blocked IAB Categories"
+        }
+      },
+      "required": [
+        "pkey"
+      ]
+    },
+    "bidder_config_smartadserver": {
+      "title": "Smartadserver Adapter Params",
+      "description": "A schema which validates params accepted by the Smartadserver adapter",
+      "type": "object",
+      "properties": {
+        "siteId": {
+          "type": "integer",
+          "description": "The site id.",
+          "minimum": 1
+        },
+        "pageId": {
+          "type": "integer",
+          "description": "The page id.",
+          "minimum": 1
+        },
+        "formatId": {
+          "type": "integer",
+          "description": "The format id.",
+          "minimum": 1
+        },
+        "networkId": {
+          "type": "integer",
+          "description": "The network id.",
+          "minimum": 1
+        }
+      },
+      "dependencies": {
+        "siteId": {
+          "required": [
+            "pageId",
+            "formatId"
+          ]
+        },
+        "pageId": {
+          "required": [
+            "siteId",
+            "formatId"
+          ]
+        },
+        "formatId": {
+          "required": [
+            "siteId",
+            "pageId"
+          ]
+        }
+      },
+      "required": [
+        "networkId"
+      ]
+    },
+    "bidder_config_smilewanted": {
+      "title": "SmileWanted Adapter Params",
+      "description": "A schema which validates params accepted by the SmileWanted adapter",
+      "type": "object",
+      "properties": {
+        "zoneId": {
+          "type": "string",
+          "description": "An ID which identifies the SmileWanted zone code",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "zoneId"
+      ]
+    },
+    "bidder_config_sovrn": {
+      "title": "Sovrn Adapter Params",
+      "description": "A schema which validates params accepted by the Sovrn adapter",
+      "type": "object",
+      "properties": {
+        "tagid": {
+          "type": "string",
+          "description": "An ID which identifies the sovrn ad tag"
+        },
+        "tagId": {
+          "type": "string",
+          "description": "An ID which identifies the sovrn ad tag (DEPRECATED, use \"tagid\" instead)"
+        },
+        "bidfloor": {
+          "type": "number",
+          "description": "The minimum acceptable bid, in CPM, using US Dollars"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "tagid"
+          ]
+        },
+        {
+          "required": [
+            "tagId"
+          ]
+        }
+      ]
+    },
+    "bidder_config_synacormedia": {
+      "title": "Synacormedia Adapter Params",
+      "description": "A schema which validates params accepted by the Synacormedia adapter",
+      "type": "object",
+      "properties": {
+        "seatId": {
+          "type": "string",
+          "description": "The seat id."
+        },
+        "tagId": {
+          "type": "string",
+          "description": "The tag id."
+        }
+      },
+      "required": [
+        "seatId"
+      ]
+    },
+    "bidder_config_triplelift": {
+      "title": "Triplelift Adapter Params",
+      "description": "A schema which validates params accepted by the Triplelift adapter",
+      "type": "object",
+      "properties": {
+        "inventoryCode": {
+          "type": "string",
+          "description": "TripleLift inventory code for this ad unit (provided to you by your partner manager)"
+        },
+        "floor": {
+          "type": "number",
+          "description": "the bid floor"
+        }
+      },
+      "required": [
+        "inventoryCode"
+      ]
+    },
+    "bidder_config_unruly": {
+      "title": "Unruly Adapter Params",
+      "description": "A schema which validates params accepted by the Unruly adapter",
+      "type": "object",
+      "properties": {
+        "siteid": {
+          "type": "integer",
+          "description": "ID for publisher site"
+        }
+      },
+      "required": [
+        "siteid"
+      ]
+    },
+    "bidder_config_yahoossp": {
+      "title": "YahooSSP Adapter Params",
+      "description": "A schema which validates params accepted by the YahooSSP adapter",
+      "type": "object",
+      "properties": {
+        "dcn": {
+          "type": "string",
+          "description": "Site ID provided by One Mobile"
+        },
+        "pos": {
+          "type": "string",
+          "description": "Placement ID"
+        }
+      },
+      "required": [
+        "dcn",
+        "pos"
+      ]
+    },
+    "bidder_config_yieldlab": {
+      "title": "Yieldlab Adapter Params",
+      "description": "A schema which validates params accepted by the Yieldlab adapter",
+      "type": "object",
+      "properties": {
+        "adslotId": {
+          "type": "string",
+          "description": "Yieldlab ID of the ad slot"
+        },
+        "supplyId": {
+          "type": "string",
+          "description": "Yieldlab ID of the supply"
+        },
+        "adSize": {
+          "type": "string",
+          "description": "Size of the adslot in pixel, e.g. 200x50"
+        },
+        "extId": {
+          "type": "string",
+          "description": "External ID used for reporting"
+        },
+        "targeting": {
+          "type": "object",
+          "description": "Targeting information in key value pairs"
+        }
+      },
+      "required": [
+        "adslotId",
+        "supplyId",
+        "adSize"
+      ]
+    },
+    "bidder_config_emxdigital": {
+      "title": "EMX Digital Adapter Params",
+      "description": "A schema which validates params accepted by the EMX Digital adapter",
+      "type": "object",
+      "properties": {
+        "tagid": {
+          "type": "string",
+          "description": "The id of an inventory target"
+        },
+        "bidfloor": {
+          "type": "string",
+          "description": "The minimum price acceptable for a bid"
+        }
+      },
+      "required": [
+        "tagid"
+      ]
+    },
+    "bidder_config_eplanning": {
+      "title": "EPlanning Adapter Params",
+      "description": "A schema which validates params accepted by the EPlanning adapter",
+      "type": "object",
+      "properties": {
+        "ci": {
+          "type": [
+            "string"
+          ],
+          "description": "Client ID to use."
+        },
+        "adunit_code": {
+          "type": [
+            "string"
+          ],
+          "description": "Adunit Code."
+        }
+      },
+      "required": [
+        "ci"
+      ]
+    },
+    "bidder_config_thirtythreeacross": {
+      "title": "33Across Adapter Params",
+      "description": "A schema which validates params accepted by the 33Across adapter",
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "string",
+          "description": "Product type"
+        },
+        "siteId": {
+          "type": "string",
+          "description": "Site Id"
+        },
+        "zoneId": {
+          "type": "string",
+          "description": "Zone Id"
+        }
+      },
+      "required": [
+        "productId",
+        "siteId"
+      ]
+    },
+    "bidder_config_gumgum": {
+      "title": "GumGum Adapter Params",
+      "description": "A schema which validates params accepted by the GumGum adapter",
+      "type": "object",
+      "properties": {
+        "zone": {
+          "type": "string",
+          "description": "A tracking id used to identify GumGum zone.",
+          "minLength": 8
+        },
+        "pubId": {
+          "type": "integer",
+          "description": "A tracking id used to identify GumGum publisher"
+        },
+        "irisid": {
+          "type": "string",
+          "description": "A hashed IRIS.TV Content ID"
+        },
+        "slot": {
+          "type": "integer",
+          "description": "A slot id used to identify a slot placement mapped to a GumGum zone or publisher"
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "zone"
+          ]
+        },
+        {
+          "required": [
+            "pubId"
+          ]
+        }
+      ]
+    },
+    "bidder_config_between": {
+      "title": "BetweenDigital Adapter Params",
+      "description": "A schema which validates params accepted by the BetweenDigital adapter",
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "description": "Network Host to request from",
+          "enum": [
+            "lbs-eu1.ads",
+            "lbs-ru1.ads",
+            "lbs-us-east1.ads",
+            "lbs-asia1.ads"
+          ]
+        },
+        "publisher_id": {
+          "type": "string",
+          "description": "Publisher ID from Between Exchange control panel"
+        }
+      },
+      "required": [
+        "host",
+        "publisher_id"
+      ]
+    },
+    "bidder_config_sonobi": {
+      "title": "Sonobi Adapter Params",
+      "description": "A schema which validates params accepted by the Sonobi adapter",
+      "type": "object",
+      "properties": {
+        "TagID": {
+          "type": "string",
+          "description": "An ID which identifies /ad/unit/code or the sonobi placement_id"
+        }
+      },
+      "required": [
+        "TagID"
+      ]
+    },
+    "bidder_config_conversant": {
+      "title": "Conversant Adapter Params",
+      "description": "A schema which validates params accepted by the Conversant adapter.",
+      "type": "object",
+      "properties": {
+        "site_id": {
+          "type": "string",
+          "description": "A Conversant specific ID which identifies the site."
+        },
+        "secure": {
+          "type": "integer",
+          "description": "Override http/https context on ad markup."
+        },
+        "bidfloor": {
+          "type": "number",
+          "description": "Minimum bid price that will be considered."
+        },
+        "tag_id": {
+          "type": "string",
+          "description": "Identifies specific ad placement."
+        },
+        "position": {
+          "type": "integer",
+          "description": "Ad position on screen."
+        },
+        "mimes": {
+          "type": "array",
+          "description": "Array of content MIME types.  For videos only.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "maxduration": {
+          "type": "integer",
+          "description": "Maximum duration in seconds.  For videos only."
+        },
+        "api": {
+          "type": "array",
+          "description": "Array of supported API frameworks.  For videos only.",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "protocols": {
+          "type": "array",
+          "description": "Array of supported video protocols.  For videos only.",
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "required": []
+    },
+    "bidder_config_grid": {
+      "title": "TheMediaGrid Adapter Params",
+      "description": "A schema which validates params accepted by TheMediaGrid adapter",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "integer",
+          "description": "An ID which identifies this placement of the impression"
+        },
+        "keywords": {
+          "type": "object",
+          "description": "Keywords",
+          "properties": {
+            "site": {
+              "type": "object"
+            },
+            "user": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "required": []
+    },
+    "bidder_config_yieldmo": {
+      "title": "Yieldmo Adapter Params",
+      "description": "A schema which validates params accepted by the Yieldmo adapter",
+      "type": "object",
+      "properties": {
+        "placementId": {
+          "type": "string",
+          "description": "Internal Yieldmo Placement ID"
+        }
+      },
+      "required": [
+        "placementId"
+      ]
     }
   }
 }

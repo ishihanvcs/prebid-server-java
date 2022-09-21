@@ -25,8 +25,11 @@ const impSchemaOutputPath = path.resolve(outputPath, 'imp.json')
 const requestSchemaTplPath = path.resolve(templatePath, 'request.json')
 const requestSchemaOutputPath = path.resolve(outputPath, 'request.json')
 
+const ansibleTagsRe = /^\s*\{%\s*.+\s*%\}\s*$/gm
+
 function getEnabledBidders() {
-  const config = yaml.load(fs.readFileSync(applicationConfigPath, 'utf8'))
+  const content = fs.readFileSync(applicationConfigPath, 'utf8').replace(ansibleTagsRe, '');
+  const config = yaml.load(content)
   return Object.keys(config.adapters)
 }
 

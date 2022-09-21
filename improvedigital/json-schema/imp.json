@@ -1034,6 +1034,194 @@
             "supplyId",
             "adSize"
           ]
+        },
+        "eplanning": {
+          "title": "EPlanning Adapter Params",
+          "description": "A schema which validates params accepted by the EPlanning adapter",
+          "type": "object",
+          "properties": {
+            "ci": {
+              "type": [
+                "string"
+              ],
+              "description": "Client ID to use."
+            },
+            "adunit_code": {
+              "type": [
+                "string"
+              ],
+              "description": "Adunit Code."
+            }
+          },
+          "required": [
+            "ci"
+          ]
+        },
+        "gumgum": {
+          "title": "GumGum Adapter Params",
+          "description": "A schema which validates params accepted by the GumGum adapter",
+          "type": "object",
+          "properties": {
+            "zone": {
+              "type": "string",
+              "description": "A tracking id used to identify GumGum zone.",
+              "minLength": 8
+            },
+            "pubId": {
+              "type": "integer",
+              "description": "A tracking id used to identify GumGum publisher"
+            },
+            "irisid": {
+              "type": "string",
+              "description": "A hashed IRIS.TV Content ID"
+            },
+            "slot": {
+              "type": "integer",
+              "description": "A slot id used to identify a slot placement mapped to a GumGum zone or publisher"
+            }
+          },
+          "anyOf": [
+            {
+              "required": [
+                "zone"
+              ]
+            },
+            {
+              "required": [
+                "pubId"
+              ]
+            }
+          ]
+        },
+        "between": {
+          "title": "BetweenDigital Adapter Params",
+          "description": "A schema which validates params accepted by the BetweenDigital adapter",
+          "type": "object",
+          "properties": {
+            "host": {
+              "type": "string",
+              "description": "Network Host to request from",
+              "enum": [
+                "lbs-eu1.ads",
+                "lbs-ru1.ads",
+                "lbs-us-east1.ads",
+                "lbs-asia1.ads"
+              ]
+            },
+            "publisher_id": {
+              "type": "string",
+              "description": "Publisher ID from Between Exchange control panel"
+            }
+          },
+          "required": [
+            "host",
+            "publisher_id"
+          ]
+        },
+        "sonobi": {
+          "title": "Sonobi Adapter Params",
+          "description": "A schema which validates params accepted by the Sonobi adapter",
+          "type": "object",
+          "properties": {
+            "TagID": {
+              "type": "string",
+              "description": "An ID which identifies /ad/unit/code or the sonobi placement_id"
+            }
+          },
+          "required": [
+            "TagID"
+          ]
+        },
+        "conversant": {
+          "title": "Conversant Adapter Params",
+          "description": "A schema which validates params accepted by the Conversant adapter.",
+          "type": "object",
+          "properties": {
+            "site_id": {
+              "type": "string",
+              "description": "A Conversant specific ID which identifies the site."
+            },
+            "secure": {
+              "type": "integer",
+              "description": "Override http/https context on ad markup."
+            },
+            "bidfloor": {
+              "type": "number",
+              "description": "Minimum bid price that will be considered."
+            },
+            "tag_id": {
+              "type": "string",
+              "description": "Identifies specific ad placement."
+            },
+            "position": {
+              "type": "integer",
+              "description": "Ad position on screen."
+            },
+            "mimes": {
+              "type": "array",
+              "description": "Array of content MIME types.  For videos only.",
+              "items": {
+                "type": "string"
+              }
+            },
+            "maxduration": {
+              "type": "integer",
+              "description": "Maximum duration in seconds.  For videos only."
+            },
+            "api": {
+              "type": "array",
+              "description": "Array of supported API frameworks.  For videos only.",
+              "items": {
+                "type": "integer"
+              }
+            },
+            "protocols": {
+              "type": "array",
+              "description": "Array of supported video protocols.  For videos only.",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          "required": []
+        },
+        "grid": {
+          "title": "TheMediaGrid Adapter Params",
+          "description": "A schema which validates params accepted by TheMediaGrid adapter",
+          "type": "object",
+          "properties": {
+            "uid": {
+              "type": "integer",
+              "description": "An ID which identifies this placement of the impression"
+            },
+            "keywords": {
+              "type": "object",
+              "description": "Keywords",
+              "properties": {
+                "site": {
+                  "type": "object"
+                },
+                "user": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "required": []
+        },
+        "yieldmo": {
+          "title": "Yieldmo Adapter Params",
+          "description": "A schema which validates params accepted by the Yieldmo adapter",
+          "type": "object",
+          "properties": {
+            "placementId": {
+              "type": "string",
+              "description": "Internal Yieldmo Placement ID"
+            }
+          },
+          "required": [
+            "placementId"
+          ]
         }
       }
     },

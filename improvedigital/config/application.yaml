@@ -23,6 +23,7 @@ adapters:
     enabled: true
   ix:
     enabled: true
+#    endpoint: http://am-ent.lb.indexww.com/pbs?p=196124
   onetag:
     enabled: true
   openx:
@@ -53,6 +54,28 @@ adapters:
   yahoossp:
     enabled: true
   yieldlab:
+    enabled: true
+#  adform:
+#    enabled: true
+#  verizonmedia:
+#    enabled: true
+#  emxdigital:
+#    enabled: true
+  eplanning:
+    enabled: true
+#  ttx:
+#    enabled: true
+  gumgum:
+    enabled: true
+  between:
+    enabled: true
+  sonobi:
+    enabled: true
+  conversant:
+    enabled: true
+  grid:
+    enabled: true
+  yieldmo:
     enabled: true
 auction:
   ad-server-currency: USD
@@ -113,7 +136,7 @@ settings:
     notification-endpoints-enabled: false
     http-update:
       endpoint: https://api.headerlift.com/pbs/getconfig
-      amp-endpoint: https://api.headerlift.com/pbs/getconfig?amp=true
+      amp-endpoint: https://api.headerlift.com/pbs/getconfig
       refresh-rate: 60000 # 1 minute in milliseconds
       timeout: 2000 # in milliseconds
 

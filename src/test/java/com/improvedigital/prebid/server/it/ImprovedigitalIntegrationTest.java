@@ -206,8 +206,6 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                                 .request(toJsonString(mapper, bidRequestData.nativeData.request))
                                 .ver(StringUtils.defaultString(bidRequestData.nativeData.ver, "1.2"))
                                 .build())
-                        .bidfloor(BigDecimal.ZERO)
-                        .bidfloorcur(bidRequestData.currency)
                         .build(),
                 bidRequest -> bidRequest.toBuilder()
                         .site(Site.builder()
@@ -288,8 +286,6 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                                 .linearity(1)
                                 .placement(5)
                                 .build())
-                        .bidfloor(BigDecimal.ZERO)
-                        .bidfloorcur(bidRequestData.currency)
                         .build(),
                 bidRequest -> bidRequest.toBuilder()
                         .site(Site.builder()

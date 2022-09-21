@@ -198,6 +198,19 @@ hooks:
                 }
               ]
             },
+            "bidder-request": {
+              "groups": [
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "improvedigital-bidadjustment-module",
+                      "hook-impl-code": "improvedigital-bidadjustment-hooks-bidder-request"
+                    }
+                  ]
+                }
+              ]
+            },
             "processed-auction-request": {
               "groups": [
                 {

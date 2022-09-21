@@ -12,7 +12,6 @@ import org.prebid.server.floors.model.PriceFloorRules;
 import org.prebid.server.floors.proto.FetchStatus;
 import org.prebid.server.model.Endpoint;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
-import org.prebid.server.proto.openrtb.ext.request.ExtRequestBidAdjustmentFactors;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -223,10 +222,6 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                                                 .w(300)
                                                 .h(250)
                                                 .build())
-                                        .reqExtBidAdjustmentFactors(expectedBidAdjustmentPct == null
-                                                ? null : getAllBiddersExpectedBidAdjustmentFactors(
-                                                expectedBidAdjustmentPct, improveIsExpectedForAdjustment)
-                                        )
                                         .publisherId(publisherId)
                                         .floor(expectedPbsBidFloor == null ? null : Floor.of(
                                                 expectedPbsBidFloor.setScale(4, RoundingMode.HALF_EVEN), "USD"
@@ -299,9 +294,6 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                                                 .w(300)
                                                 .h(250)
                                                 .build())
-                                        .reqExtBidAdjustmentFactors(getAllBiddersExpectedBidAdjustmentFactors(
-                                                expectedBidAdjustmentPct, improveIsExpectedForAdjustment
-                                        ))
                                         .publisherId(publisherId)
                                         .build(),
                                 bidRequest -> bidRequest.toBuilder()
@@ -340,9 +332,6 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                                                 .w(300)
                                                 .h(250)
                                                 .build())
-                                        .reqExtBidAdjustmentFactors(getAllBiddersExpectedBidAdjustmentFactors(
-                                                expectedBidAdjustmentPct, improveIsExpectedForAdjustment
-                                        ))
                                         .publisherId(publisherId)
                                         .build(),
                                 bidRequest -> bidRequest.toBuilder()
@@ -390,17 +379,6 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                 .isEqualTo(1);
 
         return responseJson;
-    }
-
-    private ExtRequestBidAdjustmentFactors getAllBiddersExpectedBidAdjustmentFactors(
-            double expectedBidAdjustmentPct, boolean includeImprovedigital) {
-        ExtRequestBidAdjustmentFactors expectedFactors = ExtRequestBidAdjustmentFactors.builder().build();
-        getAllActiveBidders().stream()
-                .filter(b -> !"improvedigital".equalsIgnoreCase(b) || includeImprovedigital)
-                .forEach(b -> expectedFactors.addFactor(
-                        b, BigDecimal.valueOf(expectedBidAdjustmentPct)
-                ));
-        return expectedFactors;
     }
 
     /**

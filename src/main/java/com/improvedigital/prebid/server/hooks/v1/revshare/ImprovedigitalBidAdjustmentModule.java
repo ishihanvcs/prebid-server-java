@@ -38,7 +38,8 @@ public class ImprovedigitalBidAdjustmentModule implements Module {
     @Override
     public Collection<? extends Hook<?, ? extends InvocationContext>> hooks() {
         return Arrays.asList(
-                new ProcessedAuctionRequestHook(requestUtils, bidderCatalog, applicationSettings)
+                new ProcessedAuctionRequestHook(requestUtils, bidderCatalog, applicationSettings),
+                new BidderRequestHook()
         );
     }
 }

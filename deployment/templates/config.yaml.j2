@@ -17,6 +17,7 @@ adapters:
     enabled: true
   ix:
     enabled: true
+#    endpoint: http://am-ent.lb.indexww.com/pbs?p=196124
   onetag:
     enabled: true
   openx:
@@ -49,6 +50,28 @@ adapters:
   yahoossp:
     enabled: true
   yieldlab:
+    enabled: true
+  adform:
+    enabled: true
+  verizonmedia:
+    enabled: true
+  emxdigital:
+    enabled: true
+  eplanning:
+    enabled: true
+  ttx:
+    enabled: true
+  gumgum:
+    enabled: true
+  between:
+    enabled: true
+  sonobi:
+    enabled: true
+  conversant:
+    enabled: true
+  grid:
+    enabled: true
+  yieldmo:
     enabled: true
 admin-endpoints:
   credentials:
@@ -122,7 +145,7 @@ settings:
     notification-endpoints-enabled: false
     http-update:
       endpoint: https://api.headerlift.com/pbs/getconfig
-      amp-endpoint: https://api.headerlift.com/pbs/getconfig?amp=true
+      amp-endpoint: https://api.headerlift.com/pbs/getconfig
       refresh-rate: 60000 # 1 minute in milliseconds
       timeout: 2000 # in milliseconds
 gdpr:
@@ -152,6 +175,9 @@ geolocation:
       http-client:
         connect-timeout-ms: 3000
         max-redirects: 3
+
+price-floors:
+  enabled: true
 
 # Following section defines hooks to inject custom trackers in bid responses
 # for /openrtb2/auction endpoint. Do not change this, if you don't know how
@@ -211,6 +237,28 @@ hooks:
                     {
                       "module-code": "improvedigital-custom-tracker-hooks-module",
                       "hook-impl-code": "improvedigital-custom-tracker-hooks-processed-auction-request"
+                    }
+                  ]
+                },
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "improvedigital-bidadjustment-module",
+                      "hook-impl-code": "improvedigital-bidadjustment-hooks-processed-auction-request"
+                    }
+                  ]
+                }
+              ]
+            },
+            "bidder-request": {
+              "groups": [
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "improvedigital-bidadjustment-module",
+                      "hook-impl-code": "improvedigital-bidadjustment-hooks-bidder-request"
                     }
                   ]
                 }

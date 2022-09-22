@@ -28,6 +28,7 @@ import com.iab.openrtb.response.ImageObject;
 import com.iab.openrtb.response.Link;
 import com.iab.openrtb.response.SeatBid;
 import com.iab.openrtb.response.TitleObject;
+import com.improvedigital.prebid.server.customvast.model.Floor;
 import com.improvedigital.prebid.server.it.transformers.BidResponseByImpidTransformer;
 import com.improvedigital.prebid.server.it.transformers.CacheGetByUuidTransformer;
 import com.improvedigital.prebid.server.it.transformers.CacheSetByContentTransformer;
@@ -48,6 +49,7 @@ import org.json.JSONObject;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.prebid.server.VertxTest;
+import org.prebid.server.bidder.BidderCatalog;
 import org.prebid.server.bidder.improvedigital.proto.ImprovedigitalBidExtImprovedigital;
 import org.prebid.server.proto.openrtb.ext.request.ExtImp;
 import org.prebid.server.proto.openrtb.ext.request.ExtImpPrebid;
@@ -63,6 +65,8 @@ import org.prebid.server.proto.openrtb.ext.request.ExtSite;
 import org.prebid.server.proto.openrtb.ext.request.ExtSource;
 import org.prebid.server.proto.openrtb.ext.request.ExtSourceSchain;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
+import org.prebid.server.util.ObjectUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
@@ -77,6 +81,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -103,6 +108,9 @@ import static org.assertj.core.api.Assertions.fail;
         "/com/improvedigital/prebid/server/it/config/test-application-improvedigital-hooks.properties"
 })
 public class ImprovedigitalIntegrationTest extends VertxTest {
+
+    @Autowired
+    protected BidderCatalog bidderCatalog;
 
     protected static final String IT_TEST_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
             + "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.60 Safari/537.36";
@@ -189,6 +197,12 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
         return fileContent;
     }
 
+    protected Set<String> getAllActiveBidders() {
+        return bidderCatalog.names().stream()
+                .filter(n -> bidderCatalog.isActive(n))
+                .collect(Collectors.toSet());
+    }
+
     protected String getAuctionBidRequest(String uniqueId, AuctionBidRequestTestData bidRequestData) {
         return getAuctionBidRequest(uniqueId, bidRequestData, null);
     }
@@ -223,6 +237,8 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                                         .linearity(1)
                                         .placement(5)
                                         .build())
+                                .bidfloor(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloor))
+                                .bidfloorcur(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloorCur))
                                 .build())
                         .collect(Collectors.toList()))
                 .tmax(5000L)
@@ -283,6 +299,8 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                                 .linearity(1)
                                 .placement(5)
                                 .build())
+                        .bidfloor(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloor))
+                        .bidfloorcur(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloorCur))
                         .build()))
                 .site(Site.builder()
                         .domain(IT_TEST_DOMAIN)
@@ -481,6 +499,10 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
         public boolean hasSchainNodes() {
             return schain != null && CollectionUtils.isNotEmpty(schain.getNodes());
         }
+
+        String publisherId;
+
+        Floor floor;
     }
 
     @Builder(toBuilder = true)
@@ -488,6 +510,10 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
         AuctionBidRequestImpExt impExt;
 
         SingleImpTestData impData;
+
+        String publisherId;
+
+        Floor floor;
     }
 
     @Builder(toBuilder = true)
@@ -496,6 +522,10 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
 
         /* SSP request is always single-imp even though auction is multi-imp. */
         SingleImpTestData impData;
+
+        String publisherId;
+
+        Floor floor;
 
         List<String> siteIABCategories;
 
@@ -526,6 +556,8 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
         NativeTestParam nativeData;
 
         VideoTestParam videoData;
+
+        Floor floor;
     }
 
     @Builder(toBuilder = true)
@@ -1091,7 +1123,9 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
 
     protected void assertBidPrice(
             JSONObject responseJson, int seatBidIndex, int bidIndex, double expectedBidPrice) throws JSONException {
-        assertThat(getBidPrice(responseJson, seatBidIndex, bidIndex)).isEqualTo(expectedBidPrice);
+        assertThat(getBidPrice(responseJson, seatBidIndex, bidIndex)).isEqualTo(
+                new BigDecimal(expectedBidPrice).setScale(4, RoundingMode.HALF_EVEN).doubleValue()
+        );
     }
 
     @NotNull

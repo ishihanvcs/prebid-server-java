@@ -37,9 +37,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(SpringRunner.class)
 public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTest {
 
-    // The exchange rate is hard coded (src/test/resources/org/prebid/server/it/currency/latest.json).
-    private static final double IT_TEST_USD_TO_EUR_RATE = 0.8777319407;
-
     @Test
     public void shouldAddCustomTrackerOnBannerResponse() throws Exception {
         final Response response = doBannerRequestAndGetResponse(
@@ -732,7 +729,6 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
                         SSPBidRequestTestData.builder()
                                 .currency("USD")
-                                .useDefaultBidfloor(false)
                                 .impData(SingleImpTestData.builder()
                                         .id("imp_id_1")
                                         .impExt(new SSPBidRequestImpExt(false)
@@ -776,7 +772,6 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
                         SSPBidRequestTestData.builder()
                                 .currency("USD")
-                                .useDefaultBidfloor(false)
                                 .impData(SingleImpTestData.builder()
                                         .id("imp_id_1")
                                         .impExt(new SSPBidRequestImpExt(false)
@@ -973,12 +968,6 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         }
 
         return null;
-    }
-
-    private double usdToEur(double val) {
-        return BigDecimal.valueOf(val / IT_TEST_USD_TO_EUR_RATE)
-                .setScale(3, RoundingMode.HALF_EVEN)
-                .doubleValue();
     }
 
     @Builder(toBuilder = true)

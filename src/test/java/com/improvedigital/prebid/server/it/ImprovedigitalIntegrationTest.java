@@ -113,6 +113,9 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
 
     protected static final String GAM_NETWORK_CODE = "1015413";
 
+    // The exchange rate is hard coded (src/test/resources/com/improvedigital/prebid/server/it/currency/latest.json).
+    private static final double IT_TEST_USD_TO_EUR_RATE = 0.8777319407;
+
     protected static final ObjectMapper BID_REQUEST_MAPPER = new ObjectMapper()
             .setNodeFactory(JsonNodeFactory.withExactBigDecimals(true))
             .setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -280,8 +283,6 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                                 .linearity(1)
                                 .placement(5)
                                 .build())
-                        .bidfloor(bidRequestData.hasDefaultBidfloor() ? BigDecimal.ZERO : null)
-                        .bidfloorcur(bidRequestData.hasDefaultBidfloor() ? bidRequestData.currency : null)
                         .build()))
                 .site(Site.builder()
                         .domain(IT_TEST_DOMAIN)
@@ -289,6 +290,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                         .publisher(Publisher.builder()
                                 .domain(IT_TEST_MAIN_DOMAIN)
                                 .build())
+                        .cat(bidRequestData.siteIABCategories)
                         .ext(ExtSite.of(0, null))
                         .build())
                 .device(Device.builder()
@@ -358,6 +360,12 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                 .crid("crid_" + bidIndex + "_" + d.impId)
                 .ext(d.bidExt == null ? null : d.bidExt.get())
                 .build();
+    }
+
+    protected double usdToEur(double val) {
+        return BigDecimal.valueOf(val / IT_TEST_USD_TO_EUR_RATE)
+                .setScale(3, RoundingMode.HALF_EVEN)
+                .doubleValue();
     }
 
     protected String toMoneyFormat(double value) {
@@ -495,18 +503,11 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
 
         ExtSourceSchain schain;
 
-        Boolean useDefaultBidfloor;
-
         ExtRequestPrebidChannel channel;
 
         ExtRequestTargeting extRequestTargeting;
 
         ExtRequestPrebidCache extRequestPrebidCache;
-
-        @JsonIgnore
-        public boolean hasDefaultBidfloor() {
-            return useDefaultBidfloor == null || useDefaultBidfloor.booleanValue();
-        }
 
         @JsonIgnore
         public boolean hasSchainNodes() {

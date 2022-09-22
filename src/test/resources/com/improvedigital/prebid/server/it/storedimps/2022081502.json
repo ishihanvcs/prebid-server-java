@@ -1,0 +1,17 @@
+{
+  "ext": {
+    "prebid": {
+      "improvedigitalpbs": {
+      },
+      "bidder": {
+        "improvedigital": {
+          "placementId": 20220815
+        }
+      }
+    }
+  },
+  "banner": {
+    "w": 300,
+    "h": 250
+  }
+}

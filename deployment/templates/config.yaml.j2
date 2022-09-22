@@ -176,6 +176,9 @@ geolocation:
         connect-timeout-ms: 3000
         max-redirects: 3
 
+price-floors:
+  enabled: true
+
 # Following section defines hooks to inject custom trackers in bid responses
 # for /openrtb2/auction endpoint. Do not change this, if you don't know how
 # hooks are implemented in PBS. As /gvast endpoint internally makes an auction
@@ -234,6 +237,28 @@ hooks:
                     {
                       "module-code": "improvedigital-custom-tracker-hooks-module",
                       "hook-impl-code": "improvedigital-custom-tracker-hooks-processed-auction-request"
+                    }
+                  ]
+                },
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "improvedigital-bidadjustment-module",
+                      "hook-impl-code": "improvedigital-bidadjustment-hooks-processed-auction-request"
+                    }
+                  ]
+                }
+              ]
+            },
+            "bidder-request": {
+              "groups": [
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "improvedigital-bidadjustment-module",
+                      "hook-impl-code": "improvedigital-bidadjustment-hooks-bidder-request"
                     }
                   ]
                 }

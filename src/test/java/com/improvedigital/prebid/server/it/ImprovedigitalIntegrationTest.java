@@ -21,6 +21,7 @@ import com.iab.openrtb.request.Video;
 import com.iab.openrtb.response.Bid;
 import com.iab.openrtb.response.BidResponse;
 import com.iab.openrtb.response.SeatBid;
+import com.improvedigital.prebid.server.customvast.model.Floor;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.config.ObjectMapperConfig;
 import io.restassured.config.RestAssuredConfig;
@@ -35,6 +36,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.prebid.server.bidder.BidderCatalog;
 import org.prebid.server.bidder.improvedigital.proto.ImprovedigitalBidExt;
 import org.prebid.server.bidder.improvedigital.proto.ImprovedigitalBidExtImprovedigital;
 import org.prebid.server.it.IntegrationTest;
@@ -53,6 +55,8 @@ import org.prebid.server.proto.openrtb.ext.request.ExtSite;
 import org.prebid.server.proto.openrtb.ext.request.ExtSource;
 import org.prebid.server.proto.openrtb.ext.request.ExtSourceSchain;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
+import org.prebid.server.util.ObjectUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.test.context.TestPropertySource;
 
@@ -70,6 +74,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -88,9 +93,13 @@ import static org.assertj.core.api.Assertions.fail;
 )
 @TestPropertySource(properties = {
         "settings.filesystem.stored-imps-dir=src/test/resources/com/improvedigital/prebid/server/it/storedimps",
-        "settings.targeting.truncate-attr-chars=20"
+        "settings.filesystem.settings-filename=src/test/resources/com/improvedigital/prebid/server/it/settings.yaml",
+        "settings.targeting.truncate-attr-chars=20",
 })
 public class ImprovedigitalIntegrationTest extends IntegrationTest {
+
+    @Autowired
+    protected BidderCatalog bidderCatalog;
 
     protected static final String IT_TEST_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
             + "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.60 Safari/537.36";
@@ -143,6 +152,12 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 .build();
     }
 
+    protected Set<String> getAllActiveBidders() {
+        return bidderCatalog.names().stream()
+                .filter(n -> bidderCatalog.isActive(n))
+                .collect(Collectors.toSet());
+    }
+
     protected String getAuctionBidRequestBanner(String uniqueId, AuctionBidRequestBannerTestData bidRequestData) {
         // We do not want version, complete when no nodes are there.
         final ExtSource reqSourceExt = CollectionUtils.isEmpty(bidRequestData.schainNodes) ? null : ExtSource.of(
@@ -166,8 +181,15 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                                 .request(toJsonString(mapper, bidRequestData.nativeData.request))
                                 .ver(StringUtils.defaultString(bidRequestData.nativeData.ver, "1.2"))
                                 .build())
+                        .bidfloor(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloor))
+                        .bidfloorcur(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloorCur))
                         .build(),
                 bidRequest -> bidRequest.toBuilder()
+                        .site(Site.builder()
+                                .publisher(Publisher.builder()
+                                        .id(bidRequestData.publisherId)
+                                        .build())
+                                .build())
                         .cur(Arrays.asList(bidRequestData.currency))
                         .user(User.builder()
                                 .ext(ExtUser.builder()
@@ -184,6 +206,11 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     }
 
     protected String getSSPBidRequestBanner(String uniqueId, SSPBidRequestBannerTestData bidRequestData) {
+        return getSSPBidRequestBanner(uniqueId, bidRequestData, null);
+    }
+
+    protected String getSSPBidRequestBanner(
+            String uniqueId, SSPBidRequestBannerTestData bidRequestData, Function<BidRequest, BidRequest> reqModifier) {
         // We do not want version, complete when no nodes are there.
         final ExtSource reqSourceExt = CollectionUtils.isEmpty(bidRequestData.schainNodes) ? null : ExtSource.of(
                 ExtSourceSchain.of(
@@ -198,20 +225,23 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 imp -> imp.toBuilder()
                         .ext(bidRequestData.impExt == null ? null : bidRequestData.impExt.get())
                         .banner(bidRequestData.bannerData == null ? null : Banner.builder()
-                                .w(bidRequestData.bannerData == null ? 300 : bidRequestData.bannerData.w)
-                                .h(bidRequestData.bannerData == null ? 250 : bidRequestData.bannerData.h)
+                                .w(bidRequestData.bannerData.w)
+                                .h(bidRequestData.bannerData.h)
                                 .mimes(bidRequestData.bannerData.mimes)
                                 .build())
                         .xNative(bidRequestData.nativeData == null ? null : Native.builder()
                                 .request(toJsonString(mapper, bidRequestData.nativeData.request))
                                 .ver(StringUtils.defaultString(bidRequestData.nativeData.ver, "1.2"))
                                 .build())
+                        .bidfloor(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloor))
+                        .bidfloorcur(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloorCur))
                         .build(),
                 bidRequest -> bidRequest.toBuilder()
                         .site(Site.builder()
                                 .domain(IT_TEST_DOMAIN)
                                 .page("http://" + IT_TEST_DOMAIN)
                                 .publisher(Publisher.builder()
+                                        .id(bidRequestData.publisherId)
                                         .domain(IT_TEST_MAIN_DOMAIN)
                                         .build())
                                 .ext(ExtSite.of(0, null))
@@ -230,6 +260,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                         .cur(Arrays.asList(bidRequestData.currency))
                         .regs(Regs.of(null, ExtRegs.of(0, null)))
                         .ext(ExtRequest.of(ExtRequestPrebid.builder()
+                                .channel(ExtRequestPrebidChannel.of("web"))
                                 .pbs(ExtRequestPrebidPbs.of("/openrtb2/auction"))
                                 .server(ExtRequestPrebidServer.of(
                                         "http://localhost:8080", 1, "local"
@@ -239,7 +270,8 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                                 .tid("source_tid_" + uniqueId)
                                 .ext(reqSourceExt)
                                 .build())
-                        .build()
+                        .build(),
+                reqModifier
         );
     }
 
@@ -257,6 +289,8 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                                 .linearity(1)
                                 .placement(5)
                                 .build())
+                        .bidfloor(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloor))
+                        .bidfloorcur(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloorCur))
                         .build(),
                 bidRequest -> bidRequest.toBuilder()
                         .cur(Arrays.asList(bidRequestData.currency))
@@ -286,6 +320,8 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                                 .linearity(1)
                                 .placement(5)
                                 .build())
+                        .bidfloor(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloor))
+                        .bidfloorcur(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloorCur))
                         .build(),
                 bidRequest -> bidRequest.toBuilder()
                         .site(Site.builder()
@@ -323,7 +359,7 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
     }
 
     protected String getBidRequestWeb(
-            String uniqueId, Function<Imp, Imp> impModifier, Function<BidRequest, BidRequest> bidModifier
+            String uniqueId, Function<Imp, Imp> impModifier, Function<BidRequest, BidRequest>... bidModifiers
     ) {
         Imp imp = Imp.builder()
                 .id("imp_id_" + uniqueId)
@@ -343,8 +379,12 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                 .imp(Arrays.asList(imp))
                 .build();
 
-        if (bidModifier != null) {
-            bidRequest = bidModifier.apply(bidRequest);
+        if (bidModifiers != null) {
+            for (Function<BidRequest, BidRequest> m : bidModifiers) {
+                if (m != null) {
+                    bidRequest = m.apply(bidRequest);
+                }
+            }
         }
 
         return toJsonString(BID_REQUEST_MAPPER, bidRequest);
@@ -414,6 +454,10 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         List<ExtRequestPrebidSchainSchainNode> schainNodes;
 
         Integer test;
+
+        String publisherId;
+
+        Floor floor;
     }
 
     /**
@@ -437,6 +481,10 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         Integer schainComplete;
 
         List<ExtRequestPrebidSchainSchainNode> schainNodes;
+
+        String publisherId;
+
+        Floor floor;
     }
 
     /**
@@ -454,6 +502,8 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         List<String> siteIABCategories;
 
         String gdprConsent;
+
+        Floor floor;
 
         @JsonIgnore
         public List<Integer> getVideoProtocols(int defaultProtocol) {
@@ -480,6 +530,8 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
         List<String> siteIABCategories;
 
         String gdprConsent;
+
+        Floor floor;
 
         @JsonIgnore
         public List<Integer> getVideoProtocols(int defaultProtocol) {
@@ -1007,7 +1059,9 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
 
     protected void assertBidPrice(
             JSONObject responseJson, int seatBidIndex, int bidIndex, double expectedBidPrice) throws JSONException {
-        assertThat(getBidPrice(responseJson, seatBidIndex, bidIndex)).isEqualTo(expectedBidPrice);
+        assertThat(getBidPrice(responseJson, seatBidIndex, bidIndex)).isEqualTo(
+                new BigDecimal(expectedBidPrice).setScale(4, RoundingMode.HALF_EVEN).doubleValue()
+        );
     }
 
     @NotNull

@@ -1474,6 +1474,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .post(Endpoint.openrtb2_auction.value());
 
         JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
         assertBidCountIsOneOrMore(responseJson);
         assertBidIdExists(responseJson, 0, 0);
         assertBidImpId(responseJson, 0, 0, "imp_id_1");
@@ -1552,6 +1553,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .post(Endpoint.openrtb2_auction.value());
 
         JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
         assertBidCountIsOne(responseJson); /* As we are sending some bids from SSP, we will definitely get 1 bid. */
         assertBidIdExists(responseJson, 0, 0);
         assertBidImpId(responseJson, 0, 0, "imp_id_1");
@@ -1654,6 +1656,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .post(Endpoint.openrtb2_auction.value());
 
         JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
         assertBidCountIsOne(responseJson); /* As we are sending some bids from SSP, we will definitely get 1 bid. */
         assertBidIdExists(responseJson, 0, 0);
         assertBidImpId(responseJson, 0, 0, "imp_id_1");
@@ -1729,6 +1732,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .post(Endpoint.openrtb2_auction.value());
 
         JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
         assertCurrency(responseJson, "USD");
         return responseJson;
     }
@@ -1860,6 +1864,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 .post(Endpoint.openrtb2_auction.value());
 
         JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
         assertBidCountIsOne(responseJson); /* As we are sending some bids from SSP, we will definitely get 1 bid. */
         assertBidIdExists(responseJson, 0, 0);
         assertBidImpId(responseJson, 0, 0, "imp_id_1");
@@ -1911,7 +1916,9 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 ))
                 .post(Endpoint.openrtb2_auction.value());
 
-        return new JSONObject(response.asString());
+        JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
+        return responseJson;
     }
 
     private ExtRequestPrebidCache getExtPrebidCacheForGvast() {

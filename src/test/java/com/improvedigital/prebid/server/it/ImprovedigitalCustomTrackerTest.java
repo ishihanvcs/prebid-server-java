@@ -48,6 +48,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         );
 
         JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
         assertBidExtPrebidType(responseJson, 0, 0, "banner");
         assertCurrency(responseJson, "USD");
 
@@ -65,6 +66,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         );
 
         JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
         assertBidExtPrebidType(responseJson, 0, 0, "banner");
         assertCurrency(responseJson, "USD");
 
@@ -84,6 +86,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         );
 
         JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
         assertBidExtPrebidType(responseJson, 0, 0, "banner");
         assertCurrency(responseJson, "USD");
 
@@ -103,6 +106,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         );
 
         JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
         assertBidExtPrebidType(responseJson, 0, 0, "banner");
         assertCurrency(responseJson, "USD");
 
@@ -124,6 +128,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         );
 
         JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
         assertBidExtPrebidType(responseJson, 0, 0, "video");
         assertCurrency(responseJson, "USD");
 
@@ -149,6 +154,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         );
 
         JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
         assertBidExtPrebidType(responseJson, 0, 0, "video");
         assertCurrency(responseJson, "USD");
 
@@ -186,6 +192,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         );
 
         JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
         assertBidExtPrebidType(responseJson, 0, 0, "video");
         assertCurrency(responseJson, "USD");
 
@@ -205,6 +212,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         );
 
         JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
         assertBidExtPrebidType(responseJson, 0, 0, "video");
         assertCurrency(responseJson, "USD");
 
@@ -230,6 +238,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         );
 
         JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
         assertBidExtPrebidType(responseJson, 0, 0, "video");
         assertCurrency(responseJson, "USD");
 
@@ -267,6 +276,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         );
 
         JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
         assertBidExtPrebidType(responseJson, 0, 0, "video");
         assertCurrency(responseJson, "USD");
 
@@ -286,6 +296,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         final Response response = doVideoMultiImpRequestAndGetResponse(vastXmlResponse1, vastXmlResponse2);
 
         JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
         assertBidExtPrebidType(responseJson, 0, 0, "video");
         assertBidExtPrebidType(responseJson, 0, 1, "video");
         assertCurrency(responseJson, "USD");
@@ -580,6 +591,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         assertThat(response.statusCode()).isEqualTo(200);
 
         JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
         assertThat(responseJson.getJSONArray("seatbid").length()).isEqualTo(0);
         assertThat(responseJson
                 .getJSONObject("ext")
@@ -905,6 +917,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .post(Endpoint.openrtb2_auction.value());
 
         JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
         assertBidCountIsOneOrMore(responseJson);
         assertBidIdExists(responseJson, 0, 0);
         assertBidImpId(responseJson, 0, 0, "imp_id_1");

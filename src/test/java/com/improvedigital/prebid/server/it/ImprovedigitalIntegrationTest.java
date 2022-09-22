@@ -832,11 +832,14 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
 
         public BidResponseBidExt putImprovedigitalBidExt(String buyingType, Integer lineItemId) {
             bidExt.putIfAbsent("improvedigital", BID_REQUEST_MAPPER.valueToTree(
-                    ImprovedigitalBidExtImprovedigital.builder()
-                            .buyingType(buyingType)
-                            .lineItemId(lineItemId)
-                            .build()
+                    ImprovedigitalBidExtImprovedigital.builder().build()
             ));
+            if (buyingType != null) {
+                ((ObjectNode) bidExt.at("/improvedigital")).put("buying_type", buyingType);
+            }
+            if (lineItemId != null) {
+                ((ObjectNode) bidExt.at("/improvedigital")).put("line_item_id", lineItemId);
+            }
             return this;
         }
 

@@ -51,6 +51,9 @@ import org.junit.ClassRule;
 import org.prebid.server.VertxTest;
 import org.prebid.server.bidder.BidderCatalog;
 import org.prebid.server.bidder.improvedigital.proto.ImprovedigitalBidExtImprovedigital;
+import org.prebid.server.floors.model.PriceFloorLocation;
+import org.prebid.server.floors.model.PriceFloorRules;
+import org.prebid.server.floors.proto.FetchStatus;
 import org.prebid.server.proto.openrtb.ext.request.ExtImp;
 import org.prebid.server.proto.openrtb.ext.request.ExtImpPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRegs;
@@ -245,6 +248,9 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                 .regs(Regs.of(null, ExtRegs.of(0, null)))
                 .cur(List.of(bidRequestData.currency))
                 .site(Site.builder()
+                        .publisher(Publisher.builder()
+                                .id(bidRequestData.publisherId)
+                                .build())
                         .cat(bidRequestData.siteIABCategories)
                         .build())
                 .user(User.builder()
@@ -306,6 +312,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                         .domain(IT_TEST_DOMAIN)
                         .page("http://" + IT_TEST_DOMAIN)
                         .publisher(Publisher.builder()
+                                .id(bidRequestData.publisherId)
                                 .domain(IT_TEST_MAIN_DOMAIN)
                                 .build())
                         .cat(bidRequestData.siteIABCategories)
@@ -332,6 +339,11 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                         .channel(bidRequestData.channel)
                         .targeting(bidRequestData.extRequestTargeting)
                         .cache(bidRequestData.extRequestPrebidCache)
+                        .floors(PriceFloorRules.builder()
+                                .enabled(true)
+                                .fetchStatus(FetchStatus.error)
+                                .location(PriceFloorLocation.noData)
+                                .build())
                         .build()))
                 .source(Source.builder()
                         .tid("source_tid_" + uniqueId)

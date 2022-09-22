@@ -12,6 +12,7 @@ import org.prebid.server.floors.model.PriceFloorRules;
 import org.prebid.server.floors.proto.FetchStatus;
 import org.prebid.server.model.Endpoint;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
+import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidChannel;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -26,16 +27,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@TestPropertySource(
-        locations = {
-                "/com/improvedigital/prebid/server/it/test-application-improvedigital-hooks.properties"
-        },
-        properties = {
-                "admin.port=18063",
-                "http.port=18083",
-                "price-floors.enabled=true",
-        }
-)
+@TestPropertySource(properties = {
+        "admin.port=18063",
+        "http.port=18083"
+})
 @RunWith(SpringRunner.class)
 public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTest {
 
@@ -76,8 +71,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                 null,
                 2.25,
                 null,
-                2.25 * 1.15, /* Bid is increased: 2.5875. */
-                true
+                2.25 * 1.15 /* Bid is increased: 2.5875. */
         );
     }
 
@@ -90,8 +84,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                 BigDecimal.valueOf(0.5),
                 2.25,
                 BigDecimal.valueOf(0.5 / 1.15), /* Bidfloor is decreased. 0.4348. */
-                2.25 * 1.15, /* Bid is increased: 2.5875. */
-                true
+                2.25 * 1.15 /* Bid is increased: 2.5875. */
         );
     }
 
@@ -104,8 +97,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                 BigDecimal.valueOf(0.5),
                 1.15,
                 BigDecimal.valueOf(0.5 / 0.95), /* Bidfloor is increased. 0.5263. */
-                1.15 * 0.95, /* Bid is decreased. 1.0925. */
-                true
+                1.15 * 0.95 /* Bid is decreased. 1.0925. */
         );
     }
 
@@ -146,8 +138,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                 BigDecimal.valueOf(0.5),
                 1.15,
                 BigDecimal.valueOf(0.5), /* Bidfloor intact. */
-                1.15, /* Bid intact. */
-                true
+                1.15 /* Bid intact. */
         );
     }
 
@@ -160,8 +151,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                 BigDecimal.valueOf(0.5),
                 1.15,
                 BigDecimal.valueOf(0.5), /* Bidfloor intact. */
-                1.15, /* Bid intact. */
-                true
+                1.15 /* Bid intact. */
         );
     }
 
@@ -174,8 +164,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                 BigDecimal.valueOf(0.4),
                 1.12,
                 BigDecimal.valueOf(0.4), /* Bidfloor intact. */
-                1.12, /* Bid intact. */
-                false
+                1.12 /* Bid intact. */
         );
     }
 
@@ -186,8 +175,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
             BigDecimal dspBidFloor,
             double dspBid,
             BigDecimal expectedPbsBidFloor,
-            double expectedPbsBid,
-            boolean priceFloorEnabled
+            double expectedPbsBid
     ) throws JSONException {
 
         String uniqueId = UUID.randomUUID().toString();
@@ -198,26 +186,25 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                                 SSPBidRequestTestData.builder()
                                         .currency("USD")
                                         .impData(SingleImpTestData.builder()
+                                                .id("imp_id_1")
                                                 .impExt(new SSPBidRequestImpExt()
                                                         .putStoredRequest(storedImpId)
                                                         .putBidder()
                                                         .putBidderKeyValue("placementId", placementIdOfStoredImp))
-                                                .bannerData(BannerTestParam.builder()
-                                                        .w(300)
-                                                        .h(250)
-                                                        .build())
+                                                .bannerData(BannerTestParam.getDefault())
                                                 .build())
                                         .publisherId(publisherId)
                                         .floor(expectedPbsBidFloor == null ? null : Floor.of(
                                                 expectedPbsBidFloor.setScale(4, RoundingMode.HALF_EVEN), "USD"
                                         ))
+                                        .channel(ExtRequestPrebidChannel.of("web"))
                                         .build(),
                                 bidRequest -> bidRequest.toBuilder()
                                         .ext(ExtRequest.of(bidRequest.getExt().getPrebid().toBuilder()
                                                 .floors(PriceFloorRules.builder()
-                                                        .enabled(priceFloorEnabled)
-                                                        .fetchStatus(priceFloorEnabled ? FetchStatus.none : null)
-                                                        .location(priceFloorEnabled ? PriceFloorLocation.noData : null)
+                                                        .enabled(true)
+                                                        .fetchStatus(FetchStatus.none)
+                                                        .location(PriceFloorLocation.noData)
                                                         .build())
                                                 .build()))
                                         .build()
@@ -225,6 +212,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                         .willReturn(aResponse().withBody(getSSPBidResponse(
                                 "improvedigital", uniqueId, "USD",
                                 BidResponseTestData.builder()
+                                        .impId("imp_id_1")
                                         .price(dspBid)
                                         .adm("<img src='banner-1.jpg' />")
                                         .build()
@@ -234,11 +222,14 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
         Response response = specWithPBSHeader(18083)
                 .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
                         .currency("USD")
-                        .imps(List.of(
-                                AuctionBidRequestImpTestData.builder()
-                                        .impExt(new AuctionBidRequestImpExt()
-                                                .putStoredRequest(storedImpId))
-                                        .build()
+                        .imps(List.of(AuctionBidRequestImpTestData.builder()
+                                .impExt(new AuctionBidRequestImpExt()
+                                        .putStoredRequest(storedImpId))
+                                .impData(SingleImpTestData.builder()
+                                        .id("imp_id_1")
+                                        .bannerData(BannerTestParam.getDefault())
+                                        .build())
+                                .build()
                         ))
                         .publisherId(publisherId)
                         .floor(dspBidFloor == null ? null : Floor.of(
@@ -273,16 +264,15 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                                 SSPBidRequestTestData.builder()
                                         .currency("USD")
                                         .impData(SingleImpTestData.builder()
+                                                .id("imp_id_1")
                                                 .impExt(new SSPBidRequestImpExt()
                                                         .putStoredRequest(param.storedImpId)
                                                         .putBidder()
                                                         .putBidderKeyValue("placementId", param.improvePlacementId))
-                                                .bannerData(BannerTestParam.builder()
-                                                        .w(300)
-                                                        .h(250)
-                                                        .build())
+                                                .bannerData(BannerTestParam.getDefault())
                                                 .build())
                                         .publisherId(publisherId)
+                                        .channel(ExtRequestPrebidChannel.of("web"))
                                         .build(),
                                 bidRequest -> bidRequest.toBuilder()
                                         .ext(ExtRequest.of(bidRequest.getExt().getPrebid().toBuilder()
@@ -297,10 +287,12 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                         .willReturn(aResponse().withBody(getSSPBidResponse(
                                 "improvedigital", param.auctionRequestId, "USD",
                                 BidResponseTestData.builder()
+                                        .impId("imp_id_1")
                                         .price(improvePrice1Value)
                                         .adm(param.improveAdm1)
                                         .build(),
                                 BidResponseTestData.builder()
+                                        .impId("imp_id_1")
                                         .price(improvePrice2Value)
                                         .adm(param.improveAdm2)
                                         .build()
@@ -313,16 +305,15 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                                 SSPBidRequestTestData.builder()
                                         .currency("USD")
                                         .impData(SingleImpTestData.builder()
+                                                .id("imp_id_1")
                                                 .impExt(new SSPBidRequestImpExt()
                                                         .putStoredRequest(param.storedImpId)
                                                         .putBidder()
                                                         .putBidderKeyValue("exampleProperty", "examplePropertyValue"))
-                                                .bannerData(BannerTestParam.builder()
-                                                        .w(300)
-                                                        .h(250)
-                                                        .build())
+                                                .bannerData(BannerTestParam.getDefault())
                                                 .build())
                                         .publisherId(publisherId)
+                                        .channel(ExtRequestPrebidChannel.of("web"))
                                         .build(),
                                 bidRequest -> bidRequest.toBuilder()
                                         .ext(ExtRequest.of(bidRequest.getExt().getPrebid().toBuilder()
@@ -337,10 +328,12 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                         .willReturn(aResponse().withBody(getSSPBidResponse(
                                 "generic", param.auctionRequestId, "USD",
                                 BidResponseTestData.builder()
+                                        .impId("imp_id_1")
                                         .price(genericPrice1Value)
                                         .adm(param.genericAdm1)
                                         .build(),
                                 BidResponseTestData.builder()
+                                        .impId("imp_id_1")
                                         .price(genericPrice2Value)
                                         .adm(param.genericAdm2)
                                         .build()
@@ -354,6 +347,10 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                                 .impExt(new AuctionBidRequestImpExt()
                                         .putStoredRequest(param.storedImpId)
                                 )
+                                .impData(SingleImpTestData.builder()
+                                        .id("imp_id_1")
+                                        .bannerData(BannerTestParam.getDefault())
+                                        .build())
                                 .build()))
                         .publisherId(publisherId)
                         .build()

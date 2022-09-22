@@ -164,7 +164,8 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                 BigDecimal.valueOf(0.4),
                 1.12,
                 BigDecimal.valueOf(0.4), /* Bidfloor intact. */
-                1.12 /* Bid intact. */
+                1.12, /* Bid intact. */
+                false
         );
     }
 
@@ -176,6 +177,28 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
             double dspBid,
             BigDecimal expectedPbsBidFloor,
             double expectedPbsBid
+    ) throws JSONException {
+        return doAuctionRequestToImprovedigitalBidder(
+                publisherId,
+                storedImpId,
+                placementIdOfStoredImp,
+                dspBidFloor,
+                dspBid,
+                expectedPbsBidFloor,
+                expectedPbsBid,
+                true
+        );
+    }
+
+    private JSONObject doAuctionRequestToImprovedigitalBidder(
+            String publisherId,
+            String storedImpId,
+            int placementIdOfStoredImp,
+            BigDecimal dspBidFloor,
+            double dspBid,
+            BigDecimal expectedPbsBidFloor,
+            double expectedPbsBid,
+            boolean floorModuleEnabled
     ) throws JSONException {
 
         String uniqueId = UUID.randomUUID().toString();
@@ -202,9 +225,9 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                                 bidRequest -> bidRequest.toBuilder()
                                         .ext(ExtRequest.of(bidRequest.getExt().getPrebid().toBuilder()
                                                 .floors(PriceFloorRules.builder()
-                                                        .enabled(true)
-                                                        .fetchStatus(FetchStatus.none)
-                                                        .location(PriceFloorLocation.noData)
+                                                        .enabled(floorModuleEnabled)
+                                                        .fetchStatus(floorModuleEnabled ? FetchStatus.none : null)
+                                                        .location(floorModuleEnabled ? PriceFloorLocation.noData : null)
                                                         .build())
                                                 .build()))
                                         .build()

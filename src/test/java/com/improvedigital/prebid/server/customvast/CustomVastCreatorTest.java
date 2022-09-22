@@ -9,6 +9,7 @@ import com.improvedigital.prebid.server.UnitTestBase;
 import com.improvedigital.prebid.server.customvast.model.CreatorContext;
 import com.improvedigital.prebid.server.customvast.model.CustParams;
 import com.improvedigital.prebid.server.customvast.model.CustomVast;
+import com.improvedigital.prebid.server.customvast.model.HooksModuleContext;
 import com.improvedigital.prebid.server.customvast.model.VastResponseType;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import com.improvedigital.prebid.server.utils.ResponseUtils;
@@ -251,7 +252,7 @@ public class CustomVastCreatorTest extends UnitTestBase {
 
     private void removeImproveDealsFromTargeting(BidResponse bidResponse) {
         bidResponse.getSeatbid().forEach(seatBid -> {
-            if (RequestUtils.IMPROVE_BIDDER_NAME.equals(seatBid.getSeat())) {
+            if (RequestUtils.IMPROVE_DIGITAL_BIDDER_NAME.equals(seatBid.getSeat())) {
                 seatBid.getBid().forEach(bid -> {
                     if (bid.getExt() == null) {
                         return;
@@ -291,9 +292,10 @@ public class CustomVastCreatorTest extends UnitTestBase {
         assertThat(response).isNotNull();
         Imp imp = getVideoImpFromRequest(request);
         assertThat(imp).isNotNull();
-        CreatorContext context = CreatorContext.from(
-                request, response, jsonUtils
-        ).with(imp, ResponseUtils.getBidsForImp(response, imp), jsonUtils);
+        HooksModuleContext hooksModuleContext = customVastUtils.createModuleContext(request, null)
+                .with(response);
+        CreatorContext context = CreatorContext.from(hooksModuleContext, jsonUtils)
+                .with(imp, ResponseUtils.getBidsForImp(response, imp), jsonUtils);
 
         CustomVast customVast = customVastCreator.create(context);
         assertThat(customVast).isNotNull();
@@ -397,7 +399,7 @@ public class CustomVastCreatorTest extends UnitTestBase {
         CustParams custParams = new CustParams(CUST_PARAM_STR);
         BidRequest bidRequest = fromRequest.toBuilder().build();
         bidRequest.getImp().replaceAll(imp ->
-                setImpBidderProperties(imp, RequestUtils.IMPROVE_BIDDER_NAME,
+                setImpBidderProperties(imp, RequestUtils.IMPROVE_DIGITAL_BIDDER_NAME,
                         bidderNode ->
                                 bidderNode.set("keyValues", mapper.valueToTree(custParams))
                 )

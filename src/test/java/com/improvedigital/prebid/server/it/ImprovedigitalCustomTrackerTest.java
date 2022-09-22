@@ -721,7 +721,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
         String adm = getAdm(responseJson, 0, 0);
         assertThat(adm).isEqualTo("<img src='banner-1.png' />"
-                + getCustomTrackerUrl("improvedigital", "1.45", "20220830")
+                + getCustomTrackerPixel("improvedigital", "1.45", "20220830")
         );
     }
 

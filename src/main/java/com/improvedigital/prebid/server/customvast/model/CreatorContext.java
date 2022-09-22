@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.App;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Device;
-import com.iab.openrtb.request.Geo;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.request.Regs;
 import com.iab.openrtb.request.Site;
@@ -24,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.proto.openrtb.ext.request.ExtRegs;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
 import org.prebid.server.util.HttpUtil;
+import org.prebid.server.util.ObjectUtil;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -37,6 +37,7 @@ import java.util.Optional;
 @ToString
 public class CreatorContext extends GVastHandlerParams {
 
+    BidRequest bidRequest;
     ObjectNode extBidResponse;
     List<Bid> bids;
     Imp imp;
@@ -50,15 +51,19 @@ public class CreatorContext extends GVastHandlerParams {
     VastResponseType responseType = VastResponseType.gvast;
 
     public static CreatorContext from(HooksModuleContext context, JsonUtils jsonUtils) {
-        return from(context.getBidRequest(), context.getBidResponse(), jsonUtils)
-                .with(context.getAlpha3Country());
-    }
+        Objects.requireNonNull(context);
 
-    public static CreatorContext from(BidRequest request, BidResponse response, JsonUtils jsonUtils) {
-        Objects.requireNonNull(request);
-        Objects.requireNonNull(response);
+        Objects.requireNonNull(context.getBidRequest());
+        Objects.requireNonNull(context.getBidResponse());
         Objects.requireNonNull(jsonUtils);
-        CreatorContextBuilder<?, ?> builder = CreatorContext.builder();
+
+        BidRequest request = context.getBidRequest();
+        BidResponse response = context.getBidResponse();
+
+        CreatorContextBuilder<?, ?> builder = CreatorContext.builder()
+                .bidRequest(request)
+                .alpha3Country(context.getAlpha3Country());
+
         final Optional<Site> siteOptional = Optional.ofNullable(request.getSite());
         final Optional<App> appOptional = Optional.ofNullable(request.getApp());
         final Optional<Regs> regsOptional = Optional.ofNullable(request.getRegs());
@@ -85,7 +90,6 @@ public class CreatorContext extends GVastHandlerParams {
                 .map(ExtUser::getConsent)
                 .orElse(StringUtils.EMPTY));
 
-        builder.alpha3Country(deviceOptional.map(Device::getGeo).map(Geo::getCountry).orElse(null));
         builder.ifa(deviceOptional.map(Device::getIfa).orElse(null));
         builder.lmt(deviceOptional.map(Device::getLmt).orElse(null));
         builder.os(deviceOptional.map(Device::getOs).orElse(null));
@@ -117,6 +121,14 @@ public class CreatorContext extends GVastHandlerParams {
                 .bids(bids)
                 .imp(imp);
 
+        builder.bidfloor(
+                ObjectUtil.getIfNotNull(imp.getBidfloor(), BigDecimal::doubleValue)
+        );
+
+        builder.bidfloorcur(
+                ObjectUtils.defaultIfNull(imp.getBidfloorcur(), "USD")
+        );
+
         builder.custParams(Optional.ofNullable(imp.getExt())
                 .map(impExt -> jsonUtils.objectPathToValue(
                         impExt,
@@ -135,18 +147,6 @@ public class CreatorContext extends GVastHandlerParams {
                 builder,
                 improvedigitalPbsImpExt
         ).build();
-    }
-
-    public CreatorContext with(
-            ImprovedigitalPbsImpExt improvedigitalPbsImpExt) {
-        return populateBuilderFromImprovedigitalPbsImpExt(
-                this.toBuilder(),
-                improvedigitalPbsImpExt
-        ).build();
-    }
-
-    public CreatorContext with(String alpha3Country) {
-        return this.toBuilder().alpha3Country(alpha3Country).build();
     }
 
     public boolean isApp() {
@@ -242,25 +242,9 @@ public class CreatorContext extends GVastHandlerParams {
                 .orElse(VastResponseType.gvast)
         );
 
-        final Optional<Floor> optionalFloor = optionalConfig
-                .map(config -> config.getFloor(this.getAlpha3Country()));
-
-        builder.bidfloor(
-                optionalFloor
-                        .map(Floor::getBidFloor)
-                        .map(BigDecimal::doubleValue)
-                        .orElse(0.0)
-        );
-
-        builder.bidfloorcur(
-                optionalFloor
-                        .map(Floor::getBidFloorCur)
-                        .orElse("USD")
-        );
-
         builder.waterfall(
                 optionalConfig
-                        .map(config -> config.getWaterfall(this.getAlpha3Country()))
+                        .map(config -> config.getWaterfall(alpha3Country))
                         .orElse(List.of())
         );
 

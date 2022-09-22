@@ -44,8 +44,6 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
 
         final JSONObject responseJson = doAuctionRequestToMultipleBidder(
                 /* This account has "bidPriceAdjustment=0.95, bidPriceAdjustmentIncImprove=true" */ "2022081801",
-                true,
-                0.95,
                 BidAdjustmentMultipleBidderAuctionTestParam.builder()
                         .auctionRequestId(uniqueId)
                         .storedImpId("2022081501")
@@ -72,8 +70,6 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
     public void testBidIsIncreasedWhenBidfloorIsNotSpecifiedInRequest() throws Exception {
         doAuctionRequestToImprovedigitalBidder(
                 /* This account has "bidPriceAdjustment=1.15, bidPriceAdjustmentIncImprove=true" */ "2022081802",
-                true,
-                1.15,
                 "2022081502",
                 20220815,
                 null,
@@ -88,8 +84,6 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
     public void testBidfloorIsDecreased() throws Exception {
         doAuctionRequestToImprovedigitalBidder(
                 /* This account has "bidPriceAdjustment=1.15, bidPriceAdjustmentIncImprove=true" */ "2022081802",
-                true,
-                1.15,
                 "2022081502",
                 20220815,
                 BigDecimal.valueOf(0.5),
@@ -104,8 +98,6 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
     public void testBidfloorIsIncreased() throws Exception {
         doAuctionRequestToImprovedigitalBidder(
                 /* This account has "bidPriceAdjustment=0.95, bidPriceAdjustmentIncImprove=true" */ "2022081801",
-                true,
-                0.95,
                 "2022081502",
                 20220815,
                 BigDecimal.valueOf(0.5),
@@ -122,8 +114,6 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
 
         final JSONObject responseJson = doAuctionRequestToMultipleBidder(
                 /* This account has "bidPriceAdjustment=0.90, bidPriceAdjustmentIncImprove=false" */ "2022081803",
-                false,
-                0.90,
                 BidAdjustmentMultipleBidderAuctionTestParam.builder()
                         .auctionRequestId(uniqueId)
                         .storedImpId("2022081501")
@@ -150,8 +140,6 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
     public void testBidAdjustmentWhenImprovedigitalIsNotEnabledByDefault() throws Exception {
         doAuctionRequestToImprovedigitalBidder(
                 /* This account has "bidPriceAdjustment=0.80" and no "bidPriceAdjustmentIncImprove" */ "2022081804",
-                false,
-                0.8,
                 "2022081502",
                 20220815,
                 BigDecimal.valueOf(0.5),
@@ -166,8 +154,6 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
     public void testBidAdjustmentWhenAccountHasNoValueInExt() throws Exception {
         doAuctionRequestToImprovedigitalBidder(
                 /* This account has no "ext" */ "2022081805",
-                false,
-                null, /* No bidadjustment factors. */
                 "2022081502",
                 20220815,
                 BigDecimal.valueOf(0.5),
@@ -182,8 +168,6 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
     public void testBidAdjustmentWhenAccountHasPriceFloorsModuleTurnedOff() throws Exception {
         doAuctionRequestToImprovedigitalBidder(
                 /* This account has "auction.price-floors.enabled=false, bidPriceAdjustment=0.85" */ "2022081806",
-                false,
-                null, /* No bidadjustment factors. */
                 "2022081502",
                 20220815,
                 BigDecimal.valueOf(0.4),
@@ -196,8 +180,6 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
 
     private JSONObject doAuctionRequestToImprovedigitalBidder(
             String publisherId,
-            boolean improveIsExpectedForAdjustment,
-            Double expectedBidAdjustmentPct,
             String storedImpId,
             int placementIdOfStoredImp,
             BigDecimal dspBidFloor,
@@ -271,8 +253,6 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
 
     private JSONObject doAuctionRequestToMultipleBidder(
             String publisherId,
-            boolean improveIsExpectedForAdjustment,
-            double expectedBidAdjustmentPct,
             BidAdjustmentMultipleBidderAuctionTestParam param) throws JSONException {
 
         double improvePrice1Value = Double.parseDouble(param.improvePrice1);

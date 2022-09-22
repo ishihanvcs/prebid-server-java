@@ -233,12 +233,8 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                                 .request(toJsonString(mapper, bidRequestData.nativeData.request))
                                 .ver(StringUtils.defaultString(bidRequestData.nativeData.ver, "1.2"))
                                 .build())
-                        .bidfloor(ObjectUtil.getIfNotNullOrDefault(
-                                bidRequestData.floor, Floor::getBidFloor, () -> BigDecimal.ZERO
-                        ))
-                        .bidfloorcur(ObjectUtil.getIfNotNullOrDefault(
-                                bidRequestData.floor, Floor::getBidFloorCur, () -> bidRequestData.currency
-                        ))
+                        .bidfloor(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloor))
+                        .bidfloorcur(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloorCur))
                         .build(),
                 bidRequest -> bidRequest.toBuilder()
                         .site(Site.builder()
@@ -324,12 +320,8 @@ public class ImprovedigitalIntegrationTest extends IntegrationTest {
                                 .linearity(1)
                                 .placement(5)
                                 .build())
-                        .bidfloor(ObjectUtil.getIfNotNullOrDefault(
-                                bidRequestData.floor, Floor::getBidFloor, () -> BigDecimal.ZERO
-                        ))
-                        .bidfloorcur(ObjectUtil.getIfNotNullOrDefault(
-                                bidRequestData.floor, Floor::getBidFloorCur, () -> bidRequestData.currency
-                        ))
+                        .bidfloor(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloor))
+                        .bidfloorcur(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloorCur))
                         .build(),
                 bidRequest -> bidRequest.toBuilder()
                         .site(Site.builder()

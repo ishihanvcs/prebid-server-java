@@ -996,7 +996,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
-    @Ignore
+    @Ignore /* Will be fixed in separate branch */
     public void testCustomVastResponseWithMultiFormatToMultipleBidders() throws Exception {
         String improvePlacementId = "2022091601";
 
@@ -1663,11 +1663,12 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     ) throws JSONException {
         String uniqueId = UUID.randomUUID().toString();
 
+        List<String> impId1Responder = List.of("improvedigital", "e_volution");
         params.keySet().forEach(b ->
                 WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/" + b.replace("_", "") + "-exchange"))
                         .willReturn(aResponse().withBody(getSSPBidResponse(
                                 b, uniqueId, "USD", BidResponseTestData.builder()
-                                        .impId("imp_id_1")
+                                        .impId(impId1Responder.contains(b) ? "imp_id_1" : "imp_id_2")
                                         .price(params.get(b).price)
                                         .adm(params.get(b).adm)
                                         .bidExt(params.get(b).bidExt)
@@ -1703,32 +1704,49 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         Response response = specWithPBSHeader(18080)
                 .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
                         .currency("USD")
-                        .imps(List.of(AuctionBidRequestImpTestData.builder()
-                                .impExt(new AuctionBidRequestImpExt()
-                                        .putImprovedigitalPbs()
-                                        .putImprovedigitalPbsKeyValue("responseType", responseType)
-                                        .putBidder("improvedigital")
-                                        .putBidderKeyValue("improvedigital", "placementId", improvePlacementId)
-                                        .putBidder("e_volution")
-                                        .putBidderKeyValue("e_volution", "key", "E_VOLUTION_KEY")
-                                        .putBidder("smarthub")
-                                        .putBidderKeyValue("smarthub", "token", "SMARTHUB_TOKEN")
-                                        .putBidderKeyValue("smarthub", "seat", "SMARTHUB_SEAT")
-                                        .putBidderKeyValue("smarthub", "partnerName", "SMARTHUB_PARTNER")
-                                        .putBidder("sa_lunamedia")
-                                        .putBidderKeyValue("sa_lunamedia", "key", "SA_LUNAMEDIA_KEY")
-                                )
-                                .impData(SingleImpTestData.builder()
-                                        .id("imp_id_1")
-                                        .bannerData(BannerTestParam.getDefault())
-                                        .videoData(VideoTestParam.getDefault())
-                                        .nativeData(NativeTestParam.builder()
-                                                .request(createNativeRequest(
-                                                        "1.2", 90, 128, 128, 120
-                                                ))
+                        .imps(List.of(
+                                AuctionBidRequestImpTestData.builder()
+                                        .impExt(new AuctionBidRequestImpExt()
+                                                .putImprovedigitalPbs()
+                                                .putImprovedigitalPbsKeyValue("responseType", responseType)
+                                                .putBidder("improvedigital")
+                                                .putBidderKeyValue("improvedigital", "placementId", improvePlacementId)
+                                                .putBidder("e_volution")
+                                                .putBidderKeyValue("e_volution", "key", "E_VOLUTION_KEY")
+                                        )
+                                        .impData(SingleImpTestData.builder()
+                                                .id("imp_id_1")
+                                                .bannerData(BannerTestParam.getDefault())
+                                                .videoData(VideoTestParam.getDefault())
+                                                .nativeData(NativeTestParam.builder()
+                                                        .request(createNativeRequest(
+                                                                "1.2", 90, 128, 128, 120
+                                                        ))
+                                                        .build())
                                                 .build())
-                                        .build())
-                                .build()
+                                        .build(),
+                                AuctionBidRequestImpTestData.builder()
+                                        .impExt(new AuctionBidRequestImpExt()
+                                                .putImprovedigitalPbs()
+                                                .putImprovedigitalPbsKeyValue("responseType", responseType)
+                                                .putBidder("smarthub")
+                                                .putBidderKeyValue("smarthub", "token", "SMARTHUB_TOKEN")
+                                                .putBidderKeyValue("smarthub", "seat", "SMARTHUB_SEAT")
+                                                .putBidderKeyValue("smarthub", "partnerName", "SMARTHUB_PARTNER")
+                                                .putBidder("sa_lunamedia")
+                                                .putBidderKeyValue("sa_lunamedia", "key", "SA_LUNAMEDIA_KEY")
+                                        )
+                                        .impData(SingleImpTestData.builder()
+                                                .id("imp_id_2")
+                                                .bannerData(BannerTestParam.getDefault())
+                                                .videoData(VideoTestParam.getDefault())
+                                                .nativeData(NativeTestParam.builder()
+                                                        .request(createNativeRequest(
+                                                                "1.2", 90, 128, 128, 120
+                                                        ))
+                                                        .build())
+                                                .build())
+                                        .build()
                         ))
                         .build()
                 ))

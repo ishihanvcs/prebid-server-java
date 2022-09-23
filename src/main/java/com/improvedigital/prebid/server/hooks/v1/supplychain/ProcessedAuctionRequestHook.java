@@ -1,5 +1,6 @@
 package com.improvedigital.prebid.server.hooks.v1.supplychain;
 
+import com.iab.openrtb.request.Imp;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.utils.JsonUtils;
@@ -17,7 +18,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtSource;
 import org.prebid.server.proto.openrtb.ext.request.ExtSourceSchain;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -45,8 +46,8 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
     public Future<InvocationResult<AuctionRequestPayload>> call(
             AuctionRequestPayload auctionRequestPayload, AuctionInvocationContext invocationContext) {
 
-        final ExtSourceSchain newSchain = makeNewSupplyChain(auctionRequestPayload);
-        if (newSchain == null) {
+        final ExtSourceSchain newSchain = mergeSupplyChain(auctionRequestPayload);
+        if (newSchain == null || CollectionUtils.isEmpty(newSchain.getNodes())) {
             return Future.succeededFuture(InvocationResultImpl.succeeded(
                     payload -> auctionRequestPayload, invocationContext.moduleContext()
             ));
@@ -64,55 +65,53 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         ));
     }
 
-    private ExtSourceSchain makeNewSupplyChain(AuctionRequestPayload auctionRequestPayload) {
-        ImprovedigitalPbsImpExt improvedigitalPbsImpExt = jsonUtils.getImprovedigitalPbsImpExt(
-                auctionRequestPayload.bidRequest().getImp().get(0)
-        );
-
+    private ExtRequestPrebidSchainSchainNode getNewSchainNode(String requestId, Imp imp) {
+        ImprovedigitalPbsImpExt improvedigitalPbsImpExt = jsonUtils.getImprovedigitalPbsImpExt(imp);
         if (improvedigitalPbsImpExt == null) {
             return null;
         }
 
-        List<String> schainNodesToAdd = improvedigitalPbsImpExt.getSchainNodes() == null
-                ? List.of(DEFAULT_SCHAIN_DOMAIN) : improvedigitalPbsImpExt.getSchainNodes();
-
-        if (CollectionUtils.isEmpty(schainNodesToAdd)) {
+        // No sid we can use if ext.prebid.improvedigitalpbs.headerliftPartnerId=null.
+        String sid = improvedigitalPbsImpExt.getHeaderliftPartnerId();
+        if (StringUtils.isEmpty(sid)) {
             return null;
         }
 
-        // As of now, we know "sid" for headerlift.com only. So, if we have headerlift.com in the schain
-        // and we do not have headerlift partner id, then we do not add any schain.
-        if (schainNodesToAdd.contains(DEFAULT_SCHAIN_DOMAIN)
-                && StringUtils.isEmpty(improvedigitalPbsImpExt.getHeaderliftPartnerId())) {
+        // ext.prebid.improvedigitalpbs.schainNodes=null: means we add default schain.
+        if (improvedigitalPbsImpExt.getSchainNodes() == null) {
+            return ExtRequestPrebidSchainSchainNode.of(
+                    DEFAULT_SCHAIN_DOMAIN, sid, 1, requestId, null, DEFAULT_SCHAIN_DOMAIN, null
+            );
+        }
+
+        // ext.prebid.improvedigitalpbs.schainNodes=[]: means nothing to add.
+        if (improvedigitalPbsImpExt.getSchainNodes().size() <= 0) {
             return null;
         }
 
-        return addSupplyChainNodes(
-                auctionRequestPayload,
-                improvedigitalPbsImpExt.getHeaderliftPartnerId(),
-                List.of(DEFAULT_SCHAIN_DOMAIN)
-        );
+        if (improvedigitalPbsImpExt.getSchainNodes().contains(DEFAULT_SCHAIN_DOMAIN)) {
+            return ExtRequestPrebidSchainSchainNode.of(
+                    DEFAULT_SCHAIN_DOMAIN, sid, 1, requestId, null, DEFAULT_SCHAIN_DOMAIN, null
+            );
+        }
+
+        // Future logic to support schains other than our default...
+
+        return null;
     }
 
-    private ExtSourceSchain addSupplyChainNodes(
-            AuctionRequestPayload auctionRequestPayload, String sid, List<String> schainNodesToAdd) {
+    private ExtSourceSchain mergeSupplyChain(
+            AuctionRequestPayload auctionRequestPayload) {
         final ExtSourceSchain existingSchain = getExtSourceSchain(auctionRequestPayload);
         return ExtSourceSchain.of(
                 existingSchain.getVer(),
                 existingSchain.getComplete(),
                 Stream.concat(
                         existingSchain.getNodes().stream(),
-                        schainNodesToAdd.stream()
-                                .filter(domainName -> !containsSchainNode(existingSchain, domainName))
-                                .map(domainName -> ExtRequestPrebidSchainSchainNode.of(
-                                        domainName,
-                                        sid,
-                                        1,
-                                        auctionRequestPayload.bidRequest().getId(),
-                                        null,
-                                        null,
-                                        null
-                                ))
+                        auctionRequestPayload.bidRequest().getImp().stream()
+                                .map(imp -> getNewSchainNode(auctionRequestPayload.bidRequest().getId(), imp))
+                                .filter(Objects::nonNull)
+                                .filter(schainNode -> !containsSchainNode(existingSchain, schainNode.getAsi()))
                 ).collect(Collectors.toList()),
                 existingSchain.getExt()
         );

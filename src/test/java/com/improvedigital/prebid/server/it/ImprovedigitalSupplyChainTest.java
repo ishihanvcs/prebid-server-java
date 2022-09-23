@@ -81,7 +81,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                 1,
                                 "request_id_" + uniqueId,
                                 null,
-                                null,
+                                "headerlift.com",
                                 null
                         )
                 )
@@ -167,7 +167,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                 1,
                                 "request_id_" + uniqueId,
                                 null,
-                                null,
+                                "headerlift.com",
                                 null
                         )
                 )
@@ -191,7 +191,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                 1,
                                 "request_id_" + uniqueId,
                                 null,
-                                null,
+                                "headerlift.com",
                                 null
                         ),
                         ExtRequestPrebidSchainSchainNode.of(
@@ -211,7 +211,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                 1,
                                 "request_id_" + uniqueId,
                                 null,
-                                null,
+                                "headerlift.com",
                                 null
                         ),
                         ExtRequestPrebidSchainSchainNode.of(
@@ -332,7 +332,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                                         1,
                                                         "request_id_" + param.auctionRequestId,
                                                         null,
-                                                        null,
+                                                        "headerlift.com",
                                                         null
                                                 )
                                         ), null
@@ -378,7 +378,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                                         1,
                                                         "request_id_" + param.auctionRequestId,
                                                         null,
-                                                        null,
+                                                        "headerlift.com",
                                                         null
                                                 )
                                         ), null

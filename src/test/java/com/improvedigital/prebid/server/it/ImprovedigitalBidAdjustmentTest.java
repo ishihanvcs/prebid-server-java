@@ -25,7 +25,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @TestPropertySource(properties = {
         "admin.port=18063",
@@ -383,12 +382,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
         JSONObject responseJson = new JSONObject(response.asString());
         assertNoExtErrors(responseJson);
         assertCurrency(responseJson, "USD");
-        assertThat(responseJson.getJSONArray("seatbid").length())
-                .isEqualTo(2);
-        assertThat(responseJson.getJSONArray("seatbid").getJSONObject(0).getJSONArray("bid").length())
-                .isEqualTo(1);
-        assertThat(responseJson.getJSONArray("seatbid").getJSONObject(1).getJSONArray("bid").length())
-                .isEqualTo(1);
+        assertBidCount(responseJson, 2, 1, 1);
 
         return responseJson;
     }

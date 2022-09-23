@@ -861,7 +861,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 "gvast", uniqueId, placementId
         );
 
-        assertBidCountIsOne(responseJson);
+        assertBidCount(responseJson, 1, 1);
         assertBidIdExists(responseJson, 0, 0);
         assertBidImpId(responseJson, 0, 0, "imp_id_1");
         assertBidPrice(responseJson, 0, 0, 0.0);
@@ -1570,7 +1570,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         JSONObject responseJson = new JSONObject(response.asString());
         assertNoExtErrors(responseJson);
-        assertBidCountIsOneOrMore(responseJson);
+        assertBidCount(responseJson, 1, 1);
         assertBidIdExists(responseJson, 0, 0);
         assertBidImpId(responseJson, 0, 0, "imp_id_1");
         assertBidPrice(responseJson, 0, 0, Double.parseDouble(price));
@@ -1649,7 +1649,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         JSONObject responseJson = new JSONObject(response.asString());
         assertNoExtErrors(responseJson);
-        assertBidCountIsOne(responseJson); /* As we are sending some bids from SSP, we will definitely get 1 bid. */
+        assertBidCount(responseJson, 1, 1);
         assertBidIdExists(responseJson, 0, 0);
         assertBidImpId(responseJson, 0, 0, "imp_id_1");
         assertBidPrice(responseJson, 0, 0, 0.0);
@@ -1937,7 +1937,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         JSONObject responseJson = new JSONObject(response.asString());
         assertNoExtErrors(responseJson);
-        assertBidCountIsOne(responseJson); /* As we are sending some bids from SSP, we will definitely get 1 bid. */
+        assertBidCount(responseJson, 1, 1);
         assertBidIdExists(responseJson, 0, 0);
         assertBidImpId(responseJson, 0, 0, "imp_id_1");
         assertBidPrice(responseJson, 0, 0, 0.0);
@@ -2088,15 +2088,6 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                     .putImprovedigitalPbsKeyValue("gam", gamParams)
                     .putImprovedigitalPbsKeyValue("waterfall", defaultWaterfalls == null
                             ? null : Map.of("default", defaultWaterfalls))
-                    .putStoredRequest(storedImpId)
-                    .putBidder("improvedigital")
-                    .putBidderKeyValue("improvedigital", "placementId", improvePlacementId)
-                    .putBidderKeyValue("improvedigital", "keyValues", improveCustomKeyValues);
-        }
-
-        public AuctionBidRequestImpExt toDefaultAuctionBidRequestImpExt() {
-            return new AuctionBidRequestImpExt()
-                    .putImprovedigitalPbs()
                     .putStoredRequest(storedImpId)
                     .putBidder("improvedigital")
                     .putBidderKeyValue("improvedigital", "placementId", improvePlacementId)

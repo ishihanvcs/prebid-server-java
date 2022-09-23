@@ -586,7 +586,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
         JSONObject responseJson = new JSONObject(response.asString());
         assertNoExtErrors(responseJson);
-        assertThat(responseJson.getJSONArray("seatbid").length()).isEqualTo(0);
+        assertBidCount(responseJson, 0);
         assertThat(responseJson
                 .getJSONObject("ext")
                 .getJSONObject("prebid")
@@ -910,7 +910,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
 
         JSONObject responseJson = new JSONObject(response.asString());
         assertNoExtErrors(responseJson);
-        assertBidCountIsOneOrMore(responseJson);
+        assertBidCount(responseJson, 1, 1);
         assertBidIdExists(responseJson, 0, 0);
         assertBidImpId(responseJson, 0, 0, "imp_id_1");
         if ("EUR".equalsIgnoreCase(param.improveCurrency)) {

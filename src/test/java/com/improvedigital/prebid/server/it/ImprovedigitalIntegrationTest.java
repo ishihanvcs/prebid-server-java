@@ -30,6 +30,7 @@ import com.iab.openrtb.response.SeatBid;
 import com.iab.openrtb.response.TitleObject;
 import com.improvedigital.prebid.server.customvast.model.Floor;
 import com.improvedigital.prebid.server.it.transformers.BidResponseByImpidTransformer;
+import com.improvedigital.prebid.server.it.transformers.BidResponseFunctionByImpidTransformer;
 import com.improvedigital.prebid.server.it.transformers.CacheGetByUuidTransformer;
 import com.improvedigital.prebid.server.it.transformers.CacheSetByContentTransformer;
 import io.restassured.builder.RequestSpecBuilder;
@@ -144,6 +145,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
             .jettyStopTimeout(5000L)
             .extensions(
                     BidResponseByImpidTransformer.class,
+                    BidResponseFunctionByImpidTransformer.class,
                     CacheSetByContentTransformer.class,
                     CacheGetByUuidTransformer.class
             ));
@@ -181,23 +183,6 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
         return mapper.writeValueAsString(mapper.readTree(
                 ImprovedigitalIntegrationTest.class.getResourceAsStream(file)
         ));
-    }
-
-    protected String jsonFromFileWithMacro(String file, Map<String, String> macrosInFileContent)
-            throws IOException {
-        String fileContent = mapper.writeValueAsString(
-                mapper.readTree(this.getClass().getResourceAsStream(file))
-        );
-
-        // Replace all occurrences of <key>s by it's <value> of map.
-        if (macrosInFileContent != null) {
-            return macrosInFileContent.entrySet().stream()
-                    .map(m -> (Function<String, String>) s -> s.replace(m.getKey(), m.getValue()))
-                    .reduce(Function.identity(), Function::andThen)
-                    .apply(fileContent);
-        }
-
-        return fileContent;
     }
 
     protected Set<String> getAllActiveBidders() {
@@ -369,7 +354,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                 .id("request_id_" + uniqueId) /* request id is tied to the bid request. See above. */
                 .cur(currency)
                 .seatbid(List.of(SeatBid.builder()
-                        .bid(Arrays.stream(data)
+                        .bid(data == null ? List.of() : Arrays.stream(data)
                                 .map(d -> toBid(bidIndex.getAndIncrement(), bidderName, d))
                                 .collect(Collectors.toList()))
                         .build()
@@ -1056,24 +1041,8 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                 + "</VAST>";
     }
 
-    protected void assertBidCountIsOne(JSONObject responseJson) throws JSONException {
-        assertThat(responseJson.getJSONArray("seatbid").length())
-                .isOne();
-
-        assertThat(responseJson.getJSONArray("seatbid").getJSONObject(0).getJSONArray("bid").length())
-                .isOne();
-    }
-
     protected void assertBidCountIsZero(JSONObject responseJson) throws JSONException {
         assertThat(responseJson.getJSONArray("seatbid").length()).isZero();
-    }
-
-    protected void assertBidCountIsOneOrMore(JSONObject responseJson) throws JSONException {
-        assertThat(responseJson.getJSONArray("seatbid").length())
-                .isGreaterThanOrEqualTo(1);
-
-        assertThat(responseJson.getJSONArray("seatbid").getJSONObject(0).getJSONArray("bid").length())
-                .isGreaterThanOrEqualTo(1);
     }
 
     protected void assertBidCount(

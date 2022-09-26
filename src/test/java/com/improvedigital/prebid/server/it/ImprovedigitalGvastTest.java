@@ -25,6 +25,7 @@ import org.prebid.server.util.HttpUtil;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
@@ -233,10 +234,8 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String adm = getAdm(responseJson, 0, 0);
 
         // 1st pixel is what we had on creative.
-        String mediaUrl = XPathFactory.newInstance().newXPath()
-                .compile("/VAST/Ad[@id='ad_1']/InLine/Creatives"
-                        + "/Creative[@AdID='ad_1']/Linear/MediaFiles/MediaFile[1]")
-                .evaluate(new InputSource(new StringReader(adm)));
+        String mediaUrl = getXmlValue(adm, "/VAST/Ad[@id='ad_1']/InLine/Creatives"
+                + "/Creative[@AdID='ad_1']/Linear/MediaFiles/MediaFile[1]");
         assertThat(mediaUrl.trim()).isEqualTo("https://media.pbs.improvedigital.com/ad_1.mp4");
     }
 
@@ -585,10 +584,32 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     @Test
     public void testCustomVastForWaterfallResponseTypeWhenSSPReturnsNoBid() throws JSONException {
         JSONObject responseJson = doCustomVastRequestWhenSSPReturnsNoBid(
-                "waterfall", UUID.randomUUID().toString(), 20220629
+                "waterfall", UUID.randomUUID().toString(), 20220629, 0
         );
-        assertBidCountIsZero(responseJson);
+        assertBidCount(responseJson, 0);
         assertCurrency(responseJson, "USD");
+    }
+
+    @Test
+    public void testCustomVastForWaterfallResponseTypeWhenSSPReturnsNoBidAndTestIsTrue()
+            throws JSONException, XPathExpressionException {
+        String uniqueId = UUID.randomUUID().toString();
+
+        JSONObject responseJson = doCustomVastRequestWhenSSPReturnsNoBid(
+                "waterfall", uniqueId, 20220629, 1
+        );
+
+        assertBidCount(responseJson, 1, 1);
+        assertCurrency(responseJson, "USD");
+        assertBidIdExists(responseJson, 0, 0);
+        assertBidImpId(responseJson, 0, 0, "imp_id_1");
+        assertBidPrice(responseJson, 0, 0, 0.0);
+        assertSeat(responseJson, 0, "improvedigital");
+
+        String adm = getAdm(responseJson, 0, 0);
+        assertThat(getVastTagUri(adm, "0")).isEqualTo("https://example.com");
+        assertSSPSyncPixels(adm, "0");
+        assertExtensionDebug(adm, "0", "improvedigital", uniqueId);
     }
 
     @Test
@@ -858,7 +879,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String uniqueId = UUID.randomUUID().toString();
 
         JSONObject responseJson = doCustomVastRequestWhenSSPReturnsNoBid(
-                "gvast", uniqueId, placementId
+                "gvast", uniqueId, placementId, 0
         );
 
         assertBidCount(responseJson, 1, 1);
@@ -955,10 +976,8 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         // 1st imp's ad. responseType=vast
         String adm1 = getAdm(responseJson, 0, 0);
         assertBidExtPrebidType(responseJson, 0, 0, "video");
-        String mediaUrl = XPathFactory.newInstance().newXPath()
-                .compile("/VAST/Ad[@id='ad_1']/InLine/Creatives"
-                        + "/Creative[@AdID='ad_1']/Linear/MediaFiles/MediaFile[1]")
-                .evaluate(new InputSource(new StringReader(adm1)));
+        String mediaUrl = getXmlValue(adm1, "/VAST/Ad[@id='ad_1']/InLine/Creatives"
+                + "/Creative[@AdID='ad_1']/Linear/MediaFiles/MediaFile[1]");
         assertThat(mediaUrl.trim()).isEqualTo("https://media.pbs.improvedigital.com/ad_1.mp4");
         assertCachedContentFromCacheId(cacheId1, getVastXmlToCache(
                 vastXml1, "improvedigital", "1.12", 2022091301
@@ -1108,9 +1127,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
     private String getVastTagUri(String adm, String adId) throws XPathExpressionException {
         // Looking only for Wrapper (not InLine) because vast tag uri will only appear in Wrapper.
-        return XPathFactory.newInstance().newXPath()
-                .compile("/VAST/Ad[@id='" + adId + "']/Wrapper/VASTAdTagURI")
-                .evaluate(new InputSource(new StringReader(adm)));
+        return getXmlValue(adm, "/VAST/Ad[@id='" + adId + "']/Wrapper/VASTAdTagURI");
     }
 
     private void assertGamUrlWithNoBidder(String vastAdTagUri, String placementId) throws MalformedURLException {
@@ -1337,16 +1354,12 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     private void assertNoCreative(String vastXml, String adId) throws XPathExpressionException {
-        NodeList creatives = (NodeList) XPathFactory.newInstance().newXPath()
-                .compile("/VAST/Ad[@id='" + adId + "']//Creative")
-                .evaluate(new InputSource(new StringReader(vastXml)), XPathConstants.NODESET);
+        NodeList creatives = getXmlNodeList(vastXml, "/VAST/Ad[@id='" + adId + "']//Creative");
         assertThat(creatives.getLength()).isEqualTo(0);
     }
 
     private void assertNoSSPSyncPixels(String vastXml, String adId) throws XPathExpressionException {
-        NodeList syncPixels = (NodeList) XPathFactory.newInstance().newXPath()
-                .compile("/VAST/Ad[@id='" + adId + "']//Impression")
-                .evaluate(new InputSource(new StringReader(vastXml)), XPathConstants.NODESET);
+        NodeList syncPixels = getXmlNodeList(vastXml, "/VAST/Ad[@id='" + adId + "']//Impression");
         assertThat(syncPixels.getLength()).isEqualTo(0);
     }
 
@@ -1354,9 +1367,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         List<String> syncPixels = new ArrayList<>();
         for (int i = 1; i <= 4; i++) {
             // Looking only for Wrapper (not InLine) because sync pixel will only be added in Wrapper.
-            syncPixels.add(XPathFactory.newInstance().newXPath()
-                    .compile("/VAST/Ad[@id='" + adId + "']/Wrapper/Impression[" + i + "]")
-                    .evaluate(new InputSource(new StringReader(vastXml))));
+            syncPixels.add(getXmlValue(vastXml, "/VAST/Ad[@id='" + adId + "']/Wrapper/Impression[" + i + "]"));
         }
         Collections.sort(syncPixels);
         assertThat(syncPixels.get(0)).isEqualTo("https://ad.360yield.com/server_match"
@@ -1409,24 +1420,18 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     private void assertAdCount(String vastXml, int expectedAdCount) throws XPathExpressionException {
-        NodeList creatives = (NodeList) XPathFactory.newInstance().newXPath()
-                .compile("/VAST/Ad")
-                .evaluate(new InputSource(new StringReader(vastXml)), XPathConstants.NODESET);
+        NodeList creatives = getXmlNodeList(vastXml, "/VAST/Ad");
         assertThat(creatives.getLength()).isEqualTo(expectedAdCount);
     }
 
     private void assertNoExtensions(String vastXml, String adId) throws XPathExpressionException {
-        NodeList creatives = (NodeList) XPathFactory.newInstance().newXPath()
-                .compile("/VAST/Ad[@id='" + adId + "']//Extension")
-                .evaluate(new InputSource(new StringReader(vastXml)), XPathConstants.NODESET);
+        NodeList creatives = getXmlNodeList(vastXml, "/VAST/Ad[@id='" + adId + "']//Extension");
         assertThat(creatives.getLength()).isEqualTo(0);
     }
 
     private void assertExtensions(String vastXml, String adId, int fallbackIndex) throws XPathExpressionException {
         // Looking only for Wrapper (not InLine) because extension will only be added in Wrapper.
-        NodeList extensions = (NodeList) XPathFactory.newInstance().newXPath()
-                .compile("/VAST/Ad[@id='" + adId + "']/Wrapper/Extensions/Extension")
-                .evaluate(new InputSource(new StringReader(vastXml)), XPathConstants.NODESET);
+        NodeList extensions = getXmlNodeList(vastXml, "/VAST/Ad[@id='" + adId + "']/Wrapper/Extensions/Extension");
         assertThat(extensions.getLength()).isEqualTo(1);
 
         NamedNodeMap extensionAttr = extensions.item(0).getAttributes();
@@ -1434,15 +1439,52 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertThat(extensionAttr.getNamedItem("fallback_index").getNodeValue()).isEqualTo("" + fallbackIndex);
     }
 
+    private void assertExtensionDebug(String vastXml, String adId, String bidderName, String uniqueId)
+            throws XPathExpressionException {
+        // Looking only for Wrapper (not InLine) because extension will only be added in Wrapper.
+        NodeList debugs = getXmlNodeList(vastXml, "/VAST/Ad[@id='" + adId + "']/Wrapper"
+                + "/Extensions/Extension[@type='debug']/responseExt/debug");
+        assertThat(debugs.getLength()).isEqualTo(1);
+
+        Node debug = debugs.item(0);
+        assertThat(getXmlValue(debug, "//" + bidderName + "/uri"))
+                .isEqualTo("http://localhost:8090/" + bidderName + "-exchange");
+        assertThat(getXmlValue(debug, "//" + bidderName + "/requestbody"))
+                .contains("request_id_" + uniqueId);
+        assertThat(getXmlValue(debug, "//" + bidderName + "/responsebody"))
+                .contains("request_id_" + uniqueId);
+        assertThat(getXmlValue(debug, "//" + bidderName + "/status"))
+                .isEqualTo("200");
+
+        assertThat(getXmlValue(debug, "//resolvedrequest/id"))
+                .isEqualTo("request_id_" + uniqueId);
+    }
+
     private void assertFallbackOnNoAd(String vastXml, boolean hasFallbackOnNoAd, String adId)
             throws XPathExpressionException {
 
         String wrapperLookupAttr = hasFallbackOnNoAd ? "@fallbackOnNoAd='true'" : "not(@fallbackOnNoAd)";
 
-        NodeList wrappers = (NodeList) XPathFactory.newInstance().newXPath()
-                .compile("/VAST/Ad[@id='" + adId + "']/Wrapper[" + wrapperLookupAttr + "]")
-                .evaluate(new InputSource(new StringReader(vastXml)), XPathConstants.NODESET);
+        NodeList wrappers = getXmlNodeList(vastXml, "/VAST/Ad[@id='" + adId + "']/Wrapper[" + wrapperLookupAttr + "]");
         assertThat(wrappers.getLength()).isEqualTo(1);
+    }
+
+    private NodeList getXmlNodeList(String xml, String xpathExpression) throws XPathExpressionException {
+        return (NodeList) XPathFactory.newInstance().newXPath()
+                .compile(xpathExpression)
+                .evaluate(new InputSource(new StringReader(xml)), XPathConstants.NODESET);
+    }
+
+    private String getXmlValue(String xml, String xpathExpression) throws XPathExpressionException {
+        return XPathFactory.newInstance().newXPath()
+                .compile(xpathExpression)
+                .evaluate(new InputSource(new StringReader(xml)));
+    }
+
+    private String getXmlValue(Node xmlNode, String xpathExpression) throws XPathExpressionException {
+        return XPathFactory.newInstance().newXPath()
+                .compile(xpathExpression)
+                .evaluate(xmlNode);
     }
 
     private void assertGamGeneralParameters(Map<String, List<String>> vastQueryParams, String placementId) {
@@ -1965,7 +2007,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     private JSONObject doCustomVastRequestWhenSSPReturnsNoBid(
-            String responseType, String uniqueId, int placementId
+            String responseType, String uniqueId, int placementId, int test
     ) throws JSONException {
         WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
                 .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
@@ -1981,6 +2023,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                 .channel(getExtPrebidChannelForGvast())
                                 .extRequestTargeting(getExtPrebidTargetingForGvast())
                                 .extRequestPrebidCache(getExtPrebidCacheForGvast())
+                                .test(test)
                                 .build()
                 )))
                 .willReturn(aResponse().withBody(getSSPBidResponse(
@@ -2002,6 +2045,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                                         .putBidder("improvedigital")
                                         .putBidderKeyValue("improvedigital", "placementId", placementId))
                                 .build()))
+                        .test(test)
                         .build()
                 ))
                 .post(Endpoint.openrtb2_auction.value());

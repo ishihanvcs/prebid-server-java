@@ -334,6 +334,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                         .tid("source_tid_" + uniqueId)
                         .ext(!bidRequestData.hasSchainNodes() ? null : ExtSource.of(bidRequestData.schain))
                         .build())
+                .test(bidRequestData.test)
                 .build();
 
         if (bidReqModifier != null) {
@@ -535,6 +536,8 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
         ExtRequestTargeting extRequestTargeting;
 
         ExtRequestPrebidCache extRequestPrebidCache;
+
+        Integer test;
 
         @JsonIgnore
         public boolean hasSchainNodes() {
@@ -1039,10 +1042,6 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                 + "    </Wrapper>"
                 + "  </Ad>"
                 + "</VAST>";
-    }
-
-    protected void assertBidCountIsZero(JSONObject responseJson) throws JSONException {
-        assertThat(responseJson.getJSONArray("seatbid").length()).isZero();
     }
 
     protected void assertBidCount(

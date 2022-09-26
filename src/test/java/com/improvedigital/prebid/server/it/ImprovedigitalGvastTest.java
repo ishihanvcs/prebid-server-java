@@ -76,6 +76,21 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         assertGamGeneralParameters(vastQueryParams, "20220325");
         assertThat(vastQueryParams.get("cust_params").size()).isEqualTo(1);
         assertThat(vastQueryParams.get("cust_params").get(0)).isEqualTo("tnl_asset_id=prebidserver");
+
+        assertNoDebug(response.asString(), "0");
+    }
+
+    @Test
+    public void testGvastEndpointWithDebugParameter() throws XPathExpressionException, MalformedURLException {
+        Response response = getGvastResponse(spec -> spec
+                .queryParam("debug", "1")
+        );
+
+        assertThat(getVastTagUri(response.asString(), "0"))
+                .startsWith("https://pubads.g.doubleclick.net/gampad/ads");
+
+        assertThat(getXmlValue(getDebug(response.asString(), "0"), "//resolvedrequest/id"))
+                .isNotEmpty();
     }
 
     @Test
@@ -1441,12 +1456,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
     private void assertExtensionDebug(String vastXml, String adId, String bidderName, String uniqueId)
             throws XPathExpressionException {
-        // Looking only for Wrapper (not InLine) because extension will only be added in Wrapper.
-        NodeList debugs = getXmlNodeList(vastXml, "/VAST/Ad[@id='" + adId + "']/Wrapper"
-                + "/Extensions/Extension[@type='debug']/responseExt/debug");
-        assertThat(debugs.getLength()).isEqualTo(1);
-
-        Node debug = debugs.item(0);
+        Node debug = getDebug(vastXml, adId);
         assertThat(getXmlValue(debug, "//" + bidderName + "/uri"))
                 .isEqualTo("http://localhost:8090/" + bidderName + "-exchange");
         assertThat(getXmlValue(debug, "//" + bidderName + "/requestbody"))
@@ -1458,6 +1468,21 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
 
         assertThat(getXmlValue(debug, "//resolvedrequest/id"))
                 .isEqualTo("request_id_" + uniqueId);
+    }
+
+    private Node getDebug(String vastXml, String adId) throws XPathExpressionException {
+        // Looking only for Wrapper (not InLine) because extension will only be added in Wrapper.
+        NodeList debugs = getXmlNodeList(vastXml, "/VAST/Ad[@id='" + adId + "']/Wrapper"
+                + "/Extensions/Extension[@type='debug']/responseExt/debug");
+        assertThat(debugs.getLength()).isEqualTo(1);
+
+        return debugs.item(0);
+    }
+
+    private void assertNoDebug(String vastXml, String adId) throws XPathExpressionException {
+        NodeList debugExt = getXmlNodeList(vastXml, "/VAST/Ad[@id='" + adId + "']/Wrapper"
+                + "/Extensions/Extension[@type='debug']");
+        assertThat(debugExt.getLength()).isEqualTo(0);
     }
 
     private void assertFallbackOnNoAd(String vastXml, boolean hasFallbackOnNoAd, String adId)

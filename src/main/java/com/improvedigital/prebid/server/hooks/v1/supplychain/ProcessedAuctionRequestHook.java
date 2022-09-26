@@ -91,13 +91,7 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
             );
         }
 
-        // ext.prebid.improvedigitalpbs.schainNodes=[]: means nothing to add.
-        if (improvedigitalPbsImpExt.getSchainNodes().size() <= 0) {
-            return null;
-        }
-
-        // Future logic to support schains other than our default...
-
+        // ext.prebid.improvedigitalpbs.schainNodes=[] or not contains default schain: means nothing to add.
         return null;
     }
 

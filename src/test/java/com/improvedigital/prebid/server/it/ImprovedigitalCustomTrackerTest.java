@@ -969,7 +969,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
     }
 
     @Builder(toBuilder = true)
-    public static class CustomTrackerRequestTestParam {
+    private static class CustomTrackerRequestTestParam {
         NativeTestParam nativeData;
         BannerTestParam bannerData;
         VideoTestParam videoData;

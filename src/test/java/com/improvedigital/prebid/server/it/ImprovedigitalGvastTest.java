@@ -2146,7 +2146,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Builder(toBuilder = true)
-    public static class GvastAuctionTestParam {
+    private static class GvastAuctionTestParam {
         String responseType;
         List<String> defaultWaterfalls;
         List<Integer> videoProtocols;
@@ -2183,7 +2183,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Builder(toBuilder = true)
-    public static class GvastMultiImpAuctionTestParam {
+    private static class GvastMultiImpAuctionTestParam {
         String impId;
         String responseType;
         Request nativeRequest;
@@ -2230,7 +2230,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Builder(toBuilder = true)
-    public static class GvastMultiFormatAuctionTestParam {
+    private static class GvastMultiFormatAuctionTestParam {
         double price;
         String adm;
         String videoCacheId;
@@ -2244,7 +2244,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Builder(toBuilder = true)
-    public static class GvastMultipleBidderAuctionTestParam {
+    private static class GvastMultipleBidderAuctionTestParam {
         String responseType;
         List<String> defaultWaterfalls;
         int improvePlacementId;

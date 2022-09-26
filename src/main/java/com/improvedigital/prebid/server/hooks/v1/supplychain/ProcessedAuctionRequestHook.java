@@ -77,6 +77,13 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
             return null;
         }
 
+        if (improvedigitalPbsImpExt.getSchainNodes() != null
+                && improvedigitalPbsImpExt.getSchainNodes().contains(DEFAULT_SCHAIN_DOMAIN)) {
+            return ExtRequestPrebidSchainSchainNode.of(
+                    DEFAULT_SCHAIN_DOMAIN, sid, 1, requestId, null, DEFAULT_SCHAIN_DOMAIN, null
+            );
+        }
+
         // ext.prebid.improvedigitalpbs.schainNodes=null: means we add default schain.
         if (improvedigitalPbsImpExt.getSchainNodes() == null) {
             return ExtRequestPrebidSchainSchainNode.of(
@@ -87,12 +94,6 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         // ext.prebid.improvedigitalpbs.schainNodes=[]: means nothing to add.
         if (improvedigitalPbsImpExt.getSchainNodes().size() <= 0) {
             return null;
-        }
-
-        if (improvedigitalPbsImpExt.getSchainNodes().contains(DEFAULT_SCHAIN_DOMAIN)) {
-            return ExtRequestPrebidSchainSchainNode.of(
-                    DEFAULT_SCHAIN_DOMAIN, sid, 1, requestId, null, DEFAULT_SCHAIN_DOMAIN, null
-            );
         }
 
         // Future logic to support schains other than our default...

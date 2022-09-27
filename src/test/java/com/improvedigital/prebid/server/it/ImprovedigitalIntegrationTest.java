@@ -378,8 +378,14 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                 .build();
     }
 
-    protected double usdToEur(double val) {
-        return BigDecimal.valueOf(val / IT_TEST_USD_TO_EUR_RATE)
+    protected double eurToUsd(double eurValue) {
+        return BigDecimal.valueOf(eurValue / IT_TEST_USD_TO_EUR_RATE)
+                .setScale(3, RoundingMode.HALF_EVEN)
+                .doubleValue();
+    }
+
+    protected double usdToEur(double usdValue) {
+        return BigDecimal.valueOf(usdValue * IT_TEST_USD_TO_EUR_RATE)
                 .setScale(3, RoundingMode.HALF_EVEN)
                 .doubleValue();
     }

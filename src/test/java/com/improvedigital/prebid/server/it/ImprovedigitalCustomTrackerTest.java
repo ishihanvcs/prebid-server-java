@@ -507,7 +507,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                         ))
                 ))
                 .improvePrice("1.25")
-                .improveCurrency("EUR")
+                .improveCurrency("EUR") /* Improve will send ad in EUR while the auction is in USD. */
                 .storedImpId("2022083003")
                 .improvePlacementId(20220830)
                 .nativeData(NativeTestParam.builder()
@@ -527,13 +527,13 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         // Check we placed the correct currency value in "eventtrackers" properly.
         JSONObject customTrackerEvent = findATrackerInEventTrackers(adm, "/ssp_bid");
         assertThatCustomTrackerExistsInEventTrackers(
-                customTrackerEvent, Double.toString(usdToEur(1.25)), "20220830"
+                customTrackerEvent, Double.toString(eurToUsd(1.25)), "20220830"
         );
 
         // Check we placed the tracker in "imptrackers" properly.
         String customTrackerUrl = findATrackerInImpTrackers(adm, "/ssp_bid");
         assertThatCustomTrackerExistsInImpTrackers(
-                customTrackerUrl, Double.toString(usdToEur(1.25)), "20220830"
+                customTrackerUrl, Double.toString(eurToUsd(1.25)), "20220830"
         );
     }
 
@@ -914,7 +914,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
         assertBidIdExists(responseJson, 0, 0);
         assertBidImpId(responseJson, 0, 0, "imp_id_1");
         if ("EUR".equalsIgnoreCase(param.improveCurrency)) {
-            assertBidPrice(responseJson, 0, 0, usdToEur(Double.parseDouble(param.improvePrice)));
+            assertBidPrice(responseJson, 0, 0, eurToUsd(Double.parseDouble(param.improvePrice)));
         } else {
             assertBidPrice(responseJson, 0, 0, Double.parseDouble(param.improvePrice));
         }

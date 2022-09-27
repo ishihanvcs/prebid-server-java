@@ -3,8 +3,10 @@ package com.improvedigital.prebid.server.it;
 import com.improvedigital.prebid.server.customvast.model.Floor;
 import io.restassured.response.Response;
 import lombok.Builder;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.prebid.server.floors.model.PriceFloorLocation;
@@ -63,41 +65,44 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void testBidIsIncreasedWhenBidfloorIsNotSpecifiedInRequest() throws Exception {
-        doAuctionRequestToImprovedigitalBidder(
-                /* This account has "bidPriceAdjustment=1.15, bidPriceAdjustmentIncImprove=true" */ "2022081802",
-                "2022081502",
-                20220815,
-                null,
-                2.25,
-                null,
-                2.25 * 1.15 /* Bid is increased: 2.5875. */
-        );
+        doAuctionRequestToImprovedigitalBidder(BidAdjustmentAuctionTestParam.builder()
+                .publisherId("2022081802") /* It has "bidPriceAdjustment=1.15, bidPriceAdjustmentIncImprove=true" */
+                .storedImpId("2022081502")
+                .placementIdOfStoredImp(20220815)
+                .auctionBidFloor(null)
+                .sspBid(2.25)
+                .expectedSspBidFloor(null)
+                .expectedAuctionBid(2.25 * 1.15) /* Bid is increased: 2.5875. */
+                .publisherFloorEnabled(true)
+                .build());
     }
 
     @Test
     public void testBidfloorIsDecreased() throws Exception {
-        doAuctionRequestToImprovedigitalBidder(
-                /* This account has "bidPriceAdjustment=1.15, bidPriceAdjustmentIncImprove=true" */ "2022081802",
-                "2022081502",
-                20220815,
-                BigDecimal.valueOf(0.5),
-                2.25,
-                BigDecimal.valueOf(0.5 / 1.15), /* Bidfloor is decreased. 0.4348. */
-                2.25 * 1.15 /* Bid is increased: 2.5875. */
-        );
+        doAuctionRequestToImprovedigitalBidder(BidAdjustmentAuctionTestParam.builder()
+                .publisherId("2022081802") /* It has "bidPriceAdjustment=1.15, bidPriceAdjustmentIncImprove=true" */
+                .storedImpId("2022081502")
+                .placementIdOfStoredImp(20220815)
+                .auctionBidFloor(BigDecimal.valueOf(0.5))
+                .sspBid(2.25)
+                .expectedSspBidFloor(BigDecimal.valueOf(0.5 / 1.15)) /* Bidfloor is decreased. 0.4348. */
+                .expectedAuctionBid(2.25 * 1.15) /* Bid is increased: 2.5875. */
+                .publisherFloorEnabled(true)
+                .build());
     }
 
     @Test
     public void testBidfloorIsIncreased() throws Exception {
-        doAuctionRequestToImprovedigitalBidder(
-                /* This account has "bidPriceAdjustment=0.95, bidPriceAdjustmentIncImprove=true" */ "2022081801",
-                "2022081502",
-                20220815,
-                BigDecimal.valueOf(0.5),
-                1.15,
-                BigDecimal.valueOf(0.5 / 0.95), /* Bidfloor is increased. 0.5263. */
-                1.15 * 0.95 /* Bid is decreased. 1.0925. */
-        );
+        doAuctionRequestToImprovedigitalBidder(BidAdjustmentAuctionTestParam.builder()
+                .publisherId("2022081801") /* It has "bidPriceAdjustment=0.95, bidPriceAdjustmentIncImprove=true" */
+                .storedImpId("2022081502")
+                .placementIdOfStoredImp(20220815)
+                .auctionBidFloor(BigDecimal.valueOf(0.5))
+                .sspBid(1.15)
+                .expectedSspBidFloor(BigDecimal.valueOf(0.5 / 0.95)) /* Bidfloor is increased. 0.5263. */
+                .expectedAuctionBid(1.15 * 0.95) /* Bid is decreased. 1.0925. */
+                .publisherFloorEnabled(true)
+                .build());
     }
 
     @Test
@@ -130,112 +135,103 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
 
     @Test
     public void testBidAdjustmentWhenImprovedigitalIsNotEnabledByDefault() throws Exception {
-        doAuctionRequestToImprovedigitalBidder(
-                /* This account has "bidPriceAdjustment=0.80" and no "bidPriceAdjustmentIncImprove" */ "2022081804",
-                "2022081502",
-                20220815,
-                BigDecimal.valueOf(0.5),
-                1.15,
-                BigDecimal.valueOf(0.5), /* Bidfloor intact. */
-                1.15 /* Bid intact. */
-        );
+        doAuctionRequestToImprovedigitalBidder(BidAdjustmentAuctionTestParam.builder()
+                .publisherId("2022081804") /* It has "bidPriceAdjustment=0.80" and no "bidPriceAdjustmentIncImprove" */
+                .storedImpId("2022081502")
+                .placementIdOfStoredImp(20220815)
+                .auctionBidFloor(BigDecimal.valueOf(0.5))
+                .sspBid(1.15)
+                .expectedSspBidFloor(BigDecimal.valueOf(0.5)) /* Bidfloor intact. */
+                .expectedAuctionBid(1.15) /* Bid intact. */
+                .publisherFloorEnabled(true)
+                .build());
     }
 
     @Test
     public void testBidAdjustmentWhenAccountHasNoValueInExt() throws Exception {
-        doAuctionRequestToImprovedigitalBidder(
-                /* This account has no "ext" */ "2022081805",
-                "2022081502",
-                20220815,
-                BigDecimal.valueOf(0.5),
-                1.15,
-                BigDecimal.valueOf(0.5), /* Bidfloor intact. */
-                1.15 /* Bid intact. */
-        );
+        doAuctionRequestToImprovedigitalBidder(BidAdjustmentAuctionTestParam.builder()
+                .publisherId("2022081805") /* It has no "ext" */
+                .storedImpId("2022081502")
+                .placementIdOfStoredImp(20220815)
+                .auctionBidFloor(BigDecimal.valueOf(0.5))
+                .sspBid(1.15)
+                .expectedSspBidFloor(BigDecimal.valueOf(0.5)) /* Bidfloor intact. */
+                .expectedAuctionBid(1.15) /* Bid intact. */
+                .publisherFloorEnabled(true)
+                .build());
     }
 
     @Test
     public void testBidAdjustmentWhenAccountHasPriceFloorsModuleTurnedOff() throws Exception {
-        doAuctionRequestToImprovedigitalBidder(
-                /* This account has "auction.price-floors.enabled=false, bidPriceAdjustment=0.85" */ "2022081806",
-                "2022081502",
-                20220815,
-                BigDecimal.valueOf(0.4),
-                1.12,
-                BigDecimal.valueOf(0.4), /* Bidfloor intact. */
-                1.12, /* Bid intact. */
-                false
-        );
+        doAuctionRequestToImprovedigitalBidder(BidAdjustmentAuctionTestParam.builder()
+                .publisherId("2022081806") /* It has "auction.price-floors.enabled=false, bidPriceAdjustment=0.85" */
+                .storedImpId("2022081502")
+                .placementIdOfStoredImp(20220815)
+                .auctionBidFloor(BigDecimal.valueOf(0.4))
+                .sspBid(1.12)
+                .expectedSspBidFloor(BigDecimal.valueOf(0.4)) /* Bidfloor intact. */
+                .expectedAuctionBid(1.12) /* Bid intact. */
+                .publisherFloorEnabled(false)
+                .build());
     }
 
-    private JSONObject doAuctionRequestToImprovedigitalBidder(
-            String publisherId,
-            String storedImpId,
-            int placementIdOfStoredImp,
-            BigDecimal dspBidFloor,
-            double dspBid,
-            BigDecimal expectedPbsBidFloor,
-            double expectedPbsBid
-    ) throws JSONException {
-        return doAuctionRequestToImprovedigitalBidder(
-                publisherId,
-                storedImpId,
-                placementIdOfStoredImp,
-                dspBidFloor,
-                dspBid,
-                expectedPbsBidFloor,
-                expectedPbsBid,
-                true
-        );
+    @Test
+    @Ignore
+    public void testBidAdjustmentWithNonUsdCurrency() throws Exception {
+        doAuctionRequestToImprovedigitalBidder(BidAdjustmentAuctionTestParam.builder()
+                .publisherId("2022081802") /* It has "bidPriceAdjustment=1.15, bidPriceAdjustmentIncImprove=true" */
+                .storedImpId("2022081502")
+                .placementIdOfStoredImp(20220815)
+                .auctionCurrency("EUR")
+                .auctionBidFloor(BigDecimal.valueOf(0.5))
+                .sspCurrency("USD")
+                .sspBid(2.25)
+                /* SSP will see bidfloor as decreased and in USD. */
+                .expectedSspBidFloor(BigDecimal.valueOf(eurToUsd(0.5 / 1.15)))
+                /* SSP bid is increased and in EUR. */
+                .expectedAuctionBid(usdToEur(2.25 * 1.15))
+                .publisherFloorEnabled(true)
+                .build());
     }
 
-    private JSONObject doAuctionRequestToImprovedigitalBidder(
-            String publisherId,
-            String storedImpId,
-            int placementIdOfStoredImp,
-            BigDecimal dspBidFloor,
-            double dspBid,
-            BigDecimal expectedPbsBidFloor,
-            double expectedPbsBid,
-            boolean floorModuleEnabled
-    ) throws JSONException {
+    private JSONObject doAuctionRequestToImprovedigitalBidder(BidAdjustmentAuctionTestParam param)
+            throws JSONException {
 
         String uniqueId = UUID.randomUUID().toString();
+        String auctionCurrency = StringUtils.defaultString(param.auctionCurrency, "USD");
+        String sspCurrency = StringUtils.defaultString(param.sspCurrency, "USD");
 
         WIRE_MOCK_RULE.stubFor(
                 post(urlPathEqualTo("/improvedigital-exchange"))
                         .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
                                 SSPBidRequestTestData.builder()
-                                        .currency("USD")
+                                        .currency(auctionCurrency)
                                         .impData(SingleImpTestData.builder()
                                                 .id("imp_id_1")
                                                 .impExt(new SSPBidRequestImpExt()
-                                                        .putStoredRequest(storedImpId)
+                                                        .putStoredRequest(param.storedImpId)
                                                         .putBidder()
-                                                        .putBidderKeyValue("placementId", placementIdOfStoredImp))
+                                                        .putBidderKeyValue("placementId", param.placementIdOfStoredImp))
                                                 .bannerData(BannerTestParam.getDefault())
                                                 .build())
-                                        .publisherId(publisherId)
-                                        .floor(expectedPbsBidFloor == null ? null : Floor.of(
-                                                expectedPbsBidFloor.setScale(4, RoundingMode.HALF_EVEN), "USD"
+                                        .publisherId(param.publisherId)
+                                        .floor(param.expectedSspBidFloor == null ? null : Floor.of(
+                                                param.expectedSspBidFloor.setScale(4, RoundingMode.HALF_EVEN),
+                                                "USD" /* Regardless of auction currency, it will be USD always. */
                                         ))
                                         .channel(ExtRequestPrebidChannel.of("web"))
                                         .build(),
                                 bidRequest -> bidRequest.toBuilder()
                                         .ext(ExtRequest.of(bidRequest.getExt().getPrebid().toBuilder()
-                                                .floors(PriceFloorRules.builder()
-                                                        .enabled(floorModuleEnabled)
-                                                        .fetchStatus(floorModuleEnabled ? FetchStatus.none : null)
-                                                        .location(floorModuleEnabled ? PriceFloorLocation.noData : null)
-                                                        .build())
+                                                .floors(param.getPriceFloorRules())
                                                 .build()))
                                         .build()
                         )))
                         .willReturn(aResponse().withBody(getSSPBidResponse(
-                                "improvedigital", uniqueId, "USD",
+                                "improvedigital", uniqueId, sspCurrency,
                                 BidResponseTestData.builder()
                                         .impId("imp_id_1")
-                                        .price(dspBid)
+                                        .price(param.sspBid)
                                         .adm("<img src='banner-1.jpg' />")
                                         .build()
                         )))
@@ -243,19 +239,19 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
 
         Response response = specWithPBSHeader(18083)
                 .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
-                        .currency("USD")
+                        .currency(auctionCurrency)
                         .imps(List.of(AuctionBidRequestImpTestData.builder()
                                 .impExt(new AuctionBidRequestImpExt()
-                                        .putStoredRequest(storedImpId))
+                                        .putStoredRequest(param.storedImpId))
                                 .impData(SingleImpTestData.builder()
                                         .id("imp_id_1")
                                         .bannerData(BannerTestParam.getDefault())
                                         .build())
                                 .build()
                         ))
-                        .publisherId(publisherId)
-                        .floor(dspBidFloor == null ? null : Floor.of(
-                                dspBidFloor.setScale(4, RoundingMode.HALF_EVEN), "USD"
+                        .publisherId(param.publisherId)
+                        .floor(param.auctionBidFloor == null ? null : Floor.of(
+                                param.auctionBidFloor.setScale(4, RoundingMode.HALF_EVEN), auctionCurrency
                         ))
                         .build()
                 ))
@@ -263,9 +259,9 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
 
         JSONObject responseJson = new JSONObject(response.asString());
         assertNoExtErrors(responseJson);
-        assertCurrency(responseJson, "USD");
+        assertCurrency(responseJson, auctionCurrency);
         assertSeat(responseJson, 0, "improvedigital");
-        assertBidPrice(responseJson, 0, 0, expectedPbsBid);
+        assertBidPrice(responseJson, 0, 0, param.expectedAuctionBid);
 
         return responseJson;
     }
@@ -387,12 +383,8 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
         return responseJson;
     }
 
-    /**
-     * Class to deal with many permutation/combination of request/response parameters.
-     * This is to avoid long method parameter names code smell.
-     */
     @Builder(toBuilder = true)
-    public static class BidAdjustmentMultipleBidderAuctionTestParam {
+    private static class BidAdjustmentMultipleBidderAuctionTestParam {
         String auctionRequestId;
         String storedImpId;
         int improvePlacementId;
@@ -404,5 +396,32 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
         String genericPrice1;
         String genericAdm2;
         String genericPrice2;
+    }
+
+    @Builder(toBuilder = true)
+    private static class BidAdjustmentAuctionTestParam {
+        String publisherId;
+        boolean publisherFloorEnabled;
+        String storedImpId;
+        int placementIdOfStoredImp;
+        String auctionCurrency;
+        BigDecimal auctionBidFloor;
+        double expectedAuctionBid;
+        String sspCurrency;
+        double sspBid;
+        BigDecimal expectedSspBidFloor;
+
+        public PriceFloorRules getPriceFloorRules() {
+            if (publisherFloorEnabled) {
+                return PriceFloorRules.builder()
+                        .enabled(true)
+                        .fetchStatus(FetchStatus.none)
+                        .location(PriceFloorLocation.noData)
+                        .build();
+            }
+            return PriceFloorRules.builder()
+                    .enabled(false)
+                    .build();
+        }
     }
 }

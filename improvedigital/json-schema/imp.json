@@ -67,24 +67,37 @@
     }
   },
   "definitions": {
+    "object-node": {
+      "type": "object",
+      "additionalProperties": true
+    },
     "imp_ext": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "is_rewarded_inventory": {
-          "type": "boolean"
-        },
-        "exchangepkey": {
-          "type": "string"
-        },
-        "exchangetagid": {
-          "type": "string"
-        },
-        "partner_id": {
-          "type": "string"
+        "improvedigitalpbs": {
+          "$ref": "#/definitions/imp_ext_improvedigitalpbs"
         },
         "prebid": {
           "$ref": "#/definitions/imp_ext_prebid"
+        },
+        "context": {
+          "$ref": "#/definitions/object-node"
+        },
+        "all": {
+          "$ref": "#/definitions/object-node"
+        },
+        "general": {
+          "$ref": "#/definitions/object-node"
+        },
+        "data": {
+          "$ref": "#/definitions/object-node"
+        },
+        "skadn": {
+          "$ref": "#/definitions/object-node"
+        },
+        "gpid": {
+          "type": "string"
         }
       }
     },
@@ -104,16 +117,65 @@
         "partner_id": {
           "type": "string"
         },
+        "storedauctionresponse": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "storedbidresponse": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "bidder": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "echovideoattrs": {
+              "type": "boolean"
+            }
+          }
+        },
         "improvedigitalpbs": {
-          "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs"
+          "$ref": "#/definitions/imp_ext_improvedigitalpbs"
         },
         "bidder": {
           "$ref": "#/definitions/imp_ext_prebid_bidder"
+        },
+        "floors": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "floorRule": {
+              "type": "string"
+            },
+            "floorRuleValue": {
+              "type": "number"
+            },
+            "floorValue": {
+              "type": "number"
+            }
+          }
         }
       }
     },
-    "imp_ext_prebid_improvedigitalpbs": {
+    "imp_ext_improvedigitalpbs": {
       "type": "object",
+      "additionalProperties": false,
       "required": [
         "accountId"
       ],
@@ -132,6 +194,15 @@
             "waterfall"
           ]
         },
+        "schainNodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "headerliftPartnerId": {
+          "type": "string"
+        },
         "floors": {
           "type": "object",
           "required": [
@@ -141,12 +212,12 @@
           "additionalProperties": false,
           "patternProperties": {
             "^[A-Z]{3}$": {
-              "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_floor"
+              "$ref": "#/definitions/imp_ext_improvedigitalpbs_floor"
             }
           },
           "properties": {
             "default": {
-              "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_floor"
+              "$ref": "#/definitions/imp_ext_improvedigitalpbs_floor"
             }
           }
         },
@@ -159,12 +230,12 @@
           "additionalProperties": false,
           "patternProperties": {
             "^[A-Z]{3}$": {
-              "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_waterfall"
+              "$ref": "#/definitions/imp_ext_improvedigitalpbs_waterfall"
             }
           },
           "properties": {
             "default": {
-              "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_waterfall"
+              "$ref": "#/definitions/imp_ext_improvedigitalpbs_waterfall"
             }
           }
         }
@@ -276,7 +347,7 @@
         }
       }
     },
-    "imp_ext_prebid_improvedigitalpbs_floor": {
+    "imp_ext_improvedigitalpbs_floor": {
       "type": "object",
       "required": [
         "bidFloor",
@@ -291,7 +362,7 @@
         }
       }
     },
-    "imp_ext_prebid_improvedigitalpbs_waterfall": {
+    "imp_ext_improvedigitalpbs_waterfall": {
       "type": "array",
       "minItems": 1,
       "items": {

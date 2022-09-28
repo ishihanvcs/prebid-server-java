@@ -380,14 +380,17 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
 
     protected double eurToUsd(double eurValue) {
         return BigDecimal.valueOf(eurValue / IT_TEST_USD_TO_EUR_RATE)
-                .setScale(3, RoundingMode.HALF_EVEN)
+                .setScale(3 /* In PBS core, reverse conversion is at this scale. */, RoundingMode.HALF_EVEN)
                 .doubleValue();
     }
 
-    protected double usdToEur(double usdValue) {
+    protected BigDecimal usdToEur(double usdValue) {
         return BigDecimal.valueOf(usdValue * IT_TEST_USD_TO_EUR_RATE)
-                .setScale(3, RoundingMode.HALF_EVEN)
-                .doubleValue();
+                .setScale(3 /* In PBS core, normal conversion is at this scale. */, RoundingMode.HALF_EVEN);
+    }
+
+    protected double multiplyBid(double bid, double multiplier) {
+        return BigDecimal.valueOf(bid).multiply(BigDecimal.valueOf(multiplier)).doubleValue();
     }
 
     protected String toMoneyFormat(double value) {
@@ -1112,9 +1115,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
 
     protected void assertBidPrice(
             JSONObject responseJson, int seatBidIndex, int bidIndex, double expectedBidPrice) throws JSONException {
-        assertThat(getBidPrice(responseJson, seatBidIndex, bidIndex)).isEqualTo(
-                new BigDecimal(expectedBidPrice).setScale(4, RoundingMode.HALF_EVEN).doubleValue()
-        );
+        assertThat(getBidPrice(responseJson, seatBidIndex, bidIndex)).isEqualTo(expectedBidPrice);
     }
 
     @NotNull

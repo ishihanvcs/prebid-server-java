@@ -6,7 +6,6 @@ import lombok.Builder;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.prebid.server.floors.model.PriceFloorLocation;
@@ -57,10 +56,10 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
         );
 
         assertSeat(responseJson, 0, "generic");
-        assertBidPrice(responseJson, 0, 0, 1.25 * 95 / 100); /* 95% */
+        assertBidPrice(responseJson, 0, 0, multiplyBid(1.25, 95.00 / 100)); /* 95% */
 
         assertSeat(responseJson, 1, "improvedigital");
-        assertBidPrice(responseJson, 1, 0, 1.15 * 95 / 100); /* 95% */
+        assertBidPrice(responseJson, 1, 0, multiplyBid(1.15, 95.00 / 100)); /* 95% */
     }
 
     @Test
@@ -72,7 +71,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                 .auctionBidFloor(null)
                 .sspBid(2.25)
                 .expectedSspBidFloor(null)
-                .expectedAuctionBid(2.25 * 1.15) /* Bid is increased: 2.5875. */
+                .expectedAuctionBid(multiplyBid(2.25, 1.15)) /* Bid is increased: 2.5875. */
                 .publisherFloorEnabled(true)
                 .build());
     }
@@ -86,7 +85,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                 .auctionBidFloor(BigDecimal.valueOf(0.5))
                 .sspBid(2.25)
                 .expectedSspBidFloor(BigDecimal.valueOf(0.5 / 1.15)) /* Bidfloor is decreased. 0.4348. */
-                .expectedAuctionBid(2.25 * 1.15) /* Bid is increased: 2.5875. */
+                .expectedAuctionBid(multiplyBid(2.25, 1.15)) /* Bid is increased: 2.5875. */
                 .publisherFloorEnabled(true)
                 .build());
     }
@@ -100,7 +99,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                 .auctionBidFloor(BigDecimal.valueOf(0.5))
                 .sspBid(1.15)
                 .expectedSspBidFloor(BigDecimal.valueOf(0.5 / 0.95)) /* Bidfloor is increased. 0.5263. */
-                .expectedAuctionBid(1.15 * 0.95) /* Bid is decreased. 1.0925. */
+                .expectedAuctionBid(multiplyBid(1.15, 0.95)) /* Bid is decreased. 1.0925. */
                 .publisherFloorEnabled(true)
                 .build());
     }
@@ -127,7 +126,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
         );
 
         assertSeat(responseJson, 0, "generic");
-        assertBidPrice(responseJson, 0, 0, 1.25 * 90 / 100); /* 90% */
+        assertBidPrice(responseJson, 0, 0, multiplyBid(1.25, 90.00 / 100)); /* 90% */
 
         assertSeat(responseJson, 1, "improvedigital");
         assertBidPrice(responseJson, 1, 0, 1.15); /* No adjustment */
@@ -176,7 +175,6 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
     }
 
     @Test
-    @Ignore
     public void testBidAdjustmentWithNonUsdCurrency() throws Exception {
         doAuctionRequestToImprovedigitalBidder(BidAdjustmentAuctionTestParam.builder()
                 .publisherId("2022081802") /* It has "bidPriceAdjustment=1.15, bidPriceAdjustmentIncImprove=true" */
@@ -187,9 +185,9 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                 .sspCurrency("USD")
                 .sspBid(2.25)
                 /* SSP will see bidfloor as decreased and in USD. */
-                .expectedSspBidFloor(BigDecimal.valueOf(eurToUsd(0.5 / 1.15)))
+                .expectedSspBidFloor(BigDecimal.valueOf(eurToUsd(0.5) / 1.15))
                 /* SSP bid is increased and in EUR. */
-                .expectedAuctionBid(usdToEur(2.25 * 1.15))
+                .expectedAuctionBid(usdToEur(2.25).multiply(BigDecimal.valueOf(1.15)).doubleValue())
                 .publisherFloorEnabled(true)
                 .build());
     }

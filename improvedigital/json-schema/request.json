@@ -2473,6 +2473,9 @@
         },
         "gpid": {
           "type": "string"
+        },
+        "tid": {
+          "type": "string"
         }
       }
     },

@@ -14,96 +14,7 @@
       "enum": ["active", "inactive"]
     },
     "auction": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "price-granularity": {
-          "type": "string",
-          "enum": ["low", "med", "high", "auto", "dense", "unknown"]
-        },
-        "banner-cache-ttl": {
-          "$ref": "#/definitions/positive_int"
-        },
-        "video-cache-ttl": {
-          "$ref": "#/definitions/positive_int"
-        },
-        "truncate-target-attr": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 255
-        },
-        "default-integration": {
-          "type": "string",
-          "enum": ["web", "app", "amp", "video"]
-        },
-        "bid-validations": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "banner-creative-max-size": {
-              "type": "string",
-              "enum": ["skip", "warn", "enforce"]
-            }
-          }
-        },
-        "events": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "enabled": {
-              "type": "boolean"
-            }
-          }
-        },
-        "price-floors": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "enabled": {
-              "type": "boolean"
-            },
-            "fetch": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "enabled": {
-                  "type": "boolean"
-                },
-                "url": {
-                  "type": "string"
-                },
-                "timeout-ms": {
-                  "$ref": "#/definitions/positive_int"
-                },
-                "max-file-size-kb": {
-                  "$ref": "#/definitions/positive_int"
-                },
-                "max-rules": {
-                  "$ref": "#/definitions/positive_int"
-                },
-                "max-age-sec": {
-                  "$ref": "#/definitions/positive_int"
-                },
-                "period-sec": {
-                  "$ref": "#/definitions/positive_int"
-                }
-              }
-            },
-            "enforce-floors-rate": {
-              "type": "integer"
-            },
-            "adjust-for-bid-adjustment": {
-              "type": "boolean"
-            },
-            "enforce-deal-floors": {
-              "type": "boolean"
-            },
-            "use-dynamic-data": {
-              "type": "boolean"
-            }
-          }
-        }
-      }
+      "$ref": "#/definitions/auction-event-config"
     },
     "privacy": {
       "type": "object",
@@ -118,9 +29,6 @@
             },
             "channel-enabled": {
               "$ref": "#/definitions/enabled-for-request-type"
-            },
-            "integration-enabled": {
-              "$ref": "#/definitions/enabled-for-request-type"
             }
           }
         },
@@ -132,9 +40,6 @@
               "type": "boolean"
             },
             "channel-enabled": {
-              "$ref": "#/definitions/enabled-for-request-type"
-            },
-            "integration-enabled": {
               "$ref": "#/definitions/enabled-for-request-type"
             },
             "purposes": {
@@ -186,6 +91,12 @@
             "purpose-one-treatment-interpretation": {
               "type": "string",
               "enum": ["ignore", "no-access-allowed", "access-allowed"]
+            },
+            "basic-enforcement-vendors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
@@ -196,10 +107,20 @@
       "additionalProperties": false,
       "properties": {
         "auction-events": {
-          "$ref": "#/definitions/enabled-for-request-type"
+          "$ref": "#/definitions/auction-event-config"
         },
         "modules": {
           "$ref": "#/definitions/modules"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "verbosity-level": {
+          "type": "string",
+          "enum": ["none", "basic", "detailed"]
         }
       }
     },
@@ -272,6 +193,101 @@
         },
         "video": {
           "type": "boolean"
+        }
+      }
+    },
+    "auction-event-config": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "price-granularity": {
+          "type": "string",
+          "enum": ["low", "med", "high", "auto", "dense", "unknown"]
+        },
+        "banner-cache-ttl": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "video-cache-ttl": {
+          "$ref": "#/definitions/positive_int"
+        },
+        "truncate-target-attr": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 255
+        },
+        "default-integration": {
+          "type": "string",
+          "enum": ["web", "app", "amp", "video"]
+        },
+        "debug-allow": {
+          "type": "boolean"
+        },
+        "bid-validations": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "banner-creative-max-size": {
+              "type": "string",
+              "enum": ["skip", "warn", "enforce"]
+            }
+          }
+        },
+        "events": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          }
+        },
+        "price-floors": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "fetch": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "timeout-ms": {
+                  "$ref": "#/definitions/positive_int"
+                },
+                "max-file-size-kb": {
+                  "$ref": "#/definitions/positive_int"
+                },
+                "max-rules": {
+                  "$ref": "#/definitions/positive_int"
+                },
+                "max-age-sec": {
+                  "$ref": "#/definitions/positive_int"
+                },
+                "period-sec": {
+                  "$ref": "#/definitions/positive_int"
+                }
+              }
+            },
+            "enforce-floors-rate": {
+              "type": "integer"
+            },
+            "adjust-for-bid-adjustment": {
+              "type": "boolean"
+            },
+            "enforce-deal-floors": {
+              "type": "boolean"
+            },
+            "use-dynamic-data": {
+              "type": "boolean"
+            }
+          }
         }
       }
     },

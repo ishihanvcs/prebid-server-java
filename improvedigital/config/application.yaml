@@ -23,7 +23,7 @@ adapters:
     enabled: true
   ix:
     enabled: true
-#    endpoint: http://am-ent.lb.indexww.com/pbs?p=196124
+    endpoint: http://am-ent.lb.indexww.com/pbs?p=196124
   onetag:
     enabled: true
   openx:

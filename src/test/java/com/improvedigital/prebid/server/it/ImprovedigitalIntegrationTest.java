@@ -17,6 +17,7 @@ import com.iab.openrtb.request.Regs;
 import com.iab.openrtb.request.Request;
 import com.iab.openrtb.request.Site;
 import com.iab.openrtb.request.Source;
+import com.iab.openrtb.request.SupplyChain;
 import com.iab.openrtb.request.User;
 import com.iab.openrtb.request.Video;
 import com.iab.openrtb.response.Asset;
@@ -67,7 +68,6 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidServer;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestTargeting;
 import org.prebid.server.proto.openrtb.ext.request.ExtSite;
 import org.prebid.server.proto.openrtb.ext.request.ExtSource;
-import org.prebid.server.proto.openrtb.ext.request.ExtSourceSchain;
 import org.prebid.server.proto.openrtb.ext.request.ExtUser;
 import org.prebid.server.util.ObjectUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -163,10 +163,15 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
     }
 
     protected static RequestSpecification specWithPBSHeader(int port) {
+        return specWithPBSHeader(port, "2.5");
+    }
+
+    protected static RequestSpecification specWithPBSHeader(int port, String rtbVersion) {
         return given(spec(port))
                 .header("Referer", "http://" + IT_TEST_DOMAIN)
                 .header("X-Forwarded-For", IT_TEST_IP)
                 .header("User-Agent", IT_TEST_USER_AGENT)
+                .header("x-openrtb-version", rtbVersion)
                 .header("Origin", "http://" + IT_TEST_DOMAIN);
     }
 
@@ -230,7 +235,10 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                                 .build())
                         .collect(Collectors.toList()))
                 .tmax(5000L)
-                .regs(Regs.of(null, ExtRegs.of(0, null)))
+                .regs(Regs.builder()
+                        .gdpr(0)
+                        .ext(ExtRegs.of(0, null))
+                        .build())
                 .cur(List.of(bidRequestData.currency))
                 .site(Site.builder()
                         .publisher(Publisher.builder()
@@ -239,6 +247,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                         .cat(bidRequestData.siteIABCategories)
                         .build())
                 .user(User.builder()
+                        .consent(bidRequestData.gdprConsent)
                         .ext(ExtUser.builder()
                                 .consent(bidRequestData.gdprConsent)
                                 .build())
@@ -308,6 +317,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                         .ip(IT_TEST_IP)
                         .build())
                 .user(User.builder()
+                        //.consent(bidRequestData.gdprConsent) /* If SSP supports RTB 2.6, then it is available. */
                         .ext(ExtUser.builder()
                                 .consent(bidRequestData.gdprConsent)
                                 .build())
@@ -315,7 +325,10 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                 .at(1)
                 .tmax(5000L)
                 .cur(List.of(bidRequestData.currency))
-                .regs(Regs.of(null, ExtRegs.of(0, null)))
+                .regs(Regs.builder()
+                        //.gdpr(0) /* If SSP supports RTB 2.6, then it is available. */
+                        .ext(ExtRegs.of(0, null))
+                        .build())
                 .ext(ExtRequest.of(ExtRequestPrebid.builder()
                         .pbs(ExtRequestPrebidPbs.of("/openrtb2/auction"))
                         .server(ExtRequestPrebidServer.of(
@@ -328,6 +341,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                                 .enabled(true)
                                 .fetchStatus(FetchStatus.error)
                                 .location(PriceFloorLocation.noData)
+                                .skipped(false)
                                 .build())
                         .build()))
                 .source(Source.builder()
@@ -498,7 +512,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
 
         String gdprConsent;
 
-        ExtSourceSchain schain;
+        SupplyChain schain;
 
         Integer test;
 
@@ -538,7 +552,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
 
         String gdprConsent;
 
-        ExtSourceSchain schain;
+        SupplyChain schain;
 
         ExtRequestPrebidChannel channel;
 

@@ -81,14 +81,23 @@ public class CreatorContext extends GVastHandlerParams {
             );
         }
 
-        builder.gdpr(regsOptional.map(Regs::getExt)
-                .map(ExtRegs::getGdpr)
-                .map(String::valueOf)
-                .orElse(null));
+        builder.gdpr(ObjectUtils.firstNonNull(
+                regsOptional.map(Regs::getGdpr)
+                        .map(String::valueOf)
+                        .orElse(null),
+                regsOptional.map(Regs::getExt)
+                        .map(ExtRegs::getGdpr)
+                        .map(String::valueOf)
+                        .orElse(null)
+        ));
 
-        builder.gdprConsent(userOptional.map(User::getExt)
-                .map(ExtUser::getConsent)
-                .orElse(StringUtils.EMPTY));
+        builder.gdprConsent(ObjectUtils.firstNonNull(
+                userOptional.map(User::getConsent)
+                        .orElse(null),
+                userOptional.map(User::getExt)
+                        .map(ExtUser::getConsent)
+                        .orElse(StringUtils.EMPTY)
+        ));
 
         builder.ifa(deviceOptional.map(Device::getIfa).orElse(null));
         builder.lmt(deviceOptional.map(Device::getLmt).orElse(null));

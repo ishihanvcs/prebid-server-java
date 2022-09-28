@@ -170,10 +170,10 @@ public class CustomVastUtils {
     public Future<HooksModuleContext> resolveCountryAndCreateModuleContext(BidRequest bidRequest, Timeout timeout) {
         return resolveCountry(bidRequest, timeout).map(country -> createModuleContext(bidRequest, country))
                 .recover(t -> {
-                    logger.error("Could not resolve country", t);
-                    return Future.succeededFuture(createModuleContext(bidRequest, null));
-                }
-        );
+                            logger.error("Could not resolve country", t);
+                            return Future.succeededFuture(createModuleContext(bidRequest, null));
+                        }
+                );
     }
 
     public HooksModuleContext createModuleContext(BidRequest bidRequest, String alpha3Country) {
@@ -199,7 +199,7 @@ public class CustomVastUtils {
                 .with(impIdToEffectiveFloor)
                 .with(alpha3Country);
 
-        updateImpsWithBidFloorInUsd(bidRequest, context::getEffectiveFloor);
+        bidRequest = updateImpsWithBidFloorInUsd(bidRequest, context::getEffectiveFloor);
 
         if (hasCustomVastVideo) {
             bidRequest = updateExtWithCacheSettings(bidRequest, hasGVastVideo);
@@ -208,33 +208,38 @@ public class CustomVastUtils {
         return context.with(bidRequest);
     }
 
-    private void updateImpsWithBidFloorInUsd(BidRequest bidRequest, Function<Imp, Floor> floorRetriever) {
-        bidRequest.getImp().replaceAll(imp -> {
-            Floor effectiveFloor = floorRetriever.apply(imp);
-            BigDecimal bidFloorInUsd = null;
-            String bidFloorCur = "USD";
-            if (effectiveFloor != null) {
-                if (StringUtils.compareIgnoreCase("USD", effectiveFloor.getBidFloorCur()) == 0) {
-                    bidFloorInUsd = effectiveFloor.getBidFloor().doubleValue() <= 0.0
-                            ? null
-                            : effectiveFloor.getBidFloor();
-                } else {
-                    bidFloorInUsd = currencyConversionService.convertCurrency(
-                            effectiveFloor.getBidFloor(), bidRequest,
-                            effectiveFloor.getBidFloorCur(),
-                            "USD"
-                    );
-                }
-            }
+    private BidRequest updateImpsWithBidFloorInUsd(BidRequest bidRequest, Function<Imp, Floor> floorRetriever) {
+        return bidRequest.toBuilder()
+                .imp(bidRequest.getImp().stream()
+                        .map(imp -> {
+                            Floor effectiveFloor = floorRetriever.apply(imp);
+                            BigDecimal bidFloorInUsd = null;
+                            String bidFloorCur = "USD";
+                            if (effectiveFloor != null) {
+                                if (StringUtils.compareIgnoreCase("USD", effectiveFloor.getBidFloorCur()) == 0) {
+                                    bidFloorInUsd = effectiveFloor.getBidFloor().doubleValue() <= 0.0
+                                            ? null
+                                            : effectiveFloor.getBidFloor();
+                                } else {
+                                    bidFloorInUsd = currencyConversionService.convertCurrency(
+                                            effectiveFloor.getBidFloor(), bidRequest,
+                                            effectiveFloor.getBidFloorCur(),
+                                            "USD"
+                                    );
+                                }
+                            }
 
-            if (bidFloorInUsd == null) {
-                bidFloorCur = null;
-            }
-            return imp.toBuilder()
-                    .bidfloor(bidFloorInUsd)
-                    .bidfloorcur(bidFloorCur)
-                    .build();
-        });
+                            if (bidFloorInUsd == null) {
+                                bidFloorCur = null;
+                            }
+                            return imp.toBuilder()
+                                    .bidfloor(bidFloorInUsd)
+                                    .bidfloorcur(bidFloorCur)
+                                    .build();
+                        })
+                        .collect(Collectors.toList())
+                )
+                .build();
     }
 
     private BidRequest updateExtWithCacheSettings(BidRequest bidRequest, boolean hasGVastImp) {
@@ -440,8 +445,8 @@ public class CustomVastUtils {
         String targetingString = targetingStream == null
                 ? StringUtils.EMPTY
                 : targetingStream
-                    .filter(s -> !StringUtils.isBlank(s))
-                    .collect(Collectors.joining("&"));
+                .filter(s -> !StringUtils.isBlank(s))
+                .collect(Collectors.joining("&"));
 
         if (context.getBidfloor() > 0 && !targetingString.contains("fp=")) {
             String fp = resolveGamFloorPrice(
@@ -470,7 +475,7 @@ public class CustomVastUtils {
     }
 
     public String getRedirect(String bidder, String gdpr, String gdprConsent,
-                               String userIdParamName) {
+                              String userIdParamName) {
         // TODO add us_privacy
         return externalUrl + "/setuid?bidder=" + bidder + "&gdpr=" + gdpr + "&gdpr_consent=" + gdprConsent
                 + "&us_privacy=&uid=" + userIdParamName;
@@ -479,7 +484,7 @@ public class CustomVastUtils {
     public String replaceMacros(String tag, CreatorContext context) {
         final Map<String, String> macroValues =
                 FluentMap.<String, String>create()
-                        .put("gdpr", context.getGdpr())
+                        .put("gdpr", StringUtils.defaultString(context.getGdpr(), "0"))
                         .put("gdpr_consent", context.getGdprConsent())
                         .put("timestamp", Long.toString(System.currentTimeMillis()))
                         .putIfNotNull("referrer", context.getEncodedReferrer())
@@ -487,7 +492,8 @@ public class CustomVastUtils {
         String expanded = "";
         try {
             expanded = macroProcessor.process(tag, macroValues, true);
-        } catch (Exception ignored) { }
+        } catch (Exception ignored) {
+        }
         return expanded;
     }
 

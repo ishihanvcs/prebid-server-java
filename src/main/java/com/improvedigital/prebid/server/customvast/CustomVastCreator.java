@@ -5,6 +5,7 @@ import com.improvedigital.prebid.server.customvast.model.CreatorContext;
 import com.improvedigital.prebid.server.customvast.model.CustomVast;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.util.HttpUtil;
 
 import java.util.ArrayList;
@@ -176,27 +177,30 @@ public class CustomVastCreator {
         final List<String> userSyncs = Arrays.asList("https://ib.adnxs.com/getuid?"
                 + HttpUtil.encodeUrl(
                         customVastUtils.getRedirect(
-                                "adnxs", context.getGdpr(),
+                                "adnxs", StringUtils.defaultString(context.getGdpr(), "0"),
                                 context.getGdprConsent(), "$UID"
                         )
                 ),
-                "https://ad.360yield.com/server_match?gdpr=" + context.getGdpr() + "&gdpr_consent=" + context.getGdprConsent() + "&us_privacy=&r="
+                "https://ad.360yield.com/server_match?gdpr=" + StringUtils.defaultString(context.getGdpr(), "0")
+                        + "&gdpr_consent=" + context.getGdprConsent() + "&us_privacy=&r="
                         + HttpUtil.encodeUrl(
                         customVastUtils.getRedirect(
-                                "improvedigital", context.getGdpr(),
+                                "improvedigital", StringUtils.defaultString(context.getGdpr(), "0"),
                                 context.getGdprConsent(), "{PUB_USER_ID}"
                         )
                 ),
-                "https://image8.pubmatic.com/AdServer/ImgSync?p=159706&gdpr=" + context.getGdpr() + "&gdpr_consent=" + context.getGdprConsent()
+                "https://image8.pubmatic.com/AdServer/ImgSync?p=159706&gdpr=" + StringUtils.defaultString(context.getGdpr(), "0")
+                        + "&gdpr_consent=" + context.getGdprConsent()
                         + "&us_privacy=&pu="
                         + HttpUtil.encodeUrl(
-                        customVastUtils.getRedirect("pubmatic", context.getGdpr(),
+                        customVastUtils.getRedirect("pubmatic", StringUtils.defaultString(context.getGdpr(), "0"),
                                 context.getGdprConsent(), "#PMUID")
                 ),
-                "https://ssbsync-global.smartadserver.com/api/sync?callerId=5&gdpr=" + context.getGdpr() + "&gdpr_consent=" + context.getGdprConsent()
+                "https://ssbsync-global.smartadserver.com/api/sync?callerId=5&gdpr=" + StringUtils.defaultString(context.getGdpr(), "0")
+                        + "&gdpr_consent=" + context.getGdprConsent()
                         + "&us_privacy=&redirectUri="
                         + HttpUtil.encodeUrl(
-                        customVastUtils.getRedirect("smartadserver", context.getGdpr(),
+                        customVastUtils.getRedirect("smartadserver", StringUtils.defaultString(context.getGdpr(), "0"),
                                 context.getGdprConsent(),
                                 "[ssb_sync_pid]")
                 ));

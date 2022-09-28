@@ -66,7 +66,7 @@ public class CreatorContextTest extends UnitTestBase {
                 .ext(ExtBidResponse
                         .builder()
                         .tmaxrequest(100L)
-                        .prebid(ExtBidResponsePrebid.of(1000L, null))
+                        .prebid(ExtBidResponsePrebid.of(1000L, null, null, null))
                         .build())
                 .build();
         defaultImp = getStoredImp(defaultStoredImpId, i -> setImpConfigProperties(i, config -> {

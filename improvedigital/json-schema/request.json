@@ -102,10 +102,638 @@
       "$ref": "#/definitions/regs"
     },
     "ext": {
-      "type": "object"
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "prebid": {
+          "$ref": "#/definitions/ext-prebid"
+        }
+      }
     }
   },
   "definitions": {
+    "ext-prebid": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "debug": {
+          "$ref": "#/definitions/boolean_int"
+        },
+        "trace": {
+          "type": "string",
+          "enum": [
+            "basic",
+            "verbose"
+          ]
+        },
+        "aliases": {
+          "$ref": "#/definitions/map-of-strings"
+        },
+        "aliasgvlids": {
+          "$ref": "#/definitions/map-of-integers"
+        },
+        "bidadjustmentfactors": {
+          "$ref": "#/definitions/map-of-numbers"
+        },
+        "mediatypes": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "banner": {
+              "$ref": "#/definitions/map-of-numbers"
+            },
+            "audio": {
+              "$ref": "#/definitions/map-of-numbers"
+            },
+            "native": {
+              "$ref": "#/definitions/map-of-numbers"
+            },
+            "video": {
+              "$ref": "#/definitions/map-of-numbers"
+            },
+            "video-outstream": {
+              "$ref": "#/definitions/map-of-numbers"
+            }
+          }
+        },
+        "currency": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "usepbsrates": {
+              "type": "boolean"
+            },
+            "rates": {
+              "type": "object",
+              "additionalProperties": true,
+              "patternProperties": {
+                "[a-zA-Z]{3}": {
+                  "$ref": "#/definitions/map-currency-to-rates"
+                }
+              }
+            }
+          }
+        },
+        "targeting": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pricegranularity": {
+              "$ref": "#/definitions/ext-prebid-pricegranularity"
+            },
+            "mediatypepricegranularity": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "banner": {
+                  "$ref": "#/definitions/ext-prebid-pricegranularity"
+                },
+                "video": {
+                  "$ref": "#/definitions/ext-prebid-pricegranularity"
+                },
+                "native": {
+                  "$ref": "#/definitions/ext-prebid-pricegranularity"
+                }
+              }
+            },
+            "includewinners": {
+              "type": "boolean"
+            },
+            "includebrandcategory": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "primaryadserver": {
+                  "type": "integer"
+                },
+                "publisher": {
+                  "type": "string"
+                },
+                "withcategory": {
+                  "type": "boolean"
+                },
+                "translatecategories": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "durationrangesec": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            "includebidderkeys": {
+              "type": "boolean"
+            },
+            "includeformat": {
+              "type": "boolean"
+            },
+            "truncateattrchars": {
+              "type": "integer"
+            },
+            "preferdeals": {
+              "type": "boolean"
+            },
+            "appendbiddernames": {
+              "type": "boolean"
+            },
+            "alwaysincludedeals": {
+              "type": "boolean"
+            },
+            "alwaysIncludeDeals": {
+              "type": "boolean"
+            }
+          }
+        },
+        "supportdeals": {
+          "type": "boolean"
+        },
+        "cahce": {
+          "$ref": "#/definitions/ext-prebid-cache"
+        },
+        "data": {
+          "$ref": "#/definitions/ext-prebid-data"
+        },
+        "bidderconfig": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "bidders": {
+                "$ref": "#/definitions/array-of-string"
+              },
+              "config": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "fpd": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "context": {},
+                      "user": {}
+                    }
+                  },
+                  "ortb2": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "site": {
+                        "$ref": "#/definitions/object-node"
+                      },
+                      "app": {
+                        "$ref": "#/definitions/object-node"
+                      },
+                      "user": {
+                        "$ref": "#/definitions/object-node"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "events": {
+          "$ref": "#/definitions/object-node"
+        },
+        "schains": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "bidders": {
+                "$ref": "#/definitions/array-of-string"
+              },
+              "schain": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "ver": {
+                    "type": "string"
+                  },
+                  "complete": {
+                    "type": "integer"
+                  },
+                  "nodes": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "asi": {
+                          "type": "string"
+                        },
+                        "sid": {
+                          "type": "string"
+                        },
+                        "hp": {
+                          "type": "integer"
+                        },
+                        "rid": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "domain": {
+                          "type": "string"
+                        },
+                        "ext": {
+                          "$ref": "#/definitions/object-node"
+                        }
+                      }
+                    }
+                  },
+                  "ext": {
+                    "$ref": "#/definitions/object-node"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "nosale": {
+          "$ref": "#/definitions/array-of-string"
+        },
+        "auctiontimestamp": {
+          "type": "integer"
+        },
+        "bidders": {
+          "$ref": "#/definitions/object-node"
+        },
+        "amp": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "data": {
+              "$ref": "#/definitions/map-of-strings"
+            }
+          }
+        },
+        "adservertargeting": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string",
+                "enum": [
+                  "bidrequest",
+                  "static",
+                  "bidresponse"
+                ]
+              },
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "integration": {
+          "type": "string"
+        },
+        "channel": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            }
+          }
+        },
+        "multibid": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "bidder": {
+                "type": "string"
+              },
+              "bidders": {
+                "$ref": "#/definitions/array-of-string"
+              },
+              "maxbids": {
+                "type": "integer"
+              },
+              "targetbiddercodeprefix": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "analytics": {},
+        "pbs": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "endpoint": {
+              "type": "string"
+            }
+          }
+        },
+        "server": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "externalurl": {
+              "type": "string"
+            },
+            "gvlid": {
+              "type": "integer"
+            },
+            "datacenter": {
+              "type": "string"
+            }
+          }
+        },
+        "bidderparams": {
+          "$ref": "#/definitions/object-node"
+        },
+        "floors": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "floorMin": {
+              "type": "number"
+            },
+            "floorProvider": {
+              "type": "string"
+            },
+            "enforcement": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enforceJS": {
+                  "type": "boolean"
+                },
+                "enforcePBS": {
+                  "type": "boolean"
+                },
+                "floorDeals": {
+                  "type": "boolean"
+                },
+                "bidAdjustment": {
+                  "type": "boolean"
+                },
+                "enforceRate": {
+                  "type": "integer"
+                }
+              }
+            },
+            "skipRate": {
+              "type": "integer"
+            },
+            "endpoint": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              }
+            },
+            "data": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "floorProvider": {
+                  "type": "string"
+                },
+                "currency": {
+                  "$ref": "#/definitions/currency"
+                },
+                "skipRate": {
+                  "type": "integer"
+                },
+                "floorsSchemaVersion": {
+                  "type": "string"
+                },
+                "modelTimestamp": {
+                  "type": "integer"
+                },
+                "modelGroups": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "currency": {
+                        "$ref": "#/definitions/currency"
+                      },
+                      "skipRate": {
+                        "type": "integer"
+                      },
+                      "modelVersion": {
+                        "type": "string"
+                      },
+                      "modelWeight": {
+                        "type": "integer"
+                      },
+                      "schema": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "delimiter": {
+                            "type": "string"
+                          },
+                          "fields": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "siteDomain",
+                                "pubDomain",
+                                "domain",
+                                "bundle",
+                                "channel",
+                                "mediaType",
+                                "size",
+                                "gptSlot",
+                                "pbAdSlot",
+                                "country",
+                                "deviceType"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      "values": {
+                        "$ref": "#/definitions/map-of-numbers"
+                      },
+                      "default": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "fetchStatus": {
+              "type": "string",
+              "enum": [
+                "success",
+                "timeout",
+                "error",
+                "inprogress",
+                "none"
+              ]
+            },
+            "location": {
+              "type": "string",
+              "enum": [
+                "request",
+                "fetch",
+                "noData"
+              ]
+            },
+            "skipped": {
+              "type": "boolean"
+            },
+            "floorMinCur": {
+              "$ref": "#/definitions/currency"
+            }
+          }
+        }
+      }
+    },
+    "ext-prebid-data": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bidders": {
+          "$ref": "#/definitions/array-of-string"
+        },
+        "eidpermissions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "bidders": {
+                "$ref": "#/definitions/array-of-string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "array-of-string": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ext-prebid-cache": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "winningonly": {
+          "type": "boolean"
+        },
+        "bids": {
+          "$ref": "#/definitions/ext-prebid-cache-spec"
+        },
+        "vastxml": {
+          "$ref": "#/definitions/ext-prebid-cache-spec"
+        }
+      }
+    },
+    "ext-prebid-cache-spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ttlseconds": {
+          "type": "integer"
+        },
+        "returnCreative": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ext-prebid-pricegranularity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "precision": {
+          "type": "integer"
+        },
+        "ranges": {
+          "type": "array",
+          "items": {
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "max": {
+                  "type": "number"
+                },
+                "increment": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "object-node": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "map-of-integers": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        ".+": {
+          "type": "integer"
+        }
+      }
+    },
+    "map-of-numbers": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        ".+": {
+          "type": "number"
+        }
+      }
+    },
+    "map-of-strings": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        ".+": {
+          "type": "number"
+        }
+      }
+    },
+    "map-currency-to-rates": {
+      "type": "object",
+      "additionalProperties": true,
+      "patternProperties": {
+        "[a-zA-Z]{3}": {
+          "type": "number"
+        }
+      }
+    },
     "imp": {
       "type": "object",
       "required": [
@@ -1822,20 +2450,32 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "is_rewarded_inventory": {
-          "type": "boolean"
-        },
-        "exchangepkey": {
-          "type": "string"
-        },
-        "exchangetagid": {
-          "type": "string"
-        },
-        "partner_id": {
-          "type": "string"
+        "improvedigitalpbs": {
+          "$ref": "#/definitions/imp_ext_improvedigitalpbs"
         },
         "prebid": {
           "$ref": "#/definitions/imp_ext_prebid"
+        },
+        "context": {
+          "$ref": "#/definitions/object-node"
+        },
+        "all": {
+          "$ref": "#/definitions/object-node"
+        },
+        "general": {
+          "$ref": "#/definitions/object-node"
+        },
+        "data": {
+          "$ref": "#/definitions/object-node"
+        },
+        "skadn": {
+          "$ref": "#/definitions/object-node"
+        },
+        "gpid": {
+          "type": "string"
+        },
+        "tid": {
+          "type": "string"
         }
       }
     },
@@ -1855,11 +2495,59 @@
         "partner_id": {
           "type": "string"
         },
+        "storedauctionresponse": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "storedbidresponse": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "bidder": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "echovideoattrs": {
+              "type": "boolean"
+            }
+          }
+        },
         "improvedigitalpbs": {
-          "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs"
+          "$ref": "#/definitions/imp_ext_improvedigitalpbs"
         },
         "bidder": {
           "$ref": "#/definitions/imp_ext_prebid_bidder"
+        },
+        "floors": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "floorRule": {
+              "type": "string"
+            },
+            "floorRuleValue": {
+              "type": "number"
+            },
+            "floorValue": {
+              "type": "number"
+            }
+          }
         }
       }
     },
@@ -1875,14 +2563,6 @@
         "requestId": {
           "type": "string"
         },
-        "responseType": {
-          "type": "string",
-          "enum": [
-            "vast",
-            "gvast",
-            "waterfall"
-          ]
-        },
         "floors": {
           "type": "object",
           "required": [
@@ -1891,7 +2571,7 @@
           "minProperties": 1,
           "additionalProperties": false,
           "patternProperties": {
-            "^[A-Z]{3}$": {
+            "^[a-z]{2}$": {
               "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_floor"
             }
           },
@@ -1909,7 +2589,7 @@
           "minProperties": 1,
           "additionalProperties": false,
           "patternProperties": {
-            "^[A-Z]{3}$": {
+            "^[a-z]{2}$": {
               "$ref": "#/definitions/imp_ext_prebid_improvedigitalpbs_waterfall"
             }
           },
@@ -2052,6 +2732,96 @@
     "floor_price": {
       "type": "number",
       "minimum": 0
+    },
+    "imp_ext_improvedigitalpbs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accountId"
+      ],
+      "properties": {
+        "accountId": {
+          "type": "string"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "responseType": {
+          "type": "string",
+          "enum": [
+            "vast",
+            "gvast",
+            "waterfall"
+          ]
+        },
+        "schainNodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "headerliftPartnerId": {
+          "type": "string"
+        },
+        "floors": {
+          "type": "object",
+          "required": [
+            "default"
+          ],
+          "minProperties": 1,
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[A-Z]{3}$": {
+              "$ref": "#/definitions/imp_ext_improvedigitalpbs_floor"
+            }
+          },
+          "properties": {
+            "default": {
+              "$ref": "#/definitions/imp_ext_improvedigitalpbs_floor"
+            }
+          }
+        },
+        "waterfall": {
+          "type": "object",
+          "required": [
+            "default"
+          ],
+          "minProperties": 1,
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[A-Z]{3}$": {
+              "$ref": "#/definitions/imp_ext_improvedigitalpbs_waterfall"
+            }
+          },
+          "properties": {
+            "default": {
+              "$ref": "#/definitions/imp_ext_improvedigitalpbs_waterfall"
+            }
+          }
+        }
+      }
+    },
+    "imp_ext_improvedigitalpbs_floor": {
+      "type": "object",
+      "required": [
+        "bidFloor",
+        "bidFloorCur"
+      ],
+      "properties": {
+        "bidFloor": {
+          "$ref": "#/definitions/floor_price"
+        },
+        "bidFloorCur": {
+          "$ref": "#/definitions/currency"
+        }
+      }
+    },
+    "imp_ext_improvedigitalpbs_waterfall": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
     },
     "bidder_config_adf": {
       "title": "Adf Adapter Params",

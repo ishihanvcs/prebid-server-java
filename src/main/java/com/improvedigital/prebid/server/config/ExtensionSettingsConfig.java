@@ -14,7 +14,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
 import org.prebid.server.execution.TimeoutFactory;
+import org.prebid.server.floors.PriceFloorsConfigResolver;
 import org.prebid.server.json.JacksonMapper;
+import org.prebid.server.json.JsonMerger;
 import org.prebid.server.metric.Metrics;
 import org.prebid.server.settings.ApplicationSettings;
 import org.prebid.server.settings.CachingApplicationSettings;
@@ -117,10 +119,19 @@ public class ExtensionSettingsConfig {
         HttpClient httpClient;
 
         @Autowired
+        PriceFloorsConfigResolver priceFloorsConfigResolver;
+
+        @Autowired
+        JsonMerger jsonMerger;
+
+        @Autowired
         JacksonMapper mapper;
 
         @Value("${settings.in-memory-cache.ttl-seconds:#{0}}")
         int cacheTtlSeconds;
+
+        @Value("${settings.default-account-config:#{null}}")
+        String defaultAccountConfig;
 
         @Bean
         AccountHttpPeriodicRefreshService accountHttpPeriodicRefreshService(
@@ -137,6 +148,9 @@ public class ExtensionSettingsConfig {
                     1000L * cacheTtlSeconds, // converted to milliseconds
                     vertx,
                     httpClient,
+                    defaultAccountConfig,
+                    priceFloorsConfigResolver,
+                    jsonMerger,
                     mapper
             );
         }

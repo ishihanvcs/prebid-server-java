@@ -2,7 +2,9 @@
   "ext": {
     "prebid": {
       "improvedigitalpbs": {
-        "schainNodes": ["headerlift.com"]
+        "schainNodes": [
+          "headerlift.com"
+        ]
       },
       "bidder": {
         "improvedigital": {

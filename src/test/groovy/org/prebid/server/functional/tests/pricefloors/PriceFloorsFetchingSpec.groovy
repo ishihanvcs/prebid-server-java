@@ -21,7 +21,6 @@ import static org.prebid.server.functional.model.pricefloors.Country.MULTIPLE
 import static org.prebid.server.functional.model.pricefloors.MediaType.BANNER
 import static org.prebid.server.functional.model.request.auction.DistributionChannel.APP
 import static org.prebid.server.functional.model.request.auction.FetchStatus.ERROR
-import static org.prebid.server.functional.model.request.auction.FetchStatus.INPROGRESS
 import static org.prebid.server.functional.model.request.auction.FetchStatus.NONE
 import static org.prebid.server.functional.model.request.auction.FetchStatus.SUCCESS
 import static org.prebid.server.functional.model.request.auction.Location.FETCH
@@ -649,8 +648,7 @@ class PriceFloorsFetchingSpec extends PriceFloorsBaseSpec {
 
     def "PBS should log error and increase #FETCH_FAILURE_METRIC when fetch request exceeds fetch.timeout-ms"() {
         given: "PBS with minTimeoutMs configuration"
-        def pbsService = pbsServiceFactory.getService(floorsConfig +
-                ["price-floors.minTimeoutMs": "1"])
+        def pbsService = pbsServiceFactory.getService(floorsConfig + ["price-floors.minTimeoutMs": "1"])
 
         and: "Test start time"
         def startTime = Instant.now()
@@ -701,7 +699,7 @@ class PriceFloorsFetchingSpec extends PriceFloorsBaseSpec {
 
         and: "Account with maxFileSizeKb in the DB"
         def accountId = bidRequest.app.publisher.id
-        def maxSize = PBSUtils.getRandomNumber(1, 10)
+        def maxSize = PBSUtils.getRandomNumber(1, 5)
         def account = getAccountWithEnabledFetch(accountId).tap {
             config.auction.priceFloors.fetch.maxFileSizeKb = maxSize
         }
@@ -709,7 +707,7 @@ class PriceFloorsFetchingSpec extends PriceFloorsBaseSpec {
 
         and: "Set Floors Provider response with Content-Length"
         def floorsResponse = PriceFloorData.priceFloorData
-        def responseSize = convertKilobyteSizeToByte(maxSize) + 100
+        def responseSize = convertKilobyteSizeToByte(maxSize) + 75
         floorsProvider.setResponse(accountId, floorsResponse, ["Content-Length": responseSize as String])
 
         when: "PBS processes auction request"
@@ -806,8 +804,7 @@ class PriceFloorsFetchingSpec extends PriceFloorsBaseSpec {
             imp[0].bidFloor == bidRequest.ext.prebid.floors.data.modelGroups[0].values[rule]
             imp[0].bidFloorCur == bidRequest.ext.prebid.floors.data.modelGroups[0].currency
 
-            imp[0].ext?.prebid?.floors?.floorRule ==
-                    bidRequest.ext.prebid.floors.data.modelGroups[0].values.keySet()[0]
+            imp[0].ext?.prebid?.floors?.floorRule == bidRequest.ext.prebid.floors.data.modelGroups[0].values.keySet()[0]
             imp[0].ext?.prebid?.floors?.floorRuleValue == bidRequest.ext.prebid.floors.data.modelGroups[0].values[rule]
             imp[0].ext?.prebid?.floors?.floorValue == bidRequest.ext.prebid.floors.data.modelGroups[0].values[rule]
 
@@ -953,9 +950,8 @@ class PriceFloorsFetchingSpec extends PriceFloorsBaseSpec {
 
     def "PBS should periodically fetch floor rules when previous response from floors provider is #description"() {
         given: "PBS with PF configuration with minMaxAgeSec"
-        def pbsService = pbsServiceFactory.getService(floorsConfig +
-                ["price-floors.minMaxAgeSec": "3",
-                 "price-floors.minPeriodSec": "3"])
+        def pbsService = pbsServiceFactory.getService(floorsConfig + ["price-floors.minMaxAgeSec": "3",
+                                                                      "price-floors.minPeriodSec": "3"])
 
         and: "Default BidRequest"
         def bidRequest = BidRequest.getDefaultBidRequest(APP)
@@ -1351,9 +1347,8 @@ class PriceFloorsFetchingSpec extends PriceFloorsBaseSpec {
 
     def "PBS should not invalidate previously good fetched data when floors provider return invalid data"() {
         given: "PBS with PF configuration with minMaxAgeSec"
-        def pbsService = pbsServiceFactory.getService(floorsConfig +
-                ["price-floors.minMaxAgeSec": "3",
-                 "price-floors.minPeriodSec": "3"])
+        def pbsService = pbsServiceFactory.getService(floorsConfig + ["price-floors.minMaxAgeSec": "3",
+                                                                      "price-floors.minPeriodSec": "3"])
 
         and: "Default BidRequest"
         def bidRequest = BidRequest.getDefaultBidRequest(APP)
@@ -1700,6 +1695,114 @@ class PriceFloorsFetchingSpec extends PriceFloorsBaseSpec {
         def bidderRequest = bidder.getBidderRequests(bidRequest.id).last()
         assert bidderRequest.ext?.prebid?.floors?.fetchStatus == SUCCESS
         assert bidderRequest.ext?.prebid?.floors?.location == FETCH
+    }
+
+    def "PBS should always populate floors skipped flag when floors are enabled for account"() {
+        given: "Default BidRequest"
+        def bidRequest = BidRequest.defaultBidRequest
+
+        and: "Account with enabled fetch, fetch.url in the DB"
+        def accountId = bidRequest.site.publisher.id
+        def account = getAccountWithEnabledFetch(accountId)
+        accountDao.save(account)
+
+        and: "Set Floors Provider response"
+        def floorValue = PBSUtils.randomFloorValue
+        def floorsResponse = PriceFloorData.priceFloorData.tap {
+            modelGroups[0].values = [(rule): floorValue]
+        }
+        floorsProvider.setResponse(accountId, floorsResponse)
+
+        and: "PBS cache rules"
+        cacheFloorsProviderRules(bidRequest, floorValue)
+
+        when: "PBS processes auction request"
+        floorsPbsService.sendAuctionRequest(bidRequest)
+
+        then: "Bidder request skipped flag should be false"
+        def bidderRequest = bidder.getBidderRequests(bidRequest.id).last()
+        verifyAll {
+            bidderRequest.ext?.prebid?.floors?.skipped == false
+
+            bidderRequest.ext.prebid.floors?.fetchStatus == SUCCESS
+            bidderRequest.ext.prebid.floors?.location == FETCH
+        }
+    }
+
+    def "PBS should populate floors enabled = true when floors skip rate 100"() {
+        given: "Default BidRequest with floors"
+        def floorsSkipRate = 100
+        def floorsEnabled = true
+        def bidRequest = BidRequest.defaultBidRequest.tap {
+            ext.prebid.floors = new ExtPrebidFloors(enabled: floorsEnabled, skipRate: floorsSkipRate)
+        }
+
+        and: "Account with enabled fetch, fetch.url in the DB"
+        def accountId = bidRequest.site.publisher.id
+        def account = getAccountWithEnabledFetch(accountId)
+        accountDao.save(account)
+
+        and: "Set Floors Provider response"
+        def floorValue = PBSUtils.randomFloorValue
+        def floorsResponse = PriceFloorData.priceFloorData.tap {
+            modelGroups[0].values = [(rule): floorValue]
+        }
+        floorsProvider.setResponse(accountId, floorsResponse)
+
+        and: "PBS fetch rules from floors provider"
+        cacheFloorsProviderRules(bidRequest)
+
+        when: "PBS processes auction request"
+        floorsPbsService.sendAuctionRequest(bidRequest)
+
+        then: "Bidder request should contain floors data"
+        def bidderRequest = bidder.getBidderRequests(bidRequest.id).last()
+        verifyAll {
+            bidderRequest.ext?.prebid?.floors?.enabled == floorsEnabled
+            bidderRequest.ext.prebid.floors?.skipRate == floorsSkipRate
+            bidderRequest.ext.prebid.floors?.skipped == true
+
+            bidderRequest.ext.prebid.floors?.fetchStatus == SUCCESS
+            bidderRequest.ext.prebid.floors?.location == FETCH
+        }
+    }
+
+    def "PBS shouldn't populate floors except initial field when floors enabled = false"() {
+        given: "Default BidRequest with floors"
+        def floorsSkipRate = 100
+        def floorsEnabled = false
+        def bidRequest = BidRequest.defaultBidRequest.tap {
+            ext.prebid.floors = new ExtPrebidFloors(enabled: floorsEnabled, skipRate: floorsSkipRate)
+        }
+
+        and: "Account with enabled fetch, fetch.url in the DB"
+        def accountId = bidRequest.site.publisher.id
+        def account = getAccountWithEnabledFetch(accountId)
+        accountDao.save(account)
+
+        and: "Set Floors Provider response"
+        def floorValue = PBSUtils.randomFloorValue
+        def floorsResponse = PriceFloorData.priceFloorData.tap {
+            modelGroups[0].values = [(rule): floorValue]
+        }
+        floorsProvider.setResponse(accountId, floorsResponse)
+
+        and: "PBS fetch rules from floors provider"
+        cacheFloorsProviderRules(bidRequest)
+
+        when: "PBS processes auction request"
+        floorsPbsService.sendAuctionRequest(bidRequest)
+
+        then: "Bidder request shouldn't contain floors data, except initial field"
+        def bidderRequest = bidder.getBidderRequests(bidRequest.id).last()
+        verifyAll {
+            bidderRequest.ext?.prebid?.floors?.enabled == floorsEnabled
+            bidderRequest.ext.prebid.floors?.skipRate == floorsSkipRate
+            bidderRequest.ext.prebid.floors?.skipped == null
+
+            !bidderRequest.ext.prebid.floors?.fetchStatus
+            !bidderRequest.ext.prebid.floors?.location
+        }
     }
 
     static int convertKilobyteSizeToByte(int kilobyteSize) {

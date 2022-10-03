@@ -7,6 +7,7 @@ import org.prebid.server.functional.model.Currency
 
 import static org.prebid.server.functional.model.request.auction.DistributionChannel.APP
 import static org.prebid.server.functional.model.request.auction.DistributionChannel.SITE
+import static org.prebid.server.functional.model.response.auction.MediaType.VIDEO
 
 @EqualsAndHashCode
 @ToString(includeNames = true, ignoreNulls = true)
@@ -26,7 +27,9 @@ class BidRequest {
     Integer allimps
     List<Currency> cur
     List<String> wlang
+    List<String> wlangb
     List<String> bcat
+    Integer cattax
     List<String> badv
     List<String> bapp
     Source source
@@ -38,7 +41,7 @@ class BidRequest {
     }
 
     static BidRequest getDefaultVideoRequest(DistributionChannel channel = SITE) {
-        getDefaultRequest(channel, Imp.videoImpression)
+        getDefaultRequest(channel, Imp.getDefaultImpression(VIDEO))
     }
 
     static BidRequest getDefaultStoredRequest() {

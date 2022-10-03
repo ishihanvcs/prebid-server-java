@@ -1951,7 +1951,8 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         String uniqueId = UUID.randomUUID().toString();
 
         sspResponseParams.forEach(param ->
-                WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/" + param.respondToBidderName.replace("_", "") + "-exchange"))
+                WIRE_MOCK_RULE.stubFor(
+                        post(urlPathEqualTo("/" + param.respondToBidderName.replace("_", "") + "-exchange"))
                         .willReturn(aResponse().withBody(getSSPBidResponse(
                                 param.respondToBidderName, uniqueId, "USD",
                                 param.adm == null ? null : BidResponseTestData.builder()

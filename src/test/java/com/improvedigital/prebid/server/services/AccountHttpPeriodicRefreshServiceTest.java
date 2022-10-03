@@ -45,7 +45,26 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
 
     private static final String ENDPOINT_URL = "http://config.prebid.com";
 
-    private static final String DEFAULT_ACCOUNT_CONFIG = null;
+    private static final String NULL_ACCOUNT_CONFIG = null;
+    private static final String DEFAULT_ACCOUNT_CONFIG = "{\n"
+            + "  \"auction\": {\n"
+            + "    \"price-floors\": {\n"
+            + "      \"enabled\": true,\n"
+            + "      \"fetch\": {\n"
+            + "        \"enabled\": false,\n"
+            + "        \"timeout-ms\": 5000,\n"
+            + "        \"max-rules\": 0,\n"
+            + "        \"max-file-size-kb\": 200,\n"
+            + "        \"max-age-sec\": 86400,\n"
+            + "        \"period-sec\": 3600\n"
+            + "      },\n"
+            + "      \"enforce-floors-rate\": 100,\n"
+            + "      \"adjust-for-bid-adjustment\": true,\n"
+            + "      \"enforce-deal-floors\": true,\n"
+            + "      \"use-dynamic-data\": true\n"
+            + "    }\n"
+            + "  }\n"
+            + "}";
 
     @Rule
     public final MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -68,8 +87,6 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
     @Mock
     Timeout timeout;
 
-    private PriceFloorsConfigResolver priceFloorsConfigResolver;
-
     // @Mock
     private CachingApplicationSettings cachingApplicationSettings;
     @Mock
@@ -79,7 +96,13 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
 
     private final String accountId = "id1";
     private final Account emptyAccount = Account.empty(accountId);
+    private final Account mergedAccount = merger.merge(
+            emptyAccount,
+            jacksonMapper.decodeValue(DEFAULT_ACCOUNT_CONFIG, Account.class),
+            Account.class
+    );
     private final Map<String, Account> expectedAccounts = singletonMap(accountId, emptyAccount);
+    private final Map<String, Account> expectedMergedAccounts = singletonMap(accountId, mergedAccount);
     private Map<String, Account> accountCache;
 
     @Before
@@ -92,10 +115,6 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
 
         given(httpClient.get(matches("[?&]accounts=true"), any(), anyLong()))
                 .willReturn(Future.succeededFuture(updatedResponse));
-
-        priceFloorsConfigResolver = new PriceFloorsConfigResolver(
-                DEFAULT_ACCOUNT_CONFIG, metrics, jacksonMapper
-        );
 
         cachingApplicationSettings = new CachingApplicationSettings(
                 delegate, cache, ampCache, videoCache, metrics, 1000, 100
@@ -111,7 +130,7 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
         assertThatIllegalArgumentException().isThrownBy(() -> createAndInitService(
                 cachingApplicationSettings, "invalid_url",
                 1, 1, 1,
-                vertx, httpClient, priceFloorsConfigResolver
+                vertx, httpClient, metrics
         ));
     }
 
@@ -121,7 +140,7 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
         createAndInitService(
                 cachingApplicationSettings, ENDPOINT_URL,
                 -1, 2000, 5000,
-                vertx, httpClient, priceFloorsConfigResolver
+                vertx, httpClient, metrics
         );
 
         // then
@@ -135,7 +154,7 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
         createAndInitService(
                 cachingApplicationSettings, ENDPOINT_URL,
                 1000, 2000, 100,
-                vertx, httpClient, priceFloorsConfigResolver
+                vertx, httpClient, metrics
         );
 
         // then
@@ -153,7 +172,7 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
         // when
         createAndInitService(
                 cachingApplicationSettings, urlWithParam, 1000, 2000, 5000,
-                vertx, httpClient, priceFloorsConfigResolver
+                vertx, httpClient, metrics
         );
 
         // then
@@ -173,7 +192,7 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
         AccountHttpPeriodicRefreshService service = createService(
                 cachingApplicationSettings, ENDPOINT_URL,
                 1000, 2000, 5000, vertx, httpClient,
-                priceFloorsConfigResolver
+                NULL_ACCOUNT_CONFIG, metrics
         );
 
         assertThat(service.getLastUpdateTime()).isNull();
@@ -189,6 +208,38 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
 
         assertThat(service.getLastUpdateTime()).isNotNull();
         assertThat(accountCache.size()).isEqualTo(expectedAccounts.size());
+        assertThat(accountCache.get(accountId)).isEqualTo(emptyAccount);
+
+        // TODO: verify log entries generated for successful saving of accounts using LogCaptor
+    }
+
+    @Test
+    public void shouldUpdateAccountCacheAfterPeriodicUpdateWithMergedAccount() {
+        // given
+        given(vertx.setPeriodic(anyLong(), any()))
+                .willAnswer(withSelfAndPassObjectToHandler(1L));
+
+        // when
+        AccountHttpPeriodicRefreshService service = createService(
+                cachingApplicationSettings, ENDPOINT_URL,
+                1000, 2000, 5000, vertx, httpClient,
+                DEFAULT_ACCOUNT_CONFIG, metrics
+        );
+
+        assertThat(service.getLastUpdateTime()).isNull();
+        assertThat(accountCache.isEmpty()).isTrue();
+
+        service.initialize();
+
+        // then
+        verify(httpClient, atLeast(2))
+                .get(startsWith(ENDPOINT_URL + "?accounts=true"), any(), anyLong());
+        verify(httpClient, atLeastOnce())
+                .get(startsWith(ENDPOINT_URL + "?accounts=true&last-modified="), any(), anyLong());
+
+        assertThat(service.getLastUpdateTime()).isNotNull();
+        assertThat(accountCache.size()).isEqualTo(expectedMergedAccounts.size());
+        assertThat(accountCache.get(accountId)).isEqualTo(mergedAccount);
 
         // TODO: verify log entries generated for successful saving of accounts using LogCaptor
     }
@@ -223,12 +274,15 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
     private static AccountHttpPeriodicRefreshService createService(
             CachingApplicationSettings cachingApplicationSettings, String url, long refreshPeriod,
             long timeout, long cacheTtl, Vertx vertx, HttpClient httpClient,
-            PriceFloorsConfigResolver priceFloorsConfigResolver
+            String accountConfig, Metrics metrics
     ) {
+        PriceFloorsConfigResolver priceFloorsConfigResolver = new PriceFloorsConfigResolver(
+                accountConfig, metrics, jacksonMapper
+        );
         return new AccountHttpPeriodicRefreshService(
                 cachingApplicationSettings, url, refreshPeriod,
                 timeout, cacheTtl, vertx, httpClient,
-                DEFAULT_ACCOUNT_CONFIG, priceFloorsConfigResolver,
+                accountConfig, priceFloorsConfigResolver,
                 merger, jacksonMapper
         );
     }
@@ -236,11 +290,11 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
     private static void createAndInitService(
             CachingApplicationSettings cachingApplicationSettings, String url, long refreshPeriod,
             long timeout, long cacheTtl, Vertx vertx, HttpClient httpClient,
-            PriceFloorsConfigResolver priceFloorsConfigResolver
+            Metrics metrics
     ) {
         final AccountHttpPeriodicRefreshService service = createService(
                 cachingApplicationSettings, url, refreshPeriod, timeout,
-                cacheTtl, vertx, httpClient, priceFloorsConfigResolver
+                cacheTtl, vertx, httpClient, NULL_ACCOUNT_CONFIG, metrics
         );
         service.initialize();
     }

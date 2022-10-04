@@ -1031,7 +1031,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
     }
 
     @Test
-    public void testCustomVastResponseWithMultiFormatToMultipleBidders() throws Exception {
+    public void testCustomVastResponseWithMultiFormatToMultipleBiddersWhenWinnerIsVideoBid() throws Exception {
         int improvePlacementId = 2022091601;
 
         GvastMultiFormatSSPResponseTestParam respImprovedigital = GvastMultiFormatSSPResponseTestParam.builder()
@@ -1094,7 +1094,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         );
 
         assertCurrency(responseJson, "USD");
-        assertBidCount(responseJson, 3, 1, 1, 1);
+        assertBidCount(responseJson, 1, 1, 1, 1);
 
         // improvedigital and smarthub's video bids will be merged into this gam vast.
         assertBidIdExists(responseJson, 0, 0);
@@ -1113,26 +1113,10 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
                 respSmarthub.toGvastGamTagSingleBidderTestParam(true), /* 1 video is winner. */
                 respImprovedigital.toGvastGamTagSingleBidderTestParam(false)
         );
-
-        // sa_lunamedia has its own banner bid.
-        assertBidIdExists(responseJson, 1, 0);
-        assertBidImpId(responseJson, 1, 0, "imp_id_1");
-        assertSeat(responseJson, 1, "sa_lunamedia");
-        assertBidPrice(responseJson, 1, 0, 1.45);
-        assertThat(getAdm(responseJson, 1, 0)).isEqualTo(
-                respSalunamedia.adm + getCustomTrackerPixel("sa_lunamedia", "1.45", improvePlacementId + "")
-        );
-
-        // e_volution has its own native bid.
-        assertBidIdExists(responseJson, 2, 0);
-        assertBidImpId(responseJson, 2, 0, "imp_id_1");
-        assertSeat(responseJson, 2, "e_volution");
-        assertBidPrice(responseJson, 2, 0, 1.23);
-        assertThat(getAdm(responseJson, 2, 0)).isEqualTo(respEvolution.adm);
     }
 
     @Test
-    public void testCustomVastResponseWithMultiFormatWhenNoVideoBiddersWin() throws Exception {
+    public void testCustomVastResponseWithMultiFormatWhenNoVideoBidsWin() throws Exception {
         int improvePlacementId = 2022091601;
 
         GvastMultiFormatSSPResponseTestParam respImprovedigital = GvastMultiFormatSSPResponseTestParam.builder()
@@ -1184,32 +1168,14 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         );
 
         assertCurrency(responseJson, "USD");
-        assertBidCount(responseJson, 2, 1, 1);
+        assertBidCount(responseJson, 1, 1, 1);
 
-        // improvedigital and smarthub's video bids will be merged into this gam vast.
+        // e_volution is the winner.
         assertBidIdExists(responseJson, 0, 0);
         assertBidImpId(responseJson, 0, 0, "imp_id_1");
-        assertSeat(responseJson, 0, "improvedigital"); /* Videos accumulated under this. */
-        assertBidPrice(responseJson, 0, 0, 0.0);
-        String vastAdTagUri = getVastTagUri(getAdm(responseJson, 0, 0), "0");
-        assertThat(vastAdTagUri.startsWith("https://pubads.g.doubleclick.net/gampad/ads")).isTrue();
-
-        Map<String, List<String>> vastQueryParams = TestUtils.splitQuery(new URL(vastAdTagUri).getQuery());
-        assertThat(vastQueryParams.get("cust_params")).isNotNull();
-        assertThat(vastQueryParams.get("cust_params").size()).isEqualTo(1);
-        assertGamGeneralParameters(vastQueryParams, improvePlacementId + "");
-        assertGamBidderKeys(
-                TestUtils.splitQuery(vastQueryParams.get("cust_params").get(0)),
-                respSmarthub.toGvastGamTagSingleBidderTestParam(false), /* No video is winner. */
-                respImprovedigital.toGvastGamTagSingleBidderTestParam(false) /* No video is winner. */
-        );
-
-        // e_volution has its own banner bid.
-        assertBidIdExists(responseJson, 1, 0);
-        assertBidImpId(responseJson, 1, 0, "imp_id_1");
-        assertSeat(responseJson, 1, "e_volution");
-        assertBidPrice(responseJson, 1, 0, 1.56);
-        assertThat(getAdm(responseJson, 1, 0)).isEqualTo(
+        assertSeat(responseJson, 0, "e_volution");
+        assertBidPrice(responseJson, 0, 0, 1.56);
+        assertThat(getAdm(responseJson, 0, 0)).isEqualTo(
                 respEvolution.adm + getCustomTrackerPixel("e_volution", "1.56", improvePlacementId + "")
         );
     }

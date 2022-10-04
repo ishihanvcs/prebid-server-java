@@ -79,13 +79,17 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
 
                 if (requestUtils.isCustomVastVideo(imp)) { // imp is configured for custom vast
                     final List<Bid> allBids = ResponseUtils.getBidsForImp(seatBidsForImp, imp);
-                    final List<Bid> videoBids = allBids.parallelStream()
-                            .filter(jsonUtils::isBidWithVideoType)
-                            .collect(Collectors.toList());
+                    final Bid winningBid = allBids.stream()
+                            .reduce((bid1, bid2) ->
+                                    bid1.getPrice().max(bid2.getPrice()).equals(bid1.getPrice()) ? bid1 : bid2
+                            ).orElse(null);
 
-                    if (!videoBids.isEmpty() || allBids.isEmpty()) {
+                    if (jsonUtils.isBidWithVideoType(winningBid) || allBids.isEmpty()) {
+                        final List<Bid> videoBids = allBids.parallelStream()
+                                .filter(jsonUtils::isBidWithVideoType)
+                                .collect(Collectors.toList());
                         // we'll create a Bid with custom vast only if:
-                        // 1. there is at least one bid with video type or
+                        // 1. the winning bid is of video type
                         // 2. no SSP has bid for this imp
                         final CreatorContext creatorContext = commonContext.with(
                                 imp, new ArrayList<>(videoBids),
@@ -99,22 +103,13 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
                                     .getBid()
                                     .add(customVastBid);
                         }
-                    }
-
-                    if (allBids.size() != videoBids.size()) {
-                        // Even though the imp is configured for custom vast,
-                        // there are Bids with non-video BidTypes, so we'll
-                        // simply copy those Bids into respective SeatBid
-                        for (final Bid bid : allBids) {
-                            if (!videoBids.contains(bid)) {
-                                String seatName = seatBidsForImp.stream()
-                                        .filter(seatBid -> seatBid.getBid().contains(bid))
-                                        .map(SeatBid::getSeat)
-                                        .findFirst().orElse(null);
-                                if (StringUtils.isNotBlank(seatName)) {
-                                    resultSeatBids.get(seatName).getBid().add(bid);
-                                }
-                            }
+                    } else if (winningBid != null) {
+                        String seatName = seatBidsForImp.stream()
+                                .filter(seatBid -> seatBid.getBid().contains(winningBid))
+                                .map(SeatBid::getSeat)
+                                .findFirst().orElse(null);
+                        if (StringUtils.isNotBlank(seatName)) {
+                            resultSeatBids.get(seatName).getBid().add(winningBid);
                         }
                     }
                 } else { // imp is not configured for custom vast

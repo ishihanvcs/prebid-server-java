@@ -1,10 +1,12 @@
 package com.improvedigital.prebid.server.services;
 
+import ch.qos.logback.classic.Level;
 import com.improvedigital.prebid.server.UnitTestBase;
 import com.improvedigital.prebid.server.utils.ReflectionUtils;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import nl.altindag.log.LogCaptor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -195,6 +197,8 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
                 NULL_ACCOUNT_CONFIG, metrics
         );
 
+        final LogCaptor logCaptor = LogCaptor.forClass(service.getClass());
+
         assertThat(service.getLastUpdateTime()).isNull();
         assertThat(accountCache.isEmpty()).isTrue();
 
@@ -210,7 +214,17 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
         assertThat(accountCache.size()).isEqualTo(expectedAccounts.size());
         assertThat(accountCache.get(accountId)).isEqualTo(emptyAccount);
 
-        // TODO: verify log entries generated for successful saving of accounts using LogCaptor
+        assertThat(hasLogEventWith(logCaptor, String.format(
+                "Successfully %s %d accounts with ids: %s.", "cached",
+                expectedAccounts.size(),
+                expectedAccounts.keySet()
+        ), Level.INFO)).isTrue();
+
+        assertThat(hasLogEventWith(logCaptor, String.format(
+                "Successfully %s %d accounts with ids: %s.", "updated",
+                expectedAccounts.size(),
+                expectedAccounts.keySet()
+        ), Level.INFO)).isTrue();
     }
 
     @Test
@@ -225,6 +239,8 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
                 1000, 2000, 5000, vertx, httpClient,
                 DEFAULT_ACCOUNT_CONFIG, metrics
         );
+
+        final LogCaptor logCaptor = LogCaptor.forClass(service.getClass());
 
         assertThat(service.getLastUpdateTime()).isNull();
         assertThat(accountCache.isEmpty()).isTrue();
@@ -241,7 +257,17 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
         assertThat(accountCache.size()).isEqualTo(expectedMergedAccounts.size());
         assertThat(accountCache.get(accountId)).isEqualTo(mergedAccount);
 
-        // TODO: verify log entries generated for successful saving of accounts using LogCaptor
+        assertThat(hasLogEventWith(logCaptor, String.format(
+                "Successfully %s %d accounts with ids: %s.", "cached",
+                expectedMergedAccounts.size(),
+                expectedMergedAccounts.keySet()
+        ), Level.INFO)).isTrue();
+
+        assertThat(hasLogEventWith(logCaptor, String.format(
+                "Successfully %s %d accounts with ids: %s.", "updated",
+                expectedMergedAccounts.size(),
+                expectedMergedAccounts.keySet()
+        ), Level.INFO)).isTrue();
     }
 
     @Test

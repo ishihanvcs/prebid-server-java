@@ -510,7 +510,7 @@ public class CustomVastUtils {
                 .put("correlator", System.currentTimeMillis())
                 .put("iu", resolveGamAdUnit(
                         context.getGamConfig(),
-                        requestUtils.getImprovePlacementId(context.getImp())
+                        requestUtils.getImprovedigitalPlacementId(context.getImp())
                 ))
                 .put("output", resolveGamOutputFromOrtb(context.getProtocols()))
 

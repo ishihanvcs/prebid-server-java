@@ -85,7 +85,7 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
                 AuctionRequestPayloadImpl.of(bidRequest),
                 AuctionInvocationContextImpl.of(null, false, null, null),
                 (initialPayload, invocationResult) -> {
-                    final String message = "improvedigital placementId is not defined for one or more imp(s)";
+                    final String message = "improvedigital placementId is not defined in any of the imp(s)";
                     assertThat(invocationResult)
                             .isNotNull();
                     assertThat(invocationResult.message())

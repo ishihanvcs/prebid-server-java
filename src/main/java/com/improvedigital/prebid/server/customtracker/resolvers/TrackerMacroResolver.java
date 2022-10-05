@@ -79,7 +79,7 @@ public class TrackerMacroResolver implements ITrackerMacroResolver {
     protected String resolvePlacementId(TrackerContext context) throws Exception {
         final BidRequest bidRequest = context.getBidRequest();
         final String impId = context.getBidderBid().getBid().getImpid();
-        final Integer placementId = requestUtils.getImprovePlacementId(bidRequest, impId);
+        final Integer placementId = requestUtils.getImprovedigitalPlacementId(bidRequest, impId);
 
         if (placementId == null) {
             throw new Exception("imp[" + impId + "]: Improve Digital placement ID is not defined!");

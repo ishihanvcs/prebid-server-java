@@ -1056,14 +1056,15 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
     }
 
     protected void assertBidCount(
-            JSONObject responseJson, int expectedSeatbidCount, int... expectedBidCounts
+            JSONObject responseJson, int expectedSeatbidCount, int... expectedBidCountsForSeats
     ) throws JSONException {
         assertThat(responseJson.getJSONArray("seatbid").length())
                 .isEqualTo(expectedSeatbidCount);
+        assertThat(expectedSeatbidCount).isEqualTo(expectedBidCountsForSeats.length);
 
         for (int i = 0; i < expectedSeatbidCount; i++) {
             assertThat(responseJson.getJSONArray("seatbid").getJSONObject(i).getJSONArray("bid").length())
-                    .isEqualTo(expectedBidCounts[i]);
+                    .isEqualTo(expectedBidCountsForSeats[i]);
         }
     }
 

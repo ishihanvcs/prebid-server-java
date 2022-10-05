@@ -2,6 +2,7 @@ package com.improvedigital.prebid.server.customvast;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Device;
 import com.iab.openrtb.request.Geo;
@@ -10,6 +11,7 @@ import com.iab.openrtb.response.Bid;
 import com.improvedigital.prebid.server.customvast.model.CreatorContext;
 import com.improvedigital.prebid.server.customvast.model.CustomVast;
 import com.improvedigital.prebid.server.customvast.model.Floor;
+import com.improvedigital.prebid.server.customvast.model.FloorBucket;
 import com.improvedigital.prebid.server.customvast.model.HooksModuleContext;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExtGam;
@@ -35,6 +37,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCache;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCacheVastxml;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestTargeting;
+import org.prebid.server.proto.openrtb.ext.response.BidType;
 import org.prebid.server.util.ObjectUtil;
 
 import java.io.IOException;
@@ -138,10 +141,13 @@ public class CustomVastUtils {
         if (StringUtils.isEmpty(adm)) {
             return null;
         }
+        ObjectNode extNode = jsonUtils.getObjectMapper().createObjectNode();
+        extNode.putObject("prebid").put("type", BidType.video.getName());
         return Bid.builder()
                 .id(UUID.randomUUID().toString())
                 .impid(context.getImp().getId())
                 .adm(adm)
+                .ext(extNode)
                 .price(BigDecimal.ZERO) // TODO: set price as per imp configuration
                 .build();
     }
@@ -210,28 +216,28 @@ public class CustomVastUtils {
     private void updateImpsWithBidFloorInUsd(BidRequest bidRequest, Function<Imp, Floor> floorRetriever) {
         bidRequest.getImp().replaceAll(imp -> {
             Floor effectiveFloor = floorRetriever.apply(imp);
-            if (effectiveFloor == null) {
-                return imp;
-            }
-            final BigDecimal bidFloorInUsd;
-            if (StringUtils.compareIgnoreCase("USD", effectiveFloor.getBidFloorCur()) == 0) {
-                bidFloorInUsd = effectiveFloor.getBidFloor().doubleValue() < 0.0
-                        ? BigDecimal.ZERO
-                        : effectiveFloor.getBidFloor();
-            } else {
-                bidFloorInUsd = currencyConversionService.convertCurrency(
-                        effectiveFloor.getBidFloor(), bidRequest,
-                        effectiveFloor.getBidFloorCur(),
-                        "USD"
-                );
+            BigDecimal bidFloorInUsd = null;
+            String bidFloorCur = "USD";
+            if (effectiveFloor != null) {
+                if (StringUtils.compareIgnoreCase("USD", effectiveFloor.getBidFloorCur()) == 0) {
+                    bidFloorInUsd = effectiveFloor.getBidFloor().doubleValue() <= 0.0
+                            ? null
+                            : effectiveFloor.getBidFloor();
+                } else {
+                    bidFloorInUsd = currencyConversionService.convertCurrency(
+                            effectiveFloor.getBidFloor(), bidRequest,
+                            effectiveFloor.getBidFloorCur(),
+                            "USD"
+                    );
+                }
             }
 
             if (bidFloorInUsd == null) {
-                return imp;
+                bidFloorCur = null;
             }
             return imp.toBuilder()
                     .bidfloor(bidFloorInUsd)
-                    .bidfloorcur("USD")
+                    .bidfloorcur(bidFloorCur)
                     .build();
         });
     }
@@ -279,7 +285,7 @@ public class CustomVastUtils {
     }
 
     private static Floor computeEffectiveFloor(Imp imp, ImprovedigitalPbsImpExt pbsImpExt, String alpha3Country) {
-        Floor floor = ObjectUtil.getIfNotNull(pbsImpExt, pie -> pie.getFloor(alpha3Country));
+        Floor floor = ObjectUtil.getIfNotNull(pbsImpExt, pie -> pie.getFloor(alpha3Country, null));
         BigDecimal effectiveFloorPrice = getEffectiveFloorPrice(imp, floor);
         if (effectiveFloorPrice == null) {
             return floor;
@@ -435,15 +441,18 @@ public class CustomVastUtils {
         return targeting.toString();
     }
 
-    public String getCustParams(double bidFloor, Stream<String> targetingStream) {
+    public String getCustParams(CreatorContext context, Stream<String> targetingStream) {
         String targetingString = targetingStream == null
                 ? StringUtils.EMPTY
                 : targetingStream
                     .filter(s -> !StringUtils.isBlank(s))
                     .collect(Collectors.joining("&"));
 
-        if (bidFloor > 0 && !targetingString.contains("fp=")) {
-            targetingString += (targetingString.length() > 0 ? "&" : "") + "fp=" + bidFloor;
+        if (context.getBidfloor() > 0 && !targetingString.contains("fp=")) {
+            String fp = resolveGamFloorPrice(
+                    context.getBidfloor(), context.getBidfloorcur(), context.getBidRequest()
+            );
+            targetingString += (targetingString.length() > 0 ? "&" : "") + "fp=" + fp;
         }
         if (!targetingString.contains("tnl_asset_id=")) {
             targetingString += (targetingString.length() > 0 ? "&" : "") + "tnl_asset_id=prebidserver";
@@ -452,6 +461,17 @@ public class CustomVastUtils {
             targetingString = targetingString.replace("pbct=2", "pbct=" + this.resolvePbct()); // HACK - fix
         }
         return targetingString;
+    }
+
+    public String resolveGamFloorPrice(double bidFloor, String bidFloorCur, BidRequest bidRequest) {
+        bidFloorCur = StringUtils.defaultIfBlank(bidFloorCur, "USD");
+        if (bidFloorCur.compareToIgnoreCase("EUR") != 0) {
+            bidFloor = currencyConversionService.convertCurrency(
+                    BigDecimal.valueOf(bidFloor), bidRequest, bidFloorCur, "EUR"
+            ).doubleValue();
+        }
+
+        return FloorBucket.resolveGamFloorPrice(bidFloor);
     }
 
     public String getRedirect(String bidder, String gdpr, String gdprConsent,
@@ -490,7 +510,7 @@ public class CustomVastUtils {
                 .put("correlator", System.currentTimeMillis())
                 .put("iu", resolveGamAdUnit(
                         context.getGamConfig(),
-                        requestUtils.getImprovePlacementId(context.getImp())
+                        requestUtils.getImprovedigitalPlacementId(context.getImp())
                 ))
                 .put("output", resolveGamOutputFromOrtb(context.getProtocols()))
 
@@ -501,7 +521,7 @@ public class CustomVastUtils {
                 .put("sz", "640x480|640x360")
 
                 .putIfNotNull("description_url", context.getReferrer())
-                .putIfNotBlank("cust_params", getCustParams(context.getBidfloor(), targetingStream));
+                .putIfNotBlank("cust_params", getCustParams(context, targetingStream));
 
         // Add additional params for apps running without IMA SDK
         // https://support.google.com/admanager/answer/10660756?hl=en&ref_topic=10684636

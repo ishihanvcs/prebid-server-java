@@ -1,0 +1,51 @@
+---
+accounts:
+  - id: 2022081801
+    ext:
+      improvedigitalpbs:
+        bidPriceAdjustment: 0.95
+        bidPriceAdjustmentIncImprove: true
+  - id: 2022081802
+    ext:
+      improvedigitalpbs:
+        bidPriceAdjustment: 1.15
+        bidPriceAdjustmentIncImprove: true
+  - id: 2022081803
+    ext:
+      improvedigitalpbs:
+        bidPriceAdjustment: 0.90
+        bidPriceAdjustmentIncImprove: false
+  - id: 2022081804
+    ext:
+      improvedigitalpbs:
+        bidPriceAdjustment: 0.80
+  - id: 2022081805
+  - id: 2022081806
+    auction:
+      price-floors:
+        enabled: false
+    ext:
+      improvedigitalpbs:
+        bidPriceAdjustment: 0.85
+        bidPriceAdjustmentIncImprove: true
+  - id: 14062
+    auction:
+      banner-cache-ttl: 100
+      video-cache-ttl: 100
+      events:
+        enabled: true
+  - id: 1001
+    auction:
+      debug-allow: true
+  - id: 2001
+    auction:
+      events:
+        enabled: true
+  - id: 2763
+  - id: 5001
+    auction:
+      events:
+        enabled: true
+  - id: 12001
+domains:
+  - az.pbs.com

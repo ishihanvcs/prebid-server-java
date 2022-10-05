@@ -7,9 +7,12 @@ import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.exception.PreBidException;
+import org.prebid.server.floors.PriceFloorsConfigResolver;
 import org.prebid.server.json.DecodeException;
 import org.prebid.server.json.JacksonMapper;
+import org.prebid.server.json.JsonMerger;
 import org.prebid.server.settings.CachingApplicationSettings;
 import org.prebid.server.settings.model.Account;
 import org.prebid.server.settings.proto.response.HttpAccountsResponse;
@@ -73,6 +76,9 @@ public class AccountHttpPeriodicRefreshService implements Initializable {
     private final Vertx vertx;
     private final HttpClient httpClient;
     private final JacksonMapper mapper;
+    private final Account defaultAccount;
+    private final JsonMerger jsonMerger;
+    private final PriceFloorsConfigResolver priceFloorsConfigResolver;
 
     private Map<String, Account> accountCache;
     private Instant lastUpdateTime;
@@ -89,6 +95,9 @@ public class AccountHttpPeriodicRefreshService implements Initializable {
             long cacheTtlMs,
             Vertx vertx,
             HttpClient httpClient,
+            String defaultAccountConfig,
+            PriceFloorsConfigResolver priceFloorsConfigResolver,
+            JsonMerger jsonMerger,
             JacksonMapper mapper
     ) {
         this.cachingApplicationSettings = cachingApplicationSettings;
@@ -98,6 +107,9 @@ public class AccountHttpPeriodicRefreshService implements Initializable {
         this.cacheTtlMs = cacheTtlMs;
         this.vertx = vertx;
         this.httpClient = Objects.requireNonNull(httpClient);
+        this.defaultAccount = parseAccount(defaultAccountConfig, mapper);
+        this.priceFloorsConfigResolver = Objects.requireNonNull(priceFloorsConfigResolver);
+        this.jsonMerger = Objects.requireNonNull(jsonMerger);
         this.mapper = Objects.requireNonNull(mapper);
     }
 
@@ -145,6 +157,29 @@ public class AccountHttpPeriodicRefreshService implements Initializable {
         return parsedResponse.getAccounts();
     }
 
+    private static Account parseAccount(String accountConfig, JacksonMapper mapper) {
+        try {
+            final Account account = StringUtils.isNotBlank(accountConfig)
+                    ? mapper.decodeValue(accountConfig, Account.class)
+                    : null;
+
+            return isNotEmpty(account) ? account : null;
+        } catch (DecodeException e) {
+            throw new IllegalArgumentException("Could not parse default account configuration", e);
+        }
+    }
+
+    private static boolean isNotEmpty(Account account) {
+        return account != null && !account.equals(Account.builder().build());
+    }
+
+    private Account mergeDefaultAccount(Account account) {
+        if (defaultAccount == null) {
+            return account;
+        }
+        return jsonMerger.merge(account, defaultAccount, Account.class);
+    }
+
     /**
      * Handles errors occurred while HTTP request or response processing.
      */
@@ -175,7 +210,11 @@ public class AccountHttpPeriodicRefreshService implements Initializable {
                 if (entry.getValue() == null) {
                     this.accountCache.remove(entry.getKey());
                 } else {
-                    this.accountCache.put(entry.getKey(), entry.getValue());
+                    final Account enrichedAccount = priceFloorsConfigResolver
+                            .updateFloorsConfig(entry.getValue())
+                            .map(this::mergeDefaultAccount)
+                            .result();
+                    this.accountCache.put(entry.getKey(), enrichedAccount);
                 }
             }
             logger.info(

@@ -11,6 +11,7 @@ import com.improvedigital.prebid.server.customvast.requestfactory.GVastRequestFa
 import com.improvedigital.prebid.server.customvast.resolvers.GVastHandlerParamsResolver;
 import com.improvedigital.prebid.server.hooks.v1.customtracker.CustomTrackerHooksModule;
 import com.improvedigital.prebid.server.hooks.v1.customvast.CustomVastHooksModule;
+import com.improvedigital.prebid.server.hooks.v1.revshare.ImprovedigitalBidAdjustmentModule;
 import com.improvedigital.prebid.server.hooks.v1.supplychain.ImprovedigitalSupplyChainModule;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
 import com.improvedigital.prebid.server.utils.JsonUtils;
@@ -22,6 +23,7 @@ import io.vertx.ext.web.Router;
 import org.prebid.server.analytics.reporter.AnalyticsReporterDelegator;
 import org.prebid.server.auction.ExchangeService;
 import org.prebid.server.auction.requestfactory.AuctionRequestFactory;
+import org.prebid.server.bidder.BidderCatalog;
 import org.prebid.server.currency.CurrencyConversionService;
 import org.prebid.server.geolocation.CountryCodeMapper;
 import org.prebid.server.geolocation.GeoLocationService;
@@ -31,6 +33,7 @@ import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.json.JsonMerger;
 import org.prebid.server.log.HttpInteractionLogger;
 import org.prebid.server.metric.Metrics;
+import org.prebid.server.settings.ApplicationSettings;
 import org.prebid.server.settings.model.GdprConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -200,5 +203,11 @@ public class ExtensionConfig {
     @Bean
     ImprovedigitalSupplyChainModule improvedigitalSupplyChainModule(JsonUtils jsonUtils) {
         return new ImprovedigitalSupplyChainModule(jsonUtils);
+    }
+
+    @Bean
+    ImprovedigitalBidAdjustmentModule improvedigitalBidAdjustmentModule(
+            RequestUtils requestUtils, BidderCatalog bidderCatalog, ApplicationSettings applicationSettings) {
+        return new ImprovedigitalBidAdjustmentModule(requestUtils, bidderCatalog, applicationSettings);
     }
 }

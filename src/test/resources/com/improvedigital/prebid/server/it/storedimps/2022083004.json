@@ -1,0 +1,39 @@
+{
+  "ext": {
+    "prebid": {
+      "improvedigitalpbs": {
+      },
+      "bidder": {
+        "improvedigital": {
+          "placementId": 20220830,
+          "size": {
+            "w": 320,
+            "h": 320
+          }
+        }
+      }
+    }
+  },
+  "banner": {
+    "w": 320,
+    "h": 320
+  },
+  "native": {
+    "request": "{\"ver\":\"1.2\",\"context\":1,\"plcmttype\":4,\"plcmtcnt\":1,\"assets\":[{\"id\":1,\"required\":1,\"title\":{\"len\":90}},{\"id\":2,\"required\":1,\"img\":{\"type\":3,\"wmin\":128,\"hmin\":128,\"mimes\":[\"image/jpg\",\"image/jpeg\",\"image/png\"]}},{\"id\":3,\"required\":1,\"data\":{\"type\":2,\"len\":120}}]}",
+    "ver": "1.2"
+  },
+  "video": {
+    "mimes": [
+      "video/mp4"
+    ],
+    "minduration": 1,
+    "maxduration": 60,
+    "linearity": 1,
+    "placement": 5,
+    "protocols": [
+      2
+    ],
+    "w": 640,
+    "h": 480
+  }
+}

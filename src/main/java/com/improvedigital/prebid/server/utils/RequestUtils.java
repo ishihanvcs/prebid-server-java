@@ -18,6 +18,7 @@ import org.prebid.server.proto.openrtb.ext.request.ExtPublisherPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
+import org.prebid.server.spring.config.bidder.ImprovedigitalConfiguration;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -25,7 +26,13 @@ import java.util.Optional;
 
 public class RequestUtils {
 
-    public static final String IMPROVE_BIDDER_NAME = "improvedigital";
+    public static final String IMPROVE_DIGITAL_BIDDER_NAME;
+
+    static {
+        IMPROVE_DIGITAL_BIDDER_NAME = ReflectionUtils.getPrivateProperty(
+                "BIDDER_NAME", ImprovedigitalConfiguration.class
+        );
+    }
 
     private final JsonUtils jsonUtils;
 
@@ -161,16 +168,16 @@ public class RequestUtils {
                 .anyMatch(this::isCustomVastVideo);
     }
 
-    public Integer getImprovePlacementId(Imp imp) {
-        JsonNode node = extractBidderInfo(imp, IMPROVE_BIDDER_NAME, "/placementId");
+    public Integer getImprovedigitalPlacementId(Imp imp) {
+        JsonNode node = extractBidderInfo(imp, IMPROVE_DIGITAL_BIDDER_NAME, "/placementId");
         if (!node.isMissingNode() && node.isInt()) {
             return node.asInt();
         }
         return null;
     }
 
-    public Integer getImprovePlacementId(BidRequest bidRequest, String impId) {
-        return getImprovePlacementId(
+    public Integer getImprovedigitalPlacementId(BidRequest bidRequest, String impId) {
+        return getImprovedigitalPlacementId(
                 bidRequest.getImp().stream()
                         .filter(i -> i.getId().equals(impId))
                         .findFirst()

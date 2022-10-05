@@ -1,5 +1,6 @@
 package com.improvedigital.prebid.server.utils;
 
+import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.core.TreeNode;
@@ -10,11 +11,15 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
+import com.iab.openrtb.response.Bid;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
+import com.improvedigital.prebid.server.settings.model.ImprovedigitalPbsAccountExt;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.Tuple2;
 import org.prebid.server.json.JacksonMapper;
+import org.prebid.server.settings.model.Account;
+import org.prebid.server.proto.openrtb.ext.response.BidType;
 import org.prebid.server.util.ObjectUtil;
 
 import java.math.BigDecimal;
@@ -29,6 +34,12 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public class JsonUtils {
+
+    private static final String EXT_CUSTOM_CONFIG_KEY = "improvedigitalpbs";
+    private static final JsonPointer JSON_PTR_CUSTOM_CONFIG
+            = JsonPointer.compile("/" + EXT_CUSTOM_CONFIG_KEY);
+    private static final JsonPointer JSON_PTR_CUSTOM_CONFIG_LEGACY
+            = JsonPointer.compile("/prebid/" + EXT_CUSTOM_CONFIG_KEY);
 
     private final JacksonMapper mapper;
     private final ObjectMapper objectMapper;
@@ -324,12 +335,52 @@ public class JsonUtils {
             return null;
         }
         try {
+            JsonNode configNode = imp.getExt().at(JSON_PTR_CUSTOM_CONFIG);
+            if (configNode.isMissingNode()) {
+                configNode = imp.getExt().at(JSON_PTR_CUSTOM_CONFIG_LEGACY);
+            }
+            if (configNode.isMissingNode()) {
+                return null;
+            }
             return objectMapper.treeToValue(
-                    imp.getExt().at("/prebid/improvedigitalpbs"), ImprovedigitalPbsImpExt.class
+                    configNode, ImprovedigitalPbsImpExt.class
             );
         } catch (JsonProcessingException e) {
             return null;
         }
+    }
+
+    public ImprovedigitalPbsAccountExt getAccountExt(Account account) {
+        if (account == null || account.getExt() == null) {
+            return null;
+        }
+        try {
+            JsonNode configNode = account.getExt().at(JSON_PTR_CUSTOM_CONFIG);
+            if (configNode.isMissingNode()) {
+                return null;
+            }
+            return objectMapper.treeToValue(
+                    configNode, ImprovedigitalPbsAccountExt.class
+            );
+        } catch (JsonProcessingException e) {
+            return null;
+        }
+    }
+
+    public BidType getBidType(Bid bid) {
+        if (bid == null || bid.getExt() == null) {
+            return null;
+        }
+        String bidType = getStringAt(bid.getExt(), "/prebid/type");
+        return ObjectUtil.getIfNotNull(bidType, BidType::fromString);
+    }
+
+    public boolean isBidWithVideoType(Bid bid) {
+        return getBidType(bid) == BidType.video;
+    }
+
+    public boolean isBidWithNonVideoType(Bid bid) {
+        return !isBidWithVideoType(bid);
     }
 
     public BidRequest parseBidRequest(String body) {

@@ -1,19 +1,28 @@
 package com.improvedigital.prebid.server.it;
 
+import com.iab.openrtb.request.BidRequest;
 import io.restassured.response.Response;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import lombok.Builder;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.prebid.server.model.Endpoint;
+import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidChannel;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidSchainSchainNode;
+import org.prebid.server.proto.openrtb.ext.request.ExtSourceSchain;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
@@ -21,17 +30,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@TestPropertySource(
-        locations = {
-                "/com/improvedigital/prebid/server/it/test-application-improvedigital-hooks.properties"
-        },
-        properties = {
-                "admin.port=18062",
-                "http.port=18082",
-        }
-)
+@TestPropertySource(properties = {
+        "admin.port=18062",
+        "http.port=18082",
+})
 @RunWith(SpringRunner.class)
 public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(ImprovedigitalSupplyChainTest.class);
 
     @Test
     public void testSupplyChainIsAddedToMultipleBidders() throws Exception {
@@ -54,14 +60,14 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
         );
 
         assertBidIdExists(responseJson, 0, 0);
-        assertBidImpId(responseJson, 0, 0, "imp_id_" + uniqueId);
+        assertBidImpId(responseJson, 0, 0, "imp_id_1");
         assertBidPrice(responseJson, 0, 0, 1.25);
         assertSeat(responseJson, 0, "generic");
         assertThat(getAdm(responseJson, 0, 0)).contains("<img src='banner-4.png'/>");
         assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("banner");
 
         assertBidIdExists(responseJson, 1, 0);
-        assertBidImpId(responseJson, 1, 0, "imp_id_" + uniqueId);
+        assertBidImpId(responseJson, 1, 0, "imp_id_1");
         assertBidPrice(responseJson, 1, 0, 1.15);
         assertSeat(responseJson, 1, "improvedigital");
         assertThat(getAdm(responseJson, 1, 0)).contains("<img src='banner-2.png'/>");
@@ -77,8 +83,8 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                 /* This stored imp has only partner id. */
                 "2022072202",
                 20220722,
-                Arrays.asList(),
-                Arrays.asList(
+                List.of(),
+                List.of(
                         ExtRequestPrebidSchainSchainNode.of(
                                 "headerlift.com", /* We expect this to be default. */
                                 "hl-2022072202",
@@ -99,8 +105,8 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                 /* This stored imp has partner id and empty schain nodes. */
                 "2022072203",
                 20220722,
-                Arrays.asList(),
-                Arrays.asList() /* Expecting no schain added. */
+                List.of(),
+                List.of() /* Expecting no schain added. */
         );
     }
 
@@ -111,8 +117,8 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                 /* This stored imp has no partner id and some schain nodes. */
                 "2022072204",
                 20220722,
-                Arrays.asList(),
-                Arrays.asList() /* Expecting no schain added. */
+                List.of(),
+                List.of() /* Expecting no schain added. */
         );
     }
 
@@ -126,7 +132,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                 "2022072205",
                 20220722,
                 /* Incoming request has these schain nodes already */
-                Arrays.asList(
+                List.of(
                         ExtRequestPrebidSchainSchainNode.of(
                                 "firstsite.com",
                                 "firstsite-1",
@@ -146,7 +152,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                 null
                         )
                 ),
-                Arrays.asList(
+                List.of(
                         ExtRequestPrebidSchainSchainNode.of(
                                 "firstsite.com",
                                 "firstsite-1",
@@ -188,14 +194,14 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                 "2022072205",
                 20220722,
                 /* Incoming request has these schain nodes already */
-                Arrays.asList(
+                List.of(
                         ExtRequestPrebidSchainSchainNode.of(
                                 "headerlift.com",
                                 "firstsite-1",
                                 1,
                                 "request_id_" + uniqueId,
                                 null,
-                                null,
+                                "headerlift.com",
                                 null
                         ),
                         ExtRequestPrebidSchainSchainNode.of(
@@ -208,14 +214,14 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                 null
                         )
                 ),
-                Arrays.asList(
+                List.of(
                         ExtRequestPrebidSchainSchainNode.of(
                                 "headerlift.com",
                                 "firstsite-1",
                                 1,
                                 "request_id_" + uniqueId,
                                 null,
-                                null,
+                                "headerlift.com",
                                 null
                         ),
                         ExtRequestPrebidSchainSchainNode.of(
@@ -231,6 +237,199 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
         );
     }
 
+    @Test
+    @Ignore /* Will be fixed in separate branch. */
+    public void testSupplyChainIsAddedForMultiImp() throws Exception {
+        String uniqueId = UUID.randomUUID().toString();
+
+        doAuctionRequestToImprovedigitalBidderWithMultiImp(
+                uniqueId,
+                /* Incoming request has these schain nodes already */
+                List.of(
+                        ExtRequestPrebidSchainSchainNode.of(
+                                "pubgalaxy.com",
+                                "secondsite-1",
+                                1,
+                                "request_id_" + uniqueId,
+                                null,
+                                null,
+                                null
+                        )
+                ),
+                List.of(
+                        ExtRequestPrebidSchainSchainNode.of(
+                                "pubgalaxy.com",
+                                "secondsite-1",
+                                1,
+                                "request_id_" + uniqueId,
+                                null,
+                                null,
+                                null
+                        ),
+                        ExtRequestPrebidSchainSchainNode.of(
+                                "headerlift.com",
+                                "hl-2022092701",
+                                1,
+                                "request_id_" + uniqueId,
+                                null,
+                                "headerlift.com",
+                                null
+                        )
+                ),
+                SupplyChainMultiImpTestParam.builder()
+                        .impId("imp_id_1")
+                        .price(1.12)
+                        .build(),
+                SupplyChainMultiImpTestParam.builder()
+                        .impId("imp_id_2")
+                        .price(1.23)
+                        .headerliftPartnerId("hl-2022092701")
+                        .schainNodes(List.of("headerlift.com", "pubgalaxy.com"))
+                        .build()
+        );
+    }
+
+    @Test
+    @Ignore /* Will be fixed in separate branch. */
+    public void testSupplyChainIsAddedForMultiImpWithDifferentHeaderPartnerId() throws Exception {
+        String uniqueId = UUID.randomUUID().toString();
+
+        doAuctionRequestToImprovedigitalBidderWithMultiImp(
+                uniqueId,
+                /* Incoming request has these schain nodes already */
+                List.of(
+                        ExtRequestPrebidSchainSchainNode.of(
+                                "pubgalaxy.com",
+                                "secondsite-1",
+                                1,
+                                "request_id_" + uniqueId,
+                                null,
+                                null,
+                                null
+                        )
+                ),
+                List.of(
+                        ExtRequestPrebidSchainSchainNode.of(
+                                "pubgalaxy.com",
+                                "secondsite-1",
+                                1,
+                                "request_id_" + uniqueId,
+                                null,
+                                null,
+                                null
+                        )
+                ),
+                SupplyChainMultiImpTestParam.builder()
+                        .impId("imp_id_1")
+                        .price(1.12)
+                        .build(),
+                SupplyChainMultiImpTestParam.builder()
+                        .impId("imp_id_2")
+                        .price(1.23)
+                        .headerliftPartnerId("hl-2022092701")
+                        .schainNodes(List.of("headerlift.com", "pubgalaxy.com"))
+                        .build(),
+                SupplyChainMultiImpTestParam.builder()
+                        .impId("imp_id_3")
+                        .price(1.34)
+                        .headerliftPartnerId("hl-2022092702") /* Different partner id */
+                        .schainNodes(List.of("headerlift.com", "pubgalaxy.com"))
+                        .build()
+        );
+    }
+
+    @Test
+    @Ignore /* Will be fixed in separate branch. */
+    public void testSupplyChainIsAddedForMultiImpWithDifferentSchainNodes() throws Exception {
+        String uniqueId = UUID.randomUUID().toString();
+
+        doAuctionRequestToImprovedigitalBidderWithMultiImp(
+                uniqueId,
+                /* Incoming request has these schain nodes already */
+                List.of(
+                        ExtRequestPrebidSchainSchainNode.of(
+                                "pubgalaxy.com",
+                                "secondsite-1",
+                                1,
+                                "request_id_" + uniqueId,
+                                null,
+                                null,
+                                null
+                        )
+                ),
+                List.of(
+                        ExtRequestPrebidSchainSchainNode.of(
+                                "pubgalaxy.com",
+                                "secondsite-1",
+                                1,
+                                "request_id_" + uniqueId,
+                                null,
+                                null,
+                                null
+                        )
+                ),
+                SupplyChainMultiImpTestParam.builder()
+                        .impId("imp_id_1")
+                        .price(1.12)
+                        .build(),
+                SupplyChainMultiImpTestParam.builder()
+                        .impId("imp_id_2")
+                        .price(1.23)
+                        .headerliftPartnerId("hl-2022092701")
+                        .schainNodes(List.of("headerlift.com", "pubgalaxy.com"))
+                        .build(),
+                SupplyChainMultiImpTestParam.builder()
+                        .impId("imp_id_3")
+                        .price(1.34)
+                        .headerliftPartnerId("hl-2022092701")
+                        .schainNodes(List.of("headerlift.com", "newdomain.com")) /* Different schain nodes */
+                        .build()
+        );
+
+        doAuctionRequestToImprovedigitalBidderWithMultiImp(
+                uniqueId,
+                /* Incoming request has these schain nodes already */
+                List.of(
+                        ExtRequestPrebidSchainSchainNode.of(
+                                "pubgalaxy.com",
+                                "secondsite-1",
+                                1,
+                                "request_id_" + uniqueId,
+                                null,
+                                null,
+                                null
+                        )
+                ),
+                List.of(
+                        ExtRequestPrebidSchainSchainNode.of(
+                                "pubgalaxy.com",
+                                "secondsite-1",
+                                1,
+                                "request_id_" + uniqueId,
+                                null,
+                                null,
+                                null
+                        )
+                ),
+                SupplyChainMultiImpTestParam.builder()
+                        .impId("imp_id_1")
+                        .price(1.12)
+                        .build(),
+                SupplyChainMultiImpTestParam.builder()
+                        .impId("imp_id_2")
+                        .price(1.23)
+                        .headerliftPartnerId("hl-2022092701")
+                        .schainNodes(List.of("headerlift.com", "pubgalaxy.com"))
+                        .build(),
+                SupplyChainMultiImpTestParam.builder()
+                        .impId("imp_id_3")
+                        .price(1.34)
+                        .headerliftPartnerId("hl-2022092701")
+                        .schainNodes(null) /* Different schain nodes */
+                        .build()
+        );
+    }
+
     private JSONObject doAuctionRequestToImprovedigitalBidder(
             String uniqueId,
             String storedImpId,
@@ -239,42 +438,50 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
             List<ExtRequestPrebidSchainSchainNode> expectedSchainNodes
     ) throws JSONException {
 
-        WIRE_MOCK_RULE.stubFor(
-                post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(getSSPBidRequestBanner(uniqueId,
-                                SSPBidRequestBannerTestData.builder()
-                                        .currency("USD")
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
+                .withRequestBody(equalToJson(getSSPBidRequest(uniqueId,
+                        SSPBidRequestTestData.builder()
+                                .currency("USD")
+                                .impData(SingleImpTestData.builder()
+                                        .id("imp_id_1")
                                         .impExt(new SSPBidRequestImpExt()
                                                 .putStoredRequest(storedImpId)
                                                 .putBidder()
                                                 .putBidderKeyValue("placementId", placementIdOfStoredImp))
-                                        .schainVer("1.0")
-                                        .schainComplete(1)
-                                        .schainNodes(expectedSchainNodes)
                                         .bannerData(BannerTestParam.builder()
                                                 .w(300)
                                                 .h(250)
                                                 .build())
-                                        .build()
-                        )))
-                        .willReturn(aResponse().withBody(getBidResponse(
-                                "improvedigital", uniqueId, "USD",
-                                BidResponseTestData.builder()
-                                        .price(1.15)
-                                        .adm("<img src='banner-1.jpg' />")
-                                        .build()
-                        )))
+                                        .build())
+                                .schain(ExtSourceSchain.of(
+                                        "1.0", 1, expectedSchainNodes, null
+                                ))
+                                .channel(ExtRequestPrebidChannel.of("web"))
+                                .build()
+                )))
+                .willReturn(aResponse().withBody(getSSPBidResponse(
+                        "improvedigital", uniqueId, "USD",
+                        BidResponseTestData.builder()
+                                .impId("imp_id_1")
+                                .price(1.15)
+                                .adm("<img src='banner-1.jpg' />")
+                                .build()
+                )))
         );
 
         Response response = specWithPBSHeader(18082)
-                .body(getAuctionBidRequestBanner(uniqueId, AuctionBidRequestBannerTestData.builder()
+                .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
                         .currency("USD")
-                        .impExt(new AuctionBidRequestImpExt()
-                                .putStoredRequest(storedImpId)
-                        )
-                        .schainVer("1.0")
-                        .schainComplete(1)
-                        .schainNodes(existingSchainNodes)
+                        .imps(List.of(AuctionBidRequestImpTestData.builder()
+                                .impExt(new AuctionBidRequestImpExt()
+                                        .putStoredRequest(storedImpId))
+                                .impData(SingleImpTestData.builder()
+                                        .id("imp_id_1")
+                                        .build())
+                                .build()))
+                        .schain(ExtSourceSchain.of(
+                                "1.0", 1, existingSchainNodes, null
+                        ))
                         .build()
                 ))
                 .post(Endpoint.openrtb2_auction.value());
@@ -282,16 +489,91 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
         JSONObject responseJson = new JSONObject(response.asString());
         assertNoExtErrors(responseJson);
         assertCurrency(responseJson, "USD");
-        assertThat(responseJson.getJSONArray("seatbid").length())
-                .isEqualTo(1);
-        assertThat(responseJson.getJSONArray("seatbid").getJSONObject(0).getJSONArray("bid").length())
-                .isEqualTo(1);
+        assertBidCount(responseJson, 1, 1);
         assertBidIdExists(responseJson, 0, 0);
-        assertBidImpId(responseJson, 0, 0, "imp_id_" + uniqueId);
+        assertBidImpId(responseJson, 0, 0, "imp_id_1");
         assertBidPrice(responseJson, 0, 0, 1.15);
         assertSeat(responseJson, 0, "improvedigital");
         assertThat(getAdm(responseJson, 0, 0)).contains("<img src='banner-1.jpg' />");
         assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("banner");
+
+        return responseJson;
+    }
+
+    private JSONObject doAuctionRequestToImprovedigitalBidderWithMultiImp(
+            String uniqueId,
+            List<ExtRequestPrebidSchainSchainNode> existingSchainNodes,
+            List<ExtRequestPrebidSchainSchainNode> expectedSchainNodes,
+            SupplyChainMultiImpTestParam... params
+    ) throws JSONException {
+
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
+                .willReturn(aResponse()
+                        .withTransformers("it-test-bid-response-function-by-impid")
+                        .withTransformerParameters(Arrays.stream(params).collect(Collectors.toMap(
+                                param -> param.impId,
+                                param -> (Function<BidRequest, String>) request -> {
+                                    ExtSourceSchain schain = request.getSource().getExt().getSchain();
+                                    if (!Objects.equals(schain.getNodes(), expectedSchainNodes)) {
+                                        logger.error("Expected schain nodes didn't match. expected="
+                                                + existingSchainNodes + ", found=" + schain.getNodes());
+                                        return null;
+                                    }
+
+                                    return getSSPBidResponse("improvedigital", uniqueId, "USD",
+                                            BidResponseTestData.builder()
+                                                    .impId(param.impId)
+                                                    .price(param.price)
+                                                    .adm("<img src='banner-" + param.impId + ".png' />")
+                                                    .build()
+                                    );
+                                }))))
+        );
+
+        Response response = specWithPBSHeader(18082)
+                .body(getAuctionBidRequest(uniqueId, AuctionBidRequestTestData.builder()
+                        .currency("USD")
+                        .imps(Arrays.stream(params)
+                                .map(param -> AuctionBidRequestImpTestData.builder()
+                                        .impExt(new AuctionBidRequestImpExt()
+                                                .putImprovedigitalPbs()
+                                                .putImprovedigitalPbsKeyValue(
+                                                        "headerliftPartnerId", param.headerliftPartnerId
+                                                )
+                                                .putImprovedigitalPbsKeyValue("schainNodes", param.schainNodes)
+                                                .putBidder("improvedigital")
+                                                .putBidderKeyValue("improvedigital", "placementId", 20220923))
+                                        .impData(SingleImpTestData.builder()
+                                                .id(param.impId)
+                                                .bannerData(BannerTestParam.getDefault())
+                                                .build())
+                                        .build())
+                                .collect(Collectors.toList()))
+                        .schain(ExtSourceSchain.of(
+                                "1.0", 1, existingSchainNodes, null
+                        ))
+                        .test(1) /* To get clear error message in debug key of response. */
+                        .build()
+                ))
+                .post(Endpoint.openrtb2_auction.value());
+
+        JSONObject responseJson = new JSONObject(response.asString());
+        assertNoExtErrors(responseJson);
+        assertCurrency(responseJson, "USD");
+        assertBidCount(responseJson, 1, params.length);
+        assertSeat(responseJson, 0, "improvedigital");
+
+        // The response will be as we sent. The only check here is, the schain nodes in SSP requests.
+        // If those expected schain nodes don't match, response will be empty.
+        for (int i = 0; i < params.length; i++) {
+            SupplyChainMultiImpTestParam param = params[i];
+
+            assertBidIdExists(responseJson, 0, i);
+            assertBidImpId(responseJson, 0, i, param.impId);
+            assertBidPrice(responseJson, 0, i, param.price);
+            assertThat(getAdm(responseJson, 0, i)).contains("<img src='banner-" + param.impId + ".png' />");
+            assertThat(getBidExtPrebidType(responseJson, 0, i)).isEqualTo("banner");
+        }
 
         return responseJson;
     }
@@ -305,18 +587,23 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
         double genericPrice1Value = Double.parseDouble(param.genericPrice1);
         double genericPrice2Value = Double.parseDouble(param.genericPrice2);
 
-        WIRE_MOCK_RULE.stubFor(
-                post(urlPathEqualTo("/improvedigital-exchange"))
-                        .withRequestBody(equalToJson(getSSPBidRequestBanner(param.auctionRequestId,
-                                SSPBidRequestBannerTestData.builder()
-                                        .currency("USD")
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
+                .withRequestBody(equalToJson(getSSPBidRequest(param.auctionRequestId,
+                        SSPBidRequestTestData.builder()
+                                .currency("USD")
+                                .impData(SingleImpTestData.builder()
+                                        .id("imp_id_1")
                                         .impExt(new SSPBidRequestImpExt()
                                                 .putStoredRequest(param.storedImpId)
                                                 .putBidder()
                                                 .putBidderKeyValue("placementId", param.improvePlacementId))
-                                        .schainVer("1.0")
-                                        .schainComplete(1)
-                                        .schainNodes(Arrays.asList(
+                                        .bannerData(BannerTestParam.builder()
+                                                .w(300)
+                                                .h(250)
+                                                .build())
+                                        .build())
+                                .schain(ExtSourceSchain.of(
+                                        "1.0", 1, List.of(
                                                 ExtRequestPrebidSchainSchainNode.of(
                                                         "headerlift.com",
                                                         "hl-2022072201",
@@ -326,38 +613,43 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                                         null,
                                                         null
                                                 )
-                                        ))
-                                        .bannerData(BannerTestParam.builder()
-                                                .w(300)
-                                                .h(250)
-                                                .build())
-                                        .build()
-                        )))
-                        .willReturn(aResponse().withBody(getBidResponse(
-                                "improvedigital", param.auctionRequestId, "USD",
-                                BidResponseTestData.builder()
-                                        .price(improvePrice1Value)
-                                        .adm(param.improveAdm1)
-                                        .build(),
-                                BidResponseTestData.builder()
-                                        .price(improvePrice2Value)
-                                        .adm(param.improveAdm2)
-                                        .build()
-                        )))
+                                        ), null
+                                ))
+                                .channel(ExtRequestPrebidChannel.of("web"))
+                                .build()
+                )))
+                .willReturn(aResponse().withBody(getSSPBidResponse(
+                        "improvedigital", param.auctionRequestId, "USD",
+                        BidResponseTestData.builder()
+                                .impId("imp_id_1")
+                                .price(improvePrice1Value)
+                                .adm(param.improveAdm1)
+                                .build(),
+                        BidResponseTestData.builder()
+                                .impId("imp_id_1")
+                                .price(improvePrice2Value)
+                                .adm(param.improveAdm2)
+                                .build()
+                )))
         );
 
-        WIRE_MOCK_RULE.stubFor(
-                post(urlPathEqualTo("/generic-exchange"))
-                        .withRequestBody(equalToJson(getSSPBidRequestBanner(param.auctionRequestId,
-                                SSPBidRequestBannerTestData.builder()
-                                        .currency("USD")
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/generic-exchange"))
+                .withRequestBody(equalToJson(getSSPBidRequest(param.auctionRequestId,
+                        SSPBidRequestTestData.builder()
+                                .currency("USD")
+                                .impData(SingleImpTestData.builder()
+                                        .id("imp_id_1")
                                         .impExt(new SSPBidRequestImpExt()
                                                 .putStoredRequest(param.storedImpId)
                                                 .putBidder()
                                                 .putBidderKeyValue("exampleProperty", "examplePropertyValue"))
-                                        .schainVer("1.0")
-                                        .schainComplete(1)
-                                        .schainNodes(Arrays.asList(
+                                        .bannerData(BannerTestParam.builder()
+                                                .w(300)
+                                                .h(250)
+                                                .build())
+                                        .build())
+                                .schain(ExtSourceSchain.of(
+                                        "1.0", 1, List.of(
                                                 ExtRequestPrebidSchainSchainNode.of(
                                                         "headerlift.com",
                                                         "hl-2022072201",
@@ -367,32 +659,36 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                                         null,
                                                         null
                                                 )
-                                        ))
-                                        .bannerData(BannerTestParam.builder()
-                                                .w(300)
-                                                .h(250)
-                                                .build())
-                                        .build()
-                        )))
-                        .willReturn(aResponse().withBody(getBidResponse(
-                                "generic", param.auctionRequestId, "USD",
-                                BidResponseTestData.builder()
-                                        .price(genericPrice1Value)
-                                        .adm(param.genericAdm1)
-                                        .build(),
-                                BidResponseTestData.builder()
-                                        .price(genericPrice2Value)
-                                        .adm(param.genericAdm2)
-                                        .build()
-                        )))
+                                        ), null
+                                ))
+                                .channel(ExtRequestPrebidChannel.of("web"))
+                                .build()
+                )))
+                .willReturn(aResponse().withBody(getSSPBidResponse(
+                        "generic", param.auctionRequestId, "USD",
+                        BidResponseTestData.builder()
+                                .impId("imp_id_1")
+                                .price(genericPrice1Value)
+                                .adm(param.genericAdm1)
+                                .build(),
+                        BidResponseTestData.builder()
+                                .impId("imp_id_1")
+                                .price(genericPrice2Value)
+                                .adm(param.genericAdm2)
+                                .build()
+                )))
         );
 
         Response response = specWithPBSHeader(18082)
-                .body(getAuctionBidRequestBanner(param.auctionRequestId, AuctionBidRequestBannerTestData.builder()
+                .body(getAuctionBidRequest(param.auctionRequestId, AuctionBidRequestTestData.builder()
                         .currency("USD")
-                        .impExt(new AuctionBidRequestImpExt()
-                                .putStoredRequest(param.storedImpId)
-                        )
+                        .imps(List.of(AuctionBidRequestImpTestData.builder()
+                                .impExt(new AuctionBidRequestImpExt()
+                                        .putStoredRequest(param.storedImpId))
+                                .impData(SingleImpTestData.builder()
+                                        .id("imp_id_1")
+                                        .build())
+                                .build()))
                         .build()
                 ))
                 .post(Endpoint.openrtb2_auction.value());
@@ -400,22 +696,13 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
         JSONObject responseJson = new JSONObject(response.asString());
         assertNoExtErrors(responseJson);
         assertCurrency(responseJson, "USD");
-        assertThat(responseJson.getJSONArray("seatbid").length())
-                .isEqualTo(2);
-        assertThat(responseJson.getJSONArray("seatbid").getJSONObject(0).getJSONArray("bid").length())
-                .isEqualTo(1);
-        assertThat(responseJson.getJSONArray("seatbid").getJSONObject(1).getJSONArray("bid").length())
-                .isEqualTo(1);
+        assertBidCount(responseJson, 2, 1, 1);
 
         return responseJson;
     }
 
-    /**
-     * Class to deal with many permutation/combination of request/response parameters.
-     * This is to avoid long method parameter names code smell.
-     */
     @Builder(toBuilder = true)
-    public static class SupplyChainMultipleBidderAuctionTestParam {
+    private static class SupplyChainMultipleBidderAuctionTestParam {
         String auctionRequestId;
         String storedImpId;
         int improvePlacementId;
@@ -427,5 +714,13 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
         String genericPrice1;
         String genericAdm2;
         String genericPrice2;
+    }
+
+    @Builder(toBuilder = true)
+    private static class SupplyChainMultiImpTestParam {
+        String impId;
+        String headerliftPartnerId;
+        List<String> schainNodes;
+        double price;
     }
 }

@@ -242,7 +242,7 @@
         "supportdeals": {
           "type": "boolean"
         },
-        "cahce": {
+        "cache": {
           "$ref": "#/definitions/ext-prebid-cache"
         },
         "data": {

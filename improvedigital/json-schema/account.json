@@ -14,7 +14,7 @@
       "enum": ["active", "inactive"]
     },
     "auction": {
-      "$ref": "#/definitions/auction-event-config"
+      "$ref": "#/definitions/auction-config"
     },
     "privacy": {
       "type": "object",
@@ -107,7 +107,7 @@
       "additionalProperties": false,
       "properties": {
         "auction-events": {
-          "$ref": "#/definitions/auction-event-config"
+          "$ref": "#/definitions/enabled-for-request-type"
         },
         "modules": {
           "$ref": "#/definitions/modules"
@@ -181,22 +181,13 @@
     "enabled-for-request-type": {
       "type": "object",
       "additionalProperties": false,
-      "properties": {
-        "web": {
-          "type": "boolean"
-        },
-        "amp": {
-          "type": "boolean"
-        },
-        "app": {
-          "type": "boolean"
-        },
-        "video": {
+      "patternProperties" : {
+        "web|amp|app|video|pbjs": {
           "type": "boolean"
         }
       }
     },
-    "auction-event-config": {
+    "auction-config": {
       "type": "object",
       "additionalProperties": false,
       "properties": {

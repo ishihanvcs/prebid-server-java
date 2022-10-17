@@ -3,9 +3,11 @@ import _ from "lodash";
 
 const configEndpoints = {
   imp: "pbsimpression",
-  // "account": "pbsaccount",
-  // "request": "pbsrequest"
+  account: "pbsaccount",
+  request: "pbsrequest"
 };
+
+const copyIdForTypes = ["account"];
 
 const supportedOps = ["insert", "update"];
 
@@ -122,6 +124,10 @@ export default class ApiClient {
     if (config.active !== undefined) {
       isActive = !!config.active;
       delete config.active;
+    }
+
+    if (copyIdForTypes.includes(configType)) {
+        config.id = id;
     }
     const data = {
       id,

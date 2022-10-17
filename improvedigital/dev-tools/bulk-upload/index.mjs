@@ -4,7 +4,9 @@ import getStdin from 'get-stdin';
 import _ from "lodash";
 
 const configTypeToDataKey = {
-    "imp": "imps"
+    "imp": "imps",
+    "request": "requests",
+    "account": "accounts"
 }
 
 async function saveData(api, data) {
@@ -25,7 +27,7 @@ async function saveData(api, data) {
         }
     }
     return stats;
-};
+}
 
 (async () => {
     try {

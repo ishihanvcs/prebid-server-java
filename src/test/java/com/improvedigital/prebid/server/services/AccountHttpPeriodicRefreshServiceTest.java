@@ -1,9 +1,12 @@
 package com.improvedigital.prebid.server.services;
 
+import ch.qos.logback.classic.Level;
+import com.improvedigital.prebid.server.UnitTestBase;
 import com.improvedigital.prebid.server.utils.ReflectionUtils;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import nl.altindag.log.LogCaptor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -12,8 +15,8 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.stubbing.Answer;
-import org.prebid.server.VertxTest;
 import org.prebid.server.execution.Timeout;
+import org.prebid.server.floors.PriceFloorsConfigResolver;
 import org.prebid.server.metric.Metrics;
 import org.prebid.server.settings.ApplicationSettings;
 import org.prebid.server.settings.CachingApplicationSettings;
@@ -40,9 +43,30 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-public class AccountHttpPeriodicRefreshServiceTest extends VertxTest {
+public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
 
     private static final String ENDPOINT_URL = "http://config.prebid.com";
+
+    private static final String NULL_ACCOUNT_CONFIG = null;
+    private static final String DEFAULT_ACCOUNT_CONFIG = "{\n"
+            + "  \"auction\": {\n"
+            + "    \"price-floors\": {\n"
+            + "      \"enabled\": true,\n"
+            + "      \"fetch\": {\n"
+            + "        \"enabled\": false,\n"
+            + "        \"timeout-ms\": 5000,\n"
+            + "        \"max-rules\": 0,\n"
+            + "        \"max-file-size-kb\": 200,\n"
+            + "        \"max-age-sec\": 86400,\n"
+            + "        \"period-sec\": 3600\n"
+            + "      },\n"
+            + "      \"enforce-floors-rate\": 100,\n"
+            + "      \"adjust-for-bid-adjustment\": true,\n"
+            + "      \"enforce-deal-floors\": true,\n"
+            + "      \"use-dynamic-data\": true\n"
+            + "    }\n"
+            + "  }\n"
+            + "}";
 
     @Rule
     public final MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -74,7 +98,13 @@ public class AccountHttpPeriodicRefreshServiceTest extends VertxTest {
 
     private final String accountId = "id1";
     private final Account emptyAccount = Account.empty(accountId);
+    private final Account mergedAccount = merger.merge(
+            emptyAccount,
+            jacksonMapper.decodeValue(DEFAULT_ACCOUNT_CONFIG, Account.class),
+            Account.class
+    );
     private final Map<String, Account> expectedAccounts = singletonMap(accountId, emptyAccount);
+    private final Map<String, Account> expectedMergedAccounts = singletonMap(accountId, mergedAccount);
     private Map<String, Account> accountCache;
 
     @Before
@@ -99,15 +129,21 @@ public class AccountHttpPeriodicRefreshServiceTest extends VertxTest {
 
     @Test
     public void creationShouldFailOnInvalidUrl() {
-        assertThatIllegalArgumentException().isThrownBy(() -> createAndInitService(cachingApplicationSettings,
-                "invalid_url", 1, 1, 1, vertx, httpClient));
+        assertThatIllegalArgumentException().isThrownBy(() -> createAndInitService(
+                cachingApplicationSettings, "invalid_url",
+                1, 1, 1,
+                vertx, httpClient, metrics
+        ));
     }
 
     @Test
     public void initializeShouldNotMakeAnyRequestIfRefreshPeriodIsNegative() {
         // when
-        createAndInitService(cachingApplicationSettings, ENDPOINT_URL,
-                -1, 2000, 5000, vertx, httpClient);
+        createAndInitService(
+                cachingApplicationSettings, ENDPOINT_URL,
+                -1, 2000, 5000,
+                vertx, httpClient, metrics
+        );
 
         // then
         verify(vertx, never()).setPeriodic(anyLong(), any());
@@ -117,8 +153,11 @@ public class AccountHttpPeriodicRefreshServiceTest extends VertxTest {
     @Test
     public void initializeShouldNotMakeAnyRequestIfRefreshPeriodIsGreaterThanCacheTtl() {
         // when
-        createAndInitService(cachingApplicationSettings, ENDPOINT_URL,
-                1000, 2000, 100, vertx, httpClient);
+        createAndInitService(
+                cachingApplicationSettings, ENDPOINT_URL,
+                1000, 2000, 100,
+                vertx, httpClient, metrics
+        );
 
         // then
         verify(vertx, never()).setPeriodic(anyLong(), any());
@@ -133,8 +172,10 @@ public class AccountHttpPeriodicRefreshServiceTest extends VertxTest {
                 .willAnswer(withSelfAndPassObjectToHandler(1L));
 
         // when
-        createAndInitService(cachingApplicationSettings, urlWithParam,
-                1000, 2000, 5000, vertx, httpClient);
+        createAndInitService(
+                cachingApplicationSettings, urlWithParam, 1000, 2000, 5000,
+                vertx, httpClient, metrics
+        );
 
         // then
         verify(httpClient, atLeast(2))
@@ -150,8 +191,13 @@ public class AccountHttpPeriodicRefreshServiceTest extends VertxTest {
                 .willAnswer(withSelfAndPassObjectToHandler(1L));
 
         // when
-        AccountHttpPeriodicRefreshService service = createService(cachingApplicationSettings, ENDPOINT_URL,
-                1000, 2000, 5000, vertx, httpClient);
+        AccountHttpPeriodicRefreshService service = createService(
+                cachingApplicationSettings, ENDPOINT_URL,
+                1000, 2000, 5000, vertx, httpClient,
+                NULL_ACCOUNT_CONFIG, metrics
+        );
+
+        final LogCaptor logCaptor = LogCaptor.forClass(service.getClass());
 
         assertThat(service.getLastUpdateTime()).isNull();
         assertThat(accountCache.isEmpty()).isTrue();
@@ -166,8 +212,62 @@ public class AccountHttpPeriodicRefreshServiceTest extends VertxTest {
 
         assertThat(service.getLastUpdateTime()).isNotNull();
         assertThat(accountCache.size()).isEqualTo(expectedAccounts.size());
+        assertThat(accountCache.get(accountId)).isEqualTo(emptyAccount);
 
-        // TODO: verify log entries generated for successful saving of accounts using LogCaptor
+        assertThat(hasLogEventWith(logCaptor, String.format(
+                "Successfully %s %d accounts with ids: %s.", "cached",
+                expectedAccounts.size(),
+                expectedAccounts.keySet()
+        ), Level.INFO)).isTrue();
+
+        assertThat(hasLogEventWith(logCaptor, String.format(
+                "Successfully %s %d accounts with ids: %s.", "updated",
+                expectedAccounts.size(),
+                expectedAccounts.keySet()
+        ), Level.INFO)).isTrue();
+    }
+
+    @Test
+    public void shouldUpdateAccountCacheAfterPeriodicUpdateWithMergedAccount() {
+        // given
+        given(vertx.setPeriodic(anyLong(), any()))
+                .willAnswer(withSelfAndPassObjectToHandler(1L));
+
+        // when
+        AccountHttpPeriodicRefreshService service = createService(
+                cachingApplicationSettings, ENDPOINT_URL,
+                1000, 2000, 5000, vertx, httpClient,
+                DEFAULT_ACCOUNT_CONFIG, metrics
+        );
+
+        final LogCaptor logCaptor = LogCaptor.forClass(service.getClass());
+
+        assertThat(service.getLastUpdateTime()).isNull();
+        assertThat(accountCache.isEmpty()).isTrue();
+
+        service.initialize();
+
+        // then
+        verify(httpClient, atLeast(2))
+                .get(startsWith(ENDPOINT_URL + "?accounts=true"), any(), anyLong());
+        verify(httpClient, atLeastOnce())
+                .get(startsWith(ENDPOINT_URL + "?accounts=true&last-modified="), any(), anyLong());
+
+        assertThat(service.getLastUpdateTime()).isNotNull();
+        assertThat(accountCache.size()).isEqualTo(expectedMergedAccounts.size());
+        assertThat(accountCache.get(accountId)).isEqualTo(mergedAccount);
+
+        assertThat(hasLogEventWith(logCaptor, String.format(
+                "Successfully %s %d accounts with ids: %s.", "cached",
+                expectedMergedAccounts.size(),
+                expectedMergedAccounts.keySet()
+        ), Level.INFO)).isTrue();
+
+        assertThat(hasLogEventWith(logCaptor, String.format(
+                "Successfully %s %d accounts with ids: %s.", "updated",
+                expectedMergedAccounts.size(),
+                expectedMergedAccounts.keySet()
+        ), Level.INFO)).isTrue();
     }
 
     @Test
@@ -199,19 +299,29 @@ public class AccountHttpPeriodicRefreshServiceTest extends VertxTest {
 
     private static AccountHttpPeriodicRefreshService createService(
             CachingApplicationSettings cachingApplicationSettings, String url, long refreshPeriod,
-            long timeout, long cacheTtl, Vertx vertx, HttpClient httpClient
+            long timeout, long cacheTtl, Vertx vertx, HttpClient httpClient,
+            String accountConfig, Metrics metrics
     ) {
+        PriceFloorsConfigResolver priceFloorsConfigResolver = new PriceFloorsConfigResolver(
+                accountConfig, metrics, jacksonMapper
+        );
         return new AccountHttpPeriodicRefreshService(
-                cachingApplicationSettings, url, refreshPeriod, timeout, cacheTtl, vertx, httpClient, jacksonMapper
+                cachingApplicationSettings, url, refreshPeriod,
+                timeout, cacheTtl, vertx, httpClient,
+                accountConfig, priceFloorsConfigResolver,
+                merger, jacksonMapper
         );
     }
 
     private static void createAndInitService(
             CachingApplicationSettings cachingApplicationSettings, String url, long refreshPeriod,
-            long timeout, long cacheTtl, Vertx vertx, HttpClient httpClient
+            long timeout, long cacheTtl, Vertx vertx, HttpClient httpClient,
+            Metrics metrics
     ) {
-        final AccountHttpPeriodicRefreshService service = createService(cachingApplicationSettings, url,
-                refreshPeriod, timeout, cacheTtl, vertx, httpClient);
+        final AccountHttpPeriodicRefreshService service = createService(
+                cachingApplicationSettings, url, refreshPeriod, timeout,
+                cacheTtl, vertx, httpClient, NULL_ACCOUNT_CONFIG, metrics
+        );
         service.initialize();
     }
 

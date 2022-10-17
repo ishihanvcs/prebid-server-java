@@ -1,6 +1,7 @@
 package com.improvedigital.prebid.server.hooks.v1.customvast;
 
 import com.iab.openrtb.request.BidRequest;
+import com.iab.openrtb.request.Imp;
 import com.improvedigital.prebid.server.customvast.CustomVastUtils;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.utils.LogMessage;
@@ -14,7 +15,9 @@ import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.auction.AuctionInvocationContext;
 import org.prebid.server.hooks.v1.auction.AuctionRequestPayload;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.auction.ProcessedAuctionRequestHook {
 
@@ -33,9 +36,9 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
     @Override
     public Future<InvocationResult<AuctionRequestPayload>> call(
             AuctionRequestPayload auctionRequestPayload, AuctionInvocationContext invocationContext) {
-        final BidRequest bidRequest = auctionRequestPayload.bidRequest();
+        final BidRequest originalBidRequest = auctionRequestPayload.bidRequest();
         try {
-            validateRequestWithBusinessLogic(bidRequest);
+            final BidRequest bidRequest = validateRequestWithBusinessLogic(originalBidRequest);
             Object moduleContext = invocationContext.moduleContext();
             if (moduleContext == null) {
                 return customVastUtils.resolveCountryAndCreateModuleContext(bidRequest, invocationContext.timeout())
@@ -47,7 +50,7 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
                     payload -> AuctionRequestPayloadImpl.of(bidRequest), moduleContext
             ));
         } catch (Throwable t) {
-            LogMessage logMessage = LogMessage.from(bidRequest);
+            LogMessage logMessage = LogMessage.from(originalBidRequest);
             if (t instanceof CustomVastHooksException) {
                 LogUtils.log(
                         logMessage.withLogCounterKey(logMessage.toString())
@@ -69,14 +72,19 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         );
     }
 
-    public void validateRequestWithBusinessLogic(BidRequest bidRequest) throws CustomVastHooksException {
-        if (!bidRequest.getImp().parallelStream().allMatch(
-                imp -> requestUtils.getImprovePlacementId(imp) != null
-        )) {
+    public BidRequest validateRequestWithBusinessLogic(BidRequest bidRequest) throws CustomVastHooksException {
+        List<Imp> impsWithImprovePlacementId = bidRequest.getImp()
+                .stream()
+                .filter(imp -> requestUtils.getImprovedigitalPlacementId(imp) != null)
+                .collect(Collectors.toList());
+        if (impsWithImprovePlacementId.isEmpty()) {
             throw new CustomVastHooksException(
-                    "improvedigital placementId is not defined for one or more imp(s)"
+                    "improvedigital placementId is not defined in any of the imp(s)"
             );
         }
+        return bidRequest.toBuilder()
+                .imp(impsWithImprovePlacementId)
+                .build();
     }
 
     @Override

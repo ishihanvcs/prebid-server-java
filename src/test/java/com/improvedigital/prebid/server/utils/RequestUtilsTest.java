@@ -452,13 +452,13 @@ public class RequestUtilsTest {
         Assertions.assertThat(bidderInfoNode.asText()).isEqualTo("156946");
 
         // Test getImprovePlacementId
-        Integer placementId = requestUtils.getImprovePlacementId(null);
+        Integer placementId = requestUtils.getImprovedigitalPlacementId(null);
         Assertions.assertThat(placementId).isNull();
 
-        placementId = requestUtils.getImprovePlacementId(emptyImp);
+        placementId = requestUtils.getImprovedigitalPlacementId(emptyImp);
         Assertions.assertThat(placementId).isNull();
 
-        placementId = requestUtils.getImprovePlacementId(impWithBidder);
+        placementId = requestUtils.getImprovedigitalPlacementId(impWithBidder);
         Assertions.assertThat(placementId).isNotNull();
         Assertions.assertThat(placementId).isEqualTo(20220325);
     }

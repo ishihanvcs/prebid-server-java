@@ -85,6 +85,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -370,6 +371,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                 .cur(currency)
                 .seatbid(List.of(SeatBid.builder()
                         .bid(data == null ? List.of() : Arrays.stream(data)
+                                .filter(Objects::nonNull)
                                 .map(d -> toBid(bidIndex.getAndIncrement(), bidderName, d))
                                 .collect(Collectors.toList()))
                         .build()
@@ -1068,14 +1070,15 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
     }
 
     protected void assertBidCount(
-            JSONObject responseJson, int expectedSeatbidCount, int... expectedBidCounts
+            JSONObject responseJson, int expectedSeatbidCount, int... expectedBidCountsForSeats
     ) throws JSONException {
         assertThat(responseJson.getJSONArray("seatbid").length())
                 .isEqualTo(expectedSeatbidCount);
+        assertThat(expectedSeatbidCount).isEqualTo(expectedBidCountsForSeats.length);
 
         for (int i = 0; i < expectedSeatbidCount; i++) {
             assertThat(responseJson.getJSONArray("seatbid").getJSONObject(i).getJSONArray("bid").length())
-                    .isEqualTo(expectedBidCounts[i]);
+                    .isEqualTo(expectedBidCountsForSeats[i]);
         }
     }
 

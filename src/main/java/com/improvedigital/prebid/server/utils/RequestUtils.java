@@ -168,7 +168,7 @@ public class RequestUtils {
                 .anyMatch(this::isCustomVastVideo);
     }
 
-    public Integer getImprovePlacementId(Imp imp) {
+    public Integer getImprovedigitalPlacementId(Imp imp) {
         JsonNode node = extractBidderInfo(imp, IMPROVE_DIGITAL_BIDDER_NAME, "/placementId");
         if (!node.isMissingNode() && node.isInt()) {
             return node.asInt();
@@ -176,8 +176,8 @@ public class RequestUtils {
         return null;
     }
 
-    public Integer getImprovePlacementId(BidRequest bidRequest, String impId) {
-        return getImprovePlacementId(
+    public Integer getImprovedigitalPlacementId(BidRequest bidRequest, String impId) {
+        return getImprovedigitalPlacementId(
                 bidRequest.getImp().stream()
                         .filter(i -> i.getId().equals(impId))
                         .findFirst()

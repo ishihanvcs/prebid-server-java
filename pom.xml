@@ -19,7 +19,7 @@
     </organization>
 
     <properties>
-        <project.improvedigital.version>2.4.2</project.improvedigital.version>
+        <project.improvedigital.version>2.5.0</project.improvedigital.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>17</java.version>

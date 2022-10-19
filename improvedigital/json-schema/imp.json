@@ -267,9 +267,6 @@
         "adf": {
           "$ref": "#/definitions/bidder_config_adf"
         },
-        "adpone": {
-          "$ref": "#/definitions/bidder_config_adpone"
-        },
         "amx": {
           "$ref": "#/definitions/bidder_config_amx"
         },
@@ -980,18 +977,6 @@
           ]
         }
       ]
-    },
-    "bidder_config_adpone": {
-      "title": "Adpone Adapter Params",
-      "description": "A schema which validates params accepted by the adpone adapter",
-      "type": "object",
-      "properties": {
-        "placementId": {
-          "type": "string",
-          "description": "Placement Id"
-        }
-      },
-      "required": []
     },
     "bidder_config_amx": {
       "title": "AMX RTB Adapter Params",
@@ -1734,13 +1719,26 @@
       "description": "A schema which validates params accepted by the Unruly adapter",
       "type": "object",
       "properties": {
+        "siteId": {
+          "type": "integer",
+          "description": "ID for publisher site"
+        },
         "siteid": {
           "type": "integer",
           "description": "ID for publisher site"
         }
       },
-      "required": [
-        "siteid"
+      "oneOf": [
+        {
+          "required": [
+            "siteId"
+          ]
+        },
+        {
+          "required": [
+            "siteid"
+          ]
+        }
       ]
     },
     "bidder_config_yahoossp": {

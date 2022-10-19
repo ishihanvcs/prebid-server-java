@@ -489,7 +489,7 @@ public class CustomVastUtils {
     public String replaceMacros(String tag, CreatorContext context) {
         final Map<String, String> macroValues =
                 FluentMap.<String, String>create()
-                        .put("gdpr", StringUtils.defaultString(context.getGdpr(), "0"))
+                        .put("gdpr", context.getGdpr())
                         .put("gdpr_consent", context.getGdprConsent())
                         .put("timestamp", Long.toString(System.currentTimeMillis()))
                         .putIfNotNull("referrer", context.getEncodedReferrer())

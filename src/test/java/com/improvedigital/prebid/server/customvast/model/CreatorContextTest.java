@@ -100,7 +100,7 @@ public class CreatorContextTest extends UnitTestBase {
         CreatorContext result = creatorContext(defaultBidRequest, emptyBidResponse, null, List.of());
         assertThat(result.getExtBidResponse()).isNull();
         assertThat(result.isDebug()).isFalse();
-        assertThat(result.getGdpr()).isNull();
+        assertThat(result.getGdpr()).isEmpty();
         assertThat(result.getGdprConsent()).isEmpty();
         assertThat(result.getAlpha3Country()).isBlank();
         assertThat(result.getIfa()).isNull();

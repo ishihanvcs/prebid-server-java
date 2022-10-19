@@ -88,7 +88,8 @@ public class CreatorContext extends GVastHandlerParams {
                 regsOptional.map(Regs::getExt)
                         .map(ExtRegs::getGdpr)
                         .map(String::valueOf)
-                        .orElse(null)
+                        .orElse(null),
+                StringUtils.EMPTY
         ));
 
         builder.gdprConsent(ObjectUtils.firstNonNull(
@@ -96,7 +97,8 @@ public class CreatorContext extends GVastHandlerParams {
                         .orElse(null),
                 userOptional.map(User::getExt)
                         .map(ExtUser::getConsent)
-                        .orElse(StringUtils.EMPTY)
+                        .orElse(null),
+                StringUtils.EMPTY
         ));
 
         builder.ifa(deviceOptional.map(Device::getIfa).orElse(null));

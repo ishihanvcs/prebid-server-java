@@ -238,7 +238,6 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
     }
 
     @Test
-    @Ignore /* Will be fixed in separate branch. */
     public void testSupplyChainIsAddedForMultiImp() throws Exception {
         String uniqueId = UUID.randomUUID().toString();
 
@@ -290,7 +289,6 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
     }
 
     @Test
-    @Ignore /* Will be fixed in separate branch. */
     public void testSupplyChainIsAddedForMultiImpWithDifferentHeaderPartnerId() throws Exception {
         String uniqueId = UUID.randomUUID().toString();
 
@@ -339,7 +337,6 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
     }
 
     @Test
-    @Ignore /* Will be fixed in separate branch. */
     public void testSupplyChainIsAddedForMultiImpWithDifferentSchainNodes() throws Exception {
         String uniqueId = UUID.randomUUID().toString();
 

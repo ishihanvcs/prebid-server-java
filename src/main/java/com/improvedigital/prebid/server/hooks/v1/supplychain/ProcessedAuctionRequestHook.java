@@ -73,7 +73,7 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         ImprovedigitalPbsImpExt impExtToUse = auctionRequestPayload.bidRequest().getImp().stream()
                 .map(imp -> jsonUtils.getImprovedigitalPbsImpExt(imp))
                 .filter(Objects::nonNull)
-                // No sid we can use if ext.prebid.improvedigitalpbs.headerliftPartnerId=null.
+                // We cannot use any sid if ext.prebid.improvedigitalpbs.headerliftPartnerId=null.
                 .filter(improvedigitalPbsImpExt -> improvedigitalPbsImpExt.getHeaderliftPartnerId() != null)
                 .reduce((result, e) -> result != null
                         && Objects.equals(result.getHeaderliftPartnerId(), e.getHeaderliftPartnerId())

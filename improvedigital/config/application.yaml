@@ -9,8 +9,6 @@ status-response: "ok"
 adapters:
   adf:
     enabled: true
-  adpone:
-    enabled: true
   amx:
     enabled: true
   appnexus:
@@ -86,6 +84,9 @@ auction:
   cache:
     expected-request-time-ms: 50
     only-winning-bids: false
+cookie-sync:
+  coop-sync:
+    default: false
 currency-converter:
   external-rates:
     enabled: true

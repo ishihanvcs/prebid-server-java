@@ -249,7 +249,7 @@
         "supportdeals": {
           "type": "boolean"
         },
-        "cahce": {
+        "cache": {
           "$ref": "#/definitions/ext-prebid-cache"
         },
         "data": {
@@ -2745,6 +2745,21 @@
         },
         "requestId": {
           "type": "string"
+        },
+        "gam": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "adUnit": {
+              "type": "string"
+            },
+            "networkCode": {
+              "type": "string"
+            },
+            "childNetworkCode": {
+              "type": "string"
+            }
+          }
         },
         "responseType": {
           "type": "string",

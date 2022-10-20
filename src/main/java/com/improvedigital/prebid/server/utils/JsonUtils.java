@@ -9,8 +9,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.POJONode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
+import com.iab.openrtb.request.Source;
 import com.iab.openrtb.response.Bid;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.settings.model.ImprovedigitalPbsAccountExt;
@@ -18,8 +20,10 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.Tuple2;
 import org.prebid.server.json.JacksonMapper;
-import org.prebid.server.settings.model.Account;
+import org.prebid.server.proto.openrtb.ext.request.ExtSource;
+import org.prebid.server.proto.openrtb.ext.request.ExtSourceSchain;
 import org.prebid.server.proto.openrtb.ext.response.BidType;
+import org.prebid.server.settings.model.Account;
 import org.prebid.server.util.ObjectUtil;
 
 import java.math.BigDecimal;
@@ -40,6 +44,8 @@ public class JsonUtils {
             = JsonPointer.compile("/" + EXT_CUSTOM_CONFIG_KEY);
     private static final JsonPointer JSON_PTR_CUSTOM_CONFIG_LEGACY
             = JsonPointer.compile("/prebid/" + EXT_CUSTOM_CONFIG_KEY);
+
+    private static final String SOURCE_EXT_MERGED_SCHAIN = "mergedschain";
 
     private final JacksonMapper mapper;
     private final ObjectMapper objectMapper;
@@ -228,12 +234,12 @@ public class JsonUtils {
      * in mergingObject to be available in a copy of originalObject, that will be returned by
      * this method. To understand detail behaviour of this method, please refer to respective
      * test case in JsonUtilsTest class.
-     *
+     * <p>
      * Please note, this method does not mutate any of the originalObject or mergingObject
      * and always returns a new object with the merging result.
      *
      * @param originalObject {@link ObjectNode} the object where the merge will occur upon
-     * @param mergingObject {@link ObjectNode} the object that will be merged
+     * @param mergingObject  {@link ObjectNode} the object that will be merged
      * @return ObjectNode
      */
     public ObjectNode nonDestructiveMerge(ObjectNode originalObject, ObjectNode mergingObject) {
@@ -296,10 +302,10 @@ public class JsonUtils {
         return node.isMissingNode() || !node.isNumber()
                 ? defaultValue
                 : node.isBigDecimal()
-                    ? node.decimalValue()
-                    : node.isDouble()
-                        ? BigDecimal.valueOf(node.doubleValue())
-                        : new BigDecimal(node.asText());
+                ? node.decimalValue()
+                : node.isDouble()
+                ? BigDecimal.valueOf(node.doubleValue())
+                : new BigDecimal(node.asText());
     }
 
     /**
@@ -365,6 +371,46 @@ public class JsonUtils {
         } catch (JsonProcessingException e) {
             return null;
         }
+    }
+
+    public ExtSource putMergedSourceChain(Source source, ExtSourceSchain mergedSchain) {
+        ExtSource newSourceExt = ExtSource.of(null);
+        if (source != null && source.getExt() != null) {
+            newSourceExt = source.getExt();
+        }
+        newSourceExt.addProperty(SOURCE_EXT_MERGED_SCHAIN, new POJONode(mergedSchain));
+        return newSourceExt;
+    }
+
+    public ExtSource removeMergedSourceSchain(Source source, boolean useAsSchain) {
+        if (source == null || source.getExt() == null) {
+            return null;
+        }
+
+        ExtSource newSourceExt = ExtSource.of(source.getExt().getSchain());
+
+        // For some bidder, we do not need to send merged schain. We just removed it from properties (below).
+        if (useAsSchain) {
+            JsonNode mergedSchain = source.getExt().getProperty(SOURCE_EXT_MERGED_SCHAIN);
+            if (mergedSchain != null && mergedSchain.isPojo()) {
+                Object pojo = ((POJONode) mergedSchain).getPojo();
+                if (pojo instanceof ExtSourceSchain) {
+                    newSourceExt = ExtSource.of((ExtSourceSchain) pojo);
+                }
+            }
+        }
+
+        newSourceExt.addProperties(source.getExt().getProperties().entrySet().stream()
+                .filter(e -> !StringUtils.equals(SOURCE_EXT_MERGED_SCHAIN, e.getKey()))
+                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()))
+        );
+
+        // No schain and custom properties. This means, we just used properties as a temporary store.
+        if (newSourceExt.getSchain() == null && newSourceExt.getProperties().size() <= 0) {
+            return null;
+        }
+
+        return newSourceExt;
     }
 
     public BidType getBidType(Bid bid) {

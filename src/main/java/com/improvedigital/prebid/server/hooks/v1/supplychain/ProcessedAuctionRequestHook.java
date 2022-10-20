@@ -1,5 +1,7 @@
 package com.improvedigital.prebid.server.hooks.v1.supplychain;
 
+import com.iab.openrtb.request.BidRequest;
+import com.iab.openrtb.request.Source;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.utils.JsonUtils;
@@ -8,6 +10,7 @@ import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.prebid.server.hooks.execution.v1.auction.AuctionRequestPayloadImpl;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.auction.AuctionInvocationContext;
@@ -55,10 +58,12 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
             ));
         }
 
+        Source source = auctionRequestPayload.bidRequest().getSource();
+        ExtSource newSourceExt = jsonUtils.putMergedSourceChain(source, newSchain);
         return Future.succeededFuture(InvocationResultImpl.succeeded(
                 payload -> AuctionRequestPayloadImpl.of(auctionRequestPayload.bidRequest().toBuilder()
-                        .source(auctionRequestPayload.bidRequest().getSource().toBuilder()
-                                .ext(ExtSource.of(newSchain))
+                        .source(source == null ? null : source.toBuilder()
+                                .ext(newSourceExt)
                                 .build()
                         )
                         .ext(auctionRequestPayload.bidRequest().getExt())
@@ -89,16 +94,18 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
             return null;
         }
 
-        final ExtSourceSchain existingSchain = getExtSourceSchain(auctionRequestPayload);
+        ExtSourceSchain existingSchain = getExtSourceSchain(auctionRequestPayload.bidRequest());
+        final ExtSourceSchain baseSchain = ObjectUtils.firstNonNull(existingSchain, SCHAIN_EMPTY);
         return ExtSourceSchain.of(
-                existingSchain.getVer(),
-                existingSchain.getComplete(),
+                baseSchain.getVer(),
+                baseSchain.getComplete(),
                 Stream.concat(
-                        existingSchain.getNodes().stream(),
-                        toSchainNodes(auctionRequestPayload.bidRequest().getId(), impExtToUse).stream()
-                                .filter(schainNode -> !containsSchainNode(existingSchain, schainNode.getAsi()))
-                ).collect(Collectors.toList()),
-                existingSchain.getExt()
+                                baseSchain.getNodes().stream(),
+                                toSchainNodes(auctionRequestPayload.bidRequest().getId(), impExtToUse).stream()
+                                        .filter(schainNode -> !containsSchainNode(baseSchain, schainNode.getAsi()))
+                        )
+                        .collect(Collectors.toList()),
+                baseSchain.getExt()
         );
     }
 
@@ -130,18 +137,18 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         );
     }
 
-    private ExtSourceSchain getExtSourceSchain(AuctionRequestPayload auctionRequestPayload) {
-        if (auctionRequestPayload.bidRequest().getSource() == null) {
-            return SCHAIN_EMPTY;
+    private ExtSourceSchain getExtSourceSchain(BidRequest bidRequest) {
+        if (bidRequest.getSource() == null) {
+            return null;
         }
 
-        if (auctionRequestPayload.bidRequest().getSource().getExt() == null) {
-            return SCHAIN_EMPTY;
+        if (bidRequest.getSource().getExt() == null) {
+            return null;
         }
 
-        ExtSourceSchain existingSchain = auctionRequestPayload.bidRequest().getSource().getExt().getSchain();
+        ExtSourceSchain existingSchain = bidRequest.getSource().getExt().getSchain();
         if (existingSchain == null) {
-            return SCHAIN_EMPTY;
+            return null;
         }
 
         return existingSchain;

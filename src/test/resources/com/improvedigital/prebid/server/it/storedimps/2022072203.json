@@ -8,6 +8,9 @@
       "bidder": {
         "improvedigital": {
           "placementId": 20220722
+        },
+        "generic": {
+          "exampleProperty": "examplePropertyValue"
         }
       }
     }

@@ -615,13 +615,17 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
             assertBidIdExists(responseJson, 0, i);
             assertBidImpId(responseJson, 0, i, param.impId);
             assertBidPrice(responseJson, 0, i, param.price);
-            assertThat(getAdm(responseJson, 0, i)).contains("<img src='banner-generic-" + param.impId + ".png' />");
+            assertThat(getAdm(responseJson, 0, i)).contains(
+                    "<img src='banner-generic-" + param.impId + ".png' />"
+            );
             assertThat(getBidExtPrebidType(responseJson, 0, i)).isEqualTo("banner");
 
             assertBidIdExists(responseJson, 1, i);
             assertBidImpId(responseJson, 1, i, param.impId);
             assertBidPrice(responseJson, 1, i, param.price);
-            assertThat(getAdm(responseJson, 1, i)).contains("<img src='banner-improvedigital-" + param.impId + ".png' />");
+            assertThat(getAdm(responseJson, 1, i)).contains(
+                    "<img src='banner-improvedigital-" + param.impId + ".png' />"
+            );
             assertThat(getBidExtPrebidType(responseJson, 1, i)).isEqualTo("banner");
         }
 

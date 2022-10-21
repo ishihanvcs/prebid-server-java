@@ -229,6 +229,10 @@ hooks:
                     {
                       "module-code": "improvedigital-bidadjustment-module",
                       "hook-impl-code": "improvedigital-bidadjustment-hooks-bidder-request"
+                    },
+                    {
+                      "module-code": "improvedigital-supplychain-module",
+                      "hook-impl-code": "improvedigital-supplychain-hooks-bidder-request"
                     }
                   ]
                 }

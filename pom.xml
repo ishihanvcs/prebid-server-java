@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.prebid</groupId>
         <artifactId>prebid-server-aggregator</artifactId>
-        <version>1.101.0</version>
+        <version>1.102.0</version>
         <relativePath>extra/pom.xml</relativePath>
     </parent>
 
@@ -839,6 +839,7 @@
                 <configuration>
                     <source>17</source>
                     <target>17</target>
+                    <parameters>true</parameters>
                 </configuration>
             </plugin>
         </plugins>

@@ -74,7 +74,10 @@ function resolveSchema(bidderOrAlias) {
   const actualBidder = aliasToBidderMap[bidderOrAlias] ? aliasToBidderMap[bidderOrAlias] : bidderOrAlias;
   const possibleNames = [actualBidder];
 
-  if (supportedBidders[actualBidder].usersync['cookie-family-name']) {
+  if (supportedBidders[actualBidder] &&
+          supportedBidders[actualBidder].usersync &&
+          supportedBidders[actualBidder].usersync['cookie-family-name']
+  ) {
     possibleNames.push(supportedBidders[actualBidder].usersync['cookie-family-name']);
   }
 

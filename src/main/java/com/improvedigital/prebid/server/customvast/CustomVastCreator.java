@@ -180,20 +180,23 @@ public class CustomVastCreator {
                                 context.getGdprConsent(), "$UID"
                         )
                 ),
-                "https://ad.360yield.com/server_match?gdpr=" + context.getGdpr() + "&gdpr_consent=" + context.getGdprConsent() + "&us_privacy=&r="
+                "https://ad.360yield.com/server_match?gdpr=" + context.getGdpr()
+                        + "&gdpr_consent=" + context.getGdprConsent() + "&us_privacy=&r="
                         + HttpUtil.encodeUrl(
                         customVastUtils.getRedirect(
                                 "improvedigital", context.getGdpr(),
                                 context.getGdprConsent(), "{PUB_USER_ID}"
                         )
                 ),
-                "https://image8.pubmatic.com/AdServer/ImgSync?p=159706&gdpr=" + context.getGdpr() + "&gdpr_consent=" + context.getGdprConsent()
+                "https://image8.pubmatic.com/AdServer/ImgSync?p=159706&gdpr=" + context.getGdpr()
+                        + "&gdpr_consent=" + context.getGdprConsent()
                         + "&us_privacy=&pu="
                         + HttpUtil.encodeUrl(
                         customVastUtils.getRedirect("pubmatic", context.getGdpr(),
                                 context.getGdprConsent(), "#PMUID")
                 ),
-                "https://ssbsync-global.smartadserver.com/api/sync?callerId=5&gdpr=" + context.getGdpr() + "&gdpr_consent=" + context.getGdprConsent()
+                "https://ssbsync-global.smartadserver.com/api/sync?callerId=5&gdpr=" + context.getGdpr()
+                        + "&gdpr_consent=" + context.getGdprConsent()
                         + "&us_privacy=&redirectUri="
                         + HttpUtil.encodeUrl(
                         customVastUtils.getRedirect("smartadserver", context.getGdpr(),

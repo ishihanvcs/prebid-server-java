@@ -66,7 +66,7 @@ public class CreatorContextTest extends UnitTestBase {
                 .ext(ExtBidResponse
                         .builder()
                         .tmaxrequest(100L)
-                        .prebid(ExtBidResponsePrebid.of(1000L, null))
+                        .prebid(ExtBidResponsePrebid.of(1000L, null, null, null))
                         .build())
                 .build();
         defaultImp = getStoredImp(defaultStoredImpId, i -> setImpConfigProperties(i, config -> {
@@ -100,7 +100,7 @@ public class CreatorContextTest extends UnitTestBase {
         CreatorContext result = creatorContext(defaultBidRequest, emptyBidResponse, null, List.of());
         assertThat(result.getExtBidResponse()).isNull();
         assertThat(result.isDebug()).isFalse();
-        assertThat(result.getGdpr()).isNull();
+        assertThat(result.getGdpr()).isEmpty();
         assertThat(result.getGdprConsent()).isEmpty();
         assertThat(result.getAlpha3Country()).isBlank();
         assertThat(result.getIfa()).isNull();

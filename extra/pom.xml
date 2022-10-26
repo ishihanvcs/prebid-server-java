@@ -4,23 +4,23 @@
 
     <groupId>org.prebid</groupId>
     <artifactId>prebid-server-aggregator</artifactId>
-    <version>1.89.0</version>
+    <version>1.102.0</version>
     <packaging>pom</packaging>
 
     <scm>
         <url>https://github.com/prebid/prebid-server-java</url>
         <connection>scm:git:git@github.com:prebid/prebid-server-java.git</connection>
         <developerConnection>scm:git:git@github.com:prebid/prebid-server-java.git</developerConnection>
-        <tag>1.89.0</tag>
+        <tag>1.102.0</tag>
     </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
 
-        <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
+        <maven-release-plugin.version>3.0.0-M6</maven-release-plugin.version>
     </properties>
 
     <modules>

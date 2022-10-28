@@ -1,19 +1,18 @@
 package com.improvedigital.prebid.server.it;
 
 import com.iab.openrtb.request.BidRequest;
+import com.iab.openrtb.request.SupplyChain;
+import com.iab.openrtb.request.SupplyChainNode;
 import io.restassured.response.Response;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import lombok.Builder;
-import org.apache.commons.collections4.CollectionUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.prebid.server.model.Endpoint;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidChannel;
-import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidSchainSchainNode;
-import org.prebid.server.proto.openrtb.ext.request.ExtSourceSchain;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -59,33 +58,33 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                         .build(),
                 /* Incoming request has these schain nodes already */
                 List.of(
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "firstsite.com",
                                 "firstsite-1",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 null,
+                                1,
                                 null
                         )
                 ),
                 List.of(
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "firstsite.com",
                                 "firstsite-1",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 null,
+                                1,
                                 null
                         ),
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "headerlift.com",
                                 "hl-2022072201",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 "headerlift.com",
+                                1,
                                 null
                         )
                 )
@@ -126,13 +125,13 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                         .build(),
                 List.of(),
                 List.of(
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "headerlift.com", /* We expect this to be default. */
                                 "hl-2022072202",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 "headerlift.com",
+                                1,
                                 null
                         )
                 )
@@ -205,51 +204,51 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                         .build(),
                 /* Incoming request has these schain nodes already */
                 List.of(
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "firstsite.com",
                                 "firstsite-1",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 null,
+                                1,
                                 null
                         ),
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "secondsite.com",
                                 "secondsite-1",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 null,
+                                1,
                                 null
                         )
                 ),
                 List.of(
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "firstsite.com",
                                 "firstsite-1",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 null,
+                                1,
                                 null
                         ),
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "secondsite.com",
                                 "secondsite-1",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 null,
+                                1,
                                 null
                         ),
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "headerlift.com",
                                 "hl-2022072205",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 "headerlift.com",
+                                1,
                                 null
                         )
                 )
@@ -276,42 +275,42 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                         .build(),
                 /* Incoming request has these schain nodes already */
                 List.of(
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "headerlift.com",
                                 "firstsite-1",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 "headerlift.com",
+                                1,
                                 null
                         ),
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "pubgalaxy.com",
                                 "secondsite-1",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 null,
+                                1,
                                 null
                         )
                 ),
                 List.of(
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "headerlift.com",
                                 "firstsite-1",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 "headerlift.com",
+                                1,
                                 null
                         ),
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "pubgalaxy.com",
                                 "secondsite-1",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 null,
+                                1,
                                 null
                         )
                 )
@@ -326,33 +325,33 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                 uniqueId,
                 /* Incoming request has these schain nodes already */
                 List.of(
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "pubgalaxy.com",
                                 "secondsite-1",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 null,
+                                1,
                                 null
                         )
                 ),
                 List.of(
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "pubgalaxy.com",
                                 "secondsite-1",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 null,
+                                1,
                                 null
                         ),
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "headerlift.com",
                                 "hl-2022092701",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 "headerlift.com",
+                                1,
                                 null
                         )
                 ),
@@ -377,24 +376,24 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                 uniqueId,
                 /* Incoming request has these schain nodes already */
                 List.of(
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "pubgalaxy.com",
                                 "secondsite-1",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 null,
+                                1,
                                 null
                         )
                 ),
                 List.of(
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "pubgalaxy.com",
                                 "secondsite-1",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 null,
+                                1,
                                 null
                         )
                 ),
@@ -425,24 +424,24 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                 uniqueId,
                 /* Incoming request has these schain nodes already */
                 List.of(
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "pubgalaxy.com",
                                 "secondsite-1",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 null,
+                                1,
                                 null
                         )
                 ),
                 List.of(
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "pubgalaxy.com",
                                 "secondsite-1",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 null,
+                                1,
                                 null
                         )
                 ),
@@ -468,24 +467,24 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                 uniqueId,
                 /* Incoming request has these schain nodes already */
                 List.of(
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "pubgalaxy.com",
                                 "secondsite-1",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 null,
+                                1,
                                 null
                         )
                 ),
                 List.of(
-                        ExtRequestPrebidSchainSchainNode.of(
+                        SupplyChainNode.of(
                                 "pubgalaxy.com",
                                 "secondsite-1",
-                                1,
                                 "request_id_" + uniqueId,
                                 null,
                                 null,
+                                1,
                                 null
                         )
                 ),
@@ -510,8 +509,8 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
 
     private JSONObject doAuctionRequestToGenericBidderWithMultiImp(
             String uniqueId,
-            List<ExtRequestPrebidSchainSchainNode> existingSchainNodes,
-            List<ExtRequestPrebidSchainSchainNode> expectedSchainNodes,
+            List<SupplyChainNode> existingSchainNodes,
+            List<SupplyChainNode> expectedSchainNodes,
             SupplyChainMultiImpTestParam... params
     ) throws JSONException {
 
@@ -521,11 +520,11 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                         .withTransformerParameters(Arrays.stream(params).collect(Collectors.toMap(
                                 param -> param.impId,
                                 param -> (Function<BidRequest, String>) request -> {
-                                    ExtSourceSchain schain = request.getSource().getExt().getSchain();
+                                    SupplyChain schain = request.getSource().getExt().getSchain();
                                     // For improvedigital, we only get what we had on initial request.
                                     if (!Objects.equals(schain.getNodes(), existingSchainNodes)) {
                                         logger.error("Expected schain nodes didn't match. expected="
-                                                + existingSchainNodes + ", found=" + schain.getNodes());
+                                                + expectedSchainNodes + ", found=" + schain.getNodes());
                                         return null;
                                     }
 
@@ -554,8 +553,8 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                                 .build())
                                         .collect(Collectors.toList())
                                 )
-                                .schain(CollectionUtils.isEmpty(expectedSchainNodes) ? null : ExtSourceSchain.of(
-                                        "1.0", 1, expectedSchainNodes, null
+                                .schain(SupplyChain.of(
+                                        1, expectedSchainNodes, "1.0", null
                                 ))
                                 .channel(ExtRequestPrebidChannel.of("web"))
                                 .test(1)
@@ -592,8 +591,8 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                                 .build())
                                         .build())
                                 .collect(Collectors.toList()))
-                        .schain(CollectionUtils.isEmpty(existingSchainNodes) ? null : ExtSourceSchain.of(
-                                "1.0", 1, existingSchainNodes, null
+                        .schain(SupplyChain.of(
+                                1, existingSchainNodes, "1.0", null
                         ))
                         .test(1) /* To get clear error message in debug key of response. */
                         .build()
@@ -634,8 +633,8 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
 
     private JSONObject doAuctionRequestToMultipleBidder(
             SupplyChainMultipleBidderAuctionTestParam param,
-            List<ExtRequestPrebidSchainSchainNode> existingSchainNodes,
-            List<ExtRequestPrebidSchainSchainNode> expectedSchainNodes
+            List<SupplyChainNode> existingSchainNodes,
+            List<SupplyChainNode> expectedSchainNodes
     ) throws JSONException {
 
         double improvePrice1Value = Double.parseDouble(param.improvePrice1);
@@ -662,9 +661,18 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                                 .build())
                                         .build()
                                 ))
-                                // For improvedigital, we only get what we had on initial request.
-                                .schain(CollectionUtils.isEmpty(existingSchainNodes) ? null : ExtSourceSchain.of(
-                                        "1.0", 1, existingSchainNodes, null
+                                .schain(SupplyChain.of(
+                                        1, List.of(
+                                                SupplyChainNode.of(
+                                                        "headerlift.com",
+                                                        "hl-2022072201",
+                                                        "request_id_" + param.auctionRequestId,
+                                                        null,
+                                                        null,
+                                                        1,
+                                                        null
+                                                )
+                                        ), "1.0", null
                                 ))
                                 .channel(ExtRequestPrebidChannel.of("web"))
                                 .build()
@@ -702,8 +710,18 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                                 .build())
                                         .build()
                                 ))
-                                .schain(CollectionUtils.isEmpty(expectedSchainNodes) ? null : ExtSourceSchain.of(
-                                        "1.0", 1, expectedSchainNodes, null
+                                .schain(SupplyChain.of(
+                                        1, List.of(
+                                                SupplyChainNode.of(
+                                                        "headerlift.com",
+                                                        "hl-2022072201",
+                                                        "request_id_" + param.auctionRequestId,
+                                                        null,
+                                                        null,
+                                                        1,
+                                                        null
+                                                )
+                                        ), "1.0", null
                                 ))
                                 .channel(ExtRequestPrebidChannel.of("web"))
                                 .build()
@@ -733,8 +751,8 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                         .id("imp_id_1")
                                         .build())
                                 .build()))
-                        .schain(CollectionUtils.isEmpty(existingSchainNodes) ? null : ExtSourceSchain.of(
-                                "1.0", 1, existingSchainNodes, null
+                        .schain(SupplyChain.of(
+                                1, existingSchainNodes, "1.0", null
                         ))
                         .build()
                 ))

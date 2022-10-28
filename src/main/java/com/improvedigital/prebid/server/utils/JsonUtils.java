@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.node.POJONode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.request.Source;
+import com.iab.openrtb.request.SupplyChain;
 import com.iab.openrtb.response.Bid;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.settings.model.ImprovedigitalPbsAccountExt;
@@ -21,7 +22,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.Tuple2;
 import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.proto.openrtb.ext.request.ExtSource;
-import org.prebid.server.proto.openrtb.ext.request.ExtSourceSchain;
 import org.prebid.server.proto.openrtb.ext.response.BidType;
 import org.prebid.server.settings.model.Account;
 import org.prebid.server.util.ObjectUtil;
@@ -373,7 +373,7 @@ public class JsonUtils {
         }
     }
 
-    public ExtSource putMergedSourceChain(Source source, ExtSourceSchain mergedSchain) {
+    public ExtSource putMergedSourceChain(Source source, SupplyChain mergedSchain) {
         ExtSource newSourceExt = ExtSource.of(null);
         if (source != null && source.getExt() != null) {
             newSourceExt = source.getExt();
@@ -394,8 +394,8 @@ public class JsonUtils {
             JsonNode mergedSchain = source.getExt().getProperty(SOURCE_EXT_MERGED_SCHAIN);
             if (mergedSchain != null && mergedSchain.isPojo()) {
                 Object pojo = ((POJONode) mergedSchain).getPojo();
-                if (pojo instanceof ExtSourceSchain) {
-                    newSourceExt = ExtSource.of((ExtSourceSchain) pojo);
+                if (pojo instanceof SupplyChain) {
+                    newSourceExt = ExtSource.of((SupplyChain) pojo);
                 }
             }
         }

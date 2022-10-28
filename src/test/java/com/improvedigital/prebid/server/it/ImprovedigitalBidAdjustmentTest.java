@@ -298,11 +298,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                                         .build(),
                                 bidRequest -> bidRequest.toBuilder()
                                         .ext(ExtRequest.of(bidRequest.getExt().getPrebid().toBuilder()
-                                                .floors(PriceFloorRules.builder()
-                                                        .enabled(true)
-                                                        .fetchStatus(FetchStatus.none)
-                                                        .location(PriceFloorLocation.noData)
-                                                        .build())
+                                                .floors(param.getPriceFloorRules())
                                                 .build()))
                                         .build()
                         )))
@@ -342,11 +338,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                                         .build(),
                                 bidRequest -> bidRequest.toBuilder()
                                         .ext(ExtRequest.of(bidRequest.getExt().getPrebid().toBuilder()
-                                                .floors(PriceFloorRules.builder()
-                                                        .enabled(true)
-                                                        .fetchStatus(FetchStatus.none)
-                                                        .location(PriceFloorLocation.noData)
-                                                        .build())
+                                                .floors(param.getPriceFloorRules())
                                                 .build()))
                                         .build()
                         )))
@@ -403,6 +395,15 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
         String genericPrice1;
         String genericAdm2;
         String genericPrice2;
+
+        public PriceFloorRules getPriceFloorRules() {
+            return PriceFloorRules.builder()
+                    .enabled(true)
+                    .fetchStatus(FetchStatus.none)
+                    .skipped(false)
+                    .location(PriceFloorLocation.noData)
+                    .build();
+        }
     }
 
     @Builder(toBuilder = true)
@@ -423,6 +424,7 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                 return PriceFloorRules.builder()
                         .enabled(true)
                         .fetchStatus(FetchStatus.none)
+                        .skipped(false)
                         .location(PriceFloorLocation.noData)
                         .build();
             }

@@ -1,7 +1,6 @@
 package com.improvedigital.prebid.server.hooks.v1.supplychain;
 
 import com.iab.openrtb.request.BidRequest;
-import com.iab.openrtb.request.Source;
 import com.iab.openrtb.request.SupplyChain;
 import com.iab.openrtb.request.SupplyChainNode;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
@@ -13,11 +12,9 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
-import org.prebid.server.hooks.execution.v1.auction.AuctionRequestPayloadImpl;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.auction.AuctionInvocationContext;
 import org.prebid.server.hooks.v1.auction.AuctionRequestPayload;
-import org.prebid.server.proto.openrtb.ext.request.ExtSource;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +48,12 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
     public Future<InvocationResult<AuctionRequestPayload>> call(
             AuctionRequestPayload auctionRequestPayload, AuctionInvocationContext invocationContext) {
 
+        if (!(invocationContext.moduleContext() instanceof SupplyChainContext)) {
+            return Future.succeededFuture(InvocationResultImpl.succeeded(
+                    payload -> auctionRequestPayload, invocationContext.moduleContext()
+            ));
+        }
+
         final SupplyChain newSchain = mergeSupplyChain(auctionRequestPayload);
         if (newSchain == null || CollectionUtils.isEmpty(newSchain.getNodes())) {
             return Future.succeededFuture(InvocationResultImpl.succeeded(
@@ -58,18 +61,10 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
             ));
         }
 
-        Source source = auctionRequestPayload.bidRequest().getSource();
-        ExtSource newSourceExt = jsonUtils.putMergedSourceChain(source, newSchain);
         return Future.succeededFuture(InvocationResultImpl.succeeded(
-                payload -> AuctionRequestPayloadImpl.of(auctionRequestPayload.bidRequest().toBuilder()
-                        .source(source == null ? null : source.toBuilder()
-                                .schain(newSchain) /* RTB 2.6 */
-                                .ext(newSourceExt) /* RTB 2.5 */
-                                .build()
-                        )
-                        .ext(auctionRequestPayload.bidRequest().getExt())
-                        .build()
-                ), invocationContext.moduleContext()
+                payload -> auctionRequestPayload,
+                // Updating the context with merged data.
+                ((SupplyChainContext) invocationContext.moduleContext()).with(newSchain)
         ));
     }
 
@@ -143,6 +138,10 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
             return null;
         }
 
+        if (bidRequest.getSource().getSchain() != null) {
+            return bidRequest.getSource().getSchain();
+        }
+
         if (bidRequest.getSource().getExt() == null) {
             return null;
         }
@@ -152,7 +151,7 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
             return null;
         }
 
-        return SCHAIN_EMPTY;
+        return existingSchain;
     }
 
     private boolean containsSchainNode(SupplyChain schain, String nodeAsiToCheck) {

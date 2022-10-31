@@ -9,11 +9,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.POJONode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
-import com.iab.openrtb.request.Source;
-import com.iab.openrtb.request.SupplyChain;
 import com.iab.openrtb.response.Bid;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.settings.model.ImprovedigitalPbsAccountExt;
@@ -21,7 +18,6 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.Tuple2;
 import org.prebid.server.json.JacksonMapper;
-import org.prebid.server.proto.openrtb.ext.request.ExtSource;
 import org.prebid.server.proto.openrtb.ext.response.BidType;
 import org.prebid.server.settings.model.Account;
 import org.prebid.server.util.ObjectUtil;
@@ -371,46 +367,6 @@ public class JsonUtils {
         } catch (JsonProcessingException e) {
             return null;
         }
-    }
-
-    public ExtSource putMergedSourceChain(Source source, SupplyChain mergedSchain) {
-        ExtSource newSourceExt = ExtSource.of(null);
-        if (source != null && source.getExt() != null) {
-            newSourceExt = source.getExt();
-        }
-        newSourceExt.addProperty(SOURCE_EXT_MERGED_SCHAIN, new POJONode(mergedSchain));
-        return newSourceExt;
-    }
-
-    public ExtSource removeMergedSourceSchain(Source source, boolean useAsSchain) {
-        if (source == null || source.getExt() == null) {
-            return null;
-        }
-
-        ExtSource newSourceExt = ExtSource.of(source.getExt().getSchain());
-
-        // For some bidder, we do not need to send merged schain. We just removed it from properties (below).
-        if (useAsSchain) {
-            JsonNode mergedSchain = source.getExt().getProperty(SOURCE_EXT_MERGED_SCHAIN);
-            if (mergedSchain != null && mergedSchain.isPojo()) {
-                Object pojo = ((POJONode) mergedSchain).getPojo();
-                if (pojo instanceof SupplyChain) {
-                    newSourceExt = ExtSource.of((SupplyChain) pojo);
-                }
-            }
-        }
-
-        newSourceExt.addProperties(source.getExt().getProperties().entrySet().stream()
-                .filter(e -> !StringUtils.equals(SOURCE_EXT_MERGED_SCHAIN, e.getKey()))
-                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()))
-        );
-
-        // No schain and custom properties. This means, we just used properties as a temporary store.
-        if (newSourceExt.getSchain() == null && newSourceExt.getProperties().size() <= 0) {
-            return null;
-        }
-
-        return newSourceExt;
     }
 
     public BidType getBidType(Bid bid) {

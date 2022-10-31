@@ -662,17 +662,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                         .build()
                                 ))
                                 .schain(SupplyChain.of(
-                                        1, List.of(
-                                                SupplyChainNode.of(
-                                                        "headerlift.com",
-                                                        "hl-2022072201",
-                                                        "request_id_" + param.auctionRequestId,
-                                                        null,
-                                                        null,
-                                                        1,
-                                                        null
-                                                )
-                                        ), "1.0", null
+                                        1, existingSchainNodes, "1.0", null
                                 ))
                                 .channel(ExtRequestPrebidChannel.of("web"))
                                 .build()
@@ -711,17 +701,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                         .build()
                                 ))
                                 .schain(SupplyChain.of(
-                                        1, List.of(
-                                                SupplyChainNode.of(
-                                                        "headerlift.com",
-                                                        "hl-2022072201",
-                                                        "request_id_" + param.auctionRequestId,
-                                                        null,
-                                                        null,
-                                                        1,
-                                                        null
-                                                )
-                                        ), "1.0", null
+                                        1, expectedSchainNodes, "1.0", null
                                 ))
                                 .channel(ExtRequestPrebidChannel.of("web"))
                                 .build()

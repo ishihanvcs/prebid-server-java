@@ -219,21 +219,13 @@ hooks:
                       "hook-impl-code": "improvedigital-custom-tracker-hooks-entrypoint"
                     }
                   ]
-                }
-              ]
-            },
-            "bidder-request": {
-              "groups": [
+                },
                 {
-                  "timeout": 5,
+                  "timeout": 50,
                   "hook-sequence": [
                     {
-                      "module-code": "improvedigital-bidadjustment-module",
-                      "hook-impl-code": "improvedigital-bidadjustment-hooks-bidder-request"
-                    },
-                    {
                       "module-code": "improvedigital-supplychain-module",
-                      "hook-impl-code": "improvedigital-supplychain-hooks-bidder-request"
+                      "hook-impl-code": "improvedigital-supplychain-hooks-entrypoint"
                     }
                   ]
                 }
@@ -269,6 +261,23 @@ hooks:
                     {
                       "module-code": "improvedigital-bidadjustment-module",
                       "hook-impl-code": "improvedigital-bidadjustment-hooks-processed-auction-request"
+                    }
+                  ]
+                }
+              ]
+            },
+            "bidder-request": {
+              "groups": [
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "improvedigital-bidadjustment-module",
+                      "hook-impl-code": "improvedigital-bidadjustment-hooks-bidder-request"
+                    },
+                    {
+                      "module-code": "improvedigital-supplychain-module",
+                      "hook-impl-code": "improvedigital-supplychain-hooks-bidder-request"
                     }
                   ]
                 }

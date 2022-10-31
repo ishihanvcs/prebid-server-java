@@ -1,8 +1,5 @@
 package com.improvedigital.prebid.server.hooks.v1.supplychain;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.SupplyChain;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;

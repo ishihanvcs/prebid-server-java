@@ -16,12 +16,9 @@ public class ImprovedigitalSupplyChainModule implements Module {
 
     public static final String CODE = "improvedigital-supplychain-module";
 
-    private final ApplicationContext applicationContext;
-
     private final JsonUtils jsonUtils;
 
-    public ImprovedigitalSupplyChainModule(ApplicationContext applicationContext, JsonUtils jsonUtils) {
-        this.applicationContext = applicationContext;
+    public ImprovedigitalSupplyChainModule(JsonUtils jsonUtils) {
         this.jsonUtils = jsonUtils;
     }
 

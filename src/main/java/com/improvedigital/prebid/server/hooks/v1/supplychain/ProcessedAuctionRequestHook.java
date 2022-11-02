@@ -48,12 +48,6 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
     public Future<InvocationResult<AuctionRequestPayload>> call(
             AuctionRequestPayload auctionRequestPayload, AuctionInvocationContext invocationContext) {
 
-        if (!(invocationContext.moduleContext() instanceof SupplyChainContext)) {
-            return Future.succeededFuture(InvocationResultImpl.succeeded(
-                    payload -> auctionRequestPayload, invocationContext.moduleContext()
-            ));
-        }
-
         final SupplyChain newSchain = mergeSupplyChain(auctionRequestPayload);
         if (newSchain == null || CollectionUtils.isEmpty(newSchain.getNodes())) {
             return Future.succeededFuture(InvocationResultImpl.succeeded(
@@ -63,8 +57,7 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
 
         return Future.succeededFuture(InvocationResultImpl.succeeded(
                 payload -> auctionRequestPayload,
-                // Updating the context with merged data.
-                ((SupplyChainContext) invocationContext.moduleContext()).with(newSchain)
+                SupplyChainContext.from(newSchain)
         ));
     }
 

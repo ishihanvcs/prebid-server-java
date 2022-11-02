@@ -33,7 +33,6 @@ public class ImprovedigitalSupplyChainModule implements Module {
     @Override
     public Collection<? extends Hook<?, ? extends InvocationContext>> hooks() {
         return Arrays.asList(
-                new EntrypointHook(applicationContext),
                 new ProcessedAuctionRequestHook(jsonUtils),
                 new BidderRequestHook(jsonUtils)
         );

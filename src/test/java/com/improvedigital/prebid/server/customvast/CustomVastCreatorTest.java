@@ -11,17 +11,21 @@ import com.improvedigital.prebid.server.customvast.model.CustParams;
 import com.improvedigital.prebid.server.customvast.model.CustomVast;
 import com.improvedigital.prebid.server.customvast.model.HooksModuleContext;
 import com.improvedigital.prebid.server.customvast.model.VastResponseType;
+import com.improvedigital.prebid.server.utils.PbsEndpointInvoker;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import com.improvedigital.prebid.server.utils.ResponseUtils;
+import io.vertx.core.Future;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.prebid.server.currency.CurrencyConversionService;
+import org.prebid.server.execution.Timeout;
 import org.prebid.server.geolocation.CountryCodeMapper;
 import org.prebid.server.geolocation.GeoLocationService;
 import org.prebid.server.metric.Metrics;
+import org.prebid.server.proto.request.CookieSyncRequest;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,6 +37,8 @@ import java.util.function.Function;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 public class CustomVastCreatorTest extends UnitTestBase {
 
@@ -45,6 +51,8 @@ public class CustomVastCreatorTest extends UnitTestBase {
     private BidRequest bidRequestGVast;
     private BidRequest bidRequestWaterfall;
 
+    @Mock
+    PbsEndpointInvoker pbsEndpointInvoker;
     @Mock
     CurrencyConversionService currencyConversionService;
     @Mock
@@ -61,8 +69,10 @@ public class CustomVastCreatorTest extends UnitTestBase {
     @Before
     public void setUp() {
         MockitoAnnotations.openMocks(this);
+        when(pbsEndpointInvoker.invokeCookieSync(any(CookieSyncRequest.class), any(Timeout.class)))
+                .thenReturn(Future.succeededFuture(defaultCookieSyncResponse));
         this.customVastUtils = new CustomVastUtils(
-                requestUtils, merger, currencyConversionService, macroProcessor,
+                pbsEndpointInvoker, requestUtils, merger, currencyConversionService, macroProcessor,
                 geoLocationService, metrics, countryCodeMapper,
                 EXTERNAL_URL, GAM_NETWORK_CODE, PROTO_CACHE_HOST
         );
@@ -299,7 +309,8 @@ public class CustomVastCreatorTest extends UnitTestBase {
         CreatorContext context = CreatorContext.from(hooksModuleContext, jsonUtils)
                 .with(imp, ResponseUtils.getBidsForImp(response, imp), jsonUtils);
 
-        CustomVast customVast = customVastCreator.create(context);
+        final List<String> userSyncUrls = customVastUtils.extractUserSyncUrls(defaultCookieSyncResponse);
+        CustomVast customVast = customVastCreator.create(context, userSyncUrls);
         assertThat(customVast).isNotNull();
         assertThat(customVast.getVersion()).isEqualTo("2.0");
         assertThat(customVast.getAds().size()).isEqualTo(expectedAdCount);
@@ -319,7 +330,7 @@ public class CustomVastCreatorTest extends UnitTestBase {
                 assertThat(wrapper.getImpressions()).isEmpty();
             } else {
                 assertThat(wrapper.getImpressions()).isNotEmpty();
-                assertThat(wrapper.getImpressions().size()).isEqualTo(4);
+                assertThat(wrapper.getImpressions().size()).isEqualTo(userSyncUrls.size());
             }
 
             assertThat(wrapper.getExtensions().isEmpty()).isFalse();
@@ -347,7 +358,8 @@ public class CustomVastCreatorTest extends UnitTestBase {
             int expectedAdCount,
             BiConsumer<String, CustomVast.Wrapper> validator
     ) {
-        CustomVast customVast = customVastCreator.create(context);
+        final List<String> userSyncUrls = customVastUtils.extractUserSyncUrls(defaultCookieSyncResponse);
+        CustomVast customVast = customVastCreator.create(context, userSyncUrls);
         assertThat(customVast).isNotNull();
         assertThat(customVast.getVersion()).isEqualTo("2.0");
         assertThat(customVast.getAds().size()).isEqualTo(expectedAdCount);
@@ -367,7 +379,7 @@ public class CustomVastCreatorTest extends UnitTestBase {
                 assertThat(wrapper.getImpressions()).isEmpty();
             } else {
                 assertThat(wrapper.getImpressions()).isNotEmpty();
-                assertThat(wrapper.getImpressions().size()).isEqualTo(4);
+                assertThat(wrapper.getImpressions().size()).isEqualTo(userSyncUrls.size());
             }
 
             assertThat(wrapper.getExtensions().isEmpty()).isFalse();

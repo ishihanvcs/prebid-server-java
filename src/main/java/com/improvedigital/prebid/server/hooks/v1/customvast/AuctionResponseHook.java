@@ -8,7 +8,6 @@ import com.iab.openrtb.response.SeatBid;
 import com.improvedigital.prebid.server.customvast.CustomVastCreator;
 import com.improvedigital.prebid.server.customvast.CustomVastUtils;
 import com.improvedigital.prebid.server.customvast.model.CreatorContext;
-import com.improvedigital.prebid.server.customvast.model.CustomVast;
 import com.improvedigital.prebid.server.customvast.model.HooksModuleContext;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.utils.JsonUtils;
@@ -20,6 +19,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.lang3.StringUtils;
+import org.prebid.server.execution.Timeout;
 import org.prebid.server.hooks.execution.v1.auction.AuctionResponsePayloadImpl;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.auction.AuctionInvocationContext;
@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.AuctionResponseHook {
@@ -50,25 +51,29 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
     @Override
     public Future<InvocationResult<AuctionResponsePayload>> call(
             AuctionResponsePayload auctionResponsePayload, AuctionInvocationContext invocationContext) {
-        final BidResponse bidResponse;
+        final Future<BidResponse> future;
         Object moduleContext = invocationContext.moduleContext();
         if (moduleContext instanceof HooksModuleContext) {
             moduleContext = ((HooksModuleContext) moduleContext)
                     .with(auctionResponsePayload.bidResponse());
-            bidResponse = updatedBidResponse((HooksModuleContext) moduleContext);
+            future = updatedBidResponse((HooksModuleContext) moduleContext, invocationContext.timeout());
         } else {
-            bidResponse = auctionResponsePayload.bidResponse();
+            future = Future.succeededFuture(auctionResponsePayload.bidResponse());
         }
-        return Future.succeededFuture(InvocationResultImpl.succeeded(
-                payload -> AuctionResponsePayloadImpl.of(bidResponse), moduleContext
+        final Object finalContext = moduleContext;
+        return future.map(bidResponse -> InvocationResultImpl.succeeded(
+                payload -> AuctionResponsePayloadImpl.of(bidResponse), finalContext
         ));
     }
 
-    private BidResponse updatedBidResponse(HooksModuleContext context) {
+    private Future<BidResponse> updatedBidResponse(HooksModuleContext context, Timeout timeout) {
         final BidResponse bidResponse = context.getBidResponse();
         final BidRequest bidRequest = context.getBidRequest();
-        final CreatorContext commonContext = CreatorContext.from(context, jsonUtils);
+        final CreatorContext commonContext = CreatorContext
+                .from(context, jsonUtils);
+        final String accountId = requestUtils.getAccountId(bidRequest);
         final CustomVastCreator customVastCreator = new CustomVastCreator(customVastUtils);
+        List<Future<BidWithSeatName>> futures = new ArrayList<>();
         try {
             final Map<String, SeatBid> resultSeatBids = createResultSeatBidsMap(bidResponse);
 
@@ -86,48 +91,86 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
 
                     if (jsonUtils.isBidWithVideoType(winningBid) || allBids.isEmpty()) {
                         final List<Bid> videoBids = allBids.parallelStream()
-                                .filter(jsonUtils::isBidWithVideoType)
-                                .collect(Collectors.toList());
+                                .filter(jsonUtils::isBidWithVideoType).toList();
                         // we'll create a Bid with custom vast only if:
-                        // 1. the winning bid is of video type
+                        // 1. the winning bid is of video type, or
                         // 2. no SSP has bid for this imp
                         final CreatorContext creatorContext = commonContext.with(
                                 imp, new ArrayList<>(videoBids),
                                 jsonUtils
                         );
 
-                        final CustomVast customVast = customVastCreator.create(creatorContext);
-                        final Bid customVastBid = customVastUtils.createBidFromCustomVast(creatorContext, customVast);
-                        if (customVastBid != null) {
-                            resultSeatBids.get(RequestUtils.IMPROVE_DIGITAL_BIDDER_NAME)
-                                    .getBid()
-                                    .add(customVastBid);
-                        }
+                        futures.add(
+                                customVastUtils.getUserSyncUrls(creatorContext, accountId, timeout)
+                                        .map(userSyncs -> new BidWithSeatName(
+                                                        RequestUtils.IMPROVE_DIGITAL_BIDDER_NAME,
+                                                        customVastUtils.createBidFromCustomVast(
+                                                                creatorContext,
+                                                                customVastCreator.create(
+                                                                        creatorContext, userSyncs
+                                                                )
+                                                        )
+                                                )
+                                        )
+                        );
                     } else if (winningBid != null) {
                         String seatName = seatBidsForImp.stream()
                                 .filter(seatBid -> seatBid.getBid().contains(winningBid))
                                 .map(SeatBid::getSeat)
                                 .findFirst().orElse(null);
                         if (StringUtils.isNotBlank(seatName)) {
-                            resultSeatBids.get(seatName).getBid().add(winningBid);
+                            futures.add(
+                                    Future.succeededFuture(
+                                            new BidWithSeatName(seatName, winningBid)
+                                    )
+                            );
+                            // resultSeatBids.get(seatName).getBid().add(winningBid);
                         }
                     }
                 } else { // imp is not configured for custom vast
                     // So, we'll simply copy all Bids into respective SeatBid
                     for (final SeatBid seatBid : seatBidsForImp) {
-                        resultSeatBids.get(seatBid.getSeat()).getBid().addAll(
-                                ResponseUtils.getBidsForImp(seatBid, imp)
+                        futures.addAll(
+                                ResponseUtils.getBidsForImp(seatBid, imp).stream()
+                                        .map(bid -> Future.succeededFuture(
+                                                new BidWithSeatName(seatBid.getSeat(), bid)))
+                                        .toList()
                         );
+                        // resultSeatBids.get(seatBid.getSeat()).getBid().addAll(
+                        //         ResponseUtils.getBidsForImp(seatBid, imp)
+                        // );
                     }
                 }
             }
-            return bidResponse.toBuilder().seatbid(
+
+            Future<Void> cf = Future.succeededFuture(null);
+            if (!futures.isEmpty()) {
+                @SuppressWarnings("unchecked")
+                CompletableFuture<Bid>[] cfs = futures.stream()
+                        .map(future -> future.toCompletionStage().toCompletableFuture())
+                        .toList()
+                        .toArray(new CompletableFuture[futures.size()]);
+                cf = Future.fromCompletionStage(CompletableFuture.allOf(cfs).thenAccept(ignored -> {
+                    for (final Future<BidWithSeatName> future : futures) {
+                        final BidWithSeatName result = future.result();
+                        final String seatName = result.seat();
+                        final Bid bid = result.bid();
+                        if (bid != null) {
+                            resultSeatBids.get(seatName)
+                                    .getBid()
+                                    .add(bid);
+                        }
+                    }
+                }));
+            }
+
+            return cf.map(ignored -> bidResponse.toBuilder().seatbid(
                     new ArrayList<>(resultSeatBids.values()
                             .stream()
                             .filter(sb -> !sb.getBid().isEmpty()) // skip SeatBids with no bids
                             .collect(Collectors.toList())
                     )
-            ).build();
+            ).build());
         } catch (Throwable t) {
             logger.error(
                     LogMessage.from(bidRequest)
@@ -135,7 +178,7 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
                             .with(t)
             );
         }
-        return bidResponse;
+        return Future.succeededFuture(bidResponse);
     }
 
     private Map<String, SeatBid> createResultSeatBidsMap(BidResponse bidResponse) {
@@ -160,5 +203,8 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
     @Override
     public String code() {
         return "improvedigital-custom-vast-hooks-auction-response";
+    }
+
+    private record BidWithSeatName(String seat, Bid bid) {
     }
 }

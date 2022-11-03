@@ -5,17 +5,15 @@ import com.improvedigital.prebid.server.customvast.model.CreatorContext;
 import com.improvedigital.prebid.server.customvast.model.CustomVast;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.prebid.server.util.HttpUtil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
 /**
  * Class for creating {@link CustomVast} and {@link Bid} that supports waterfall as well as
- * Google Ad Manager tag (https://support.google.com/admanager/table/9749596?hl=en)
+ * <a href="https://support.google.com/admanager/table/9749596?hl=en">Google Ad Manager tag</a>
  * with params and SSP bids attached. If debug mode is enabled, the {@link CustomVast}
  * will also include a "debug" extension with SSP requests/responses and Prebid cache calls.
  */
@@ -50,7 +48,8 @@ public class CustomVastCreator {
     }
 
     public CustomVast create(
-            CreatorContext context
+            CreatorContext context,
+            List<String> userSyncUrls
     ) {
         validateContext(context);
         CustomVast.CustomVastBuilder builder = CustomVast.builder();
@@ -125,7 +124,7 @@ public class CustomVastCreator {
             }
             builder.ad(
                     createAdForCustomVast(
-                            context, i, vastTags.size(), adTag, addUserSyncs, addDebugInfo
+                            context, i, vastTags.size(), adTag, addUserSyncs ? userSyncUrls : null, addDebugInfo
                     )
             );
         }
@@ -136,7 +135,7 @@ public class CustomVastCreator {
     public CustomVast.Ad createAdForCustomVast(
             CreatorContext context,
             int adIndex, int adCount,
-            String tagUrl, boolean addUserSyncs, boolean addDebugInfo
+            String tagUrl, List<String> userSyncUrls, boolean addDebugInfo
     ) {
         CustomVast.Wrapper.WrapperBuilder wrapperBuilder = CustomVast.Wrapper.builder()
                 .vastAdTagURI(customVastUtils.replaceMacros(tagUrl, context));
@@ -159,51 +158,11 @@ public class CustomVastCreator {
             );
         }
 
-        if (addUserSyncs && !context.isApp()) {
+        if (userSyncUrls != null && !context.isApp()) {
             // Inject sync pixels as imp pixels.
             // Only inject for web, not app as apps can't do cookie syncing and rely on device id (IFA) instead
-            // TODO
-            // Move list of SSPs to a config
-            // Use logic from CookieSyncHandler to generate sync urls
-            addUserSyncImpressions(context, wrapperBuilder);
+            wrapperBuilder.impressions(userSyncUrls);
         }
         return CustomVast.Ad.of(adIndex, wrapperBuilder.build());
-    }
-
-    private void addUserSyncImpressions(
-            CreatorContext context, CustomVast.Wrapper.WrapperBuilder wrapperBuilder
-    ) {
-        final List<String> userSyncs = Arrays.asList("https://ib.adnxs.com/getuid?"
-                + HttpUtil.encodeUrl(
-                        customVastUtils.getRedirect(
-                                "adnxs", context.getGdpr(),
-                                context.getGdprConsent(), "$UID"
-                        )
-                ),
-                "https://ad.360yield.com/server_match?gdpr=" + context.getGdpr()
-                        + "&gdpr_consent=" + context.getGdprConsent() + "&us_privacy=&r="
-                        + HttpUtil.encodeUrl(
-                        customVastUtils.getRedirect(
-                                "improvedigital", context.getGdpr(),
-                                context.getGdprConsent(), "{PUB_USER_ID}"
-                        )
-                ),
-                "https://image8.pubmatic.com/AdServer/ImgSync?p=159706&gdpr=" + context.getGdpr()
-                        + "&gdpr_consent=" + context.getGdprConsent()
-                        + "&us_privacy=&pu="
-                        + HttpUtil.encodeUrl(
-                        customVastUtils.getRedirect("pubmatic", context.getGdpr(),
-                                context.getGdprConsent(), "#PMUID")
-                ),
-                "https://ssbsync-global.smartadserver.com/api/sync?callerId=5&gdpr=" + context.getGdpr()
-                        + "&gdpr_consent=" + context.getGdprConsent()
-                        + "&us_privacy=&redirectUri="
-                        + HttpUtil.encodeUrl(
-                        customVastUtils.getRedirect("smartadserver", context.getGdpr(),
-                                context.getGdprConsent(),
-                                "[ssb_sync_pid]")
-                ));
-
-        wrapperBuilder.impressions(userSyncs);
     }
 }

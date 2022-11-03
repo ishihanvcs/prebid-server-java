@@ -5,9 +5,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.improvedigital.prebid.server.UnitTestBase;
+import com.improvedigital.prebid.server.customvast.CustomVastUtils;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.customvast.model.VastResponseType;
-import com.improvedigital.prebid.server.customvast.CustomVastUtils;
+import com.improvedigital.prebid.server.utils.PbsEndpointInvoker;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import nl.altindag.log.LogCaptor;
 import org.junit.Before;
@@ -41,6 +42,8 @@ import static org.mockito.Mockito.when;
 public class ProcessedAuctionRequestHookTest extends UnitTestBase {
 
     @Mock
+    PbsEndpointInvoker pbsEndpointInvoker;
+    @Mock
     CurrencyConversionService currencyConversionService;
     @Mock
     GeoLocationService geoLocationService;
@@ -69,7 +72,8 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
         hook = new ProcessedAuctionRequestHook(
                 requestUtils,
                 new CustomVastUtils(
-                        requestUtils, merger, currencyConversionService, macroProcessor,
+                        pbsEndpointInvoker, requestUtils, merger,
+                        currencyConversionService, macroProcessor,
                         geoLocationService, metrics, countryCodeMapper,
                         EXTERNAL_URL, GAM_NETWORK_CODE, PROTO_CACHE_HOST
                 )

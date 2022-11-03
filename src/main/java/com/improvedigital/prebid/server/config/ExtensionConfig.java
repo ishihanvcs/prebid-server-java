@@ -16,6 +16,7 @@ import com.improvedigital.prebid.server.hooks.v1.supplychain.ImprovedigitalSuppl
 import com.improvedigital.prebid.server.settings.SettingsLoader;
 import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
+import com.improvedigital.prebid.server.utils.PbsEndpointInvoker;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -35,6 +36,7 @@ import org.prebid.server.log.HttpInteractionLogger;
 import org.prebid.server.metric.Metrics;
 import org.prebid.server.settings.ApplicationSettings;
 import org.prebid.server.settings.model.GdprConfig;
+import org.prebid.server.vertx.http.HttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -141,7 +143,18 @@ public class ExtensionConfig {
     }
 
     @Bean
+    PbsEndpointInvoker pbsEndpointInvoker(
+            HttpClient httpClient,
+            JacksonMapper mapper,
+            @Value("${server.ssl}") boolean ssl,
+            @Value("${server.http.port}") int port
+    ) {
+        return new PbsEndpointInvoker(httpClient, mapper, ssl, port);
+    }
+
+    @Bean
     CustomVastUtils customVastUtils(
+            PbsEndpointInvoker pbsEndpointInvoker,
             JsonMerger merger,
             RequestUtils requestUtils,
             CurrencyConversionService currencyConversionService,
@@ -154,6 +167,7 @@ public class ExtensionConfig {
             @Value("${cache.host}") String cacheHost
     ) {
         return new CustomVastUtils(
+                pbsEndpointInvoker,
                 requestUtils,
                 merger,
                 currencyConversionService,

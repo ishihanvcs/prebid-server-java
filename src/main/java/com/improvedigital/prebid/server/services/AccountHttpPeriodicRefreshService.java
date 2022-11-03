@@ -1,7 +1,7 @@
 package com.improvedigital.prebid.server.services;
 
 import com.improvedigital.prebid.server.utils.ReflectionUtils;
-import io.netty.handler.codec.http.HttpResponseStatus;
+import com.improvedigital.prebid.server.utils.ResponseUtils;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
@@ -139,22 +139,16 @@ public class AccountHttpPeriodicRefreshService implements Initializable {
     }
 
     private Map<String, Account> processResponse(HttpClientResponse response) {
-        final int statusCode = response.getStatusCode();
-        if (statusCode != HttpResponseStatus.OK.code()) {
-            throw new PreBidException(String.format("Error fetching last modified accounts via http: "
-                    + "unexpected response status %d", statusCode));
-        }
-        final String body = response.getBody();
-
-        final HttpAccountsResponse parsedResponse;
         try {
-            parsedResponse = mapper.decodeValue(body, HttpAccountsResponse.class);
+            final HttpAccountsResponse parsedResponse = ResponseUtils.processHttpResponse(
+                    mapper, response, HttpAccountsResponse.class
+            );
+            return parsedResponse.getAccounts();
         } catch (DecodeException e) {
             throw new PreBidException(
                     String.format("Error parsing last modified accounts response: %s", e.getMessage())
             );
         }
-        return parsedResponse.getAccounts();
     }
 
     private static Account parseAccount(String accountConfig, JacksonMapper mapper) {

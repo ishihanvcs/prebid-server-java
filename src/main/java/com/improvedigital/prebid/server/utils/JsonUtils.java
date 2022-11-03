@@ -41,8 +41,6 @@ public class JsonUtils {
     private static final JsonPointer JSON_PTR_CUSTOM_CONFIG_LEGACY
             = JsonPointer.compile("/prebid/" + EXT_CUSTOM_CONFIG_KEY);
 
-    private static final String SOURCE_EXT_MERGED_SCHAIN = "mergedschain";
-
     private final JacksonMapper mapper;
     private final ObjectMapper objectMapper;
 

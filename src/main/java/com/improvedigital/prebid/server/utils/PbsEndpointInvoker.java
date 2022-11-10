@@ -64,12 +64,12 @@ public class PbsEndpointInvoker {
             return httpClient.post(resolvePbsUrl(Endpoint.cookie_sync), body, timeRemaining)
                     .map(response -> {
                         final long timeElapsed = timeRemaining - timeout.remaining();
-                        logger.info("Time required to invoke cookie_sync endpoint: " + timeElapsed + " ms");
+                        logger.debug("Time required to invoke cookie_sync endpoint: " + timeElapsed + " ms");
                         return ResponseUtils.processHttpResponse(
                                 mapper, response, CookieSyncResponse.class
                         );
                     }).onFailure(t -> {
-                        logger.info("cookie_sync failed for request: \n" + body);
+                        logger.debug("cookie_sync invocation failed for request: \n" + body);
                         logger.error("Error in http client", t);
                     });
         } catch (Exception ex) {

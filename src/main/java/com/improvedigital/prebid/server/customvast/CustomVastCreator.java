@@ -7,6 +7,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -49,7 +50,7 @@ public class CustomVastCreator {
 
     public CustomVast create(
             CreatorContext context,
-            List<String> userSyncUrls
+            Collection<String> userSyncUrls
     ) {
         validateContext(context);
         CustomVast.CustomVastBuilder builder = CustomVast.builder();
@@ -135,7 +136,7 @@ public class CustomVastCreator {
     public CustomVast.Ad createAdForCustomVast(
             CreatorContext context,
             int adIndex, int adCount,
-            String tagUrl, List<String> userSyncUrls, boolean addDebugInfo
+            String tagUrl, Collection<String> userSyncUrls, boolean addDebugInfo
     ) {
         CustomVast.Wrapper.WrapperBuilder wrapperBuilder = CustomVast.Wrapper.builder()
                 .vastAdTagURI(customVastUtils.replaceMacros(tagUrl, context));
@@ -158,7 +159,7 @@ public class CustomVastCreator {
             );
         }
 
-        if (userSyncUrls != null && !context.isApp()) {
+        if (userSyncUrls != null && !userSyncUrls.isEmpty() && !context.isApp()) {
             // Inject sync pixels as imp pixels.
             // Only inject for web, not app as apps can't do cookie syncing and rely on device id (IFA) instead
             wrapperBuilder.impressions(userSyncUrls);

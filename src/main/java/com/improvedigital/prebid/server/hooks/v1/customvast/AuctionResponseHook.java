@@ -1,5 +1,6 @@
 package com.improvedigital.prebid.server.hooks.v1.customvast;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.response.Bid;
@@ -8,6 +9,7 @@ import com.iab.openrtb.response.SeatBid;
 import com.improvedigital.prebid.server.customvast.CustomVastCreator;
 import com.improvedigital.prebid.server.customvast.CustomVastUtils;
 import com.improvedigital.prebid.server.customvast.model.CreatorContext;
+import com.improvedigital.prebid.server.customvast.model.CustomVast;
 import com.improvedigital.prebid.server.customvast.model.HooksModuleContext;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.utils.JsonUtils;
@@ -24,12 +26,12 @@ import org.prebid.server.hooks.execution.v1.auction.AuctionResponsePayloadImpl;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.auction.AuctionInvocationContext;
 import org.prebid.server.hooks.v1.auction.AuctionResponsePayload;
+import org.prebid.server.proto.openrtb.ext.request.ExtImp;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.AuctionResponseHook {
@@ -67,118 +69,127 @@ public class AuctionResponseHook implements org.prebid.server.hooks.v1.auction.A
     }
 
     private Future<BidResponse> updatedBidResponse(HooksModuleContext context, Timeout timeout) {
-        final BidResponse bidResponse = context.getBidResponse();
         final BidRequest bidRequest = context.getBidRequest();
+        final BidResponse bidResponse = context.getBidResponse();
+        if (!requestUtils.hasCustomVastVideo(bidRequest)) {
+            return Future.succeededFuture(bidResponse);
+        }
+
         final CreatorContext commonContext = CreatorContext
                 .from(context, jsonUtils);
         final String accountId = requestUtils.getAccountId(bidRequest);
-        final CustomVastCreator customVastCreator = new CustomVastCreator(customVastUtils);
-        List<Future<BidWithSeatName>> futures = new ArrayList<>();
-        try {
-            final Map<String, SeatBid> resultSeatBids = createResultSeatBidsMap(bidResponse);
+        final List<String> customVastBidders = getCustomVastBidders(timeout, bidRequest);
 
-            for (final Imp imp : bidRequest.getImp()) {
-                final List<SeatBid> seatBidsForImp = ResponseUtils.findSeatBidsForImp(
-                        bidResponse, imp
-                );
+        return customVastUtils.getUserSyncUrls(customVastBidders, accountId, commonContext, timeout)
+                .map(syncUrlMap -> {
+                    final CustomVastCreator customVastCreator = new CustomVastCreator(customVastUtils);
+                    try {
+                        final Map<String, SeatBid> resultSeatBids = createResultSeatBidsMap(bidResponse);
 
-                if (requestUtils.isCustomVastVideo(imp)) { // imp is configured for custom vast
-                    final List<Bid> allBids = ResponseUtils.getBidsForImp(seatBidsForImp, imp);
-                    final Bid winningBid = allBids.stream()
-                            .reduce((bid1, bid2) ->
-                                    bid1.getPrice().max(bid2.getPrice()).equals(bid1.getPrice()) ? bid1 : bid2
-                            ).orElse(null);
-
-                    if (jsonUtils.isBidWithVideoType(winningBid) || allBids.isEmpty()) {
-                        final List<Bid> videoBids = allBids.parallelStream()
-                                .filter(jsonUtils::isBidWithVideoType).toList();
-                        // we'll create a Bid with custom vast only if:
-                        // 1. the winning bid is of video type, or
-                        // 2. no SSP has bid for this imp
-                        final CreatorContext creatorContext = commonContext.with(
-                                imp, new ArrayList<>(videoBids),
-                                jsonUtils
-                        );
-
-                        futures.add(
-                                customVastUtils.getUserSyncUrls(creatorContext, accountId, timeout)
-                                        .map(userSyncs -> new BidWithSeatName(
-                                                        RequestUtils.IMPROVE_DIGITAL_BIDDER_NAME,
-                                                        customVastUtils.createBidFromCustomVast(
-                                                                creatorContext,
-                                                                customVastCreator.create(
-                                                                        creatorContext, userSyncs
-                                                                )
-                                                        )
-                                                )
-                                        )
-                        );
-                    } else if (winningBid != null) {
-                        String seatName = seatBidsForImp.stream()
-                                .filter(seatBid -> seatBid.getBid().contains(winningBid))
-                                .map(SeatBid::getSeat)
-                                .findFirst().orElse(null);
-                        if (StringUtils.isNotBlank(seatName)) {
-                            futures.add(
-                                    Future.succeededFuture(
-                                            new BidWithSeatName(seatName, winningBid)
-                                    )
+                        for (final Imp imp : bidRequest.getImp()) {
+                            final List<SeatBid> seatBidsForImp = ResponseUtils.findSeatBidsForImp(
+                                    bidResponse, imp
                             );
-                            // resultSeatBids.get(seatName).getBid().add(winningBid);
+
+                            if (requestUtils.isCustomVastVideo(imp)) { // imp is configured for custom vast
+                                final List<Bid> allBids = ResponseUtils.getBidsForImp(seatBidsForImp, imp);
+                                final Bid winningBid = allBids.stream()
+                                        .reduce((bid1, bid2) ->
+                                                bid1.getPrice().max(bid2.getPrice())
+                                                        .equals(bid1.getPrice()) ? bid1 : bid2
+                                        ).orElse(null);
+
+                                if (jsonUtils.isBidWithVideoType(winningBid) || allBids.isEmpty()) {
+                                    final List<Bid> videoBids = allBids.parallelStream()
+                                            .filter(jsonUtils::isBidWithVideoType).toList();
+                                    // we'll create a Bid with custom vast only if:
+                                    // 1. the winning bid is of video type
+                                    // 2. no SSP has bid for this imp
+                                    final CreatorContext creatorContext = commonContext.with(
+                                            imp, new ArrayList<>(videoBids),
+                                            jsonUtils
+                                    );
+
+                                    final CustomVast customVast = customVastCreator.create(
+                                            creatorContext,
+                                            getSyncUrlsForImp(syncUrlMap, imp));
+                                    final Bid customVastBid = customVastUtils.createBidFromCustomVast(
+                                            creatorContext, customVast
+                                    );
+                                    if (customVastBid != null) {
+                                        resultSeatBids.get(RequestUtils.IMPROVE_DIGITAL_BIDDER_NAME)
+                                                .getBid()
+                                                .add(customVastBid);
+                                    }
+                                } else if (winningBid != null) {
+                                    String seatName = seatBidsForImp.stream()
+                                            .filter(seatBid -> seatBid.getBid().contains(winningBid))
+                                            .map(SeatBid::getSeat)
+                                            .findFirst().orElse(null);
+                                    if (StringUtils.isNotBlank(seatName)) {
+                                        resultSeatBids.get(seatName).getBid().add(winningBid);
+                                    }
+                                }
+                            } else { // imp is not configured for custom vast
+                                // So, we'll simply copy all Bids into respective SeatBid
+                                for (final SeatBid seatBid : seatBidsForImp) {
+                                    resultSeatBids.get(seatBid.getSeat()).getBid().addAll(
+                                            ResponseUtils.getBidsForImp(seatBid, imp)
+                                    );
+                                }
+                            }
                         }
-                    }
-                } else { // imp is not configured for custom vast
-                    // So, we'll simply copy all Bids into respective SeatBid
-                    for (final SeatBid seatBid : seatBidsForImp) {
-                        futures.addAll(
-                                ResponseUtils.getBidsForImp(seatBid, imp).stream()
-                                        .map(bid -> Future.succeededFuture(
-                                                new BidWithSeatName(seatBid.getSeat(), bid)))
-                                        .toList()
+                        return bidResponse.toBuilder().seatbid(
+                                new ArrayList<>(resultSeatBids.values()
+                                        .stream()
+                                        .filter(sb -> !sb.getBid().isEmpty()) // skip SeatBids with no bids
+                                        .collect(Collectors.toList())
+                                )
+                        ).build();
+                    } catch (Throwable t) {
+                        logger.error(
+                                LogMessage.from(bidRequest)
+                                        .with(bidResponse)
+                                        .with(t)
                         );
-                        // resultSeatBids.get(seatBid.getSeat()).getBid().addAll(
-                        //         ResponseUtils.getBidsForImp(seatBid, imp)
-                        // );
                     }
-                }
-            }
+                    return bidResponse;
+                });
+    }
 
-            Future<Void> cf = Future.succeededFuture(null);
-            if (!futures.isEmpty()) {
-                @SuppressWarnings("unchecked")
-                CompletableFuture<Bid>[] cfs = futures.stream()
-                        .map(future -> future.toCompletionStage().toCompletableFuture())
-                        .toList()
-                        .toArray(new CompletableFuture[futures.size()]);
-                cf = Future.fromCompletionStage(CompletableFuture.allOf(cfs).thenAccept(ignored -> {
-                    for (final Future<BidWithSeatName> future : futures) {
-                        final BidWithSeatName result = future.result();
-                        final String seatName = result.seat();
-                        final Bid bid = result.bid();
-                        if (bid != null) {
-                            resultSeatBids.get(seatName)
-                                    .getBid()
-                                    .add(bid);
-                        }
+    private List<String> getCustomVastBidders(Timeout timeout, BidRequest bidRequest) {
+        return bidRequest.getImp().stream()
+                .filter(requestUtils::isCustomVastVideo)
+                .map(imp -> {
+                    List<String> bidders = new ArrayList<>();
+                    if (imp.getExt() == null || timeout.remaining() <= 0) {
+                        return bidders;
                     }
-                }));
-            }
+                    ExtImp extImp = jsonUtils.treeToValue(imp.getExt(), ExtImp.class);
+                    if (extImp.getPrebid() == null || extImp.getPrebid().getBidder() == null) {
+                        return bidders;
+                    }
+                    extImp.getPrebid().getBidder().fieldNames().forEachRemaining(bidders::add);
+                    return bidders;
+                })
+                .flatMap(List::stream)
+                .toList();
+    }
 
-            return cf.map(ignored -> bidResponse.toBuilder().seatbid(
-                    new ArrayList<>(resultSeatBids.values()
-                            .stream()
-                            .filter(sb -> !sb.getBid().isEmpty()) // skip SeatBids with no bids
-                            .collect(Collectors.toList())
-                    )
-            ).build());
-        } catch (Throwable t) {
-            logger.error(
-                    LogMessage.from(bidRequest)
-                            .with(bidResponse)
-                            .with(t)
-            );
+    private List<String> getSyncUrlsForImp(Map<String, String> syncUrlMap, Imp imp) {
+        List<String> syncUrls = new ArrayList<>();
+        if (syncUrlMap == null || imp.getExt() == null) {
+            return syncUrls;
         }
-        return Future.succeededFuture(bidResponse);
+        jsonUtils.objectPathToValue(
+                imp.getExt(), "/prebid/bidder", ObjectNode.class,
+                jsonUtils.getObjectMapper().createObjectNode()
+        ).fieldNames().forEachRemaining(bidder -> {
+            if (syncUrlMap.containsKey(bidder)) {
+                syncUrls.add(syncUrlMap.get(bidder));
+            }
+        });
+        return syncUrls;
     }
 
     private Map<String, SeatBid> createResultSeatBidsMap(BidResponse bidResponse) {

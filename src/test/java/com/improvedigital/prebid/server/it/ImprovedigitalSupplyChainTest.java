@@ -33,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestPropertySource(properties = {
         "admin.port=18062",
         "http.port=18082",
+        "server.http.port=18082", // set it to http.port value, so that /cookie_sync calls work
 })
 @RunWith(SpringRunner.class)
 public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest {
@@ -59,19 +60,19 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                         .build()
         );
 
-        assertBidIdExists(responseJson, 0, 0);
-        assertBidImpId(responseJson, 0, 0, "imp_id_1");
-        assertBidPrice(responseJson, 0, 0, 1.25);
-        assertSeat(responseJson, 0, "generic");
-        assertThat(getAdm(responseJson, 0, 0)).contains("<img src='banner-4.png'/>");
-        assertThat(getBidExtPrebidType(responseJson, 0, 0)).isEqualTo("banner");
+        int seatBidIndex = getSeatBidIndex(responseJson, "generic");
+        assertBidIdExists(responseJson, seatBidIndex, 0);
+        assertBidImpId(responseJson, seatBidIndex, 0, "imp_id_1");
+        assertBidPrice(responseJson, seatBidIndex, 0, 1.25);
+        assertThat(getAdm(responseJson, seatBidIndex, 0)).contains("<img src='banner-4.png'/>");
+        assertThat(getBidExtPrebidType(responseJson, seatBidIndex, 0)).isEqualTo("banner");
 
-        assertBidIdExists(responseJson, 1, 0);
-        assertBidImpId(responseJson, 1, 0, "imp_id_1");
-        assertBidPrice(responseJson, 1, 0, 1.15);
-        assertSeat(responseJson, 1, "improvedigital");
-        assertThat(getAdm(responseJson, 1, 0)).contains("<img src='banner-2.png'/>");
-        assertThat(getBidExtPrebidType(responseJson, 1, 0)).isEqualTo("banner");
+        seatBidIndex = getSeatBidIndex(responseJson, "improvedigital");
+        assertBidIdExists(responseJson, seatBidIndex, 0);
+        assertBidImpId(responseJson, seatBidIndex, 0, "imp_id_1");
+        assertBidPrice(responseJson, seatBidIndex, 0, 1.15);
+        assertThat(getAdm(responseJson, seatBidIndex, 0)).contains("<img src='banner-2.png'/>");
+        assertThat(getBidExtPrebidType(responseJson, seatBidIndex, 0)).isEqualTo("banner");
     }
 
     @Test

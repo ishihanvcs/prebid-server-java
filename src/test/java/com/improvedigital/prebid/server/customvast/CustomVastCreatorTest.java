@@ -30,6 +30,7 @@ import org.prebid.server.proto.request.CookieSyncRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -309,8 +310,8 @@ public class CustomVastCreatorTest extends UnitTestBase {
         CreatorContext context = CreatorContext.from(hooksModuleContext, jsonUtils)
                 .with(imp, ResponseUtils.getBidsForImp(response, imp), jsonUtils);
 
-        final List<String> userSyncUrls = customVastUtils.extractUserSyncUrls(defaultCookieSyncResponse);
-        CustomVast customVast = customVastCreator.create(context, userSyncUrls);
+        final Map<String, String> syncUrlMap = customVastUtils.extractUserSyncUrls(defaultCookieSyncResponse);
+        CustomVast customVast = customVastCreator.create(context, syncUrlMap.values());
         assertThat(customVast).isNotNull();
         assertThat(customVast.getVersion()).isEqualTo("2.0");
         assertThat(customVast.getAds().size()).isEqualTo(expectedAdCount);
@@ -330,7 +331,7 @@ public class CustomVastCreatorTest extends UnitTestBase {
                 assertThat(wrapper.getImpressions()).isEmpty();
             } else {
                 assertThat(wrapper.getImpressions()).isNotEmpty();
-                assertThat(wrapper.getImpressions().size()).isEqualTo(userSyncUrls.size());
+                assertThat(wrapper.getImpressions().size()).isEqualTo(syncUrlMap.size());
             }
 
             assertThat(wrapper.getExtensions().isEmpty()).isFalse();
@@ -358,8 +359,8 @@ public class CustomVastCreatorTest extends UnitTestBase {
             int expectedAdCount,
             BiConsumer<String, CustomVast.Wrapper> validator
     ) {
-        final List<String> userSyncUrls = customVastUtils.extractUserSyncUrls(defaultCookieSyncResponse);
-        CustomVast customVast = customVastCreator.create(context, userSyncUrls);
+        final Map<String, String> syncUrlMap = customVastUtils.extractUserSyncUrls(defaultCookieSyncResponse);
+        CustomVast customVast = customVastCreator.create(context, syncUrlMap.values());
         assertThat(customVast).isNotNull();
         assertThat(customVast.getVersion()).isEqualTo("2.0");
         assertThat(customVast.getAds().size()).isEqualTo(expectedAdCount);
@@ -379,7 +380,7 @@ public class CustomVastCreatorTest extends UnitTestBase {
                 assertThat(wrapper.getImpressions()).isEmpty();
             } else {
                 assertThat(wrapper.getImpressions()).isNotEmpty();
-                assertThat(wrapper.getImpressions().size()).isEqualTo(userSyncUrls.size());
+                assertThat(wrapper.getImpressions().size()).isEqualTo(syncUrlMap.size());
             }
 
             assertThat(wrapper.getExtensions().isEmpty()).isFalse();

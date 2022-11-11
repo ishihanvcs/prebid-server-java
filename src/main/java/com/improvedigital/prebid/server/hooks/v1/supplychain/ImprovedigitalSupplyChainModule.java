@@ -1,6 +1,5 @@
 package com.improvedigital.prebid.server.hooks.v1.supplychain;
 
-import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import org.prebid.server.hooks.v1.Hook;
 import org.prebid.server.hooks.v1.InvocationContext;

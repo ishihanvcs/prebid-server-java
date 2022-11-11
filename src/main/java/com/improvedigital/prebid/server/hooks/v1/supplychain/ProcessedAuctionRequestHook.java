@@ -208,12 +208,12 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         static SupplyChainConfig from(ImprovedigitalPbsAccountExt accExt, ImprovedigitalPbsImpExt pbsImpExt) {
             return SupplyChainConfig.builder()
                     .headerliftPartnerId(ObjectUtils.firstNonNull(
-                            ObjectUtil.getIfNotNull(accExt, ImprovedigitalPbsAccountExt::getHeaderliftPartnerId),
-                            ObjectUtil.getIfNotNull(pbsImpExt, ImprovedigitalPbsImpExt::getHeaderliftPartnerId)
+                            ObjectUtil.getIfNotNull(pbsImpExt, ImprovedigitalPbsImpExt::getHeaderliftPartnerId),
+                            ObjectUtil.getIfNotNull(accExt, ImprovedigitalPbsAccountExt::getHeaderliftPartnerId)
                     ))
                     .schainNodes(ObjectUtils.firstNonNull(
-                            ObjectUtil.getIfNotNull(accExt, ImprovedigitalPbsAccountExt::getSchainNodes),
-                            ObjectUtil.getIfNotNull(pbsImpExt, ImprovedigitalPbsImpExt::getSchainNodes)
+                            ObjectUtil.getIfNotNull(pbsImpExt, ImprovedigitalPbsImpExt::getSchainNodes),
+                            ObjectUtil.getIfNotNull(accExt, ImprovedigitalPbsAccountExt::getSchainNodes)
                     ))
                     .build();
         }

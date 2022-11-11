@@ -47,5 +47,16 @@ accounts:
       events:
         enabled: true
   - id: 12001
+  - id: 2022111101
+    ext:
+      improvedigitalpbs:
+        headerliftPartnerId: "hl-2022111101-acc"
+        schainNodes:
+          - "headerlift.com"
+          - "pubgalaxy.com"
+  - id: 2022111102
+    ext:
+      improvedigitalpbs:
+        headerliftPartnerId: "hl-2022111102-acc"
 domains:
   - az.pbs.com

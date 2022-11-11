@@ -507,6 +507,130 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
         );
     }
 
+    @Test
+    public void testSupplyChainIsAddedWhenConfigAreInAccount() throws Exception {
+        String uniqueId = UUID.randomUUID().toString();
+
+        doAuctionRequestToMultipleBidder(
+                SupplyChainMultipleBidderAuctionTestParam.builder()
+                        .publisherId("2022111101") /* This stored imp has both partner id and schain nodes. */
+                        .auctionRequestId(uniqueId)
+                        .storedImpId("2022072206") /* This stored imp has no pbs imp ext config. */
+                        .improvePlacementId(20220722)
+                        .improveAdm1("<img src='banner-1.png'/>")
+                        .improvePrice1("1.10")
+                        .improveAdm2("<img src='banner-2.png'/>")
+                        .improvePrice2("1.15")
+                        .genericAdm1("<img src='banner-3.png'/>")
+                        .genericPrice1("1.20")
+                        .genericAdm2("<img src='banner-4.png'/>")
+                        .genericPrice2("1.25")
+                        .build(),
+                /* Incoming request has these schain nodes already */
+                List.of(
+                        SupplyChainNode.of(
+                                "pubgalaxy.com",
+                                "firstsite-1",
+                                "request_id_" + uniqueId,
+                                null,
+                                null,
+                                1,
+                                null
+                        )
+                ),
+                List.of(
+                        SupplyChainNode.of(
+                                "pubgalaxy.com",
+                                "firstsite-1",
+                                "request_id_" + uniqueId,
+                                null,
+                                null,
+                                1,
+                                null
+                        ),
+                        SupplyChainNode.of(
+                                "headerlift.com",
+                                "hl-2022111101-acc", /* This id is what we have set in account.ext */
+                                "request_id_" + uniqueId,
+                                null,
+                                "headerlift.com",
+                                1,
+                                null
+                        )
+                )
+        );
+    }
+
+    @Test
+    public void testSupplyChainIsAddedWhenConfigAreOverriddenByPbsImpExt() throws Exception {
+        String uniqueId = UUID.randomUUID().toString();
+
+        doAuctionRequestToMultipleBidder(
+                SupplyChainMultipleBidderAuctionTestParam.builder()
+                        .publisherId("2022111101") /* This stored imp has both partner id and schain nodes. */
+                        .auctionRequestId(uniqueId)
+                        .storedImpId("2022072205") /* This stored imp has overridden partner id. */
+                        .improvePlacementId(20220722)
+                        .improveAdm1("<img src='banner-1.png'/>")
+                        .improvePrice1("1.10")
+                        .improveAdm2("<img src='banner-2.png'/>")
+                        .improvePrice2("1.15")
+                        .genericAdm1("<img src='banner-3.png'/>")
+                        .genericPrice1("1.20")
+                        .genericAdm2("<img src='banner-4.png'/>")
+                        .genericPrice2("1.25")
+                        .build(),
+                /* Incoming request has these schain nodes already */
+                List.of(),
+                List.of(
+                        SupplyChainNode.of(
+                                "headerlift.com",
+                                "hl-2022072205", /* This id is what we have overridden in imp ext */
+                                "request_id_" + uniqueId,
+                                null,
+                                "headerlift.com",
+                                1,
+                                null
+                        )
+                )
+        );
+    }
+
+    @Test
+    public void testSupplyChainIsAddedWhenConfigAreBothInAccountAndPbsImpExt() throws Exception {
+        String uniqueId = UUID.randomUUID().toString();
+
+        doAuctionRequestToMultipleBidder(
+                SupplyChainMultipleBidderAuctionTestParam.builder()
+                        .publisherId("2022111102") /* This stored imp has partner id only. */
+                        .auctionRequestId(uniqueId)
+                        .storedImpId("2022072204") /* This stored imp has schain nodes only. */
+                        .improvePlacementId(20220722)
+                        .improveAdm1("<img src='banner-1.png'/>")
+                        .improvePrice1("1.10")
+                        .improveAdm2("<img src='banner-2.png'/>")
+                        .improvePrice2("1.15")
+                        .genericAdm1("<img src='banner-3.png'/>")
+                        .genericPrice1("1.20")
+                        .genericAdm2("<img src='banner-4.png'/>")
+                        .genericPrice2("1.25")
+                        .build(),
+                /* Incoming request has these schain nodes already */
+                List.of(),
+                List.of(
+                        SupplyChainNode.of(
+                                "headerlift.com",
+                                "hl-2022111102-acc",
+                                "request_id_" + uniqueId,
+                                null,
+                                "headerlift.com",
+                                1,
+                                null
+                        )
+                )
+        );
+    }
+
     private JSONObject doAuctionRequestToGenericBidderWithMultiImp(
             String uniqueId,
             List<SupplyChainNode> existingSchainNodes,
@@ -661,6 +785,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                                 .build())
                                         .build()
                                 ))
+                                .publisherId(param.publisherId)
                                 .schain(SupplyChain.of(
                                         1, existingSchainNodes, "1.0", null
                                 ))
@@ -700,6 +825,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                                 .build())
                                         .build()
                                 ))
+                                .publisherId(param.publisherId)
                                 .schain(SupplyChain.of(
                                         1, expectedSchainNodes, "1.0", null
                                 ))
@@ -731,6 +857,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                         .id("imp_id_1")
                                         .build())
                                 .build()))
+                        .publisherId(param.publisherId)
                         .schain(SupplyChain.of(
                                 1, existingSchainNodes, "1.0", null
                         ))
@@ -748,6 +875,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
 
     @Builder(toBuilder = true)
     private static class SupplyChainMultipleBidderAuctionTestParam {
+        String publisherId;
         String auctionRequestId;
         String storedImpId;
         int improvePlacementId;

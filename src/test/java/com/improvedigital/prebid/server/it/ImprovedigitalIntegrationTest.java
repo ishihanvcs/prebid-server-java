@@ -342,7 +342,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                         .cache(bidRequestData.extRequestPrebidCache)
                         .floors(PriceFloorRules.builder()
                                 .enabled(true)
-                                .fetchStatus(FetchStatus.error)
+                                .fetchStatus(bidRequestData.publisherId != null ? FetchStatus.none : FetchStatus.error)
                                 .location(PriceFloorLocation.noData)
                                 .skipped(false)
                                 .build())

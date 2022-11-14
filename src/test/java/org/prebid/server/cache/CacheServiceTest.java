@@ -83,6 +83,10 @@ public class CacheServiceTest extends VertxTest {
 
     private final CacheTtl mediaTypeCacheTtl = CacheTtl.of(null, null);
 
+    private final long expectedCacheTimeMs = 100L;
+    private final long httpClientConnectTimeoutMs = 2000L;
+    private final boolean waitForResponse = true;
+
     @Mock
     private HttpClient httpClient;
     @Mock
@@ -113,7 +117,9 @@ public class CacheServiceTest extends VertxTest {
                 httpClient,
                 new URL("http://cache-service/cache"),
                 "http://cache-service-host/cache?uuid=",
-                100L,
+                expectedCacheTimeMs,
+                httpClientConnectTimeoutMs,
+                waitForResponse,
                 vastModifier,
                 eventsService,
                 metrics,
@@ -559,7 +565,9 @@ public class CacheServiceTest extends VertxTest {
                 httpClient,
                 new URL("http://cache-service/cache"),
                 "http://cache-service-host/cache?uuid=",
-                100L,
+                expectedCacheTimeMs,
+                httpClientConnectTimeoutMs,
+                waitForResponse,
                 vastModifier,
                 eventsService,
                 metrics,
@@ -600,7 +608,9 @@ public class CacheServiceTest extends VertxTest {
                 httpClient,
                 new URL("http://cache-service/cache"),
                 "http://cache-service-host/cache?uuid=",
-                100L,
+                expectedCacheTimeMs,
+                httpClientConnectTimeoutMs,
+                waitForResponse,
                 vastModifier,
                 eventsService,
                 metrics,
@@ -637,7 +647,9 @@ public class CacheServiceTest extends VertxTest {
                 httpClient,
                 new URL("http://cache-service/cache"),
                 "http://cache-service-host/cache?uuid=",
-                100L,
+                expectedCacheTimeMs,
+                httpClientConnectTimeoutMs,
+                waitForResponse,
                 vastModifier,
                 eventsService,
                 metrics,

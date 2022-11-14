@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.response.Bid;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.logging.Logger;
@@ -81,6 +82,8 @@ public class CacheService {
     private final URL endpointUrl;
     private final String cachedAssetUrlTemplate;
     private final long expectedCacheTimeMs;
+    private final long httpClientConnectTimeoutMs;
+    private final boolean waitForResponse;
     private final VastModifier vastModifier;
     private final EventsService eventsService;
     private final Metrics metrics;
@@ -93,6 +96,8 @@ public class CacheService {
                         URL endpointUrl,
                         String cachedAssetUrlTemplate,
                         long expectedCacheTimeMs,
+                        long httpClientConnectTimeoutMs,
+                        boolean waitForResponse,
                         VastModifier vastModifier,
                         EventsService eventsService,
                         Metrics metrics,
@@ -105,6 +110,8 @@ public class CacheService {
         this.endpointUrl = Objects.requireNonNull(endpointUrl);
         this.cachedAssetUrlTemplate = Objects.requireNonNull(cachedAssetUrlTemplate);
         this.expectedCacheTimeMs = expectedCacheTimeMs;
+        this.httpClientConnectTimeoutMs = httpClientConnectTimeoutMs;
+        this.waitForResponse = waitForResponse;
         this.vastModifier = Objects.requireNonNull(vastModifier);
         this.eventsService = Objects.requireNonNull(eventsService);
         this.metrics = Objects.requireNonNull(metrics);
@@ -171,9 +178,12 @@ public class CacheService {
             return Future.failedFuture(new TimeoutException("Timeout has been exceeded"));
         }
 
+        final String url = endpointUrl.toString();
+        final String body = mapper.encodeToString(bidCacheRequest);
+        final List<PutObject> putObjects = bidCacheRequest.getPuts();
+
         final long startTime = clock.millis();
-        return httpClient.post(endpointUrl.toString(), CACHE_HEADERS, mapper.encodeToString(bidCacheRequest),
-                        remainingTimeout)
+        return getHttpClientResponseFuture(putObjects, url, body, startTime, remainingTimeout)
                 .map(response -> toBidCacheResponse(
                         response.getStatusCode(), response.getBody(), bidCount, accountId, startTime))
                 .recover(exception -> failResponse(exception, accountId, startTime));
@@ -228,7 +238,9 @@ public class CacheService {
                         .bidid(null)
                         .bidder(null)
                         .timestamp(null)
-                        .value(vastModifier.modifyVastXml(isEventsEnabled,
+                        .key(StringUtils.isBlank(putObject.getKey()) && !waitForResponse
+                                ? idGenerator.generateId() : putObject.getKey()
+                        ).value(vastModifier.modifyVastXml(isEventsEnabled,
                                 allowedBidders,
                                 putObject,
                                 accountId,
@@ -374,9 +386,10 @@ public class CacheService {
         final String url = endpointUrl.toString();
         final String body = mapper.encodeToString(bidCacheRequest);
         final CacheHttpRequest httpRequest = CacheHttpRequest.of(url, body);
+        final List<PutObject> putObjects = bidCacheRequest.getPuts();
 
         final long startTime = clock.millis();
-        return httpClient.post(url, CACHE_HEADERS, body, remainingTimeout)
+        return getHttpClientResponseFuture(putObjects, url, body, startTime, remainingTimeout)
                 .map(response -> processResponseOpenrtb(response,
                         httpRequest,
                         cachedCreatives.size(),
@@ -386,6 +399,36 @@ public class CacheService {
                         accountId,
                         startTime))
                 .otherwise(exception -> failResponseOpenrtb(exception, accountId, httpRequest, startTime));
+    }
+
+    private Future<HttpClientResponse> getHttpClientResponseFuture(
+            List<PutObject> putObjects, String url, String body,
+            long startTime, long remainingTimeout
+    ) {
+        final long effectiveTimeout = waitForResponse ? remainingTimeout : httpClientConnectTimeoutMs;
+        Future<HttpClientResponse> future = httpClient.post(url, CACHE_HEADERS, body, effectiveTimeout);
+        if (!waitForResponse) {
+            future.onComplete(asyncResult -> {
+                final long endTime = clock.millis();
+                logger.debug("time taken in cache service call: %d ms".formatted(endTime - startTime));
+                if (asyncResult.failed()) {
+                    logger.error("cache service call failed", asyncResult.cause());
+                }
+            });
+            final BidCacheResponse bidCacheResponse = BidCacheResponse.of(
+                    putObjects.stream().map(
+                            putObject -> CacheObject.of(putObject.getKey())
+                    ).toList()
+            );
+            future = Future.succeededFuture(
+                    HttpClientResponse.of(
+                            HttpResponseStatus.OK.code(),
+                            MultiMap.caseInsensitiveMultiMap(),
+                            mapper.encodeToString(bidCacheResponse)
+                    )
+            );
+        }
+        return future;
     }
 
     /**
@@ -481,12 +524,16 @@ public class CacheService {
             bidObjectNode.put(BID_WURL_ATTRIBUTE, eventUrl);
         }
 
-        final PutObject payload = PutObject.builder()
+        PutObject payload = PutObject.builder()
                 .aid(eventsContext.getAuctionId())
                 .type("json")
                 .value(bidObjectNode)
                 .ttlseconds(cacheBid.getTtl())
                 .build();
+
+        if (!waitForResponse) {
+            payload = payload.toBuilder().key(idGenerator.generateId()).build();
+        }
 
         return CachedCreative.of(payload, creativeSizeFromAdm(bid.getAdm()));
     }
@@ -499,7 +546,10 @@ public class CacheService {
         final Bid bid = bidInfo.getBid();
         final String vastXml = bid.getAdm();
 
-        final String customCacheKey = resolveCustomCacheKey(hbCacheId, bidInfo.getCategory());
+        final String customCacheKey = ObjectUtils.firstNonNull(
+                resolveCustomCacheKey(hbCacheId, bidInfo.getCategory()),
+                waitForResponse ? null : idGenerator.generateId()
+        );
 
         final PutObject payload = PutObject.builder()
                 .aid(requestId)

@@ -385,7 +385,7 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
         // 2nd tag.
         String vastAdTagUri2 = getVastTagUri(adm, "1");
         Map<String, List<String>> customUrlParams = TestUtils.splitQuery(new URL(vastAdTagUri2).getQuery());
-        assertQuerySingleValue(customUrlParams.get("gdpr"), "0"); /* We have gdpr_consent but gdpr=0? */
+        assertQuerySingleValue(customUrlParams.get("gdpr"), "0");
         assertQuerySingleValue(customUrlParams.get("gdpr_consent"), "BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA");
         assertQuerySingleValue(customUrlParams.get("referrer"), "http://pbs.improvedigital.com");
         assertThat(Long.parseLong(customUrlParams.get("t").get(0)) > (System.currentTimeMillis() - 5 * 60 * 1000L));

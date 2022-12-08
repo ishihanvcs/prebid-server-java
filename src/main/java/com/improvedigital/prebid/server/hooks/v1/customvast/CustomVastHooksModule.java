@@ -43,7 +43,7 @@ public class CustomVastHooksModule implements Module {
     public Collection<? extends Hook<?, ? extends InvocationContext>> hooks() {
         return Arrays.asList(
                 new EntrypointHook(settingsLoader, requestUtils, merger),
-                new ProcessedAuctionRequestHook(requestUtils, customVastUtils),
+                new ProcessedAuctionRequestHook(settingsLoader, requestUtils, customVastUtils),
                 new AuctionResponseHook(requestUtils, customVastUtils)
         );
     }

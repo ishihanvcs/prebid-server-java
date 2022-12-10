@@ -85,8 +85,6 @@ auction:
   cache:
     expected-request-time-ms: 50
     only-winning-bids: false
-    connect-timeout-ms: 2000
-    wait-for-response: false
 cookie-sync:
   coop-sync:
     default: false
@@ -105,6 +103,8 @@ cache:
   query: uuid=
   banner-ttl-seconds: 300
   video-ttl-seconds: 300
+  connect-timeout-ms: 100
+  wait-for-response: false
 default-request:
   file:
     path : improvedigital/stored-data/requests/default.json

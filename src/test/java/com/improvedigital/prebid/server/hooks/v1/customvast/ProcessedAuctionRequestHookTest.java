@@ -97,11 +97,10 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
                         InvocationContextImpl.of(timeout, Endpoint.openrtb2_auction), false, null, null
                 ),
                 (initialPayload, invocationResult) -> {
-                    final String message = "improvedigital placementId is not defined in any of the imp(s)";
+                    final String message = "request.imp[0] must be configured with improvedigital placementId";
                     assertThat(invocationResult)
                             .isNotNull();
-                    assertThat(invocationResult.message())
-                            .isEqualTo(message);
+                    assertThat(invocationResult.message()).startsWith(message);
                     assertThat(hasLogEventWith(logCaptor, message, Level.ERROR))
                             .isTrue();
                 }

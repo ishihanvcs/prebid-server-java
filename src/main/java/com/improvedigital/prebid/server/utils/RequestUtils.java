@@ -152,6 +152,11 @@ public class RequestUtils {
                 && !isOfResponseType(pbsImpExt, VastResponseType.vast);
     }
 
+    public boolean isCustomVastVideo(Imp imp, ImprovedigitalPbsImpExt pbsImpExt, VastResponseType responseType) {
+        return imp != null && imp.getVideo() != null && pbsImpExt != null
+                && isOfResponseType(pbsImpExt, responseType);
+    }
+
     public boolean hasGVastResponseType(ImprovedigitalPbsImpExt impExt) {
         return isOfResponseType(impExt, VastResponseType.gvast);
     }

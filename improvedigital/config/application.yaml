@@ -31,7 +31,7 @@ adapters:
     endpoint: https://b1h.zemanta.com/api/bidder/prebid/bid
     usersync:
       redirect:
-        url: https://b1h.zemanta.com/usersync/prebid?gdpr={{gdpr}}&gdpr_consent={{gdpr_consent}}&us_privacy={{us_privacy}}&cb=
+        url: https://b1h.zemanta.com/usersync/prebid?gdpr={{gdpr}}&gdpr_consent={{gdpr_consent}}&us_privacy={{us_privacy}}&cb={{redirect_url}}
   pubmatic:
     enabled: true
   rubicon:

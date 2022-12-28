@@ -82,6 +82,7 @@ auction:
   max-timeout-ms: 5000
   timeout-adjustment-ms: 30
   stored-requests-timeout-ms: 200
+  abort-on-hook-error: true # custom configuration for HBT-258
   cache:
     expected-request-time-ms: 50
     only-winning-bids: false

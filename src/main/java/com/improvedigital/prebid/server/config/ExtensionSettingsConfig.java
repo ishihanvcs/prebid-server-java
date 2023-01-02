@@ -6,6 +6,7 @@ import com.improvedigital.prebid.server.settings.CustomSettings;
 import com.improvedigital.prebid.server.settings.FileCustomSettings;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
 import com.improvedigital.prebid.server.utils.ReflectionUtils;
+import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.Vertx;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.logging.Logger;
@@ -54,13 +55,13 @@ public class ExtensionSettingsConfig {
                 ApplicationSettings applicationSettings,
                 CustomSettings customSettings,
                 Metrics metrics,
-                JacksonMapper mapper,
+                RequestUtils requestUtils,
                 @Value("${settings.default-loading-timeout:#{500}}") long defaultTimeoutMs,
                 TimeoutFactory timeoutFactory
         ) {
             return new SettingsLoader(
-                    applicationSettings, customSettings,
-                    metrics, mapper, timeoutFactory, defaultTimeoutMs
+                    applicationSettings, customSettings, requestUtils,
+                    metrics, timeoutFactory, defaultTimeoutMs
             );
         }
     }

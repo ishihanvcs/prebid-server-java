@@ -338,7 +338,7 @@ public class CustomVastUtils {
     }
 
     public String resolveGamAdUnit(
-            ImprovedigitalPbsImpExtGam gamConfig, int improvePlacementId
+            ImprovedigitalPbsImpExtGam gamConfig, Integer improvePlacementId
     ) {
         gamConfig = ObjectUtils.defaultIfNull(gamConfig, ImprovedigitalPbsImpExtGam.DEFAULT);
         String adUnit = gamConfig.getAdUnit();

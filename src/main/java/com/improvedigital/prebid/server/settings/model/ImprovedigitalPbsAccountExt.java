@@ -20,6 +20,9 @@ public class ImprovedigitalPbsAccountExt {
     @JsonProperty("schainNodes")
     List<String> schainNodes;
 
+    @JsonProperty("requireImprovePlacement")
+    Boolean requireImprovePlacement;
+
     @JsonProperty("headerliftPartnerId")
     String headerliftPartnerId;
 

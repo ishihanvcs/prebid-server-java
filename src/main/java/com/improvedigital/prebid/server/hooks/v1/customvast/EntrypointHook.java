@@ -1,9 +1,9 @@
 package com.improvedigital.prebid.server.hooks.v1.customvast;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.request.Publisher;
+import com.iab.openrtb.request.User;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
@@ -15,18 +15,25 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.Tuple2;
+import org.prebid.server.execution.Timeout;
 import org.prebid.server.hooks.execution.v1.entrypoint.EntrypointPayloadImpl;
 import org.prebid.server.hooks.v1.InvocationContext;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.entrypoint.EntrypointPayload;
+import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.json.JsonMerger;
+import org.prebid.server.model.CaseInsensitiveMultiMap;
 import org.prebid.server.proto.openrtb.ext.request.ExtPublisher;
 import org.prebid.server.proto.openrtb.ext.request.ExtPublisherPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
+import org.prebid.server.proto.openrtb.ext.request.ExtUser;
+import org.prebid.server.proto.openrtb.ext.request.ExtUserPrebid;
 
+import java.net.HttpCookie;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -36,7 +43,7 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
     private static final Logger logger = LoggerFactory.getLogger(EntrypointHook.class);
     private final SettingsLoader settingsLoader;
     private final JsonUtils jsonUtils;
-    private final ObjectMapper mapper;
+    private final JacksonMapper mapper;
     private final RequestUtils requestUtils;
     private final JsonMerger merger;
 
@@ -49,116 +56,158 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
         this.requestUtils = Objects.requireNonNull(requestUtils);
         this.merger = Objects.requireNonNull(merger);
         this.jsonUtils = Objects.requireNonNull(requestUtils.getJsonUtils());
-        this.mapper = Objects.requireNonNull(jsonUtils.getObjectMapper());
+        this.mapper = Objects.requireNonNull(jsonUtils.getMapper());
     }
 
     @Override
     public Future<InvocationResult<EntrypointPayload>> call(
-            EntrypointPayload entrypointPayload, InvocationContext invocationContext) {
-        final InvocationResult<EntrypointPayload> defaultResult = InvocationResultImpl.succeeded(
-                payload -> entrypointPayload
+            EntrypointPayload entrypointPayload, InvocationContext invocationContext
+    ) {
+        final BidRequest originalBidRequest = jsonUtils.parseBidRequest(entrypointPayload.body());
+
+        return enrichBidRequest(
+                originalBidRequest,
+                entrypointPayload.headers(),
+                invocationContext.timeout()
+        ).map(bidRequest -> {
+            final EntrypointPayload updatedPayload;
+            if (originalBidRequest != bidRequest) {
+                final String updatedBody = mapper.encodeToString(bidRequest);
+                updatedPayload = EntrypointPayloadImpl.of(
+                        entrypointPayload.queryParams(),
+                        entrypointPayload.headers(),
+                        updatedBody
+                );
+            } else {
+                updatedPayload = entrypointPayload;
+            }
+            return InvocationResultImpl.succeeded(
+                    payload -> updatedPayload
+            );
+        });
+    }
+
+    private Future<BidRequest> enrichBidRequest(
+            BidRequest originalBidRequest, CaseInsensitiveMultiMap headers, Timeout timeout
+    ) {
+        final BidRequest bidRequest = copyImproveUserIdFromCookieIfAvailable(
+                originalBidRequest, headers
         );
 
-        try {
-            final BidRequest originalBidRequest = jsonUtils.parseBidRequest(entrypointPayload.body());
+        final Future<BidRequest> defaultReturn = Future.succeededFuture(bidRequest);
 
-            final boolean hasAccountId = StringUtils.isNotBlank(
-                    requestUtils.getParentAccountId(originalBidRequest)
-            );
+        final boolean hasAccountId = StringUtils.isNotBlank(
+                requestUtils.getParentAccountId(bidRequest)
+        );
 
-            final boolean hasStoredRequest = StringUtils.isNotBlank(
-                    requestUtils.getStoredRequestId(originalBidRequest)
-            );
+        final boolean hasStoredRequest = StringUtils.isNotBlank(
+                requestUtils.getStoredRequestId(bidRequest)
+        );
 
-            if (!hasAccountId || !hasStoredRequest) {
-                final Map<Imp, String> impToStoredRequestId = originalBidRequest.getImp().stream()
-                        .map(imp -> Tuple2.of(imp, requestUtils.getStoredImpId(imp)))
-                        .filter(t -> StringUtils.isNotBlank(t.getRight()))
-                        .collect(Collectors.toMap(Tuple2::getLeft, Tuple2::getRight));
+        if (!hasAccountId || !hasStoredRequest) {
+            final Map<Imp, String> impToStoredRequestId = bidRequest.getImp().stream()
+                    .map(imp -> Tuple2.of(imp, requestUtils.getStoredImpId(imp)))
+                    .filter(t -> StringUtils.isNotBlank(t.getRight()))
+                    .collect(Collectors.toMap(Tuple2::getLeft, Tuple2::getRight));
 
-                // let core logic for auction handle/process errors in later phase
-                return settingsLoader
-                        .getStoredImpsSafely(
-                            new HashSet<>(impToStoredRequestId.values()), invocationContext.timeout()
-                        ).map(storedImps -> {
-                            try {
-                                BidRequest updatedBidRequest = originalBidRequest;
-                                String accountId = null;
-                                String requestId = null;
-                                boolean hasMismatchedAccount = false;
-                                boolean hasMismatchedRequest = false;
+            return settingsLoader
+                    .getStoredImpsSafely(
+                            new HashSet<>(impToStoredRequestId.values()), timeout
+                    ).map(storedImps -> {
+                        BidRequest updatedBidRequest = bidRequest;
+                        String accountId = null;
+                        String requestId = null;
+                        boolean hasMismatchedAccount = false;
+                        boolean hasMismatchedRequest = false;
 
-                                for (final Imp imp : originalBidRequest.getImp()) {
-                                    final String storedRequestId = impToStoredRequestId.get(imp);
-                                    final Imp storedImp = storedRequestId != null
-                                            ? storedImps.get(storedRequestId)
-                                            : null;
-                                    final ImprovedigitalPbsImpExt pbsImpExt
-                                            = mergeImprovedigitalPbsImpExt(imp, storedImp);
-                                    if (pbsImpExt != null) {
-                                        if (!hasAccountId && pbsImpExt.getAccountId() != null) {
-                                            if (accountId == null) {
-                                                accountId = pbsImpExt.getAccountId();
-                                            } else if (!accountId.equals(pbsImpExt.getAccountId())) {
-                                                hasMismatchedAccount = true;
-                                            }
-                                        }
-
-                                        if (!hasStoredRequest && pbsImpExt.getRequestId() != null) {
-                                            if (requestId == null) {
-                                                requestId = pbsImpExt.getRequestId();
-                                            } else if (!requestId.equals(pbsImpExt.getRequestId())) {
-                                                hasMismatchedRequest = true;
-                                            }
-                                        }
+                        for (final Imp imp : bidRequest.getImp()) {
+                            final String storedRequestId = impToStoredRequestId.get(imp);
+                            final Imp storedImp = storedRequestId != null
+                                    ? storedImps.get(storedRequestId)
+                                    : null;
+                            final ImprovedigitalPbsImpExt pbsImpExt
+                                    = mergeImprovedigitalPbsImpExt(imp, storedImp);
+                            if (pbsImpExt != null) {
+                                if (!hasAccountId && pbsImpExt.getAccountId() != null) {
+                                    if (accountId == null) {
+                                        accountId = pbsImpExt.getAccountId();
+                                    } else if (!accountId.equals(pbsImpExt.getAccountId())) {
+                                        hasMismatchedAccount = true;
                                     }
                                 }
 
-                                if (!hasMismatchedAccount) {
-                                    updatedBidRequest = setParentAccountId(updatedBidRequest, accountId);
-                                } else {
-                                    logger.warn(
-                                            LogMessage.from(originalBidRequest).withMessage(
-                                                    "accountId mismatched in imp[].prebid.improvedigitalpbs"
-                                            )
-                                    );
+                                if (!hasStoredRequest && pbsImpExt.getRequestId() != null) {
+                                    if (requestId == null) {
+                                        requestId = pbsImpExt.getRequestId();
+                                    } else if (!requestId.equals(pbsImpExt.getRequestId())) {
+                                        hasMismatchedRequest = true;
+                                    }
                                 }
-
-                                if (!hasMismatchedRequest) {
-                                    updatedBidRequest = setRequestId(updatedBidRequest, requestId);
-                                } else {
-                                    logger.warn(
-                                            LogMessage.from(originalBidRequest)
-                                                    .withMessage(
-                                                            "requestId mismatched in imp[].prebid.improvedigitalpbs"
-                                                    )
-                                    );
-                                }
-                                final String updatedBody = mapper.writeValueAsString(updatedBidRequest);
-                                return InvocationResultImpl.succeeded(
-                                        payload -> EntrypointPayloadImpl.of(
-                                                entrypointPayload.queryParams(),
-                                                entrypointPayload.headers(),
-                                                updatedBody
-                                        ));
-                            } catch (Throwable t) {
-                                logger.error(
-                                        LogMessage.from(originalBidRequest)
-                                                .with(t)
-                                );
-                                return defaultResult;
                             }
-                        });
-            }
-        } catch (Throwable t) {
-            logger.error(LogMessage.from(t));
-        }
+                        }
 
-        return Future.succeededFuture(
-                InvocationResultImpl.succeeded(
-                    payload -> entrypointPayload
-                )
+                        if (!hasMismatchedAccount) {
+                            updatedBidRequest = setParentAccountId(updatedBidRequest, accountId);
+                        } else {
+                            logger.warn(
+                                    LogMessage.from(bidRequest).withMessage(
+                                            "accountId mismatched in imp[].prebid.improvedigitalpbs"
+                                    )
+                            );
+                        }
+
+                        if (!hasMismatchedRequest) {
+                            updatedBidRequest = setRequestId(updatedBidRequest, requestId);
+                        } else {
+                            logger.warn(
+                                    LogMessage.from(bidRequest)
+                                            .withMessage(
+                                                    "requestId mismatched in imp[].prebid.improvedigitalpbs"
+                                            )
+                            );
+                        }
+                        return updatedBidRequest;
+
+                    }).recover(t -> {
+                        logger.error(
+                                LogMessage.from(bidRequest)
+                                        .with(t)
+                        );
+                        return defaultReturn;
+                    });
+        }
+        return defaultReturn;
+    }
+
+    private BidRequest copyImproveUserIdFromCookieIfAvailable(
+            BidRequest bidRequest, CaseInsensitiveMultiMap headers
+    ) {
+        if (!headers.contains("cookie")) {
+            return bidRequest;
+        }
+        List<HttpCookie> cookies = HttpCookie.parse(headers.get("cookie"));
+        HttpCookie tuuidCookie = cookies.stream()
+                .filter(cookie -> cookie.getName().equals("tuuid"))
+                .findAny().orElse(null);
+        if (tuuidCookie == null || StringUtils.isBlank(tuuidCookie.getValue())) {
+            return bidRequest;
+        }
+        final User mergedUser = merger.merge(
+                bidRequest.getUser(),
+                User.builder()
+                        .ext(ExtUser.builder()
+                                .prebid(ExtUserPrebid.of(Map.of(
+                                                RequestUtils.IMPROVE_DIGITAL_BIDDER_NAME,
+                                                tuuidCookie.getValue()
+                                        ))
+                                ).build()
+                        ).build(),
+                User.class
         );
+
+        return bidRequest.toBuilder()
+                .user(mergedUser)
+                .build();
     }
 
     private ImprovedigitalPbsImpExt mergeImprovedigitalPbsImpExt(Imp imp, Imp storedImp) {
@@ -220,7 +269,7 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
                                 ExtRequest.class
                         )
                 )
-        .build();
+                .build();
     }
 
     @Override

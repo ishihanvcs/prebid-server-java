@@ -5,6 +5,8 @@ import com.improvedigital.prebid.server.customtracker.contracts.ITrackerMacroRes
 import com.improvedigital.prebid.server.customtracker.model.AuctionRequestModuleContext;
 import com.improvedigital.prebid.server.customtracker.model.TrackerContext;
 import com.improvedigital.prebid.server.settings.model.CustomTracker;
+import com.improvedigital.prebid.server.utils.LogMessage;
+import com.improvedigital.prebid.server.utils.LogUtils;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.logging.Logger;
@@ -41,13 +43,19 @@ public class BidderBidModifier {
 
         Collection<CustomTracker> customTrackers = moduleContext.getCustomTrackers();
         if (customTrackers == null || customTrackers.isEmpty()) {
-            logger.warn("No custom trackers are configured & enabled!");
+            logger.warn(
+                    LogMessage.from(moduleContext.getBidRequest())
+                            .withMessage("No custom trackers are configured & enabled!")
+            );
             return bidderBid;
         }
 
         Bid bid = bidderBid.getBid();
         if (StringUtils.isBlank(bid.getAdm())) {
-            logger.warn("Skipping bid as adm value is blank!");
+            logger.warn(
+                    LogMessage.from(moduleContext.getBidRequest())
+                            .withMessage("Skipping bid as adm value is blank!")
+            );
             return bidderBid;
         }
 
@@ -59,18 +67,25 @@ public class BidderBidModifier {
                 .with(bidderBid, bidder);
         customTrackers.forEach(customTracker -> {
             if (!customTracker.getEnabled()) {
-                logger.info(String.format(
-                        "Skipping Custom Tracker [id=%s] as it is disabled in configuration", customTracker.getId()
-                ));
+                logger.info(
+                        LogMessage.from(moduleContext.getBidRequest())
+                                .withMessage(String.format(
+                                        "Skipping Custom Tracker [id=%s] as it is disabled in configuration",
+                                        customTracker.getId()
+                                ))
+                );
                 return;
             } else if (!customTracker.getExcludedAccounts().isEmpty()
                     && StringUtils.isNotBlank(accountId)
                     && customTracker.getExcludedAccounts().contains(accountId)
             ) {
-                logger.info(String.format(
-                        "Skipping Custom Tracker [id=%s] as [account=%s] is excluded in configuration",
-                        customTracker.getId(), accountId
-                ));
+                logger.info(
+                        LogMessage.from(moduleContext.getBidRequest())
+                                .withMessage(String.format(
+                                        "Skipping Custom Tracker [id=%s] as [account=%s] is excluded in configuration",
+                                        customTracker.getId(), accountId
+                                ))
+                );
                 return;
             }
             final TrackerContext trackerContext = commonTrackerContext
@@ -86,16 +101,26 @@ public class BidderBidModifier {
                                     .inject(trackingUrl, admStack.pop(), bidder, bidderBid.getType())
                     );
                 } else {
-                    logger.warn(trackerContext, new Exception(
-                            "Could not generate tracking url for bidder: " + bidder + "!")
+                    LogUtils.log(
+                            LogMessage.from(moduleContext.getBidRequest())
+                                    .with(new Exception(
+                                            "Could not generate tracking url for bidder: " + bidder + "!"
+                                    ))
+                                    .withFrequency(100),
+                            logger::warn
                     );
                 }
             } catch (Exception ex) {
-                logger.warn(
-                        trackerContext, new Exception(String.format(
-                                "Could not inject impression tag for tracker = %s",
-                                customTracker.getId()
-                        ), ex)
+                LogUtils.log(
+                        LogMessage.from(moduleContext.getBidRequest())
+                                .with(new Exception(
+                                        String.format(
+                                                "Could not inject impression tag for tracker = %s",
+                                                customTracker.getId()
+                                        ), ex
+                                ))
+                                .withFrequency(100),
+                        logger::warn
                 );
             }
         });

@@ -1,8 +1,10 @@
 package com.improvedigital.prebid.server.settings;
 
+import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.improvedigital.prebid.server.exception.SettingsLoaderException;
 import com.improvedigital.prebid.server.settings.model.CustomTracker;
+import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -26,7 +28,6 @@ import java.util.function.BiFunction;
 
 public class SettingsLoader {
 
-    private static final long DEFAULT_SETTINGS_LOADING_TIMEOUT = 500L;
     private static final Logger logger = LoggerFactory.getLogger(SettingsLoader.class);
 
     private final ApplicationSettings applicationSettings;
@@ -35,19 +36,21 @@ public class SettingsLoader {
     private final Metrics metrics;
     private final JacksonMapper mapper;
     private final long defaultLoadingTimeoutMs;
+    private final RequestUtils requestUtils;
 
     public SettingsLoader(
             ApplicationSettings applicationSettings,
             CustomSettings customSettings,
+            RequestUtils requestUtils,
             Metrics metrics,
-            JacksonMapper mapper,
             TimeoutFactory timeoutFactory,
             long defaultLoadingTimeoutMs
     ) {
         this.applicationSettings = applicationSettings;
         this.customSettings = customSettings;
         this.metrics = metrics;
-        this.mapper = mapper;
+        this.requestUtils = requestUtils;
+        this.mapper = requestUtils.getJsonUtils().getMapper();
         this.timeoutFactory = timeoutFactory;
         this.defaultLoadingTimeoutMs = defaultLoadingTimeoutMs;
     }
@@ -90,6 +93,11 @@ public class SettingsLoader {
     public Future<Account> getAccountFuture(String accountId, Timeout timeout) {
         timeout = createTimeoutIfNull(timeout);
         return getSettingFuture(accountId, "account", applicationSettings::getAccountById, timeout);
+    }
+
+    public Future<Account> getAccountFuture(BidRequest bidRequest, Timeout timeout) {
+        final String accountId = requestUtils.getAccountId(bidRequest);
+        return getAccountFuture(accountId, timeout);
     }
 
     public Future<Collection<CustomTracker>> getCustomTrackersFuture(Timeout timeout) {

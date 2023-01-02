@@ -8,7 +8,9 @@ import com.improvedigital.prebid.server.UnitTestBase;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.customvast.model.VastResponseType;
 import com.improvedigital.prebid.server.customvast.CustomVastUtils;
+import com.improvedigital.prebid.server.settings.SettingsLoader;
 import com.improvedigital.prebid.server.utils.RequestUtils;
+import io.vertx.core.Future;
 import nl.altindag.log.LogCaptor;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,6 +29,7 @@ import org.prebid.server.model.Endpoint;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestTargeting;
+import org.prebid.server.settings.model.Account;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -36,6 +39,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 public class ProcessedAuctionRequestHookTest extends UnitTestBase {
@@ -48,6 +52,9 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
     Metrics metrics;
     @Mock
     CountryCodeMapper countryCodeMapper;
+
+    @Mock
+    SettingsLoader settingsLoader;
 
     ProcessedAuctionRequestHook hook;
 
@@ -66,7 +73,10 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
     @Before
     public void setUp() {
         MockitoAnnotations.openMocks(this);
+        when(settingsLoader.getAccountFuture(any(BidRequest.class), any(Timeout.class)))
+                .thenReturn(Future.succeededFuture(Account.empty("1")));
         hook = new ProcessedAuctionRequestHook(
+                settingsLoader,
                 requestUtils,
                 new CustomVastUtils(
                         requestUtils, merger, currencyConversionService, macroProcessor,
@@ -83,7 +93,9 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
         executeHookAndValidateRejectedInvocationResult(
                 hook,
                 AuctionRequestPayloadImpl.of(bidRequest),
-                AuctionInvocationContextImpl.of(null, false, null, null),
+                AuctionInvocationContextImpl.of(
+                        InvocationContextImpl.of(timeout, Endpoint.openrtb2_auction), false, null, null
+                ),
                 (initialPayload, invocationResult) -> {
                     final String message = "improvedigital placementId is not defined in any of the imp(s)";
                     assertThat(invocationResult)

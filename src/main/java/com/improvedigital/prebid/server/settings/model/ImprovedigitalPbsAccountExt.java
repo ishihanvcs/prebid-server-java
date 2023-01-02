@@ -16,6 +16,9 @@ public class ImprovedigitalPbsAccountExt {
     @JsonProperty("bidPriceAdjustmentIncImprove")
     Boolean bidPriceAdjustmentIncImprove;
 
+    @JsonProperty("requireImprovePlacement")
+    Boolean requireImprovePlacement;
+
     @JsonIgnore
     public BigDecimal getBidPriceAdjustmentRounded() {
         if (bidPriceAdjustment == null) {

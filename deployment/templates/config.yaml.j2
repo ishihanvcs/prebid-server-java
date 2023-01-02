@@ -26,7 +26,7 @@ adapters:
     usersync:
       redirect:
 {% raw %}
-        url: https://b1h.zemanta.com/usersync/prebid?gdpr={{gdpr}}&gdpr_consent={{gdpr_consent}}&us_privacy={{us_privacy}}&cb=
+        url: https://b1h.zemanta.com/usersync/prebid?gdpr={{gdpr}}&gdpr_consent={{gdpr_consent}}&us_privacy={{us_privacy}}&cb={{redirect_url}}
 {% endraw %}
   pubmatic:
     enabled: true
@@ -129,6 +129,8 @@ cache:
   query: uuid=
   banner-ttl-seconds: 300
   video-ttl-seconds: 900
+  connect-timeout-ms: 100
+  wait-for-response: false
 default-request:
   file:
     path : stored-data/requests/default.json

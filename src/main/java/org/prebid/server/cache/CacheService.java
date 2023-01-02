@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.response.Bid;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.logging.Logger;
@@ -49,6 +50,7 @@ import org.prebid.server.vertx.http.model.HttpClientResponse;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -80,6 +82,8 @@ public class CacheService {
     private final URL endpointUrl;
     private final String cachedAssetUrlTemplate;
     private final long expectedCacheTimeMs;
+    private final long httpClientConnectTimeoutMs;
+    private final boolean waitForResponse;
     private final VastModifier vastModifier;
     private final EventsService eventsService;
     private final Metrics metrics;
@@ -92,6 +96,8 @@ public class CacheService {
                         URL endpointUrl,
                         String cachedAssetUrlTemplate,
                         long expectedCacheTimeMs,
+                        long httpClientConnectTimeoutMs,
+                        boolean waitForResponse,
                         VastModifier vastModifier,
                         EventsService eventsService,
                         Metrics metrics,
@@ -104,6 +110,8 @@ public class CacheService {
         this.endpointUrl = Objects.requireNonNull(endpointUrl);
         this.cachedAssetUrlTemplate = Objects.requireNonNull(cachedAssetUrlTemplate);
         this.expectedCacheTimeMs = expectedCacheTimeMs;
+        this.httpClientConnectTimeoutMs = httpClientConnectTimeoutMs;
+        this.waitForResponse = waitForResponse;
         this.vastModifier = Objects.requireNonNull(vastModifier);
         this.eventsService = Objects.requireNonNull(eventsService);
         this.metrics = Objects.requireNonNull(metrics);
@@ -115,7 +123,7 @@ public class CacheService {
     public String getEndpointHost() {
         final String host = endpointUrl.getHost();
         final int port = endpointUrl.getPort();
-        return port != -1 ? String.format("%s:%d", host, port) : host;
+        return port != -1 ? "%s:%d".formatted(host, port) : host;
     }
 
     public String getEndpointPath() {
@@ -149,7 +157,7 @@ public class CacheService {
                 .type(CachedDebugLog.CACHE_TYPE)
                 .value(new TextNode(videoCacheDebugLog.buildCacheBody()))
                 .expiry(videoCacheTtl != null ? videoCacheTtl : videoCacheDebugLog.getTtl())
-                .key(String.format("log_%s", hbCacheId))
+                .key("log_" + hbCacheId)
                 .build(), creativeSizeFromTextNode(value));
     }
 
@@ -170,9 +178,12 @@ public class CacheService {
             return Future.failedFuture(new TimeoutException("Timeout has been exceeded"));
         }
 
+        final String url = endpointUrl.toString();
+        final String body = mapper.encodeToString(bidCacheRequest);
+        final List<PutObject> putObjects = bidCacheRequest.getPuts();
+
         final long startTime = clock.millis();
-        return httpClient.post(endpointUrl.toString(), CACHE_HEADERS, mapper.encodeToString(bidCacheRequest),
-                        remainingTimeout)
+        return getHttpClientResponseFuture(putObjects, url, body, startTime, remainingTimeout)
                 .map(response -> toBidCacheResponse(
                         response.getStatusCode(), response.getBody(), bidCount, accountId, startTime))
                 .recover(exception -> failResponse(exception, accountId, startTime));
@@ -227,14 +238,16 @@ public class CacheService {
                         .bidid(null)
                         .bidder(null)
                         .timestamp(null)
-                        .value(vastModifier.modifyVastXml(isEventsEnabled,
+                        .key(StringUtils.isBlank(putObject.getKey()) && !waitForResponse
+                                ? idGenerator.generateId() : putObject.getKey()
+                        ).value(vastModifier.modifyVastXml(isEventsEnabled,
                                 allowedBidders,
                                 putObject,
                                 accountId,
                                 integration))
                         .build())
                 .map(payload -> CachedCreative.of(payload, creativeSizeFromTextNode(payload.getValue())))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public Future<CacheServiceResult> cacheBidsOpenrtb(List<BidInfo> bidsToCache,
@@ -287,7 +300,7 @@ public class CacheService {
 
         return bidInfos.stream()
                 .map(bidInfo -> toCacheBid(bidInfo, cacheBidsTtl, accountCacheTtl, false))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private List<CacheBid> getVideoCacheBids(List<BidInfo> bidInfos,
@@ -297,7 +310,7 @@ public class CacheService {
         return bidInfos.stream()
                 .filter(bidInfo -> Objects.equals(bidInfo.getBidType(), BidType.video))
                 .map(bidInfo -> toCacheBid(bidInfo, cacheBidsTtl, accountCacheTtl, true))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -346,7 +359,7 @@ public class CacheService {
                         bids.stream().map(cacheBid ->
                                 createJsonPutObjectOpenrtb(cacheBid, accountId, eventsContext)),
                         videoBids.stream().map(videoBid -> createXmlPutObjectOpenrtb(videoBid, requestId, hbCacheId)))
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(ArrayList::new));
 
         if (cachedCreatives.isEmpty()) {
             return Future.succeededFuture(CacheServiceResult.empty());
@@ -373,9 +386,10 @@ public class CacheService {
         final String url = endpointUrl.toString();
         final String body = mapper.encodeToString(bidCacheRequest);
         final CacheHttpRequest httpRequest = CacheHttpRequest.of(url, body);
+        final List<PutObject> putObjects = bidCacheRequest.getPuts();
 
         final long startTime = clock.millis();
-        return httpClient.post(url, CACHE_HEADERS, body, remainingTimeout)
+        return getHttpClientResponseFuture(putObjects, url, body, startTime, remainingTimeout)
                 .map(response -> processResponseOpenrtb(response,
                         httpRequest,
                         cachedCreatives.size(),
@@ -385,6 +399,36 @@ public class CacheService {
                         accountId,
                         startTime))
                 .otherwise(exception -> failResponseOpenrtb(exception, accountId, httpRequest, startTime));
+    }
+
+    private Future<HttpClientResponse> getHttpClientResponseFuture(
+            List<PutObject> putObjects, String url, String body,
+            long startTime, long remainingTimeout
+    ) {
+        final long effectiveTimeout = waitForResponse ? remainingTimeout : httpClientConnectTimeoutMs;
+        Future<HttpClientResponse> future = httpClient.post(url, CACHE_HEADERS, body, effectiveTimeout);
+        if (!waitForResponse) {
+            future.onComplete(asyncResult -> {
+                final long endTime = clock.millis();
+                logger.debug("time taken in cache service call: %d ms".formatted(endTime - startTime));
+                if (asyncResult.failed()) {
+                    logger.error("cache service call failed", asyncResult.cause());
+                }
+            });
+            final BidCacheResponse bidCacheResponse = BidCacheResponse.of(
+                    putObjects.stream().map(
+                            putObject -> CacheObject.of(putObject.getKey())
+                    ).toList()
+            );
+            future = Future.succeededFuture(
+                    HttpClientResponse.of(
+                            HttpResponseStatus.OK.code(),
+                            MultiMap.caseInsensitiveMultiMap(),
+                            mapper.encodeToString(bidCacheResponse)
+                    )
+            );
+        }
+        return future;
     }
 
     /**
@@ -480,12 +524,16 @@ public class CacheService {
             bidObjectNode.put(BID_WURL_ATTRIBUTE, eventUrl);
         }
 
-        final PutObject payload = PutObject.builder()
+        PutObject payload = PutObject.builder()
                 .aid(eventsContext.getAuctionId())
                 .type("json")
                 .value(bidObjectNode)
                 .ttlseconds(cacheBid.getTtl())
                 .build();
+
+        if (!waitForResponse) {
+            payload = payload.toBuilder().key(idGenerator.generateId()).build();
+        }
 
         return CachedCreative.of(payload, creativeSizeFromAdm(bid.getAdm()));
     }
@@ -498,7 +546,10 @@ public class CacheService {
         final Bid bid = bidInfo.getBid();
         final String vastXml = bid.getAdm();
 
-        final String customCacheKey = resolveCustomCacheKey(hbCacheId, bidInfo.getCategory());
+        final String customCacheKey = ObjectUtils.firstNonNull(
+                resolveCustomCacheKey(hbCacheId, bidInfo.getCategory()),
+                waitForResponse ? null : idGenerator.generateId()
+        );
 
         final PutObject payload = PutObject.builder()
                 .aid(requestId)
@@ -513,7 +564,7 @@ public class CacheService {
 
     private static String resolveCustomCacheKey(String hbCacheId, String category) {
         return StringUtils.isNoneEmpty(category, hbCacheId)
-                ? String.format("%s_%s", category, hbCacheId)
+                ? "%s_%s".formatted(category, hbCacheId)
                 : null;
     }
 
@@ -551,14 +602,14 @@ public class CacheService {
                                                 long startTime) {
 
         if (statusCode != 200) {
-            throw new PreBidException(String.format("HTTP status code %d", statusCode));
+            throw new PreBidException("HTTP status code " + statusCode);
         }
 
         final BidCacheResponse bidCacheResponse;
         try {
             bidCacheResponse = mapper.decodeValue(responseBody, BidCacheResponse.class);
         } catch (DecodeException e) {
-            throw new PreBidException(String.format("Cannot parse response: %s", responseBody), e);
+            throw new PreBidException("Cannot parse response: " + responseBody, e);
         }
 
         final List<CacheObject> responses = bidCacheResponse.getResponses();
@@ -578,7 +629,7 @@ public class CacheService {
                 .filter(Objects::nonNull)
                 .map(responseItemCreator)
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -597,7 +648,7 @@ public class CacheService {
             final List<Bid> videoBids = cacheVideoBids.stream()
                     .map(CacheBid::getBidInfo)
                     .map(BidInfo::getBid)
-                    .collect(Collectors.toList());
+                    .toList();
 
             final int bidsSize = cacheBids.size();
             for (int i = 0; i < bidsSize; i++) {
@@ -702,7 +753,7 @@ public class CacheService {
     private BidCacheRequest toBidCacheRequest(List<CachedCreative> cachedCreatives) {
         return BidCacheRequest.of(cachedCreatives.stream()
                 .map(CachedCreative::getPayload)
-                .collect(Collectors.toList()));
+                .toList());
     }
 
     @Value(staticConstructor = "of")

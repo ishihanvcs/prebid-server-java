@@ -9,8 +9,6 @@ status-response: "ok"
 adapters:
   adf:
     enabled: true
-  adpone:
-    enabled: true
   amx:
     enabled: true
   appnexus:
@@ -32,7 +30,8 @@ adapters:
     enabled: true
     endpoint: https://b1h.zemanta.com/api/bidder/prebid/bid
     usersync:
-      url: https://b1h.zemanta.com/usersync/prebid?gdpr={{gdpr}}&gdpr_consent={{gdpr_consent}}&us_privacy={{us_privacy}}&cb=
+      redirect:
+        url: https://b1h.zemanta.com/usersync/prebid?gdpr={{gdpr}}&gdpr_consent={{gdpr_consent}}&us_privacy={{us_privacy}}&cb={{redirect_url}}
   pubmatic:
     enabled: true
   rubicon:
@@ -86,6 +85,9 @@ auction:
   cache:
     expected-request-time-ms: 50
     only-winning-bids: false
+cookie-sync:
+  coop-sync:
+    default: false
 currency-converter:
   external-rates:
     enabled: true
@@ -101,6 +103,8 @@ cache:
   query: uuid=
   banner-ttl-seconds: 300
   video-ttl-seconds: 300
+  connect-timeout-ms: 100
+  wait-for-response: false
 default-request:
   file:
     path : improvedigital/stored-data/requests/default.json

@@ -167,6 +167,9 @@
             },
             "bidPriceAdjustmentIncImprove": {
               "type": "boolean"
+            },
+            "requireImprovePlacement": {
+              "type": "boolean"
             }
           }
         }

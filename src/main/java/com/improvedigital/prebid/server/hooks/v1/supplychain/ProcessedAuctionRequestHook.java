@@ -1,5 +1,8 @@
 package com.improvedigital.prebid.server.hooks.v1.supplychain;
 
+import com.iab.openrtb.request.Source;
+import com.iab.openrtb.request.SupplyChain;
+import com.iab.openrtb.request.SupplyChainNode;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.utils.JsonUtils;
@@ -12,9 +15,7 @@ import org.prebid.server.hooks.execution.v1.auction.AuctionRequestPayloadImpl;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.auction.AuctionInvocationContext;
 import org.prebid.server.hooks.v1.auction.AuctionRequestPayload;
-import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidSchainSchainNode;
 import org.prebid.server.proto.openrtb.ext.request.ExtSource;
-import org.prebid.server.proto.openrtb.ext.request.ExtSourceSchain;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,8 +24,8 @@ import java.util.stream.Stream;
 
 public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.auction.ProcessedAuctionRequestHook {
 
-    public static final ExtSourceSchain DEFAULT_SCHAIN = ExtSourceSchain.of(
-            "1.0", 1, new ArrayList<>(), null
+    private static final SupplyChain SCHAIN_EMPTY = SupplyChain.of(
+            1, new ArrayList<>(), "1.0", null
     );
     public static final String DEFAULT_SCHAIN_DOMAIN = "headerlift.com";
 
@@ -49,9 +50,8 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
                 auctionRequestPayload.bidRequest().getImp().get(0)
         );
 
-        final ExtSourceSchain newSchain = makeNewSupplyChain(auctionRequestPayload, improvedigitalPbsImpExt);
-
-        if (newSchain == null) {
+        final SupplyChain newSchain = makeNewSupplyChain(auctionRequestPayload, improvedigitalPbsImpExt);
+        if (newSchain == null || CollectionUtils.isEmpty(newSchain.getNodes())) {
             return Future.succeededFuture(InvocationResultImpl.succeeded(
                     payload -> auctionRequestPayload, invocationContext.moduleContext()
             ));
@@ -60,7 +60,8 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         return Future.succeededFuture(InvocationResultImpl.succeeded(
                 payload -> AuctionRequestPayloadImpl.of(auctionRequestPayload.bidRequest().toBuilder()
                         .source(auctionRequestPayload.bidRequest().getSource().toBuilder()
-                                .ext(ExtSource.of(newSchain))
+                                .schain(newSchain) /* RTB 2.6 */
+                                .ext(ExtSource.of(newSchain)) /* RTB 2.5 */
                                 .build()
                         )
                         .ext(auctionRequestPayload.bidRequest().getExt())
@@ -69,7 +70,7 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         ));
     }
 
-    private ExtSourceSchain makeNewSupplyChain(
+    private SupplyChain makeNewSupplyChain(
             AuctionRequestPayload auctionRequestPayload, ImprovedigitalPbsImpExt improvedigitalPbsImpExt) {
 
         List<String> schainNodesToAdd = improvedigitalPbsImpExt.getSchainNodes() == null
@@ -93,48 +94,52 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         );
     }
 
-    private ExtSourceSchain addSupplyChainNodes(
+    private SupplyChain addSupplyChainNodes(
             AuctionRequestPayload auctionRequestPayload, String sid, List<String> schainNodesToAdd) {
-        final ExtSourceSchain existingSchain = getExtSourceSchain(auctionRequestPayload);
-        return ExtSourceSchain.of(
-                existingSchain.getVer(),
+        final SupplyChain existingSchain = getExtSourceSchain(auctionRequestPayload);
+        return SupplyChain.of(
                 existingSchain.getComplete(),
                 Stream.concat(
                         existingSchain.getNodes().stream(),
                         schainNodesToAdd.stream()
                                 .filter(domainName -> !containsSchainNode(existingSchain, domainName))
-                                .map(domainName -> ExtRequestPrebidSchainSchainNode.of(
+                                .map(domainName -> SupplyChainNode.of(
                                         domainName,
                                         sid,
-                                        1,
                                         auctionRequestPayload.bidRequest().getId(),
                                         null,
                                         null,
+                                        1,
                                         null
                                 ))
                 ).collect(Collectors.toList()),
+                existingSchain.getVer(),
                 existingSchain.getExt()
         );
     }
 
-    private ExtSourceSchain getExtSourceSchain(AuctionRequestPayload auctionRequestPayload) {
-        if (auctionRequestPayload.bidRequest().getSource() == null) {
-            return DEFAULT_SCHAIN;
+    private SupplyChain getExtSourceSchain(AuctionRequestPayload auctionRequestPayload) {
+        Source source = auctionRequestPayload.bidRequest().getSource();
+        if (source == null) {
+            return SCHAIN_EMPTY;
         }
 
-        if (auctionRequestPayload.bidRequest().getSource().getExt() == null) {
-            return DEFAULT_SCHAIN;
+        if (source.getSchain() != null) {
+            return source.getSchain();
         }
 
-        ExtSourceSchain existingSchain = auctionRequestPayload.bidRequest().getSource().getExt().getSchain();
-        if (existingSchain == null) {
-            return DEFAULT_SCHAIN;
+        if (source.getExt() == null) {
+            return SCHAIN_EMPTY;
         }
 
-        return existingSchain;
+        if (source.getExt().getSchain() != null) {
+            return source.getExt().getSchain();
+        }
+
+        return SCHAIN_EMPTY;
     }
 
-    private boolean containsSchainNode(ExtSourceSchain schain, String nodeAsiToCheck) {
+    private boolean containsSchainNode(SupplyChain schain, String nodeAsiToCheck) {
         return schain.getNodes().stream()
                 .anyMatch(existingNode -> existingNode.getAsi().equalsIgnoreCase(nodeAsiToCheck));
     }

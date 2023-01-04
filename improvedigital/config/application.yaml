@@ -104,7 +104,7 @@ cache:
   query: uuid=
   banner-ttl-seconds: 300
   video-ttl-seconds: 300
-  connect-timeout-ms: 100
+  connect-timeout-ms: 1000
   wait-for-response: false
 default-request:
   file:

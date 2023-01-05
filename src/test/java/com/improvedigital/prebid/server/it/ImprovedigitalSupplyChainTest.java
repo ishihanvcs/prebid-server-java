@@ -83,7 +83,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                 "hl-2022072201",
                                 "request_id_" + uniqueId,
                                 null,
-                                "headerlift.com",
+                                null,
                                 1,
                                 null
                         )
@@ -130,7 +130,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                 "hl-2022072202",
                                 "request_id_" + uniqueId,
                                 null,
-                                "headerlift.com",
+                                null,
                                 1,
                                 null
                         )
@@ -247,7 +247,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                 "hl-2022072205",
                                 "request_id_" + uniqueId,
                                 null,
-                                "headerlift.com",
+                                null,
                                 1,
                                 null
                         )
@@ -280,7 +280,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                 "firstsite-1",
                                 "request_id_" + uniqueId,
                                 null,
-                                "headerlift.com",
+                                null,
                                 1,
                                 null
                         ),
@@ -300,7 +300,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                 "firstsite-1",
                                 "request_id_" + uniqueId,
                                 null,
-                                "headerlift.com",
+                                null,
                                 1,
                                 null
                         ),
@@ -350,7 +350,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                 "hl-2022092701",
                                 "request_id_" + uniqueId,
                                 null,
-                                "headerlift.com",
+                                null,
                                 1,
                                 null
                         )
@@ -553,7 +553,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                 "hl-2022111101-acc", /* This id is what we have set in account.ext */
                                 "request_id_" + uniqueId,
                                 null,
-                                "headerlift.com",
+                                null,
                                 1,
                                 null
                         )
@@ -588,7 +588,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                 "hl-2022072205", /* This id is what we have overridden in imp ext */
                                 "request_id_" + uniqueId,
                                 null,
-                                "headerlift.com",
+                                null,
                                 1,
                                 null
                         )
@@ -623,7 +623,7 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
                                 "hl-2022111102-acc",
                                 "request_id_" + uniqueId,
                                 null,
-                                "headerlift.com",
+                                null,
                                 1,
                                 null
                         )

@@ -168,7 +168,7 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
 
     private SupplyChainNode toSchainNode(String domain, String sid, String requestId) {
         return SupplyChainNode.of(
-                domain, sid, requestId, null, domain, SCHAIN_PARTY_PAID_DEFAULT ? 1 : 0, null
+                domain, sid, requestId, null, null, SCHAIN_PARTY_PAID_DEFAULT ? 1 : 0, null
         );
     }
 

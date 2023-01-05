@@ -1,24 +1,31 @@
 package com.improvedigital.prebid.server.hooks.v1.supplychain;
 
-import com.iab.openrtb.request.Source;
+import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.SupplyChain;
 import com.iab.openrtb.request.SupplyChainNode;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
-import com.improvedigital.prebid.server.utils.JsonUtils;
+import com.improvedigital.prebid.server.settings.model.ImprovedigitalPbsAccountExt;
+import com.improvedigital.prebid.server.utils.LogMessage;
+import com.improvedigital.prebid.server.utils.RequestUtils;
 import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import lombok.Builder;
+import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.prebid.server.hooks.execution.v1.auction.AuctionRequestPayloadImpl;
 import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.auction.AuctionInvocationContext;
 import org.prebid.server.hooks.v1.auction.AuctionRequestPayload;
-import org.prebid.server.proto.openrtb.ext.request.ExtSource;
+import org.prebid.server.settings.ApplicationSettings;
+import org.prebid.server.util.ObjectUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,14 +34,18 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
     private static final SupplyChain SCHAIN_EMPTY = SupplyChain.of(
             1, new ArrayList<>(), "1.0", null
     );
-    public static final String DEFAULT_SCHAIN_DOMAIN = "headerlift.com";
+    private static final String SCHAIN_DOMAIN_DEFAULT = "headerlift.com";
+    private static final boolean SCHAIN_PARTY_PAID_DEFAULT = true;
 
     private static final Logger logger = LoggerFactory.getLogger(ProcessedAuctionRequestHook.class);
 
-    private final JsonUtils jsonUtils;
+    private final RequestUtils requestUtils;
 
-    public ProcessedAuctionRequestHook(JsonUtils jsonUtils) {
-        this.jsonUtils = jsonUtils;
+    private final ApplicationSettings applicationSettings;
+
+    public ProcessedAuctionRequestHook(RequestUtils requestUtils, ApplicationSettings applicationSettings) {
+        this.requestUtils = requestUtils;
+        this.applicationSettings = applicationSettings;
     }
 
     @Override
@@ -46,102 +57,166 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
     public Future<InvocationResult<AuctionRequestPayload>> call(
             AuctionRequestPayload auctionRequestPayload, AuctionInvocationContext invocationContext) {
 
-        ImprovedigitalPbsImpExt improvedigitalPbsImpExt = jsonUtils.getImprovedigitalPbsImpExt(
-                auctionRequestPayload.bidRequest().getImp().get(0)
-        );
-
-        final SupplyChain newSchain = makeNewSupplyChain(auctionRequestPayload, improvedigitalPbsImpExt);
-        if (newSchain == null || CollectionUtils.isEmpty(newSchain.getNodes())) {
-            return Future.succeededFuture(InvocationResultImpl.succeeded(
-                    payload -> auctionRequestPayload, invocationContext.moduleContext()
+        String accountId = requestUtils.getAccountId(auctionRequestPayload.bidRequest());
+        if (StringUtils.isEmpty(accountId)) {
+            return Future.succeededFuture(getInvocationResult(
+                    auctionRequestPayload, invocationContext, null
             ));
         }
 
-        return Future.succeededFuture(InvocationResultImpl.succeeded(
-                payload -> AuctionRequestPayloadImpl.of(auctionRequestPayload.bidRequest().toBuilder()
-                        .source(auctionRequestPayload.bidRequest().getSource().toBuilder()
-                                .schain(newSchain) /* RTB 2.6 */
-                                .ext(ExtSource.of(newSchain)) /* RTB 2.5 */
-                                .build()
-                        )
-                        .ext(auctionRequestPayload.bidRequest().getExt())
-                        .build()
-                ), invocationContext.moduleContext()
+        return applicationSettings.getAccountById(accountId, invocationContext.timeout()).map(
+                account -> getInvocationResult(
+                        auctionRequestPayload, invocationContext, requestUtils.getJsonUtils().getAccountExt(account)
+                )
+        );
+    }
+
+    private InvocationResult<AuctionRequestPayload> getInvocationResult(
+            AuctionRequestPayload auctionRequestPayload,
+            AuctionInvocationContext invocationContext,
+            ImprovedigitalPbsAccountExt accountExt
+    ) {
+        final SupplyChain newSchain = mergeSupplyChain(auctionRequestPayload, SupplyChainConfig.from(
+                accountExt, getSupplyChainConfigFromImpExt(auctionRequestPayload.bidRequest())
         ));
-    }
-
-    private SupplyChain makeNewSupplyChain(
-            AuctionRequestPayload auctionRequestPayload, ImprovedigitalPbsImpExt improvedigitalPbsImpExt) {
-
-        List<String> schainNodesToAdd = improvedigitalPbsImpExt.getSchainNodes() == null
-                ? List.of(DEFAULT_SCHAIN_DOMAIN) : improvedigitalPbsImpExt.getSchainNodes();
-
-        if (CollectionUtils.isEmpty(schainNodesToAdd)) {
-            return null;
+        if (newSchain == null || CollectionUtils.isEmpty(newSchain.getNodes())) {
+            return InvocationResultImpl.succeeded(
+                    payload -> auctionRequestPayload, invocationContext.moduleContext()
+            );
         }
 
-        // As of now, we know "sid" for headerlift.com only. So, if we have headerlift.com in the schain
-        // and we do not have headerlift partner id, then we do not add any schain.
-        if (schainNodesToAdd.contains(DEFAULT_SCHAIN_DOMAIN)
-                && StringUtils.isEmpty(improvedigitalPbsImpExt.getHeaderliftPartnerId())) {
-            return null;
-        }
-
-        return addSupplyChainNodes(
-                auctionRequestPayload,
-                improvedigitalPbsImpExt.getHeaderliftPartnerId(),
-                List.of(DEFAULT_SCHAIN_DOMAIN)
+        return InvocationResultImpl.succeeded(
+                payload -> auctionRequestPayload, SupplyChainContext.from(newSchain)
         );
     }
 
-    private SupplyChain addSupplyChainNodes(
-            AuctionRequestPayload auctionRequestPayload, String sid, List<String> schainNodesToAdd) {
-        final SupplyChain existingSchain = getExtSourceSchain(auctionRequestPayload);
+    private ImprovedigitalPbsImpExt getSupplyChainConfigFromImpExt(BidRequest bidRequest) {
+        // If we have multiple schain nodes, then we want them to be exactly same.
+        // Otherwise, it means inconsistencies.
+        List<ImprovedigitalPbsImpExt> pbsImpExtsEligible = bidRequest.getImp().stream()
+                .map(imp -> requestUtils.getJsonUtils().getImprovedigitalPbsImpExt(imp))
+                .filter(Objects::nonNull)
+                // We cannot use any sid if ext.prebid.improvedigitalpbs.headerliftPartnerId=null.
+                .filter(pbsImpExt -> pbsImpExt.getHeaderliftPartnerId() != null)
+                .collect(Collectors.toList());
+        if (pbsImpExtsEligible.size() <= 0) {
+            return null; /* No imp has any eligible config for supply chain. */
+        }
+
+        // Make sure different imp doesn't have different settings because that would mean inconsistencies.
+        ImprovedigitalPbsImpExt pbsImpExtToUse = pbsImpExtsEligible.stream()
+                .reduce((result, e) -> result != null
+                        && Objects.equals(result.getHeaderliftPartnerId(), e.getHeaderliftPartnerId())
+                        && Objects.equals(result.getSchainNodes(), e.getSchainNodes()) ? result : null)
+                .filter(Objects::nonNull)
+                .orElse(null);
+
+        // A logging for us to know something is wrong in the settings.
+        if (pbsImpExtToUse == null) {
+            logger.error(LogMessage
+                    .from(bidRequest)
+                    .withMessage("Supply chain configuration has mismatching values in multiple imp")
+                    .withFrequency(1000)
+            );
+            return null;
+        }
+
+        return pbsImpExtToUse;
+    }
+
+    private SupplyChain mergeSupplyChain(AuctionRequestPayload auctionRequestPayload, SupplyChainConfig schainConfig) {
+        if (StringUtils.isEmpty(schainConfig.getHeaderliftPartnerId())) {
+            return null;
+        }
+
+        SupplyChain existingSchain = getExtSourceSchain(auctionRequestPayload.bidRequest());
+        final SupplyChain baseSchain = ObjectUtils.firstNonNull(existingSchain, SCHAIN_EMPTY);
         return SupplyChain.of(
-                existingSchain.getComplete(),
+                baseSchain.getComplete(),
                 Stream.concat(
-                        existingSchain.getNodes().stream(),
-                        schainNodesToAdd.stream()
-                                .filter(domainName -> !containsSchainNode(existingSchain, domainName))
-                                .map(domainName -> SupplyChainNode.of(
-                                        domainName,
-                                        sid,
-                                        auctionRequestPayload.bidRequest().getId(),
-                                        null,
-                                        null,
-                                        1,
-                                        null
-                                ))
-                ).collect(Collectors.toList()),
-                existingSchain.getVer(),
-                existingSchain.getExt()
+                                baseSchain.getNodes().stream(),
+                                toSchainNodes(auctionRequestPayload.bidRequest().getId(), schainConfig).stream()
+                                        .filter(schainNode -> !containsSchainNode(baseSchain, schainNode.getAsi()))
+                        )
+                        .collect(Collectors.toList()),
+                baseSchain.getVer(),
+                baseSchain.getExt()
         );
     }
 
-    private SupplyChain getExtSourceSchain(AuctionRequestPayload auctionRequestPayload) {
-        Source source = auctionRequestPayload.bidRequest().getSource();
-        if (source == null) {
-            return SCHAIN_EMPTY;
+    private List<SupplyChainNode> toSchainNodes(String requestId, SupplyChainConfig schainConfig) {
+        String sid = schainConfig.headerliftPartnerId;
+
+        // ext.prebid.improvedigitalpbs.schainNodes=null: means we add default schain.
+        if (schainConfig.getSchainNodes() == null) {
+            return Arrays.asList(toSchainNode(SCHAIN_DOMAIN_DEFAULT, sid, requestId));
         }
 
-        if (source.getSchain() != null) {
-            return source.getSchain();
+        // ext.prebid.improvedigitalpbs.schainNodes=[]: means nothing to add.
+        if (schainConfig.getSchainNodes().size() <= 0) {
+            return null;
         }
 
-        if (source.getExt() == null) {
-            return SCHAIN_EMPTY;
+        // Future work. As of now, we only work for default domain.
+        // Later, we re-visit what to do with multiple values in schain nodes.
+        if (schainConfig.getSchainNodes().contains(SCHAIN_DOMAIN_DEFAULT)) {
+            return Arrays.asList(toSchainNode(SCHAIN_DOMAIN_DEFAULT, sid, requestId));
         }
 
-        if (source.getExt().getSchain() != null) {
-            return source.getExt().getSchain();
+        return null;
+    }
+
+    private SupplyChainNode toSchainNode(String domain, String sid, String requestId) {
+        return SupplyChainNode.of(
+                domain, sid, requestId, null, null, SCHAIN_PARTY_PAID_DEFAULT ? 1 : 0, null
+        );
+    }
+
+    private SupplyChain getExtSourceSchain(BidRequest bidRequest) {
+        if (bidRequest.getSource() == null) {
+            return null;
         }
 
-        return SCHAIN_EMPTY;
+        if (bidRequest.getSource().getSchain() != null) {
+            return bidRequest.getSource().getSchain();
+        }
+
+        if (bidRequest.getSource().getExt() == null) {
+            return null;
+        }
+
+        SupplyChain existingSchain = bidRequest.getSource().getExt().getSchain();
+        if (existingSchain == null) {
+            return null;
+        }
+
+        return existingSchain;
     }
 
     private boolean containsSchainNode(SupplyChain schain, String nodeAsiToCheck) {
         return schain.getNodes().stream()
                 .anyMatch(existingNode -> existingNode.getAsi().equalsIgnoreCase(nodeAsiToCheck));
+    }
+
+    @Getter
+    @Builder(toBuilder = true)
+    private static class SupplyChainConfig {
+        List<String> schainNodes;
+
+        String headerliftPartnerId;
+
+        static SupplyChainConfig from(ImprovedigitalPbsAccountExt accExt, ImprovedigitalPbsImpExt pbsImpExt) {
+            return SupplyChainConfig.builder()
+                    .headerliftPartnerId(ObjectUtils.firstNonNull(
+                            ObjectUtil.getIfNotNull(pbsImpExt, ImprovedigitalPbsImpExt::getHeaderliftPartnerId),
+                            ObjectUtil.getIfNotNull(accExt, ImprovedigitalPbsAccountExt::getHeaderliftPartnerId)
+                    ))
+                    .schainNodes(ObjectUtils.firstNonNull(
+                            ObjectUtil.getIfNotNull(pbsImpExt, ImprovedigitalPbsImpExt::getSchainNodes),
+                            ObjectUtil.getIfNotNull(accExt, ImprovedigitalPbsAccountExt::getSchainNodes)
+                    ))
+                    .build();
+        }
     }
 }
 

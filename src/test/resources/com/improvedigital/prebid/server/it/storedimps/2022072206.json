@@ -2,7 +2,6 @@
   "ext": {
     "prebid": {
       "improvedigitalpbs": {
-        "headerliftPartnerId": "hl-2022072202"
       },
       "bidder": {
         "improvedigital": {

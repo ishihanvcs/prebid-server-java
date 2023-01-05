@@ -6,6 +6,7 @@ import lombok.Value;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 
 @Value(staticConstructor = "of")
 public class ImprovedigitalPbsAccountExt {
@@ -16,8 +17,14 @@ public class ImprovedigitalPbsAccountExt {
     @JsonProperty("bidPriceAdjustmentIncImprove")
     Boolean bidPriceAdjustmentIncImprove;
 
+    @JsonProperty("schainNodes")
+    List<String> schainNodes;
+
     @JsonProperty("requireImprovePlacement")
     Boolean requireImprovePlacement;
+
+    @JsonProperty("headerliftPartnerId")
+    String headerliftPartnerId;
 
     @JsonIgnore
     public BigDecimal getBidPriceAdjustmentRounded() {

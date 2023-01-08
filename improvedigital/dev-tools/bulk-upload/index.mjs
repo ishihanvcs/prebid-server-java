@@ -1,27 +1,20 @@
 import { getOptions, showHelp, getData } from "./utils.mjs";
 import ApiClient from './api.mjs';
-import getStdin from 'get-stdin';
 import _ from "lodash";
 
-const configTypeToDataKey = {
-    "imp": "imps",
-    "request": "requests",
-    "account": "accounts"
-}
+const dataKeys = ["imps", "requests", "accounts"];
 
 async function saveData(api, data) {
-    const configTypes = Object.keys(configTypeToDataKey);
     const stats = {};
-    for (let i = 0; i < configTypes.length; i++) {
-        const configType = configTypes[i];
-        const dataKey = configTypeToDataKey[configType];
+    for (let i = 0; i < dataKeys.length; i++) {
+        const dataKey = dataKeys[i];
         stats[dataKey] = (stats[dataKey] || {});
         if (data[dataKey] && _.isPlainObject(data[dataKey])) {
             const configIds = Object.keys(data[dataKey]);
             for (let j = 0; j < configIds.length; j++) {
                 const configId = configIds[j];
                 const config = data[dataKey][configId];
-                const retVal = await api.saveConfig(configType, configId, config);
+                const retVal = await api.saveConfig(dataKey, configId, config);
                 stats[dataKey][configId] = !!retVal;
             }
         }

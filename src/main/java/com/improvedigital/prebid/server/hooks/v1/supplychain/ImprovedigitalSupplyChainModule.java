@@ -1,9 +1,10 @@
 package com.improvedigital.prebid.server.hooks.v1.supplychain;
 
-import com.improvedigital.prebid.server.utils.JsonUtils;
+import com.improvedigital.prebid.server.utils.RequestUtils;
 import org.prebid.server.hooks.v1.Hook;
 import org.prebid.server.hooks.v1.InvocationContext;
 import org.prebid.server.hooks.v1.Module;
+import org.prebid.server.settings.ApplicationSettings;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,10 +16,13 @@ public class ImprovedigitalSupplyChainModule implements Module {
 
     public static final String CODE = "improvedigital-supplychain-module";
 
-    private final JsonUtils jsonUtils;
+    private final RequestUtils requestUtils;
 
-    public ImprovedigitalSupplyChainModule(JsonUtils jsonUtils) {
-        this.jsonUtils = jsonUtils;
+    private final ApplicationSettings applicationSettings;
+
+    public ImprovedigitalSupplyChainModule(RequestUtils requestUtils, ApplicationSettings applicationSettings) {
+        this.requestUtils = requestUtils;
+        this.applicationSettings = applicationSettings;
     }
 
     @Override
@@ -29,7 +33,8 @@ public class ImprovedigitalSupplyChainModule implements Module {
     @Override
     public Collection<? extends Hook<?, ? extends InvocationContext>> hooks() {
         return Arrays.asList(
-                new ProcessedAuctionRequestHook(jsonUtils)
+                new ProcessedAuctionRequestHook(requestUtils, applicationSettings),
+                new BidderRequestHook(requestUtils.getJsonUtils())
         );
     }
 }

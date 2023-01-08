@@ -648,6 +648,7 @@ public class ServiceConfiguration {
     @Bean
     ExchangeService exchangeService(
             @Value("${auction.cache.expected-request-time-ms}") long expectedCacheTimeMs,
+            @Value("${auction.abort-on-hook-error:#{false}}") Boolean abortOnHookError,
             BidderCatalog bidderCatalog,
             StoredResponseProcessor storedResponseProcessor,
             DealsProcessor dealsProcessor,
@@ -675,6 +676,7 @@ public class ServiceConfiguration {
 
         return new ExchangeService(
                 expectedCacheTimeMs,
+                abortOnHookError,
                 bidderCatalog,
                 storedResponseProcessor,
                 dealsProcessor,

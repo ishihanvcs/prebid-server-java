@@ -82,6 +82,7 @@ auction:
   max-timeout-ms: 5000
   timeout-adjustment-ms: 30
   stored-requests-timeout-ms: 200
+  abort-on-hook-error: true # custom configuration for HBT-258
   cache:
     expected-request-time-ms: 50
     only-winning-bids: false
@@ -103,7 +104,7 @@ cache:
   query: uuid=
   banner-ttl-seconds: 300
   video-ttl-seconds: 300
-  connect-timeout-ms: 100
+  connect-timeout-ms: 1000
   wait-for-response: false
 default-request:
   file:
@@ -225,19 +226,6 @@ hooks:
                 }
               ]
             },
-            "bidder-request": {
-              "groups": [
-                {
-                  "timeout": 5,
-                  "hook-sequence": [
-                    {
-                      "module-code": "improvedigital-bidadjustment-module",
-                      "hook-impl-code": "improvedigital-bidadjustment-hooks-bidder-request"
-                    }
-                  ]
-                }
-              ]
-            },
             "processed-auction-request": {
               "groups": [
                 {
@@ -268,6 +256,23 @@ hooks:
                     {
                       "module-code": "improvedigital-bidadjustment-module",
                       "hook-impl-code": "improvedigital-bidadjustment-hooks-processed-auction-request"
+                    }
+                  ]
+                }
+              ]
+            },
+            "bidder-request": {
+              "groups": [
+                {
+                  "timeout": 5,
+                  "hook-sequence": [
+                    {
+                      "module-code": "improvedigital-bidadjustment-module",
+                      "hook-impl-code": "improvedigital-bidadjustment-hooks-bidder-request"
+                    },
+                    {
+                      "module-code": "improvedigital-supplychain-module",
+                      "hook-impl-code": "improvedigital-supplychain-hooks-bidder-request"
                     }
                   ]
                 }

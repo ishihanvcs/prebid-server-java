@@ -53,6 +53,7 @@ import org.prebid.server.currency.CurrencyConversionService;
 import org.prebid.server.deals.DealsProcessor;
 import org.prebid.server.deals.events.ApplicationEventService;
 import org.prebid.server.deals.model.TxnLog;
+import org.prebid.server.exception.InvalidRequestException;
 import org.prebid.server.exception.PreBidException;
 import org.prebid.server.execution.Timeout;
 import org.prebid.server.floors.PriceFloorAdjuster;
@@ -180,8 +181,10 @@ public class ExchangeService {
     private final Clock clock;
     private final JacksonMapper mapper;
     private final CriteriaLogManager criteriaLogManager;
+    private final boolean abortOnHookError;
 
     public ExchangeService(long expectedCacheTime,
+                           boolean abortOnHookError,
                            BidderCatalog bidderCatalog,
                            StoredResponseProcessor storedResponseProcessor,
                            DealsProcessor dealsProcessor,
@@ -235,6 +238,7 @@ public class ExchangeService {
         this.clock = Objects.requireNonNull(clock);
         this.mapper = Objects.requireNonNull(mapper);
         this.criteriaLogManager = Objects.requireNonNull(criteriaLogManager);
+        this.abortOnHookError = abortOnHookError;
     }
 
     /**
@@ -1636,6 +1640,14 @@ public class ExchangeService {
     }
 
     private AuctionContext enrichWithHooksDebugInfo(AuctionContext context) {
+
+        if (this.abortOnHookError) {
+            final List<String> hookErrors = getHookExecutionErrors(context);
+            if (CollectionUtils.isNotEmpty(hookErrors)) {
+                throw new InvalidRequestException(hookErrors);
+            }
+        }
+
         final ExtModules extModules = toExtModules(context);
 
         if (extModules == null) {
@@ -1660,6 +1672,19 @@ public class ExchangeService {
 
         final BidResponse updatedBidResponse = bidResponse.toBuilder().ext(updatedExt).build();
         return context.with(updatedBidResponse);
+    }
+
+    private static List<String> getHookExecutionErrors(
+            AuctionContext context) {
+
+        return context.getHookExecutionContext().getStageOutcomes().values().stream()
+                        .flatMap(Collection::stream)
+                        .flatMap(stageOutcome -> stageOutcome.getGroups().stream())
+                        .flatMap(groupOutcome -> groupOutcome.getHooks().stream())
+                        .map(HookExecutionOutcome::getErrors)
+                        .filter(CollectionUtils::isNotEmpty)
+                        .flatMap(Collection::stream)
+                        .toList();
     }
 
     private static ExtModules toExtModules(AuctionContext context) {

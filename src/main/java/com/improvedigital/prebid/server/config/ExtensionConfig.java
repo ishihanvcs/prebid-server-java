@@ -201,8 +201,9 @@ public class ExtensionConfig {
     }
 
     @Bean
-    ImprovedigitalSupplyChainModule improvedigitalSupplyChainModule(JsonUtils jsonUtils) {
-        return new ImprovedigitalSupplyChainModule(jsonUtils);
+    ImprovedigitalSupplyChainModule improvedigitalSupplyChainModule(
+            RequestUtils requestUtils, ApplicationSettings applicationSettings) {
+        return new ImprovedigitalSupplyChainModule(requestUtils, applicationSettings);
     }
 
     @Bean

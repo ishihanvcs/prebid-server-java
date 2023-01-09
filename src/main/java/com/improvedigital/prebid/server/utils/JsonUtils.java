@@ -18,8 +18,8 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.model.Tuple2;
 import org.prebid.server.json.JacksonMapper;
-import org.prebid.server.settings.model.Account;
 import org.prebid.server.proto.openrtb.ext.response.BidType;
+import org.prebid.server.settings.model.Account;
 import org.prebid.server.util.ObjectUtil;
 
 import java.math.BigDecimal;
@@ -228,12 +228,12 @@ public class JsonUtils {
      * in mergingObject to be available in a copy of originalObject, that will be returned by
      * this method. To understand detail behaviour of this method, please refer to respective
      * test case in JsonUtilsTest class.
-     *
+     * <p>
      * Please note, this method does not mutate any of the originalObject or mergingObject
      * and always returns a new object with the merging result.
      *
      * @param originalObject {@link ObjectNode} the object where the merge will occur upon
-     * @param mergingObject {@link ObjectNode} the object that will be merged
+     * @param mergingObject  {@link ObjectNode} the object that will be merged
      * @return ObjectNode
      */
     public ObjectNode nonDestructiveMerge(ObjectNode originalObject, ObjectNode mergingObject) {
@@ -296,10 +296,10 @@ public class JsonUtils {
         return node.isMissingNode() || !node.isNumber()
                 ? defaultValue
                 : node.isBigDecimal()
-                    ? node.decimalValue()
-                    : node.isDouble()
-                        ? BigDecimal.valueOf(node.doubleValue())
-                        : new BigDecimal(node.asText());
+                ? node.decimalValue()
+                : node.isDouble()
+                ? BigDecimal.valueOf(node.doubleValue())
+                : new BigDecimal(node.asText());
     }
 
     /**

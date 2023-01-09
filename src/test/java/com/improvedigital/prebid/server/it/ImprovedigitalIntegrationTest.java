@@ -255,7 +255,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                         .build())
                 .source(Source.builder()
                         .tid("source_tid_" + uniqueId)
-                        .ext(!bidRequestData.hasSchainNodes() ? null : ExtSource.of(bidRequestData.schain))
+                        .ext(bidRequestData.schain == null ? null : ExtSource.of(bidRequestData.schain))
                         .build())
                 .test(bidRequestData.test)
                 .build();
@@ -278,31 +278,33 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
     ) {
         BidRequest bidRequest = BidRequest.builder()
                 .id("request_id_" + uniqueId)
-                .imp(List.of(Imp.builder()
-                        .id(bidRequestData.impData.id)
-                        .ext(bidRequestData.impData.impExt.get())
-                        .banner(bidRequestData.impData.bannerData == null ? null : Banner.builder()
-                                .w(bidRequestData.impData.bannerData.w)
-                                .h(bidRequestData.impData.bannerData.h)
-                                .mimes(bidRequestData.impData.bannerData.mimes)
+                .imp(bidRequestData.imps.stream()
+                        .map(anImp -> Imp.builder()
+                                .id(anImp.impData.id)
+                                .ext(anImp.impExt.get())
+                                .banner(anImp.impData.bannerData == null ? null : Banner.builder()
+                                        .w(anImp.impData.bannerData.w)
+                                        .h(anImp.impData.bannerData.h)
+                                        .mimes(anImp.impData.bannerData.mimes)
+                                        .build())
+                                .xNative(anImp.impData.nativeData == null ? null : Native.builder()
+                                        .request(toJsonString(mapper, anImp.impData.nativeData.request))
+                                        .ver(StringUtils.defaultString(anImp.impData.nativeData.ver, "1.2"))
+                                        .build())
+                                .video(anImp.impData.videoData == null ? null : Video.builder()
+                                        .protocols(anImp.impData.videoData.getVideoProtocols(2))
+                                        .w(anImp.impData.videoData.w)
+                                        .h(anImp.impData.videoData.h)
+                                        .mimes(anImp.impData.videoData.mimes)
+                                        .minduration(1)
+                                        .maxduration(60)
+                                        .linearity(1)
+                                        .placement(5)
+                                        .build())
+                                .bidfloor(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloor))
+                                .bidfloorcur(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloorCur))
                                 .build())
-                        .xNative(bidRequestData.impData.nativeData == null ? null : Native.builder()
-                                .request(toJsonString(mapper, bidRequestData.impData.nativeData.request))
-                                .ver(StringUtils.defaultString(bidRequestData.impData.nativeData.ver, "1.2"))
-                                .build())
-                        .video(bidRequestData.impData.videoData == null ? null : Video.builder()
-                                .protocols(bidRequestData.impData.videoData.getVideoProtocols(2))
-                                .w(bidRequestData.impData.videoData.w)
-                                .h(bidRequestData.impData.videoData.h)
-                                .mimes(bidRequestData.impData.videoData.mimes)
-                                .minduration(1)
-                                .maxduration(60)
-                                .linearity(1)
-                                .placement(5)
-                                .build())
-                        .bidfloor(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloor))
-                        .bidfloorcur(ObjectUtil.getIfNotNull(bidRequestData.floor, Floor::getBidFloorCur))
-                        .build()))
+                        .collect(Collectors.toList()))
                 .site(Site.builder()
                         .domain(IT_TEST_DOMAIN)
                         .page("http://" + IT_TEST_DOMAIN)
@@ -340,14 +342,14 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                         .cache(bidRequestData.extRequestPrebidCache)
                         .floors(PriceFloorRules.builder()
                                 .enabled(true)
-                                .fetchStatus(FetchStatus.error)
+                                .fetchStatus(bidRequestData.publisherId != null ? FetchStatus.none : FetchStatus.error)
                                 .location(PriceFloorLocation.noData)
                                 .skipped(false)
                                 .build())
                         .build()))
                 .source(Source.builder()
                         .tid("source_tid_" + uniqueId)
-                        .ext(!bidRequestData.hasSchainNodes() ? null : ExtSource.of(bidRequestData.schain))
+                        .ext(bidRequestData.schain == null ? null : ExtSource.of(bidRequestData.schain))
                         .build())
                 .test(bidRequestData.test)
                 .build();
@@ -365,12 +367,23 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
             String currency,
             BidResponseTestData... data
     ) {
+        return getSSPBidResponse(
+                bidderName, uniqueId, currency, Arrays.stream(data).collect(Collectors.toList())
+        );
+    }
+
+    protected String getSSPBidResponse(
+            String bidderName,
+            String uniqueId,
+            String currency,
+            List<BidResponseTestData> data
+    ) {
         final AtomicInteger bidIndex = new AtomicInteger(0);
         BidResponse bidResponse = BidResponse.builder()
                 .id("request_id_" + uniqueId) /* request id is tied to the bid request. See above. */
                 .cur(currency)
                 .seatbid(List.of(SeatBid.builder()
-                        .bid(data == null ? List.of() : Arrays.stream(data)
+                        .bid(data == null ? List.of() : data.stream()
                                 .filter(Objects::nonNull)
                                 .map(d -> toBid(bidIndex.getAndIncrement(), bidderName, d))
                                 .collect(Collectors.toList()))
@@ -518,11 +531,6 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
 
         Integer test;
 
-        @JsonIgnore
-        public boolean hasSchainNodes() {
-            return schain != null && CollectionUtils.isNotEmpty(schain.getNodes());
-        }
-
         String publisherId;
 
         Floor floor;
@@ -543,8 +551,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
     public static class SSPBidRequestTestData {
         String currency;
 
-        /* SSP request is always single-imp even though auction is multi-imp. */
-        SingleImpTestData impData;
+        List<SSPBidRequestImpTestData> imps;
 
         String publisherId;
 
@@ -563,18 +570,18 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
         ExtRequestPrebidCache extRequestPrebidCache;
 
         Integer test;
+    }
 
-        @JsonIgnore
-        public boolean hasSchainNodes() {
-            return schain != null && CollectionUtils.isNotEmpty(schain.getNodes());
-        }
+    @Builder(toBuilder = true)
+    public static class SSPBidRequestImpTestData {
+        SSPBidRequestImpExt impExt;
+
+        SingleImpTestData impData;
     }
 
     @Builder(toBuilder = true)
     public static class SingleImpTestData {
         String id; /* Optional. If not set, test case will generate one. */
-
-        SSPBidRequestImpExt impExt;
 
         BannerTestParam bannerData;
 

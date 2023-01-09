@@ -279,6 +279,8 @@ public class ExchangeServiceTest extends VertxTest {
 
     private DealsProcessor dealsProcessor;
 
+    private final boolean abortOnHookError = false;
+
     @SuppressWarnings("unchecked")
     @Before
     public void setUp() {
@@ -370,6 +372,7 @@ public class ExchangeServiceTest extends VertxTest {
 
         exchangeService = new ExchangeService(
                 0,
+                abortOnHookError,
                 bidderCatalog,
                 storedResponseProcessor,
                 dealsProcessor,
@@ -401,6 +404,7 @@ public class ExchangeServiceTest extends VertxTest {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> new ExchangeService(
                         -1,
+                        abortOnHookError,
                         bidderCatalog,
                         storedResponseProcessor,
                         dealsProcessor,
@@ -679,6 +683,7 @@ public class ExchangeServiceTest extends VertxTest {
         // given
         exchangeService = new ExchangeService(
                 100,
+                abortOnHookError,
                 bidderCatalog,
                 storedResponseProcessor,
                 dealsProcessor,
@@ -2706,6 +2711,7 @@ public class ExchangeServiceTest extends VertxTest {
         // given
         exchangeService = new ExchangeService(
                 100,
+                abortOnHookError,
                 bidderCatalog,
                 storedResponseProcessor,
                 dealsProcessor,
@@ -4404,6 +4410,7 @@ public class ExchangeServiceTest extends VertxTest {
 
         exchangeService = new ExchangeService(
                 100,
+                abortOnHookError,
                 bidderCatalog,
                 storedResponseProcessor,
                 dealsProcessor,

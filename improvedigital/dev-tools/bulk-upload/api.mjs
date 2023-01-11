@@ -3,24 +3,32 @@ import _ from "lodash";
 
 const configEndpoints = {
   imp: "pbsimpression",
-  // "account": "pbsaccount",
-  // "request": "pbsrequest"
+  account: "pbsaccount",
+  request: "pbsrequest"
 };
+
+const dataTypeToConfigType = {
+    "imps": "imp",
+    "requests": "request",
+    "accounts": "account"
+}
+
+const copyIdForConfigTypes = ["account"];
 
 const supportedOps = ["insert", "update"];
 
 const pastForms = {
-  insert: "inserted",
+  insert: "inserted/updated",
   update: "updated",
 };
 
 function assert(condition, errorMsg) {
   if (!condition) {
-    throw new Error(errorMsg);
+    throw new AssertionError(errorMsg);
   }
 }
 
-export class ApiError extends Error {
+class ApiError extends Error {
   #details
 
   constructor(details) {
@@ -34,6 +42,12 @@ export class ApiError extends Error {
   get details() {
     return this.#details;
   }
+}
+
+class AssertionError extends Error {
+    constructor(message) {
+        super(message);
+    }
 }
 
 export default class ApiClient {
@@ -109,13 +123,17 @@ export default class ApiClient {
     }
   }
 
-  async #callConfigApi(configType, operation, id, config) {
+  async #callConfigApi(dataType, operation, dataKey, config) {
     this.#ensureToken();
+    assert(dataTypeToConfigType[dataType], `Invalid dataType: ${dataType}`);
+    const configType = dataTypeToConfigType[dataType];
     assert(configEndpoints[configType], `Invalid configType: ${configType} `);
     assert(supportedOps.indexOf(operation) >= 0, `Unsupported operation: ${operation} `);
     assert(config, `config must not be empty`);
-    assert(id, `id must not be empty`);
+    assert(dataKey, `dataKey must not be empty`);
     config = _.cloneDeep(config);
+    assert(!config.id || config.id === dataKey,`${dataType} dataKey did not match config.id: ${dataKey} != ${config.id}`);
+
     const endpoint = `${configEndpoints[configType]}/${operation}`;
 
     let isActive = true;
@@ -123,37 +141,43 @@ export default class ApiClient {
       isActive = !!config.active;
       delete config.active;
     }
+
+    if (copyIdForConfigTypes.includes(configType) && !config.id) {
+      config.id = dataKey;
+    }
     const data = {
-      id,
+      id: dataKey,
       config: this.#stringify(config, false),
       isActive,
     };
-    console.log(`Calling ${operation} api for ${configType} with id: ${id}`);
+    console.log(`Calling ${operation} api for ${configType} with id: ${dataKey}`);
     const result = await this.#callApi(endpoint, data);
-    console.log(`Successfully ${pastForms[operation]} ${configType} with id: ${id}`);
+    console.log(`Successfully ${pastForms[operation]} ${configType} with id: ${dataKey}`);
     return result;
   }
 
-  async insertConfig(configType, id, config) {
-    return await this.#callConfigApi(configType, "insert", id, config);
+  async insertConfig(dataKey, id, config) {
+    return await this.#callConfigApi(dataKey, "insert", id, config);
   }
 
-  async updateConfig(configType, id, config) {
-    return await this.#callConfigApi(configType, "update", id, config);
-  }
+  // async updateConfig(configType, id, config) {
+  //   return await this.#callConfigApi(configType, "update", id, config);
+  // }
 
-  async saveConfig(configType, id, config) {
+  async saveConfig(dataKey, id, config) {
     const methodsToTry = [
-      this.insertConfig, this.updateConfig
+      this.insertConfig, /*this.updateConfig*/
     ];
 
     for (let index = 0; index < methodsToTry.length; index++) {
       try {
         const method = methodsToTry[index].bind(this);
-        return await method(configType, id, config);
+        return await method(dataKey, id, config);
       } catch (error) {
-        if (error instanceof ApiError) {
-          console.log(error.message, error.details);
+        if (error instanceof AssertionError) {
+          console.log(`AssertionError: ${error.message}`);
+        } else if (error instanceof ApiError) {
+          console.log(`ApiError: ${error.message}`, error.details);
         } else {
           throw error;
         }

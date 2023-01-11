@@ -10,30 +10,212 @@
 
 ```json
 {
-  "imps": {
-    "3246": {
-      "ext": {
-        "prebid": {
-          "improvedigitalpbs": {
-            "accountId": "1220"
-          },
-          "bidder": {
-            "improvedigital": {
-              "placementId": 3246
+    "imps" : {
+        "3246" : {
+            "ext" : {
+                "prebid" : {
+                    "improvedigitalpbs" : {
+                        "accountId" : "1220"
+                    },
+                    "bidder" : {
+                        "improvedigital" : {
+                            "placementId" : 3246
+                        },
+                        "appnexus" : {
+                            "placement_id" : 18785899
+                        },
+                        "outbrain" : {
+                            "publisher" : {
+                                "id" : "1234"
+                            }
+                        }
+                    }
+                }
             },
-            "appnexus": {
-              "placement_id": 18785899
-            },
-            "outbrain": {
-              "publisher": {
-                "id": "1234"
-              }
-            }
-          }
+            "active": false
         }
-      }
+    },
+    "requests" : {
+        "test-bulk-upload-video" : {
+            "cur" : [
+                "EUR"
+            ],
+            "imp" : [
+                {
+                    "id" : "video",
+                    "ext" : {
+                        "prebid" : {
+                            "is_rewarded_inventory" : 1,
+                            "bidder" : {
+                                "pubmatic" : {
+                                    "publisherId" : "156946",
+                                    "adSlot" : "a10.com_game_preroll"
+                                },
+                                "improvedigital" : {
+                                    "placementId" : 22137694
+                                },
+                                "appnexus" : {
+                                    "use_pmt_rule" : false,
+                                    "placement_id" : 18785899
+                                }
+                            }
+                        }
+                    },
+                    "video" : {
+                        "mimes" : [
+                            "video/mp4",
+                            "application/javascript",
+                            "video/webm",
+                            "video/ogg"
+                        ],
+                        "minduration" : 1,
+                        "maxduration" : 30,
+                        "linearity" : 1,
+                        "api" : [
+                            2
+                        ],
+                        "startdelay" : 0,
+                        "protocols" : [
+                            2,
+                            3,
+                            5,
+                            6
+                        ],
+                        "skip" : 1,
+                        "w" : 640,
+                        "h" : 480,
+                        "placement" : 1
+                    }
+                },
+                {
+                    "id" : "banner",
+                    "ext" : {
+                        "prebid" : {
+                            "bidder" : {
+                                "improvedigital" : {
+                                    "placementId" : 22135702
+                                }
+                            }
+                        }
+                    },
+                    "banner" : {
+                        "format" : [
+                            {
+                                "w" : 300,
+                                "h" : 250
+                            },
+                            {
+                                "w" : 300,
+                                "h" : 600
+                            },
+                            {
+                                "w" : 728,
+                                "h" : 90
+                            },
+                            {
+                                "w" : 970,
+                                "h" : 250
+                            }
+                        ]
+                    }
+                }
+            ],
+            "test" : 0,
+            "regs" : {
+                "ext" : {
+                    "gdpr" : 0
+                }
+            },
+            "ext" : {
+                "prebid" : {
+                    "cache" : {
+                        "vastxml" : {
+                            "returnCreative" : true
+                        }
+                    },
+                    "targeting" : {
+                        "includeformat" : true,
+                        "includebidderkeys" : false,
+                        "includewinners" : true,
+                        "pricegranularity" : {
+                            "precision" : 2,
+                            "ranges" : [
+                                {
+                                    "max" : 2,
+                                    "increment" : 0.01
+                                },
+                                {
+                                    "max" : 5,
+                                    "increment" : 0.05
+                                },
+                                {
+                                    "max" : 10,
+                                    "increment" : 0.1
+                                },
+                                {
+                                    "max" : 40,
+                                    "increment" : 0.5
+                                },
+                                {
+                                    "max" : 100,
+                                    "increment" : 1
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "accounts" : {
+        "test-bulk-upload-account" : {
+            "auction" : {
+                "price-granularity" : "low",
+                "banner-cache-ttl" : 100,
+                "video-cache-ttl" : 100,
+                "truncate-target-attr" : 40,
+                "default-integration" : "web",
+                "bid-validations" : {
+                    "banner-creative-max-size" : "enforce"
+                },
+                "events" : {
+                    "enabled" : true
+                }
+            },
+            "privacy" : {
+                "ccpa" : {
+                    "enabled" : true,
+                    "channel-enabled" : {
+                        "web" : true,
+                        "amp" : false,
+                        "app" : true,
+                        "video" : false
+                    }
+                },
+                "gdpr" : {
+                    "enabled" : true,
+                    "channel-enabled" : {
+                        "video" : true,
+                        "web" : true,
+                        "app" : true,
+                        "amp" : true
+                    }
+                }
+            },
+            "analytics" : {
+                "auction-events" : {
+                    "web" : true,
+                    "amp" : true,
+                    "app" : false
+                }
+            },
+            "cookie-sync" : {
+                "default-limit" : 5,
+                "max-limit" : 8,
+                "default-coop-sync" : true
+            }
+        }
     }
-  }
 }
 ```
 

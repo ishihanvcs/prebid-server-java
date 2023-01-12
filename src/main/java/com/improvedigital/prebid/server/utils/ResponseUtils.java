@@ -4,6 +4,12 @@ import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.response.Bid;
 import com.iab.openrtb.response.BidResponse;
 import com.iab.openrtb.response.SeatBid;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import org.prebid.server.exception.PreBidException;
+import org.prebid.server.json.JacksonMapper;
+import org.prebid.server.vertx.http.model.HttpClientResponse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +17,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class ResponseUtils {
+
+    private static final Logger logger = LoggerFactory.getLogger(ResponseUtils.class);
 
     private ResponseUtils() {
     }
@@ -52,5 +60,15 @@ public class ResponseUtils {
 
     public static List<Bid> getBidsForImp(BidResponse bidResponse, Imp imp) {
         return getBidsForImp(findSeatBidsForImp(bidResponse, imp), imp);
+    }
+
+    public static <T> T processHttpResponse(JacksonMapper mapper, HttpClientResponse response, Class<T> clazz) {
+        final int statusCode = response.getStatusCode();
+        if (statusCode != HttpResponseStatus.OK.code()) {
+            logger.warn("Won't try to parse body as http status != OK. Response: \n" + response);
+            throw new PreBidException(String.format("Error response received via http: "
+                    + "unexpected response status %d", statusCode));
+        }
+        return mapper.decodeValue(response.getBody(), clazz);
     }
 }

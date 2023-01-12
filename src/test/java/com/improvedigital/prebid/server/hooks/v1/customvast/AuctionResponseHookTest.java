@@ -8,6 +8,7 @@ import com.improvedigital.prebid.server.customvast.CustomVastUtils;
 import com.improvedigital.prebid.server.customvast.model.HooksModuleContext;
 import com.improvedigital.prebid.server.customvast.model.VastResponseType;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
+import com.improvedigital.prebid.server.utils.PbsEndpointInvoker;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -47,6 +48,8 @@ public class AuctionResponseHookTest extends UnitTestBase {
     static MacroProcessor macroProcessor = new MacroProcessor();
 
     @Mock
+    PbsEndpointInvoker pbsEndpointInvoker;
+    @Mock
     CurrencyConversionService currencyConversionService;
     @Mock
     GeoLocationService geoLocationService;
@@ -62,7 +65,7 @@ public class AuctionResponseHookTest extends UnitTestBase {
     public void setUp() {
         MockitoAnnotations.openMocks(this);
         customVastUtils = new CustomVastUtils(
-                requestUtils, merger, currencyConversionService, macroProcessor,
+                pbsEndpointInvoker, requestUtils, merger, currencyConversionService, macroProcessor,
                 geoLocationService, metrics, countryCodeMapper,
                 EXTERNAL_URL, GAM_NETWORK_CODE, PROTO_CACHE_HOST
         );

@@ -18,15 +18,18 @@ import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt
 import com.improvedigital.prebid.server.utils.FluentMap;
 import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
+import com.improvedigital.prebid.server.utils.PbsEndpointInvoker;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import com.improvedigital.prebid.server.utils.XmlUtils;
 import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.prebid.server.auction.PriceGranularity;
 import org.prebid.server.currency.CurrencyConversionService;
+import org.prebid.server.exception.PreBidException;
 import org.prebid.server.execution.Timeout;
 import org.prebid.server.geolocation.CountryCodeMapper;
 import org.prebid.server.geolocation.GeoLocationService;
@@ -38,6 +41,11 @@ import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCache;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestPrebidCacheVastxml;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequestTargeting;
 import org.prebid.server.proto.openrtb.ext.response.BidType;
+import org.prebid.server.proto.request.CookieSyncRequest;
+import org.prebid.server.proto.response.BidderUsersyncStatus;
+import org.prebid.server.proto.response.CookieSyncResponse;
+import org.prebid.server.proto.response.UsersyncInfo;
+import org.prebid.server.util.HttpUtil;
 import org.prebid.server.util.ObjectUtil;
 
 import java.io.IOException;
@@ -48,6 +56,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -70,6 +79,7 @@ public class CustomVastUtils {
     private final ExtRequest customVastExtRequest;
     private final ExtRequest prioritizedExtRequestForGVast;
 
+    private final PbsEndpointInvoker endpointInvoker;
     private final RequestUtils requestUtils;
     private final JsonUtils jsonUtils;
     private final JsonMerger merger;
@@ -83,6 +93,7 @@ public class CustomVastUtils {
     private final String cacheHost;
 
     public CustomVastUtils(
+            PbsEndpointInvoker endpointInvoker,
             RequestUtils requestUtils,
             JsonMerger merger,
             CurrencyConversionService currencyConversionService,
@@ -94,6 +105,7 @@ public class CustomVastUtils {
             String gamNetworkCode,
             String cacheHost
     ) {
+        this.endpointInvoker = Objects.requireNonNull(endpointInvoker);
         this.requestUtils = Objects.requireNonNull(requestUtils);
         this.jsonUtils = Objects.requireNonNull(requestUtils.getJsonUtils());
         this.merger = Objects.requireNonNull(merger);
@@ -477,6 +489,111 @@ public class CustomVastUtils {
         }
 
         return FloorBucket.resolveGamFloorPrice(bidFloor);
+    }
+
+    public Future<Map<String, String>> getUserSyncUrls(
+            List<String> bidders, String accountId, CreatorContext context, Timeout timeout
+    ) {
+        if (context.isApp()) {
+            return Future.succeededFuture(Map.of());
+        }
+
+        if (timeout.remaining() <= 0) {
+            return getDefaultUserSyncFuture(context);
+        }
+
+        CookieSyncRequest request = CookieSyncRequest.builder()
+                .account(accountId)
+                .coopSync(false)
+                .gdpr(StringUtils.isNotBlank(context.getGdpr()) ? Integer.valueOf(context.getGdpr()) : null)
+                .gdprConsent(context.getGdprConsent())
+                .bidders(bidders)
+                .filterSettings(CookieSyncRequest.FilterSettings.of(
+                        CookieSyncRequest.MethodFilter.of(
+                                jsonUtils.getObjectMapper().valueToTree("*"),
+                                CookieSyncRequest.FilterType.exclude),
+                        null
+                    )
+                ).build();
+
+        return endpointInvoker.invokeCookieSync(request, timeout)
+                .map(this::extractUserSyncUrls)
+                // we'll recover from any error with defaultReturn
+                // so that custom vast creation logic won't fail.
+                .recover(t -> getDefaultUserSyncFuture(context));
+    }
+
+    public Map<String, String> extractUserSyncUrls(CookieSyncResponse response) {
+        if (response == null) {
+            throw new PreBidException("cookie_sync response is null");
+        }
+
+        try {
+            // logger.info("cookie_sync response: \n" + response);
+            return response.getBidderStatus()
+                    .stream()
+                    .filter(syncStatus -> {
+                        String url = Optional.ofNullable(syncStatus)
+                                .map(BidderUsersyncStatus::getUsersync)
+                                .map(UsersyncInfo::getUrl)
+                                .orElse(null);
+                        return StringUtils.isNotBlank(url);
+                    })
+                    .collect(
+                            Collectors.toMap(
+                                    BidderUsersyncStatus::getBidder,
+                                    syncStatus -> syncStatus.getUsersync().getUrl()
+                            )
+                    );
+        } catch (Exception ex) {
+            logger.error("Error parsing sync urls from cookie_sync response", ex);
+            throw ex;
+        }
+    }
+
+    private Future<Map<String, String>> getDefaultUserSyncFuture(
+            CreatorContext context
+    ) {
+        final Map<String, String> userSyncs = new HashedMap<>();
+        userSyncs.put("adnxs",
+                "https://ib.adnxs.com/getuid?"
+                        + HttpUtil.encodeUrl(
+                        this.getRedirect(
+                                "adnxs", context.getGdpr(),
+                                context.getGdprConsent(), "$UID"
+                        )
+                )
+        );
+        userSyncs.put("improvedigital",
+                "https://ad.360yield.com/server_match?gdpr=" + context.getGdpr()
+                        + "&gdpr_consent=" + context.getGdprConsent() + "&us_privacy=&r="
+                        + HttpUtil.encodeUrl(
+                        this.getRedirect(
+                                "improvedigital", context.getGdpr(),
+                                context.getGdprConsent(), "{PUB_USER_ID}"
+                        )
+                )
+        );
+        userSyncs.put("pubmatic",
+                "https://image8.pubmatic.com/AdServer/ImgSync?p=159706&gdpr=" + context.getGdpr()
+                        + "&gdpr_consent=" + context.getGdprConsent()
+                        + "&us_privacy=&pu="
+                        + HttpUtil.encodeUrl(
+                        this.getRedirect("pubmatic", context.getGdpr(),
+                                context.getGdprConsent(), "#PMUID")
+                )
+        );
+        userSyncs.put("smartadserver",
+                "https://ssbsync-global.smartadserver.com/api/sync?callerId=5&gdpr=" + context.getGdpr()
+                        + "&gdpr_consent=" + context.getGdprConsent()
+                        + "&us_privacy=&redirectUri="
+                        + HttpUtil.encodeUrl(
+                        this.getRedirect("smartadserver", context.getGdpr(),
+                                context.getGdprConsent(),
+                                "[ssb_sync_pid]")
+                )
+        );
+        return Future.succeededFuture(userSyncs);
     }
 
     public String getRedirect(String bidder, String gdpr, String gdprConsent,

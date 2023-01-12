@@ -117,6 +117,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
     @Autowired
     protected BidderCatalog bidderCatalog;
 
+    protected final String defaultAccountId = "empty-account";
     protected static final String IT_TEST_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
             + "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.60 Safari/537.36";
     protected static final String IT_TEST_IP = "193.168.244.1";
@@ -206,6 +207,8 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
             AuctionBidRequestTestData bidRequestData,
             Function<BidRequest, BidRequest> bidReqModifier
     ) {
+        final String publisherId = StringUtils.defaultIfBlank(bidRequestData.publisherId, defaultAccountId);
+
         BidRequest bidRequest = BidRequest.builder()
                 .id("request_id_" + uniqueId)
                 .imp(bidRequestData.imps.stream()
@@ -243,7 +246,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                 .cur(List.of(bidRequestData.currency))
                 .site(Site.builder()
                         .publisher(Publisher.builder()
-                                .id(bidRequestData.publisherId)
+                                .id(publisherId)
                                 .build())
                         .cat(bidRequestData.siteIABCategories)
                         .build())
@@ -276,6 +279,8 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
             SSPBidRequestTestData bidRequestData,
             Function<BidRequest, BidRequest> bidReqModifier
     ) {
+        final String publisherId = StringUtils.defaultIfBlank(bidRequestData.publisherId, defaultAccountId);
+
         BidRequest bidRequest = BidRequest.builder()
                 .id("request_id_" + uniqueId)
                 .imp(bidRequestData.imps.stream()
@@ -309,7 +314,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                         .domain(IT_TEST_DOMAIN)
                         .page("http://" + IT_TEST_DOMAIN)
                         .publisher(Publisher.builder()
-                                .id(bidRequestData.publisherId)
+                                .id(publisherId)
                                 .domain(IT_TEST_MAIN_DOMAIN)
                                 .build())
                         .cat(bidRequestData.siteIABCategories)
@@ -342,7 +347,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                         .cache(bidRequestData.extRequestPrebidCache)
                         .floors(PriceFloorRules.builder()
                                 .enabled(true)
-                                .fetchStatus(bidRequestData.publisherId != null ? FetchStatus.none : FetchStatus.error)
+                                .fetchStatus(publisherId != null ? FetchStatus.none : FetchStatus.error)
                                 .location(PriceFloorLocation.noData)
                                 .skipped(false)
                                 .build())

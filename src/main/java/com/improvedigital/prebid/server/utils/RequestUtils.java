@@ -190,6 +190,10 @@ public class RequestUtils {
         );
     }
 
+    public boolean isImprovePlacementMissing(BidRequest bidRequest, String impId) {
+        return Objects.isNull(this.getImprovedigitalPlacementId(bidRequest, impId));
+    }
+
     public JsonNode extractBidderInfo(Imp imp, String bidderName, String path) {
         return Optional.ofNullable(imp)
                 .map(Imp::getExt)

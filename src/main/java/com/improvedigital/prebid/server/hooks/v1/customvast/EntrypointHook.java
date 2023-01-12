@@ -182,32 +182,32 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
     private BidRequest copyImproveUserIdFromCookieIfAvailable(
             BidRequest bidRequest, CaseInsensitiveMultiMap headers
     ) {
-        if (!headers.contains("cookie")) {
-            return bidRequest;
-        }
-        List<HttpCookie> cookies = HttpCookie.parse(headers.get("cookie"));
-        HttpCookie tuuidCookie = cookies.stream()
-                .filter(cookie -> cookie.getName().equals("tuuid"))
-                .findAny().orElse(null);
-        if (tuuidCookie == null || StringUtils.isBlank(tuuidCookie.getValue())) {
-            return bidRequest;
-        }
-        final User mergedUser = merger.merge(
-                bidRequest.getUser(),
-                User.builder()
-                        .ext(ExtUser.builder()
-                                .prebid(ExtUserPrebid.of(Map.of(
-                                                RequestUtils.IMPROVE_DIGITAL_BIDDER_NAME,
-                                                tuuidCookie.getValue()
-                                        ))
-                                ).build()
-                        ).build(),
-                User.class
-        );
+        try {
+            List<HttpCookie> cookies = HttpCookie.parse(headers.get("cookie"));
+            HttpCookie tuuidCookie = cookies.stream()
+                    .filter(cookie -> cookie.getName().equals("tuuid"))
+                    .findAny().orElse(null);
+            if (tuuidCookie == null || StringUtils.isBlank(tuuidCookie.getValue())) {
+                return bidRequest;
+            }
+            final User mergedUser = merger.merge(
+                    bidRequest.getUser(),
+                    User.builder()
+                            .ext(ExtUser.builder()
+                                    .prebid(ExtUserPrebid.of(Map.of(
+                                                    RequestUtils.IMPROVE_DIGITAL_BIDDER_NAME,
+                                                    tuuidCookie.getValue()
+                                            ))
+                                    ).build()
+                            ).build(),
+                    User.class
+            );
 
-        return bidRequest.toBuilder()
-                .user(mergedUser)
-                .build();
+            bidRequest = bidRequest.toBuilder()
+                    .user(mergedUser)
+                    .build();
+        } catch (Exception ignored) { } // cookie parsing error should not disrupt other logic
+        return bidRequest;
     }
 
     private ImprovedigitalPbsImpExt mergeImprovedigitalPbsImpExt(Imp imp, Imp storedImp) {

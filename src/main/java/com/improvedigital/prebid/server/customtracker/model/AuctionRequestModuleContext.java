@@ -4,6 +4,7 @@ import com.improvedigital.prebid.server.settings.model.CustomTracker;
 import com.iab.openrtb.request.BidRequest;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
+import org.prebid.server.settings.model.Account;
 import org.springframework.context.ApplicationContext;
 
 import java.util.Collection;
@@ -26,5 +27,9 @@ public class AuctionRequestModuleContext extends ModuleContext {
 
     public AuctionRequestModuleContext with(BidRequest bidRequest) {
         return this.toBuilder().bidRequest(bidRequest).build();
+    }
+
+    public AuctionRequestModuleContext with(Account account) {
+        return this.toBuilder().account(account).build();
     }
 }

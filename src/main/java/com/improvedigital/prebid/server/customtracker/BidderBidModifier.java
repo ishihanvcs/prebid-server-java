@@ -5,6 +5,7 @@ import com.improvedigital.prebid.server.customtracker.contracts.ITrackerMacroRes
 import com.improvedigital.prebid.server.customtracker.model.AuctionRequestModuleContext;
 import com.improvedigital.prebid.server.customtracker.model.TrackerContext;
 import com.improvedigital.prebid.server.settings.model.CustomTracker;
+import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.LogMessage;
 import com.improvedigital.prebid.server.utils.LogUtils;
 import com.improvedigital.prebid.server.utils.MacroProcessor;
@@ -23,6 +24,7 @@ public class BidderBidModifier {
     private static final Logger logger = LoggerFactory.getLogger(BidderBidModifier.class);
     private final MacroProcessor macroProcessor;
     private final RequestUtils requestUtils;
+    private final JsonUtils jsonUtils;
 
     public BidderBidModifier(
             MacroProcessor macroProcessor,
@@ -30,6 +32,7 @@ public class BidderBidModifier {
     ) {
         this.macroProcessor = macroProcessor;
         this.requestUtils = requestUtils;
+        this.jsonUtils = requestUtils.getJsonUtils();
     }
 
     public BidderBid modifyBidAdm(
@@ -70,7 +73,7 @@ public class BidderBidModifier {
                 logger.info(
                         LogMessage.from(moduleContext.getBidRequest())
                                 .withMessage(String.format(
-                                        "Skipping Custom Tracker [id=%s] as it is disabled in configuration",
+                                        "Skipping tracker [id=%s] as it is disabled in configuration",
                                         customTracker.getId()
                                 ))
                 );
@@ -82,8 +85,25 @@ public class BidderBidModifier {
                 logger.info(
                         LogMessage.from(moduleContext.getBidRequest())
                                 .withMessage(String.format(
-                                        "Skipping Custom Tracker [id=%s] as [account=%s] is excluded in configuration",
+                                        "Skipping [tracker=%s] as [account=%s] is excluded in configuration",
                                         customTracker.getId(), accountId
+                                ))
+                );
+                return;
+            } else if (
+                    customTracker.isImprovePlacementRequired()
+                    && !jsonUtils.isImprovePlacementRequired(moduleContext.getAccount())
+                    && requestUtils.isImprovePlacementMissing(
+                            moduleContext.getBidRequest(), bid.getImpid()
+                    )
+            ) {
+                logger.info(
+                        LogMessage.from(moduleContext.getBidRequest())
+                                .withMessage(String.format(
+                                        "Improve placement is required for [tracker=%s], "
+                                        + "but optional for [account=%s]!\n"
+                                        + "Skipping tracker for imp[id=%s], as improve placement is missing.",
+                                        customTracker.getId(), accountId, bid.getImpid()
                                 ))
                 );
                 return;

@@ -25,6 +25,7 @@ public class TrackerContext extends ModuleContext {
                 .builder()
                 .applicationContext(moduleContext.applicationContext)
                 .bidRequest(moduleContext.bidRequest)
+                .account(moduleContext.account)
                 .build();
     }
 

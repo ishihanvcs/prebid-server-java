@@ -8,7 +8,6 @@ import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt
 import com.improvedigital.prebid.server.customvast.model.VastResponseType;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
-import com.improvedigital.prebid.server.settings.model.ImprovedigitalPbsAccountExt;
 import com.improvedigital.prebid.server.utils.JsonUtils;
 import com.improvedigital.prebid.server.utils.LogMessage;
 import com.improvedigital.prebid.server.utils.LogUtils;
@@ -29,7 +28,6 @@ import org.prebid.server.settings.model.Account;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.auction.ProcessedAuctionRequestHook {
 
@@ -90,10 +88,7 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
     public void validateRequestForImprovePlacement(
             BidRequest bidRequest, Account account
     ) throws CustomVastHooksException {
-        boolean isImprovePlacementRequired = Optional.ofNullable(account)
-                .map(jsonUtils::getAccountExt)
-                .map(ImprovedigitalPbsAccountExt::getRequireImprovePlacement)
-                .orElse(true);
+        boolean isImprovePlacementRequired = jsonUtils.isImprovePlacementRequired(account);
 
         final List<String> errors = new ArrayList<>();
         final String errorPrefix = "request.imp[%d] must be configured with improvedigital placementId";

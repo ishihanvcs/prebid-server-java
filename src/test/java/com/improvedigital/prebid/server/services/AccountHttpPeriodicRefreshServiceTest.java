@@ -1,7 +1,9 @@
 package com.improvedigital.prebid.server.services;
 
 import ch.qos.logback.classic.Level;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.improvedigital.prebid.server.UnitTestBase;
+import com.improvedigital.prebid.server.settings.proto.response.HttpAccountRefreshResponse;
 import com.improvedigital.prebid.server.utils.ReflectionUtils;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -22,10 +24,10 @@ import org.prebid.server.settings.ApplicationSettings;
 import org.prebid.server.settings.CachingApplicationSettings;
 import org.prebid.server.settings.SettingsCache;
 import org.prebid.server.settings.model.Account;
-import org.prebid.server.settings.proto.response.HttpAccountsResponse;
 import org.prebid.server.vertx.http.HttpClient;
 import org.prebid.server.vertx.http.model.HttpClientResponse;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static java.util.Collections.singletonMap;
@@ -34,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.BDDMockito.given;
@@ -45,28 +48,29 @@ import static org.mockito.Mockito.verify;
 
 public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
 
-    private static final String ENDPOINT_URL = "http://config.prebid.com";
+    private static final String ENDPOINT_URL = "https://config.prebid.com";
 
     private static final String NULL_ACCOUNT_CONFIG = null;
-    private static final String DEFAULT_ACCOUNT_CONFIG = "{\n"
-            + "  \"auction\": {\n"
-            + "    \"price-floors\": {\n"
-            + "      \"enabled\": true,\n"
-            + "      \"fetch\": {\n"
-            + "        \"enabled\": false,\n"
-            + "        \"timeout-ms\": 5000,\n"
-            + "        \"max-rules\": 0,\n"
-            + "        \"max-file-size-kb\": 200,\n"
-            + "        \"max-age-sec\": 86400,\n"
-            + "        \"period-sec\": 3600\n"
-            + "      },\n"
-            + "      \"enforce-floors-rate\": 100,\n"
-            + "      \"adjust-for-bid-adjustment\": true,\n"
-            + "      \"enforce-deal-floors\": true,\n"
-            + "      \"use-dynamic-data\": true\n"
-            + "    }\n"
-            + "  }\n"
-            + "}";
+    private static final String DEFAULT_ACCOUNT_CONFIG = """
+            {
+              "auction": {
+                "price-floors": {
+                  "enabled": true,
+                  "fetch": {
+                    "enabled": false,
+                    "timeout-ms": 5000,
+                    "max-rules": 0,
+                    "max-file-size-kb": 200,
+                    "max-age-sec": 86400,
+                    "period-sec": 3600
+                  },
+                  "enforce-floors-rate": 100,
+                  "adjust-for-bid-adjustment": true,
+                  "enforce-deal-floors": true,
+                  "use-dynamic-data": true
+                }
+              }
+            }""";
 
     @Rule
     public final MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -96,27 +100,55 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
     @Mock
     private Vertx vertx;
 
-    private final String accountId = "id1";
-    private final Account emptyAccount = Account.empty(accountId);
-    private final Account mergedAccount = merger.merge(
-            emptyAccount,
+    private final String accountId1 = "id1";
+    private final Account account1 = Account.empty(accountId1);
+    private final String accountId2 = "id2";
+    private final Account account2 = Account.empty(accountId2);
+    private final Account mergedAccount2 = merger.merge(
+            account2,
             jacksonMapper.decodeValue(DEFAULT_ACCOUNT_CONFIG, Account.class),
             Account.class
     );
-    private final Map<String, Account> expectedAccounts = singletonMap(accountId, emptyAccount);
-    private final Map<String, Account> expectedMergedAccounts = singletonMap(accountId, mergedAccount);
+
+    private final ObjectNode deletedNode = mapper.createObjectNode()
+            .put("deleted", true);
+
+    private final Map<String, ObjectNode> initialResponseData = singletonMap(
+            accountId1, mapper.valueToTree(account1)
+    );
+
+    private final Map<String, ObjectNode> refreshResponseData = new HashMap<>() {{
+            put(accountId1, deletedNode);
+            put(accountId2, mapper.valueToTree(account2));
+        }};
+    private final Map<String, Account> mergedAccountsAfterRefresh = new HashMap<>() {{
+            put(accountId2, mergedAccount2);
+        }};
     private Map<String, Account> accountCache;
+
+    private final LogCaptor logCaptor = LogCaptor.forClass(AccountHttpPeriodicRefreshService.class);
 
     @Before
     public void setUp() throws Exception {
-        HttpClientResponse updatedResponse = HttpClientResponse.of(200, null,
+        HttpClientResponse initialResponse = HttpClientResponse.of(200, null,
                 mapper.writeValueAsString(
-                        HttpAccountsResponse.of(expectedAccounts)
+                        HttpAccountRefreshResponse.of(initialResponseData)
                 )
         );
 
-        given(httpClient.get(matches("[?&]accounts=true"), any(), anyLong()))
-                .willReturn(Future.succeededFuture(updatedResponse));
+        HttpClientResponse refreshResponse = HttpClientResponse.of(200, null,
+                mapper.writeValueAsString(
+                        HttpAccountRefreshResponse.of(
+                                this.refreshResponseData
+                        )
+                )
+        );
+
+        given(httpClient.get(matches("[?&]accounts=true$"), any(), anyLong()))
+                .willReturn(Future.succeededFuture(initialResponse));
+
+        given(httpClient.get(matches("[?&]accounts=true&last-modified="), any(), anyLong()))
+                .willReturn(Future.succeededFuture(refreshResponse));
 
         cachingApplicationSettings = new CachingApplicationSettings(
                 delegate, cache, ampCache, videoCache, metrics, 1000, 100
@@ -125,6 +157,8 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
         accountCache = ReflectionUtils.getPrivateProperty(
                 "accountCache", cachingApplicationSettings, CachingApplicationSettings.class
         );
+
+        logCaptor.setLogLevelToDebug();
     }
 
     @Test
@@ -197,34 +231,57 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
                 NULL_ACCOUNT_CONFIG, metrics
         );
 
-        final LogCaptor logCaptor = LogCaptor.forClass(service.getClass());
-
         assertThat(service.getLastUpdateTime()).isNull();
         assertThat(accountCache.isEmpty()).isTrue();
 
         service.initialize();
 
         // then
-        verify(httpClient, atLeast(2))
+        verify(httpClient, times(2))
                 .get(startsWith(ENDPOINT_URL + "?accounts=true"), any(), anyLong());
-        verify(httpClient, atLeastOnce())
+        verify(httpClient, times(1))
                 .get(startsWith(ENDPOINT_URL + "?accounts=true&last-modified="), any(), anyLong());
 
         assertThat(service.getLastUpdateTime()).isNotNull();
-        assertThat(accountCache.size()).isEqualTo(expectedAccounts.size());
-        assertThat(accountCache.get(accountId)).isEqualTo(emptyAccount);
+        assertThat(accountCache.size()).isEqualTo(1);
+        assertThat(accountCache.get(accountId1)).isNull();
+        assertThat(accountCache.get(accountId2)).isEqualTo(account2);
 
-        assertThat(hasLogEventWith(logCaptor, String.format(
+        assertLogMessages();
+    }
+
+    private void assertLogMessages() {
+        String message = String.format(
+                "Account with id=%s has been saved in cache successfully.",
+                accountId1
+        );
+        assertThat(hasLogEventWith(logCaptor, message, Level.DEBUG)).isTrue();
+
+        message = String.format(
                 "Successfully %s %d accounts with ids: %s.", "cached",
-                expectedAccounts.size(),
-                expectedAccounts.keySet()
-        ), Level.INFO)).isTrue();
+                initialResponseData.size(),
+                initialResponseData.keySet()
+        );
+        assertThat(hasLogEventWith(logCaptor, message, Level.INFO)).isTrue();
 
-        assertThat(hasLogEventWith(logCaptor, String.format(
+        message = String.format(
+                "Account with id=%s is deleted and hence removed from cache.",
+                accountId1
+        );
+        assertThat(hasLogEventWith(logCaptor, message, Level.DEBUG)).isTrue();
+
+        message = String.format(
+                "Account with id=%s has been saved in cache successfully.",
+                accountId2
+        );
+        assertThat(hasLogEventWith(logCaptor, message, Level.DEBUG)).isTrue();
+
+        message = String.format(
                 "Successfully %s %d accounts with ids: %s.", "updated",
-                expectedAccounts.size(),
-                expectedAccounts.keySet()
-        ), Level.INFO)).isTrue();
+                refreshResponseData.size(),
+                refreshResponseData.keySet()
+        );
+        assertThat(hasLogEventWith(logCaptor, message, Level.INFO)).isTrue();
     }
 
     @Test
@@ -240,8 +297,6 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
                 DEFAULT_ACCOUNT_CONFIG, metrics
         );
 
-        final LogCaptor logCaptor = LogCaptor.forClass(service.getClass());
-
         assertThat(service.getLastUpdateTime()).isNull();
         assertThat(accountCache.isEmpty()).isTrue();
 
@@ -254,41 +309,32 @@ public class AccountHttpPeriodicRefreshServiceTest extends UnitTestBase {
                 .get(startsWith(ENDPOINT_URL + "?accounts=true&last-modified="), any(), anyLong());
 
         assertThat(service.getLastUpdateTime()).isNotNull();
-        assertThat(accountCache.size()).isEqualTo(expectedMergedAccounts.size());
-        assertThat(accountCache.get(accountId)).isEqualTo(mergedAccount);
+        assertThat(accountCache.size()).isEqualTo(mergedAccountsAfterRefresh.size());
+        assertThat(accountCache.get(accountId2)).isEqualTo(mergedAccount2);
 
-        assertThat(hasLogEventWith(logCaptor, String.format(
-                "Successfully %s %d accounts with ids: %s.", "cached",
-                expectedMergedAccounts.size(),
-                expectedMergedAccounts.keySet()
-        ), Level.INFO)).isTrue();
-
-        assertThat(hasLogEventWith(logCaptor, String.format(
-                "Successfully %s %d accounts with ids: %s.", "updated",
-                expectedMergedAccounts.size(),
-                expectedMergedAccounts.keySet()
-        ), Level.INFO)).isTrue();
+        assertLogMessages();
     }
 
     @Test
     public void shouldNotCallDelegateMethodAfterPeriodicRefresh() {
-        given(delegate.getAccountById(any(), any())).willReturn(Future.succeededFuture(emptyAccount));
+        given(delegate.getAccountById(eq(accountId1), eq(timeout))).willReturn(Future.succeededFuture(account1));
+        given(delegate.getAccountById(eq(accountId2), eq(timeout))).willReturn(Future.succeededFuture(account2));
 
-        cachingApplicationSettings.getAccountById(accountId, timeout)
+        cachingApplicationSettings.getAccountById(accountId1, timeout)
                 .onComplete(asyncResult -> {
                     verify(delegate, times(1)).getAccountById(any(), any()); // one call
                     assertThat(asyncResult.succeeded()).isTrue();
-                    assertThat(asyncResult.result()).isEqualTo(emptyAccount);
+                    assertThat(asyncResult.result()).isEqualTo(account1);
                 });
 
-        accountCache.remove(accountId); // reset accountCache
+        accountCache.remove(accountId1); // reset accountCache
         shouldUpdateAccountCacheAfterPeriodicUpdate(); // update accountCache with periodic refresher
 
-        cachingApplicationSettings.getAccountById(accountId, timeout)
+        cachingApplicationSettings.getAccountById(accountId2, timeout)
                 .onComplete(asyncResult -> {
                     verify(delegate, times(1)).getAccountById(any(), any()); // no new call
                     assertThat(asyncResult.succeeded()).isTrue();
-                    assertThat(asyncResult.result()).isEqualTo(emptyAccount);
+                    assertThat(asyncResult.result()).isEqualTo(account2);
                 });
 
     }

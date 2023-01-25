@@ -160,7 +160,7 @@ public class AccountHttpPeriodicRefreshService implements Initializable {
                 final ObjectNode objectNode = entry.getValue();
                 final String accountId = entry.getKey();
                 Account parsedAccount = null;
-                if (!objectNode.has("deleted") || !objectNode.get("deleted").asBoolean()) {
+                if (objectNode != null && !(objectNode.has("deleted") && objectNode.get("deleted").asBoolean())) {
                     parsedAccount = mapper.mapper().convertValue(objectNode, Account.class);
                 }
                 result.put(accountId, parsedAccount);

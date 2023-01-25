@@ -38,8 +38,7 @@ public class CustomTrackerHooksModule implements Module {
     public Collection<? extends Hook<?, ? extends InvocationContext>> hooks() {
         return Arrays.asList(
                 new EntrypointHook(applicationContext, settingsLoader),
-                new ProcessedAuctionRequestHook(),
-                // new BidderRequestHook(),
+                new ProcessedAuctionRequestHook(settingsLoader),
                 new ProcessedBidderResponseHook(bidderBidModifier)
         );
     }

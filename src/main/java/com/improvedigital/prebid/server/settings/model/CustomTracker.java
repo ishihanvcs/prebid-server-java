@@ -22,6 +22,10 @@ public class CustomTracker {
     @Builder.Default
     Boolean enabled = true;
 
+    @Builder.Default
+    @JsonProperty("improvePlacementRequired")
+    boolean improvePlacementRequired = true;
+
     @JsonProperty("macroResolver")
     @Builder.Default
     String macroResolver = null;

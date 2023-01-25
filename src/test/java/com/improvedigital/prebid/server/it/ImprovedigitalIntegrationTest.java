@@ -46,6 +46,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.BeforeClass;
@@ -1150,7 +1151,7 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
 
     @NotNull
     protected JSONObject getBid(JSONObject responseJson, int seatBidIndex, int bidIndex) throws JSONException {
-        return getSeatbid(responseJson, seatBidIndex)
+        return getSeatBid(responseJson, seatBidIndex)
                 .getJSONArray("bid").getJSONObject(bidIndex);
     }
 
@@ -1160,14 +1161,26 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
 
     @NotNull
     protected String getSeat(JSONObject responseJson, int seatBidIndex) throws JSONException {
-        return getSeatbid(responseJson, seatBidIndex)
+        return getSeatBid(responseJson, seatBidIndex)
                 .getString("seat");
     }
 
     @NotNull
-    protected JSONObject getSeatbid(JSONObject responseJson, int seatBidIndex) throws JSONException {
+    protected JSONObject getSeatBid(JSONObject responseJson, int seatBidIndex) throws JSONException {
         return responseJson
                 .getJSONArray("seatbid").getJSONObject(seatBidIndex);
+    }
+
+    protected int getSeatBidIndex(JSONObject responseJson, String seatName) throws JSONException {
+        final JSONArray seatBidArray = responseJson
+                .getJSONArray("seatbid");
+        for (int i = 0; i < seatBidArray.length(); i++) {
+            JSONObject seatBid = seatBidArray.getJSONObject(i);
+            if (seatBid.getString("seat").equals(seatName)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     protected void assertCurrency(JSONObject responseJson, String expectedCurrency) throws JSONException {

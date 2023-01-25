@@ -7,6 +7,7 @@ import com.iab.openrtb.response.Bid;
 import com.iab.openrtb.response.BidResponse;
 import com.improvedigital.prebid.server.UnitTestBase;
 import com.improvedigital.prebid.server.customvast.CustomVastUtils;
+import com.improvedigital.prebid.server.utils.PbsEndpointInvoker;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -50,6 +51,8 @@ public class CreatorContextTest extends UnitTestBase {
     private CustomVastUtils customVastUtils;
 
     @Mock
+    PbsEndpointInvoker pbsEndpointInvoker;
+    @Mock
     CurrencyConversionService currencyConversionService;
     @Mock
     GeoLocationService geoLocationService;
@@ -77,7 +80,7 @@ public class CreatorContextTest extends UnitTestBase {
         defaultBidRequest = BidRequest.builder().imp(new ArrayList<>(List.of(defaultImp))).build();
 
         customVastUtils = new CustomVastUtils(
-                requestUtils, merger, currencyConversionService,
+                pbsEndpointInvoker, requestUtils, merger, currencyConversionService,
                 macroProcessor, geoLocationService, metrics,
                 countryCodeMapper, EXTERNAL_URL, GAM_NETWORK_CODE, PROTO_CACHE_HOST
         );

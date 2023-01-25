@@ -133,6 +133,7 @@ public class AccountHttpPeriodicRefreshService implements Initializable {
         );
         final String andOrParam = refreshUrl.contains("?") ? "&" : "?";
         final String refreshEndpoint = refreshUrl + andOrParam + lastModifiedParam;
+        logger.debug("account refresh url:\n" + refreshEndpoint);
 
         httpClient.get(refreshEndpoint, HttpUtil.headers(), timeout)
                 .map(this::processResponse)

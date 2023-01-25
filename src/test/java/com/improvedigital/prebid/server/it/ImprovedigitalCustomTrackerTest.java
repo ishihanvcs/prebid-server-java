@@ -31,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestPropertySource(properties = {
         "admin.port=18061",
         "http.port=18081",
+        "server.http.port=18081", // set it to http.port value, so that /cookie_sync calls work
 })
 @RunWith(SpringRunner.class)
 public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTest {

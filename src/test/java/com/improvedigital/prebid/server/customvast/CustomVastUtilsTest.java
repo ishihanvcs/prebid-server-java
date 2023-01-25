@@ -11,6 +11,7 @@ import com.improvedigital.prebid.server.customvast.model.CustomVast;
 import com.improvedigital.prebid.server.customvast.model.Floor;
 import com.improvedigital.prebid.server.customvast.model.HooksModuleContext;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
+import com.improvedigital.prebid.server.utils.PbsEndpointInvoker;
 import io.vertx.core.Future;
 import org.junit.Assert;
 import org.junit.Before;
@@ -94,6 +95,8 @@ public class CustomVastUtilsTest extends UnitTestBase {
     );
 
     @Mock
+    PbsEndpointInvoker pbsEndpointInvoker;
+    @Mock
     CurrencyConversionService currencyConversionService;
     @Mock
     GeoLocationService geoLocationService;
@@ -109,7 +112,7 @@ public class CustomVastUtilsTest extends UnitTestBase {
         MockitoAnnotations.openMocks(this);
         doNothing().when(metrics).updateGeoLocationMetric(true);
         customVastUtils = new CustomVastUtils(
-                requestUtils, merger, currencyConversionService,
+                pbsEndpointInvoker, requestUtils, merger, currencyConversionService,
                 macroProcessor, geoLocationService, metrics,
                 countryCodeMapper, EXTERNAL_URL, GAM_NETWORK_CODE, PROTO_CACHE_HOST
         );
@@ -464,12 +467,6 @@ public class CustomVastUtilsTest extends UnitTestBase {
         Assert.assertEquals("replaceMeWithExpectedResult", result);
     }
 
-    // @Test
-    public void testGetCachedBidUrls() throws Exception {
-        List<String> result = customVastUtils.getCachedBidUrls(List.of(null), true);
-        Assert.assertEquals(List.of("String"), result);
-    }
-
     @Test
     public void testResolveFloorBucketPriceWithEuro() {
         String bidFloorCur = "EUR";
@@ -600,19 +597,13 @@ public class CustomVastUtilsTest extends UnitTestBase {
 
     // @Test
     public void testFormatPrebidGamKeyValueString() throws Exception {
-        String result = customVastUtils.formatPrebidGamKeyValueString(List.of(null), true);
+        String result = customVastUtils.formatPrebidGamKeyValueString(List.of(), true);
         Assert.assertEquals("replaceMeWithExpectedResult", result);
     }
 
     // @Test
     public void testGetCustParams() throws Exception {
         String result = customVastUtils.getCustParams(null, null);
-        Assert.assertEquals("replaceMeWithExpectedResult", result);
-    }
-
-    // @Test
-    public void testGetRedirect() throws Exception {
-        String result = customVastUtils.getRedirect("bidder", "gdpr", "gdprConsent", "userIdParamName");
         Assert.assertEquals("replaceMeWithExpectedResult", result);
     }
 

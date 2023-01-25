@@ -16,6 +16,7 @@ import nl.altindag.log.LogCaptor;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Assertions;
 import org.prebid.server.VertxTest;
+import org.prebid.server.bidder.UsersyncMethodType;
 import org.prebid.server.execution.Timeout;
 import org.prebid.server.execution.TimeoutFactory;
 import org.prebid.server.hooks.v1.Hook;
@@ -28,6 +29,9 @@ import org.prebid.server.json.JsonMerger;
 import org.prebid.server.proto.openrtb.ext.request.ExtImp;
 import org.prebid.server.proto.openrtb.ext.request.ExtImpPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtStoredRequest;
+import org.prebid.server.proto.response.BidderUsersyncStatus;
+import org.prebid.server.proto.response.CookieSyncResponse;
+import org.prebid.server.proto.response.UsersyncInfo;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
@@ -36,6 +40,7 @@ import java.nio.file.Files;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -74,7 +79,27 @@ public abstract class UnitTestBase extends VertxTest {
     protected final String defaultStoredImpId = "video-gvast";
     protected final String defaultStoredRequestId = "stored-request";
 
-    protected Timeout timeout = createTimeout(10000L);
+    protected final CookieSyncResponse defaultCookieSyncResponse = CookieSyncResponse.of(
+            "no_cookie",
+            List.of(
+                    createBidderUserSyncStatus("pubmatic", "pubmatic_sync_url"),
+                    createBidderUserSyncStatus("improvedigital", "improvedigital_sync_url"),
+                    createBidderUserSyncStatus("adnx", "adnx_sync_url"),
+                    createBidderUserSyncStatus("connectad", "connectad_sync_url")
+            )
+    );
+
+    protected long timeoutMs = 10000L;
+
+    protected Timeout timeout = createTimeout(timeoutMs);
+
+    protected BidderUsersyncStatus createBidderUserSyncStatus(String bidder, String userSyncUrl) {
+        return BidderUsersyncStatus.builder()
+                .noCookie(true)
+                .bidder(bidder)
+                .usersync(UsersyncInfo.of(userSyncUrl, UsersyncMethodType.IFRAME, false))
+                .build();
+    }
 
     protected Timeout createTimeout(long timeout) {
         final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());

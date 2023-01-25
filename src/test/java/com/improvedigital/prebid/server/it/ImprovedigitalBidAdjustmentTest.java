@@ -29,7 +29,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 
 @TestPropertySource(properties = {
         "admin.port=18063",
-        "http.port=18083"
+        "http.port=18083",
+        "server.http.port=18083", // set it to http.port value, so that /cookie_sync calls work
 })
 @RunWith(SpringRunner.class)
 public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTest {
@@ -55,11 +56,11 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                         .build()
         );
 
-        assertSeat(responseJson, 0, "generic");
-        assertBidPrice(responseJson, 0, 0, multiplyBid(1.25, 95.00 / 100)); /* 95% */
+        int seatBidIndex = getSeatBidIndex(responseJson, "generic");
+        assertBidPrice(responseJson, seatBidIndex, 0, multiplyBid(1.25, 95.00 / 100)); /* 95% */
 
-        assertSeat(responseJson, 1, "improvedigital");
-        assertBidPrice(responseJson, 1, 0, multiplyBid(1.15, 95.00 / 100)); /* 95% */
+        seatBidIndex = getSeatBidIndex(responseJson, "improvedigital");
+        assertBidPrice(responseJson, seatBidIndex, 0, multiplyBid(1.15, 95.00 / 100)); /* 95% */
     }
 
     @Test
@@ -125,11 +126,11 @@ public class ImprovedigitalBidAdjustmentTest extends ImprovedigitalIntegrationTe
                         .build()
         );
 
-        assertSeat(responseJson, 0, "generic");
-        assertBidPrice(responseJson, 0, 0, multiplyBid(1.25, 90.00 / 100)); /* 90% */
+        int seatBidIndex = getSeatBidIndex(responseJson, "generic");
+        assertBidPrice(responseJson, seatBidIndex, 0, multiplyBid(1.25, 90.00 / 100)); /* 90% */
 
-        assertSeat(responseJson, 1, "improvedigital");
-        assertBidPrice(responseJson, 1, 0, 1.15); /* No adjustment */
+        seatBidIndex = getSeatBidIndex(responseJson, "improvedigital");
+        assertBidPrice(responseJson, seatBidIndex, 0, 1.15); /* No adjustment */
     }
 
     @Test

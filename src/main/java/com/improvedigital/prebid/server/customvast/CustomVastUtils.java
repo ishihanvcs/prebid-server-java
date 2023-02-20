@@ -22,6 +22,7 @@ import com.improvedigital.prebid.server.utils.PbsEndpointInvoker;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import com.improvedigital.prebid.server.utils.XmlUtils;
 import io.vertx.core.Future;
+import io.vertx.core.MultiMap;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.collections4.map.HashedMap;
@@ -184,16 +185,20 @@ public class CustomVastUtils {
         return Future.succeededFuture(country);
     }
 
-    public Future<HooksModuleContext> resolveCountryAndCreateModuleContext(BidRequest bidRequest, Timeout timeout) {
-        return resolveCountry(bidRequest, timeout).map(country -> createModuleContext(bidRequest, country))
+    public Future<HooksModuleContext> resolveCountryAndUpdateModuleContext(
+            HooksModuleContext moduleContext, BidRequest bidRequest, Timeout timeout
+    ) {
+        return resolveCountry(bidRequest, timeout)
+                .map(country -> updateModuleContext(moduleContext, bidRequest, country))
                 .recover(t -> {
-                            logger.error("Could not resolve country", t);
-                            return Future.succeededFuture(createModuleContext(bidRequest, null));
-                        }
-                );
+                    logger.error("Could not resolve country", t);
+                    return Future.succeededFuture(updateModuleContext(moduleContext, bidRequest, null));
+                });
     }
 
-    public HooksModuleContext createModuleContext(BidRequest bidRequest, String alpha3Country) {
+    public HooksModuleContext updateModuleContext(
+            HooksModuleContext moduleContext, BidRequest bidRequest, String alpha3Country
+    ) {
         final Map<String, ImprovedigitalPbsImpExt> impIdToPbsImpExt = new HashMap<>();
         Map<String, Floor> impIdToEffectiveFloor = new HashMap<>();
         boolean hasCustomVastVideo = false;
@@ -211,18 +216,18 @@ public class CustomVastUtils {
             impIdToEffectiveFloor.put(impId, computeEffectiveFloor(imp, pbsImpExt, alpha3Country));
         }
 
-        HooksModuleContext context = HooksModuleContext
-                .from(impIdToPbsImpExt)
-                .with(impIdToEffectiveFloor)
+        moduleContext = moduleContext
+                .withImpIdToPbsImpExt(impIdToPbsImpExt)
+                .withImpIdToFloor(impIdToEffectiveFloor)
                 .with(alpha3Country);
 
-        bidRequest = updateImpsWithBidFloorInUsd(bidRequest, context::getEffectiveFloor);
+        bidRequest = updateImpsWithBidFloorInUsd(bidRequest, moduleContext::getEffectiveFloor);
 
         if (hasCustomVastVideo) {
             bidRequest = updateExtWithCacheSettings(bidRequest, hasGVastVideo);
         }
 
-        return context.with(bidRequest);
+        return moduleContext.with(bidRequest);
     }
 
     private BidRequest updateImpsWithBidFloorInUsd(BidRequest bidRequest, Function<Imp, Floor> floorRetriever) {
@@ -492,7 +497,7 @@ public class CustomVastUtils {
     }
 
     public Future<Map<String, String>> getUserSyncUrls(
-            List<String> bidders, String accountId, CreatorContext context, Timeout timeout
+            List<String> bidders, String accountId, String cookieHeader, CreatorContext context, Timeout timeout
     ) {
         if (context.isApp()) {
             return Future.succeededFuture(Map.of());
@@ -502,25 +507,39 @@ public class CustomVastUtils {
             return getDefaultUserSyncFuture(context);
         }
 
-        CookieSyncRequest request = CookieSyncRequest.builder()
-                .account(accountId)
-                .coopSync(false)
-                .gdpr(StringUtils.isNotBlank(context.getGdpr()) ? Integer.valueOf(context.getGdpr()) : null)
-                .gdprConsent(context.getGdprConsent())
-                .bidders(bidders)
-                .filterSettings(CookieSyncRequest.FilterSettings.of(
-                        CookieSyncRequest.MethodFilter.of(
-                                jsonUtils.getObjectMapper().valueToTree("*"),
-                                CookieSyncRequest.FilterType.exclude),
-                        null
-                    )
-                ).build();
+        try {
+            CookieSyncRequest request = CookieSyncRequest.builder()
+                    .account(accountId)
+                    .coopSync(false)
+                    .gdpr(StringUtils.isNotBlank(context.getGdpr()) ? Integer.valueOf(context.getGdpr()) : null)
+                    .gdprConsent(context.getGdprConsent())
+                    .bidders(bidders)
+                    .filterSettings(CookieSyncRequest.FilterSettings.of(
+                                    CookieSyncRequest.MethodFilter.of(
+                                            jsonUtils.getObjectMapper().valueToTree("*"),
+                                            CookieSyncRequest.FilterType.exclude),
+                                    null
+                            )
+                    ).build();
 
-        return endpointInvoker.invokeCookieSync(request, timeout)
-                .map(this::extractUserSyncUrls)
-                // we'll recover from any error with defaultReturn
-                // so that custom vast creation logic won't fail.
-                .recover(t -> getDefaultUserSyncFuture(context));
+            MultiMap headers = MultiMap.caseInsensitiveMultiMap();
+            if (StringUtils.isNotBlank(cookieHeader)) {
+                headers.add("cookie", cookieHeader);
+            }
+            return endpointInvoker.invokeCookieSync(request, headers, timeout)
+                    .otherwiseEmpty()
+                    .map(this::extractUserSyncUrls)
+                    // we'll recover from any error with defaultReturn
+                    // so that custom vast creation logic won't fail.
+                    .recover(t -> {
+                        logger.warn("Exception occurred while invoking cookie_sync endpoint.");
+                        logger.warn(t.getMessage(), t);
+                        return getDefaultUserSyncFuture(context);
+                    });
+        } catch (Throwable t) {
+            logger.warn("Unable to create CookieSyncRequest from context.", t);
+            return getDefaultUserSyncFuture(context);
+        }
     }
 
     public Map<String, String> extractUserSyncUrls(CookieSyncResponse response) {

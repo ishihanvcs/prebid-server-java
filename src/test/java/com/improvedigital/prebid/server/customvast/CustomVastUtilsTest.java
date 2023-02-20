@@ -424,7 +424,7 @@ public class CustomVastUtilsTest extends UnitTestBase {
             BiConsumer<HooksModuleContext, Map<String, Floor>> validator
     ) {
         Future<HooksModuleContext> result = customVastUtils
-                .resolveCountryAndCreateModuleContext(bidRequest, timeout);
+                .resolveCountryAndUpdateModuleContext(HooksModuleContext.EMPTY, bidRequest, timeout);
         assertThat(result).isNotNull();
         result.onComplete(asyncResult -> {
             assertThat(asyncResult.succeeded()).isTrue();
@@ -457,7 +457,9 @@ public class CustomVastUtilsTest extends UnitTestBase {
 
     // @Test
     public void testCreateModuleContext() throws Exception {
-        HooksModuleContext result = customVastUtils.createModuleContext(null, "alpha3Country");
+        HooksModuleContext result = customVastUtils.updateModuleContext(
+                HooksModuleContext.EMPTY, null, "alpha3Country"
+        );
         Assert.assertEquals(null, result);
     }
 

@@ -3,6 +3,7 @@ package com.improvedigital.prebid.server.hooks.v1.customvast;
 import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.improvedigital.prebid.server.customvast.CustomVastUtils;
+import com.improvedigital.prebid.server.customvast.model.HooksModuleContext;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExtGam;
 import com.improvedigital.prebid.server.customvast.model.VastResponseType;
@@ -57,9 +58,10 @@ public class ProcessedAuctionRequestHook implements org.prebid.server.hooks.v1.a
         return settingsLoader.getAccountFuture(originalBidRequest, timeout).otherwiseEmpty().compose(account -> {
             try {
                 validateRequestForImprovePlacement(originalBidRequest, account);
-                if (moduleContext == null) {
-                    return customVastUtils.resolveCountryAndCreateModuleContext(originalBidRequest, timeout)
-                            .map(context -> InvocationResultImpl.succeeded(
+                if (moduleContext instanceof HooksModuleContext) {
+                    return customVastUtils.resolveCountryAndUpdateModuleContext(
+                                (HooksModuleContext) moduleContext, originalBidRequest, timeout
+                            ).map(context -> InvocationResultImpl.succeeded(
                                     payload -> AuctionRequestPayloadImpl.of(context.getBidRequest()), context
                             ));
                 }

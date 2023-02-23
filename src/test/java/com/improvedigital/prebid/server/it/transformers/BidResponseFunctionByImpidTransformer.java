@@ -2,6 +2,7 @@ package com.improvedigital.prebid.server.it.transformers;
 
 import com.github.tomakehurst.wiremock.common.FileSource;
 import com.github.tomakehurst.wiremock.extension.Parameters;
+import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.http.Response;
 import com.iab.openrtb.request.BidRequest;
 
@@ -16,7 +17,7 @@ public class BidResponseFunctionByImpidTransformer extends ImprovedigitalRespons
 
     @Override
     public Response transform(
-            com.github.tomakehurst.wiremock.http.Request request,
+            Request request,
             Response response,
             FileSource fileSource,
             Parameters parameters) {

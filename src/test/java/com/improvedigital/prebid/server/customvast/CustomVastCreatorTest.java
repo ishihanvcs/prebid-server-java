@@ -15,6 +15,7 @@ import com.improvedigital.prebid.server.utils.PbsEndpointInvoker;
 import com.improvedigital.prebid.server.utils.RequestUtils;
 import com.improvedigital.prebid.server.utils.ResponseUtils;
 import io.vertx.core.Future;
+import io.vertx.core.MultiMap;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -70,8 +71,9 @@ public class CustomVastCreatorTest extends UnitTestBase {
     @Before
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        when(pbsEndpointInvoker.invokeCookieSync(any(CookieSyncRequest.class), any(Timeout.class)))
-                .thenReturn(Future.succeededFuture(defaultCookieSyncResponse));
+        when(pbsEndpointInvoker.invokeCookieSync(
+                any(CookieSyncRequest.class), any(MultiMap.class), any(Timeout.class))
+        ).thenReturn(Future.succeededFuture(defaultCookieSyncResponse));
         this.customVastUtils = new CustomVastUtils(
                 pbsEndpointInvoker, requestUtils, merger, currencyConversionService, macroProcessor,
                 geoLocationService, metrics, countryCodeMapper,
@@ -305,8 +307,9 @@ public class CustomVastCreatorTest extends UnitTestBase {
         assertThat(response).isNotNull();
         Imp imp = getVideoImpFromRequest(request);
         assertThat(imp).isNotNull();
-        HooksModuleContext hooksModuleContext = customVastUtils.createModuleContext(request, null)
-                .with(response);
+        HooksModuleContext hooksModuleContext = customVastUtils.updateModuleContext(
+                HooksModuleContext.EMPTY, request, null
+        ).with(response);
         CreatorContext context = CreatorContext.from(hooksModuleContext, jsonUtils)
                 .with(imp, ResponseUtils.getBidsForImp(response, imp), jsonUtils);
 

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.prebid.server.settings.model.Account;
 import org.springframework.context.ApplicationContext;
 
 @SuperBuilder(toBuilder = true)
@@ -15,6 +16,7 @@ public class ModuleContext {
     @NonNull
     ApplicationContext applicationContext;
     BidRequest bidRequest;
+    Account account;
 
     public static ModuleContext from(
             ApplicationContext applicationContext

@@ -152,6 +152,11 @@ public class RequestUtils {
                 && !isOfResponseType(pbsImpExt, VastResponseType.vast);
     }
 
+    public boolean isCustomVastVideo(Imp imp, ImprovedigitalPbsImpExt pbsImpExt, VastResponseType responseType) {
+        return imp != null && imp.getVideo() != null && pbsImpExt != null
+                && isOfResponseType(pbsImpExt, responseType);
+    }
+
     public boolean hasGVastResponseType(ImprovedigitalPbsImpExt impExt) {
         return isOfResponseType(impExt, VastResponseType.gvast);
     }
@@ -183,6 +188,10 @@ public class RequestUtils {
                         .findFirst()
                         .orElse(null)
         );
+    }
+
+    public boolean isImprovePlacementMissing(BidRequest bidRequest, String impId) {
+        return Objects.isNull(this.getImprovedigitalPlacementId(bidRequest, impId));
     }
 
     public JsonNode extractBidderInfo(Imp imp, String bidderName, String path) {

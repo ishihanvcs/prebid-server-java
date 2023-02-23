@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -348,6 +349,13 @@ public class JsonUtils {
         } catch (JsonProcessingException e) {
             return null;
         }
+    }
+
+    public boolean isImprovePlacementRequired(Account account) {
+        return Optional.ofNullable(account)
+                .map(this::getAccountExt)
+                .map(ImprovedigitalPbsAccountExt::getRequireImprovePlacement)
+                .orElse(true);
     }
 
     public ImprovedigitalPbsAccountExt getAccountExt(Account account) {

@@ -4,6 +4,7 @@ import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.iab.openrtb.request.Publisher;
 import com.iab.openrtb.request.User;
+import com.improvedigital.prebid.server.customvast.model.HooksModuleContext;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.hooks.v1.InvocationResultImpl;
 import com.improvedigital.prebid.server.settings.SettingsLoader;
@@ -22,7 +23,6 @@ import org.prebid.server.hooks.v1.InvocationResult;
 import org.prebid.server.hooks.v1.entrypoint.EntrypointPayload;
 import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.json.JsonMerger;
-import org.prebid.server.model.CaseInsensitiveMultiMap;
 import org.prebid.server.proto.openrtb.ext.request.ExtPublisher;
 import org.prebid.server.proto.openrtb.ext.request.ExtPublisherPrebid;
 import org.prebid.server.proto.openrtb.ext.request.ExtRequest;
@@ -64,10 +64,11 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
             EntrypointPayload entrypointPayload, InvocationContext invocationContext
     ) {
         final BidRequest originalBidRequest = jsonUtils.parseBidRequest(entrypointPayload.body());
+        final HooksModuleContext moduleContext = HooksModuleContext.from(entrypointPayload.headers().get("cookie"));
 
         return enrichBidRequest(
                 originalBidRequest,
-                entrypointPayload.headers(),
+                moduleContext,
                 invocationContext.timeout()
         ).map(bidRequest -> {
             final EntrypointPayload updatedPayload;
@@ -82,16 +83,16 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
                 updatedPayload = entrypointPayload;
             }
             return InvocationResultImpl.succeeded(
-                    payload -> updatedPayload
+                    payload -> updatedPayload, moduleContext
             );
         });
     }
 
     private Future<BidRequest> enrichBidRequest(
-            BidRequest originalBidRequest, CaseInsensitiveMultiMap headers, Timeout timeout
+            BidRequest originalBidRequest, HooksModuleContext moduleContext, Timeout timeout
     ) {
         final BidRequest bidRequest = copyImproveUserIdFromCookieIfAvailable(
-                originalBidRequest, headers
+                originalBidRequest, moduleContext.getCookieHeader()
         );
 
         final Future<BidRequest> defaultReturn = Future.succeededFuture(bidRequest);
@@ -180,34 +181,34 @@ public class EntrypointHook implements org.prebid.server.hooks.v1.entrypoint.Ent
     }
 
     private BidRequest copyImproveUserIdFromCookieIfAvailable(
-            BidRequest bidRequest, CaseInsensitiveMultiMap headers
+            BidRequest bidRequest, String cookieHeader
     ) {
-        if (!headers.contains("cookie")) {
-            return bidRequest;
-        }
-        List<HttpCookie> cookies = HttpCookie.parse(headers.get("cookie"));
-        HttpCookie tuuidCookie = cookies.stream()
-                .filter(cookie -> cookie.getName().equals("tuuid"))
-                .findAny().orElse(null);
-        if (tuuidCookie == null || StringUtils.isBlank(tuuidCookie.getValue())) {
-            return bidRequest;
-        }
-        final User mergedUser = merger.merge(
-                bidRequest.getUser(),
-                User.builder()
-                        .ext(ExtUser.builder()
-                                .prebid(ExtUserPrebid.of(Map.of(
-                                                RequestUtils.IMPROVE_DIGITAL_BIDDER_NAME,
-                                                tuuidCookie.getValue()
-                                        ))
-                                ).build()
-                        ).build(),
-                User.class
-        );
+        try {
+            List<HttpCookie> cookies = HttpCookie.parse(cookieHeader);
+            HttpCookie tuuidCookie = cookies.stream()
+                    .filter(cookie -> cookie.getName().equals("tuuid"))
+                    .findAny().orElse(null);
+            if (tuuidCookie == null || StringUtils.isBlank(tuuidCookie.getValue())) {
+                return bidRequest;
+            }
+            final User mergedUser = merger.merge(
+                    bidRequest.getUser(),
+                    User.builder()
+                            .ext(ExtUser.builder()
+                                    .prebid(ExtUserPrebid.of(Map.of(
+                                                    RequestUtils.IMPROVE_DIGITAL_BIDDER_NAME,
+                                                    tuuidCookie.getValue()
+                                            ))
+                                    ).build()
+                            ).build(),
+                    User.class
+            );
 
-        return bidRequest.toBuilder()
-                .user(mergedUser)
-                .build();
+            bidRequest = bidRequest.toBuilder()
+                    .user(mergedUser)
+                    .build();
+        } catch (Exception ignored) { } // cookie parsing error should not disrupt other logic
+        return bidRequest;
     }
 
     private ImprovedigitalPbsImpExt mergeImprovedigitalPbsImpExt(Imp imp, Imp storedImp) {

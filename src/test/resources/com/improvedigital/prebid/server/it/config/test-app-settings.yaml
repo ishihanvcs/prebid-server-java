@@ -1,5 +1,6 @@
 ---
 accounts:
+  - id: empty-account
   - id: 2022081801
     ext:
       improvedigitalpbs:

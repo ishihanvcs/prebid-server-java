@@ -599,7 +599,7 @@ public class ImprovedigitalCustomTrackerTest extends ImprovedigitalIntegrationTe
                 .getJSONObject("improvedigital-custom-vast-hooks-module")
                 .getJSONArray("improvedigital-custom-vast-hooks-processed-auction-request")
                 .getString(0)
-        ).isEqualTo("improvedigital placementId is not defined in any of the imp(s)");
+        ).startsWith("request.imp[0] must be configured with improvedigital placementId");
     }
 
     @Test

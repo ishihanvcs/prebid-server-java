@@ -13,16 +13,27 @@ import java.util.Map;
 @Value
 public class HooksModuleContext {
 
+    public static final HooksModuleContext EMPTY = HooksModuleContext.builder().build();
+
     Map<String, ImprovedigitalPbsImpExt> impIdToPbsImpExt;
     Map<String, Floor> impIdToEffectiveFloor;
     String alpha3Country;
     BidRequest bidRequest;
     BidResponse bidResponse;
+    String cookieHeader;
 
-    public static HooksModuleContext from(Map<String, ImprovedigitalPbsImpExt> impIdToPbsImpExt) {
+    public static HooksModuleContext from(String cookieHeader) {
         return HooksModuleContext.builder()
-                .impIdToPbsImpExt(impIdToPbsImpExt)
+                .cookieHeader(cookieHeader)
                 .build();
+    }
+
+    public HooksModuleContext withImpIdToPbsImpExt(Map<String, ImprovedigitalPbsImpExt> impIdToPbsImpExt) {
+        return this.toBuilder().impIdToPbsImpExt(impIdToPbsImpExt).build();
+    }
+
+    public HooksModuleContext withImpIdToFloor(Map<String, Floor> impIdToFloor) {
+        return this.toBuilder().impIdToEffectiveFloor(impIdToFloor).build();
     }
 
     public HooksModuleContext with(BidRequest bidRequest) {
@@ -31,10 +42,6 @@ public class HooksModuleContext {
 
     public HooksModuleContext with(BidResponse bidResponse) {
         return this.toBuilder().bidResponse(bidResponse).build();
-    }
-
-    public HooksModuleContext with(Map<String, Floor> impIdToFloor) {
-        return this.toBuilder().impIdToEffectiveFloor(impIdToFloor).build();
     }
 
     public HooksModuleContext with(String alpha3Country) {

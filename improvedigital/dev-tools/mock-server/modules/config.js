@@ -2,48 +2,60 @@ const path = require("path");
 const debug = require("debug")("routes:config");
 const fs = require("fs");
 const yaml = require("js-yaml");
-const accountsDataPath = path.resolve(__dirname, "../../../config/settings.yaml");
-const requestsDataPath = path.resolve(__dirname, "../../../stored-data/requests");
-const impsDataPath = path.resolve(__dirname, "../../../stored-data/imps");
 
-const paramNames = {
+const projectRoot = path.resolve(__dirname, "../../../../");
+// const configRoot = "imporvedigital";
+const configRoot = "local";
+
+const dataKeys = Object.freeze({
+    ACCOUNT: "accounts",
+    REQUEST: "requests",
+    IMP: "imps",
+});
+
+const dataFilePaths = Object.freeze({
+    [dataKeys.ACCOUNT]: path.resolve(projectRoot, `${configRoot}/config/settings.yaml`),
+    [dataKeys.REQUEST]: path.resolve(projectRoot, `${configRoot}/stored-data/requests`),
+    [dataKeys.IMP]: path.resolve(projectRoot, `${configRoot}/stored-data/imps`)
+});
+
+const paramNames = Object.freeze({
     ACCOUNT: "account-ids",
     REQUEST: "request-ids",
     IMP: "imp-ids",
     LAST_MODIFIED: "last-modified",
-};
+});
 
-const resultKeys = {
-    ACCOUNT: "accounts",
-    REQUEST: "requests",
-    IMP: "imps",
-};
 
 const jsonRegEx = /\.json$/;
 
-function extractIds(req, paramName) {
-    let ids = null;
-    if (req.query[paramName]) {
-        ids = JSON.parse(req.query[paramName]);
-    }
-    return ids;
-}
+const dataCache = {};
 
-function getAccounts(accountIds) {
-    const doc = yaml.load(fs.readFileSync(accountsDataPath, "utf8"));
-    const allAccounts = doc.accounts;
+const deletedEntry = {
+    deleted: true
+};
+
+function loadAllAccounts() {
+    const doc = yaml.load(fs.readFileSync(dataFilePaths[dataKeys.ACCOUNT], "utf8"));
+    const allAccounts = doc.accounts || {};
     const result = {};
-    if (!accountIds || accountIds.length === 0) {
-        accountIds = Object.values(allAccounts).map((acc) => acc.id);
-    }
-    accountIds.forEach((id) => {
-        const acc = allAccounts.find((a) => {
-            return a.id == id;
-        });
-        result[id] = acc !== undefined ? acc : null;
+    Object.values(allAccounts).forEach((account) => {
+        result[account.id] = account;
     });
     return result;
 }
+
+function getAllJsonObjectIds(dataType) {
+    const dataPath = dataFilePaths[dataType];
+    return fs
+            .readdirSync(dataPath, {
+                encoding: "utf-8",
+                withFileTypes: true,
+            })
+            .filter((f) => f.isFile() && jsonRegEx.test(f.name) && f.name !== "default.json")
+            .map((f) => f.name.replace(jsonRegEx, ""));
+}
+
 
 function getJson(dataPath, ids) {
     const result = {};
@@ -58,53 +70,80 @@ function getJson(dataPath, ids) {
     return result;
 }
 
-function getRequestData(dataPath, ids, result, resultKey) {
-    if (ids && ids.length) {
-        result[resultKey] = getJson(dataPath, ids);
-    }
-}
-
-function getAllRequestIds(dataPath) {
-    return fs
-        .readdirSync(dataPath, {
-            encoding: "utf-8",
-            withFileTypes: true,
-        })
-        .filter((f) => f.isFile() && jsonRegEx.test(f.name) && f.name !== "default.json")
-        .map((f) => f.name.replace(jsonRegEx, ""));
-}
-
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
 
+function getRandomChoice(...args) {
+    return args[getRandomInt(args.length)];
+}
+
+function getData(dataType, {ids, randomDelete} = {ids: null, randomDelete: false}) {
+    let data;
+    if (dataCache[dataType] !== undefined) {
+        data = dataCache[dataType]
+    } else {
+        if (dataType === "accounts") {
+            data = loadAllAccounts();
+        } else {
+            const allIds = getAllJsonObjectIds(dataType) || [];
+            data = getJson(dataFilePaths[dataType], allIds);
+        }
+        dataCache[dataType] = data;
+    }
+
+    if (!ids && !randomDelete) {
+        return data;
+    }
+
+    if (!ids) {
+        ids = []
+        let availableIds = Object.keys(data);
+        const targetCount = getRandomInt(availableIds.length);
+        let count = 0;
+        while (count < targetCount) {
+            const randomId = getRandomChoice(...availableIds);
+            ids.push(randomId);
+            availableIds = availableIds.filter((id) => id !== randomId);
+            count++;
+        }
+    }
+
+    const result = {}
+    for (let i = 0; i < ids.length; i++) {
+        const isDeleted = randomDelete ? getRandomChoice(true, false) : false;
+        const id = ids[i];
+        result[id] = isDeleted || data[id] === undefined ? deletedEntry : data[id];
+    }
+
+    return result;
+}
+
+function extractIds(req, paramName) {
+    let ids = null;
+    if (req.query[paramName]) {
+        ids = JSON.parse(req.query[paramName]);
+    }
+    return ids;
+}
+
 module.exports = function (req, res) {
     const result = {
-        [resultKeys.ACCOUNT]: {},
-        [resultKeys.REQUEST]: {},
-        [resultKeys.IMP]: {},
+        [dataKeys.ACCOUNT]: {},
+        [dataKeys.REQUEST]: {},
+        [dataKeys.IMP]: {},
     };
     debug("query: %O", req.query);
     if (!req.query.amp && !req.query.video) {
-        let accountIds = extractIds(req, paramNames.ACCOUNT);
-        let requestIds = extractIds(req, paramNames.REQUEST);
-        let impIds = extractIds(req, paramNames.IMP);
+        const accountIds = extractIds(req, paramNames.ACCOUNT);
+        const randomDelete = req.query[paramNames.LAST_MODIFIED] !== undefined
         if (accountIds !== null || req.query.accounts) {
-            if (req.query[paramNames.LAST_MODIFIED]) {
-                const allAccounts = getAccounts(null);
-                accountIds = Object.keys(allAccounts);
-                accountIds = accountIds.length > 0 ? [accountIds[getRandomInt(accountIds.length)]] : null;
-            }
-            result[resultKeys.ACCOUNT] = getAccounts(accountIds);
+            result[dataKeys.ACCOUNT] = getData(dataKeys.ACCOUNT, {ids: accountIds, randomDelete})
         } else {
-            requestIds = requestIds || getAllRequestIds(requestsDataPath);
-            impIds = impIds || getAllRequestIds(impsDataPath);
-            if (req.query[paramNames.LAST_MODIFIED]) {
-                requestIds = requestIds.length > 0 ? [requestIds[getRandomInt(requestIds.length)]] : null;
-                impIds = impIds.length > 0 ? [impIds[getRandomInt(impIds.length)]] : null;
-            }
-            getRequestData(requestsDataPath, requestIds, result, resultKeys.REQUEST);
-            getRequestData(impsDataPath, impIds, result, resultKeys.IMP);
+            const requestIds = extractIds(req, paramNames.REQUEST);
+            const impIds = extractIds(req, paramNames.IMP);
+            result[dataKeys.REQUEST] = getData(dataKeys.REQUEST, {ids: requestIds, randomDelete})
+            result[dataKeys.IMP] = getData(dataKeys.IMP, {ids: impIds, randomDelete})
         }
     }
     debug("result: %O", result);

@@ -1,7 +1,8 @@
 package com.improvedigital.prebid.server.services;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.improvedigital.prebid.server.settings.proto.response.HttpAccountRefreshResponse;
 import com.improvedigital.prebid.server.utils.ReflectionUtils;
-import com.improvedigital.prebid.server.utils.ResponseUtils;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
@@ -15,13 +16,13 @@ import org.prebid.server.json.JacksonMapper;
 import org.prebid.server.json.JsonMerger;
 import org.prebid.server.settings.CachingApplicationSettings;
 import org.prebid.server.settings.model.Account;
-import org.prebid.server.settings.proto.response.HttpAccountsResponse;
 import org.prebid.server.util.HttpUtil;
 import org.prebid.server.vertx.Initializable;
 import org.prebid.server.vertx.http.HttpClient;
 import org.prebid.server.vertx.http.model.HttpClientResponse;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -59,6 +60,7 @@ import java.util.Objects;
  *     "account1": { ... account data ... },
  *     "account2": { ... account data ... },
  *     "account3": { ... account data ... },
+ *     "account4": { "deleted": true },
  *   }
  * }
  * </pre>
@@ -140,14 +142,34 @@ public class AccountHttpPeriodicRefreshService implements Initializable {
     }
 
     private Map<String, Account> processResponse(HttpClientResponse response) {
+        final int statusCode = response.getStatusCode();
+        if (statusCode != 200) {
+            throw new PreBidException("HTTP status code " + statusCode);
+        }
+
         try {
-            final HttpAccountsResponse parsedResponse = ResponseUtils.processHttpResponse(
-                    mapper, response, HttpAccountsResponse.class
+            final HttpAccountRefreshResponse refreshResponse = mapper.decodeValue(
+                    response.getBody(), HttpAccountRefreshResponse.class
             );
-            return parsedResponse.getAccounts();
+            final Map<String, Account> result = new HashMap<>();
+
+            if (refreshResponse.getAccounts() == null) { // if there is no "accounts" key in response or the key value is null
+                return result;
+            }
+
+            for (Map.Entry<String, ObjectNode> entry : refreshResponse.getAccounts().entrySet()) {
+                final ObjectNode objectNode = entry.getValue();
+                final String accountId = entry.getKey();
+                Account parsedAccount = null;
+                if (objectNode != null && !(objectNode.has("deleted") && objectNode.get("deleted").asBoolean())) {
+                    parsedAccount = mapper.mapper().convertValue(objectNode, Account.class);
+                }
+                result.put(accountId, parsedAccount);
+            }
+            return result;
         } catch (DecodeException e) {
             throw new PreBidException(
-                    String.format("Error parsing last modified accounts response: %s", e.getMessage())
+                    String.format("Error parsing periodic refresh accounts response: %s", e.getMessage())
             );
         }
     }
@@ -184,7 +206,7 @@ public class AccountHttpPeriodicRefreshService implements Initializable {
     }
 
     private void loadAccountCache() {
-        Map<String, Account> accountCache = null;
+        Map<String, Account> accountCache;
         try {
             accountCache = ReflectionUtils.getPrivateProperty(
                     "accountCache", cachingApplicationSettings,
@@ -204,12 +226,24 @@ public class AccountHttpPeriodicRefreshService implements Initializable {
             for (Map.Entry<String, Account> entry: accountMap.entrySet()) {
                 if (entry.getValue() == null) {
                     this.accountCache.remove(entry.getKey());
+                    logger.debug(
+                            String.format(
+                                    "Account with id=%s is deleted and hence removed from cache.",
+                                    entry.getKey()
+                            )
+                    );
                 } else {
                     final Account enrichedAccount = priceFloorsConfigResolver
                             .updateFloorsConfig(entry.getValue())
                             .map(this::mergeDefaultAccount)
                             .result();
                     this.accountCache.put(entry.getKey(), enrichedAccount);
+                    logger.debug(
+                            String.format(
+                                    "Account with id=%s has been saved in cache successfully.",
+                                    entry.getKey()
+                            )
+                    );
                 }
             }
             logger.info(

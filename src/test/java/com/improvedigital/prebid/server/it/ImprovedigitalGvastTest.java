@@ -1738,6 +1738,17 @@ public class ImprovedigitalGvastTest extends ImprovedigitalIntegrationTest {
             spec = modifier.apply(spec);
         }
 
+        String uniqueId = UUID.randomUUID().toString();
+
+        WIRE_MOCK_RULE.stubFor(post(urlPathEqualTo("/improvedigital-exchange"))
+                .willReturn(aResponse().withBody(
+                        getSSPBidResponse(
+                                "improvedigital", uniqueId, "USD"
+                        )
+                    )
+                )
+        );
+
         return spec.get(GVastHandler.END_POINT);
     }
 

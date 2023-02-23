@@ -1160,6 +1160,19 @@ public class ImprovedigitalIntegrationTest extends VertxTest {
                 .getJSONArray("bid").getJSONObject(bidIndex);
     }
 
+    protected int getBidIndex(JSONObject responseJson, int seatBidIndex, String impId) throws JSONException {
+        JSONArray bidArray = getSeatBid(responseJson, seatBidIndex)
+                .getJSONArray("bid");
+
+        for (int i = 0; i < bidArray.length(); i++) {
+            JSONObject bid = bidArray.getJSONObject(i);
+            if (bid.getString("impid").equals(impId)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     protected void assertSeat(JSONObject responseJson, int seatBidIndex, String expectedSeat) throws JSONException {
         assertThat(getSeat(responseJson, seatBidIndex)).isEqualTo(expectedSeat);
     }

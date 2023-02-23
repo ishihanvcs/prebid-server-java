@@ -6,6 +6,7 @@ import com.iab.openrtb.request.BidRequest;
 import com.iab.openrtb.request.Imp;
 import com.improvedigital.prebid.server.UnitTestBase;
 import com.improvedigital.prebid.server.customvast.CustomVastUtils;
+import com.improvedigital.prebid.server.customvast.model.HooksModuleContext;
 import com.improvedigital.prebid.server.customvast.model.ImprovedigitalPbsImpExt;
 import com.improvedigital.prebid.server.customvast.model.VastResponseType;
 import com.improvedigital.prebid.server.utils.PbsEndpointInvoker;
@@ -432,7 +433,7 @@ public class ProcessedAuctionRequestHookTest extends UnitTestBase {
                 AuctionRequestPayloadImpl.of(originalBidRequest),
                 AuctionInvocationContextImpl.of(
                         InvocationContextImpl.of(timeout, Endpoint.openrtb2_auction),
-                        false, null, null
+                        false, null, HooksModuleContext.EMPTY
                 ),
                 (initialPayload, updatedPayload) -> {
                     BidRequest updatedBidRequest = updatedPayload.bidRequest();

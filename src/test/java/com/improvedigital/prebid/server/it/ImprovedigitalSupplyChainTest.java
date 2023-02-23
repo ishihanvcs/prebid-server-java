@@ -728,29 +728,33 @@ public class ImprovedigitalSupplyChainTest extends ImprovedigitalIntegrationTest
         assertNoExtErrors(responseJson);
         assertCurrency(responseJson, "USD");
         assertBidCount(responseJson, 2, params.length, params.length);
-        assertSeat(responseJson, 0, "generic");
-        assertSeat(responseJson, 1, "improvedigital");
+        final int genericSeatBidIndex = getSeatBidIndex(responseJson, "generic");
+        assertThat(genericSeatBidIndex).isGreaterThan(-1);
+        final int improveSeatBidIndex = getSeatBidIndex(responseJson, "improvedigital");
+        assertThat(improveSeatBidIndex).isGreaterThan(-1);
 
         // The response will be as we sent. The only check here is, the schain nodes in SSP requests.
         // If those expected schain nodes don't match, response will be empty.
         for (int i = 0; i < params.length; i++) {
             SupplyChainMultiImpTestParam param = params[i];
 
-            assertBidIdExists(responseJson, 0, i);
-            assertBidImpId(responseJson, 0, i, param.impId);
-            assertBidPrice(responseJson, 0, i, param.price);
-            assertThat(getAdm(responseJson, 0, i)).contains(
+            int bidIndex = getBidIndex(responseJson, genericSeatBidIndex, param.impId);
+            assertThat(bidIndex).isGreaterThan(-1); // bid exists
+            assertBidIdExists(responseJson, genericSeatBidIndex, bidIndex);
+            assertBidPrice(responseJson, genericSeatBidIndex, bidIndex, param.price);
+            assertThat(getAdm(responseJson, genericSeatBidIndex, bidIndex)).contains(
                     "<img src='banner-generic-" + param.impId + ".png' />"
             );
-            assertThat(getBidExtPrebidType(responseJson, 0, i)).isEqualTo("banner");
+            assertThat(getBidExtPrebidType(responseJson, genericSeatBidIndex, bidIndex)).isEqualTo("banner");
 
-            assertBidIdExists(responseJson, 1, i);
-            assertBidImpId(responseJson, 1, i, param.impId);
-            assertBidPrice(responseJson, 1, i, param.price);
-            assertThat(getAdm(responseJson, 1, i)).contains(
+            bidIndex = getBidIndex(responseJson, improveSeatBidIndex, param.impId);
+            assertThat(bidIndex).isGreaterThan(-1); // bid exists
+            assertBidIdExists(responseJson, improveSeatBidIndex, bidIndex);
+            assertBidPrice(responseJson, improveSeatBidIndex, bidIndex, param.price);
+            assertThat(getAdm(responseJson, improveSeatBidIndex, bidIndex)).contains(
                     "<img src='banner-improvedigital-" + param.impId + ".png' />"
             );
-            assertThat(getBidExtPrebidType(responseJson, 1, i)).isEqualTo("banner");
+            assertThat(getBidExtPrebidType(responseJson, improveSeatBidIndex, bidIndex)).isEqualTo("banner");
         }
 
         return responseJson;

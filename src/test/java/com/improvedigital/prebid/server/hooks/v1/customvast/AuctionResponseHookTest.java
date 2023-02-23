@@ -166,7 +166,7 @@ public class AuctionResponseHookTest extends UnitTestBase {
 
     private HooksModuleContext getModuleContext(Function<BidRequest, BidRequest> requestModifier) {
         BidRequest bidRequest = getBidRequest(requestModifier);
-        return customVastUtils.createModuleContext(bidRequest, null);
+        return customVastUtils.updateModuleContext(HooksModuleContext.EMPTY, bidRequest, null);
     }
 
     private BidRequest getBidRequest() {

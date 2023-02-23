@@ -1,6 +1,7 @@
 package com.improvedigital.prebid.server.utils;
 
 import io.vertx.core.Future;
+import io.vertx.core.MultiMap;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.StringUtils;
@@ -47,21 +48,24 @@ public class PbsEndpointInvoker {
         return String.format("%s%s", baseUrl, endPoint);
     }
 
-    public Future<CookieSyncResponse> invokeCookieSync(CookieSyncRequest request, Timeout timeout) {
-        final Future<CookieSyncResponse> defaultReturn = Future.succeededFuture(null);
-        if (request.getGdpr() == 1 && StringUtils.isBlank(request.getGdprConsent())) {
-            logger.warn("Invalid cookie_sync request: gdpr_consent is required if gdpr is 1: " + request);
-            return defaultReturn;
-        }
+    public Future<CookieSyncResponse> invokeCookieSync(CookieSyncRequest request, MultiMap headers, Timeout timeout) {
+        final Future<CookieSyncResponse> defaultReturn = Future.succeededFuture();
         try {
+            if (Objects.nonNull(request.getGdpr())
+                    && request.getGdpr() == 1
+                    && StringUtils.isBlank(request.getGdprConsent())
+            ) {
+                logger.warn("Invalid cookie_sync request: gdpr_consent is required if gdpr is 1: " + request);
+                return defaultReturn;
+            }
             String body = mapper.encodeToString(request);
             final long timeRemaining = timeout.remaining();
             if (timeRemaining <= 0) {
-                logger.error("Timeout exceeded while invoking cookie_sync handler");
+                logger.error("No time remaining to invoke cookie_sync handler");
                 return defaultReturn;
             }
             // logger.info("Invoking cookie_sync with request: \n" + body);
-            return httpClient.post(resolvePbsUrl(Endpoint.cookie_sync), body, timeRemaining)
+            return httpClient.post(resolvePbsUrl(Endpoint.cookie_sync), headers, body, timeRemaining)
                     .map(response -> {
                         final long timeElapsed = timeRemaining - timeout.remaining();
                         logger.debug("Time required to invoke cookie_sync endpoint: " + timeElapsed + " ms");

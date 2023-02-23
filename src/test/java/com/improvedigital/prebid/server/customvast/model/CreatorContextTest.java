@@ -153,8 +153,9 @@ public class CreatorContextTest extends UnitTestBase {
                 bidFloorInEuro2, bidRequest, "EUR", "USD")
         ).thenReturn(bidFloorInUsd2);
 
-        HooksModuleContext hooksModuleContext = customVastUtils.createModuleContext(bidRequest, alpha3Country)
-                .with(bidResponse);
+        HooksModuleContext hooksModuleContext = customVastUtils.updateModuleContext(
+                HooksModuleContext.EMPTY, bidRequest, alpha3Country
+        ).with(bidResponse);
 
         CreatorContext creatorContext = CreatorContext.from(hooksModuleContext, jsonUtils);
         final Imp updatedImp = hooksModuleContext.getBidRequest().getImp().get(0);

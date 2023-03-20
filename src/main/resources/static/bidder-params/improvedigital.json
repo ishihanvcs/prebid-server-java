@@ -9,6 +9,11 @@
       "minimum": 1,
       "description": "An ID which identifies this placement of the impression"
     },
+    "publisherId": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Publisher Id associated with the impression"
+    },
     "keyValues": {
       "type": "object",
       "description": "Contains one or more key-value pairings for key-value targeting"
